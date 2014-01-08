@@ -4,7 +4,8 @@ version := "5.0.0-SNAPSHOT"
 
 libraryDependencies ++= Seq(
   jdbc,
-  cache
+  cache,
+  "net.liftweb" %% "lift-json" % "2.5"
 )     
 
 play.Project.playScalaSettings
