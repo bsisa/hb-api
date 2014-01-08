@@ -3,3 +3,30 @@ Welcome to HyperBird Play application
 
 This file is packaged with the current Play application 
 when using `play dist`.
+
+
+== Managed dependencies ==
+
+Check build.sbt, project/plugins.sbt 
+
+
+== Unmanaged dependencies ==
+
+XQJ driver: A standard Java interface to XML DataSources which support XQuery 1.0.
+
+XQJ driver files for eXist XML database http://www.exist-db.org downloaded from http://xqj.net/exist/
+are located in project at: 
+
+lib/exist-xqj-1.0.1.jar
+lib/xqj2-0.0.1.jar
+lib/xqjapi.jar
+
+
+XQS XQuery for Scala
+
+XQS is found at https://github.com/fancellu/xqs and is a single file.
+This file XQS.scala is included in the source code "as is" and should
+only be used by objects or classes located in ch.bsisa.hyperbird.dao 
+package.
+
+ 
