@@ -3,7 +3,12 @@
 # ~~~~
 
 # Home page
-GET     /                           ch.bsisa.hyperbird.controllers.Application.index
+GET   /                                 ch.bsisa.hyperbird.controllers.Application.index
+
+GET   /api/                             ch.bsisa.hyperbird.controllers.Api.collections
+GET   /api/:collectionId                ch.bsisa.hyperbird.controllers.Api.collection(collectionId)
+GET   /api/:collectionId/xpath/*xpath   ch.bsisa.hyperbird.controllers.Api.fileteredCollection(collectionId, xpath)
+GET   /api/:collectionId/:cardId        ch.bsisa.hyperbird.controllers.Api.card(collectionId, cardId)
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.at(path="/public", file)
+GET   /assets/*file                     controllers.Assets.at(path="/public", file)
