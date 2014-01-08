@@ -12,7 +12,7 @@ import javax.xml.namespace.QName
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.sax.SAXResult
-import javax.xml.xquery._
+import javax.xml.xquery._ // Found in lib/xqjapi.jar
 import java.util.Date
 import javax.xml.datatype.DatatypeFactory
 import java.util.GregorianCalendar

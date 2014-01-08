@@ -28,5 +28,5 @@ XQS is found at https://github.com/fancellu/xqs and is a single file.
 This file XQS.scala is included in the source code "as is" and should
 only be used by objects or classes located in ch.bsisa.hyperbird.dao 
 package.
-
+Note that XQS.scala depends on lib/xqjapi.jar at compile time.
  
