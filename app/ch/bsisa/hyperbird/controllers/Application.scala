@@ -6,7 +6,7 @@ import play.api.mvc._
 object Application extends Controller {
 
   def index = Action {
-    Ok(views.html.index("HyperBird 5.0"))
+    Ok(views.html.index("HyperBird 5.0", ""))
   }
 
 }

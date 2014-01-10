@@ -1,7 +1,13 @@
-@(message: String)
+@(message: String, xquery: String)
 
 @main(message) {
 
-    <div>Welcome to @message</div>
+    <div>Message:
+    <pre>@message</pre>
+    </div>
+    <div>XQuery:
+    <pre>@xquery</pre>
+    </div>    
+    
 
 }

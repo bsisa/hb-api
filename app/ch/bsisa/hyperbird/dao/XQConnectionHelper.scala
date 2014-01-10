@@ -16,7 +16,10 @@ object XQConnectionHelper {
   /**
    * @return XQConnection
    */
-  def getConnection() = getDataSource(host, port).getConnection()
+  def getConnection() = {
+    println("Datasource properties: " + getDataSource(host, port).getSupportedPropertyNames().mkString(";")) 
+    getDataSource(host, port).getConnection()
+  }
 
   /**
    * Returns an ExistXQDataSource meant only for use inside the current object.
