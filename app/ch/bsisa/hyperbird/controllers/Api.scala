@@ -28,7 +28,7 @@ object Api extends Controller {
    */
   def collections = Action {
     // Perform call to eXist REST service to get collections list
-    val responseFuture: Future[Response] = WS.url("http://localhost:8080/exist/rest/db/hb4").get()
+    val responseFuture: Future[Response] = WS.url("http://localhost:8080/exist/rest/db/hb").get()
 
     // Keep asynchronous calls asynchronous to allow Play free threads
     val resultFuture: Future[Result] = responseFuture.map { resp =>
@@ -42,40 +42,10 @@ object Api extends Controller {
     Async(resultFuture)
   }
 
-  def collection(collectionId: String) = Action {
-
-    // Perform call to eXist REST service to get collections list
-    val responseFuture: Future[Response] = WS.url(s"""http://localhost:8080/exist/rest/db/hb4/${collectionId}?_query=//ELFIN&_howmany=1000000000""").get()
-
-    // Keep asynchronous calls asynchronous to allow Play free threads
-    val resultFuture: Future[Result] = responseFuture.map { resp =>
-      // We expect to receive XML content
-      Logger.debug(s"Result of type ${resp.ahcResponse.getContentType} received")
-      // let's convert XML to JSON
-      val jsonBody = JsonXmlConverter.xmlStringToJson(resp.body.mkString)
-      // Return JSON response
-      Status(resp.status)(jsonBody).as(JSON)
-      // Returns original XML response
-      //Status(resp.status)(resp.body).as(resp.ahcResponse.getContentType)
-    }
-    Async(resultFuture)
-
-    // TODO: Need to solve double quote breaking XML parsing before using this method.
-
-//    val xquery = s"""|xquery version "3.0";
-//                     |let $$result := collection("/db/hb4/${collectionId}")//ELFIN 
-//                     |return 
-//                     |$$result
-//                     | """.stripMargin('|')
-//
-//    val xmlSeqResult = XQueryHelper.seqOfElem(xquery)
-//    val jsonResult = JsonXmlConverter.xmlSeqToJson(xmlSeqResult)
-//    Ok(jsonResult).as(JSON)
-  }
 
   def fileteredCollection(collectionId: String, xpath: String) = Action {
     // Perform call to eXist REST service to get collections list
-    val responseFuture: Future[Response] = WS.url(s"""http://localhost:8080/exist/rest/db/hb4/${collectionId}?_query=${xpath}&_howmany=1000000000""").get()
+    val responseFuture: Future[Response] = WS.url(s"""http://localhost:8080/exist/rest/db/hb/${collectionId}?_query=${xpath}&_howmany=1000000000""").get()
 
     // Keep asynchronous calls asynchronous to allow Play free threads
     val resultFuture: Future[Result] = responseFuture.map { resp =>
@@ -93,7 +63,7 @@ object Api extends Controller {
 
   def card(collectionId: String, cardId: String) = Action {
     // Perform call to eXist REST service to get collections list
-    val responseFuture: Future[Response] = WS.url(s"""http://localhost:8080/exist/rest/db/hb4/${collectionId}?_query=//ELFIN%5B@Id=%27${cardId}%27%5D&_howmany=1000000000""").get()
+    val responseFuture: Future[Response] = WS.url(s"""http://localhost:8080/exist/rest/db/hb/${collectionId}?_query=//ELFIN%5B@Id=%27${cardId}%27%5D&_howmany=1000000000""").get()
 
     // Keep asynchronous calls asynchronous to allow Play free threads
     val resultFuture: Future[Result] = responseFuture.map { resp =>
