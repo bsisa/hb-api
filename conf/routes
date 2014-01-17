@@ -3,14 +3,14 @@
 # ~~~~
 
 # Home page
-GET   /                                            ch.bsisa.hyperbird.controllers.Application.index
+GET   /                                              ch.bsisa.hyperbird.controllers.Application.index
 
-GET   /api/card/:cardId                            ch.bsisa.hyperbird.controllers.Api.card(cardId)
-GET   /api/collection/                             ch.bsisa.hyperbird.controllers.Api.collections
+GET   /api/elfin/:elfinId                            ch.bsisa.hyperbird.controllers.Api.elfin(elfinId)
+GET   /api/collection/                               ch.bsisa.hyperbird.controllers.Api.collections
 #GET   /api/collection/:collectionId                ch.bsisa.hyperbird.controllers.Api.fileteredCollection(collectionId, xpath ?= "//ELFIN")
-GET   /api/collection/:collectionId                ch.bsisa.hyperbird.controllers.Api.collection(collectionId)
-GET   /api/collection/card/:collectionId/:cardId   ch.bsisa.hyperbird.controllers.Api.cardWithinCollection(collectionId, cardId)
-GET   /api/collection/xpath/:collectionId/*xpath   ch.bsisa.hyperbird.controllers.Api.fileteredCollection(collectionId, xpath)
+GET   /api/collection/:collectionId                  ch.bsisa.hyperbird.controllers.Api.collection(collectionId)
+GET   /api/collection/elfin/:collectionId/:elfinId   ch.bsisa.hyperbird.controllers.Api.elfinWithinCollection(collectionId, elfinId)
+GET   /api/collection/xpath/:collectionId/*xpath     ch.bsisa.hyperbird.controllers.Api.fileteredCollection(collectionId, xpath)
 
 # Map static resources from the /public folder to the /assets URL path
-GET   /assets/*file                                controllers.Assets.at(path="/public", file)
+GET   /assets/*file                                  controllers.Assets.at(path="/public", file)

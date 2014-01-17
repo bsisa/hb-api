@@ -40,18 +40,18 @@ object WSQueries extends Queries {
   /**
    * Implements Queries
    */
-  def cardQuery(collectionId: String, cardId: String)(implicit conf: DbConfig): String = {
-    val query = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.databaseName}${collectionId}?_query=//ELFIN%5B@Id=%27${cardId}%27%5D&_howmany=${highPagingLimit}"""
-    Logger.debug("card: " + query)
+  def elfinQuery(collectionId: String, elfinId: String)(implicit conf: DbConfig): String = {
+    val query = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.databaseName}${collectionId}?_query=//ELFIN%5B@Id=%27${elfinId}%27%5D&_howmany=${highPagingLimit}"""
+    Logger.debug("elfin: " + query)
     query
   }
   
   /**
    * Implements Queries
    */
-  def cardQuery(cardId: String)(implicit conf: DbConfig): String = {
-    val query = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.databaseName}?_query=//ELFIN%5B@Id=%27${cardId}%27%5D&_howmany=${highPagingLimit}"""
-    Logger.debug("card: " + query)
+  def elfinQuery(elfinId: String)(implicit conf: DbConfig): String = {
+    val query = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.databaseName}?_query=//ELFIN%5B@Id=%27${elfinId}%27%5D&_howmany=${highPagingLimit}"""
+    Logger.debug("elfin: " + query)
     query
   }  
 

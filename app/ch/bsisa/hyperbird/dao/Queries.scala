@@ -24,15 +24,15 @@ trait Queries {
   def fileteredCollectionQuery(collectionId: String, xpath: String)(implicit conf: DbConfig): String
 
   /**
-   * Returns a query to access a single ELFIN given its collection and unique card id.
-   * The collection is provided to improve performance, indeed the card id is unique across
+   * Returns a query to access a single ELFIN given its collection and unique elfin id.
+   * The collection is provided to improve performance, indeed the elfin id is unique across
    * the whole database.
    */
-  def cardQuery(collectionId: String, cardId: String)(implicit conf: DbConfig): String
+  def elfinQuery(collectionId: String, elfinId: String)(implicit conf: DbConfig): String
   
   /**
-   * Returns a query to access a single ELFIN given its unique card id.
+   * Returns a query to access a single ELFIN given its unique elfin id.
    */
-  def cardQuery(cardId: String)(implicit conf: DbConfig): String  
+  def elfinQuery(elfinId: String)(implicit conf: DbConfig): String  
 
 }

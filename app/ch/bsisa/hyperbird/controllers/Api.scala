@@ -40,12 +40,12 @@ object Api extends Controller {
     XQueryWSHelper.query(WSQueries.fileteredCollectionQuery(collectionId, xpath))
   }
 
-  def cardWithinCollection(collectionId: String, cardId: String) = Action.async {
-    XQueryWSHelper.query(WSQueries.cardQuery(collectionId, cardId))
+  def elfinWithinCollection(collectionId: String, elfinId: String) = Action.async {
+    XQueryWSHelper.query(WSQueries.elfinQuery(collectionId, elfinId))
   }
 
-  def card(cardId: String) = Action.async {
-    XQueryWSHelper.query(WSQueries.cardQuery(cardId))
+  def elfin(elfinId: String) = Action.async {
+    XQueryWSHelper.query(WSQueries.elfinQuery(elfinId))
   }
 
 }
