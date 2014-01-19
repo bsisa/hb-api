@@ -31,7 +31,7 @@ object WSQueries extends Queries {
   /**
    * Implements Queries
    */
-  def fileteredCollectionQuery(collectionId: String, xpath: String = "//ELFIN")(implicit conf: DbConfig): String = {
+  def filteredCollectionQuery(collectionId: String, xpath: String = "//ELFIN")(implicit conf: DbConfig): String = {
     val query = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.databaseName}${collectionId}?_query=${xpath}&_howmany=${highPagingLimit}"""
     Logger.debug("fileteredCollectionQuery: " + query)
     query    

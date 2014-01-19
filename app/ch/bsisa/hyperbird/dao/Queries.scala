@@ -21,7 +21,7 @@ trait Queries {
   /**
    * Returns a query to list all ELFINs of a given collections which satisfies to the provided XPath query
    */
-  def fileteredCollectionQuery(collectionId: String, xpath: String)(implicit conf: DbConfig): String
+  def filteredCollectionQuery(collectionId: String, xpath: String)(implicit conf: DbConfig): String
 
   /**
    * Returns a query to access a single ELFIN given its collection and unique elfin id.
