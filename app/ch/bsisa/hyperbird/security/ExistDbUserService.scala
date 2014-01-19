@@ -6,7 +6,7 @@ import securesocial.core.providers.Token
 import securesocial.core.IdentityId
 
 /**
- * SecureSocial UserServicePlugin implementation targeted at eXist database.
+ * SecureSocial UserService implementation targeted at eXist database.
  * 
  * @author Patrick Refondini
  */
