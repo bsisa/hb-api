@@ -14,6 +14,8 @@ import ch.bsisa.hyperbird.dao.XQueryHelper
 import ch.bsisa.hyperbird.util.JsonXmlConverter
 import ch.bsisa.hyperbird.dao.ws.WSQueries
 import ch.bsisa.hyperbird.dao.ws.XQueryWSHelper
+import ch.bsisa.hyperbird.dao.xqs.XQSQueriesProcessor
+import ch.bsisa.hyperbird.dao.xqs.XQSQueries
 
 /**
  * REST API controller.
