@@ -9,7 +9,7 @@ import play.api.mvc.Results._
 import scala.concurrent.Future
 import ch.bsisa.hyperbird.util.JsonXmlConverter
 import ch.bsisa.hyperbird.dao.QueriesProcessor
-import ch.bsisa.hyperbird.dao.XQueryHelper
+import ch.bsisa.hyperbird.dao.xqs.XQueryHelper
 
 object XQSQueriesProcessor extends Controller with QueriesProcessor {
 

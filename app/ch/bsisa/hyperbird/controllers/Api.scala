@@ -10,7 +10,7 @@ import scala.concurrent.Future
 import scala.xml.XML
 import ch.bsisa.hyperbird.Implicits._
 import ch.bsisa.hyperbird.dao.TestQueries
-import ch.bsisa.hyperbird.dao.XQueryHelper
+import ch.bsisa.hyperbird.dao.xqs.XQueryHelper
 import ch.bsisa.hyperbird.util.JsonXmlConverter
 import ch.bsisa.hyperbird.dao.ws.WSQueries
 import ch.bsisa.hyperbird.dao.ws.XQueryWSHelper
