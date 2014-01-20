@@ -1,7 +1,6 @@
-package ch.bsisa.hyperbird.dao
+package ch.bsisa.hyperbird.dao.xqs
 
 import ch.bsisa.hyperbird.util.JsonXmlConverter
-import ch.bsisa.hyperbird.dao.xqs.XQueryHelper
 
 /**
  * Predefined XQueries meant for prototyping/testing
