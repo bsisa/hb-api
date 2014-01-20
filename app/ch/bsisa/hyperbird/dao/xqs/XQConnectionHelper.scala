@@ -1,7 +1,8 @@
 package ch.bsisa.hyperbird.dao.xqs
 
-import net.xqj.exist.ExistXQDataSource
 import ch.bsisa.hyperbird.dao.DbConfig
+import net.xqj.exist.ExistXQDataSource
+import play.api.Logger
 
 /**
  * Helper object providing generic javax.xml.xquery.XQConnection
@@ -9,16 +10,13 @@ import ch.bsisa.hyperbird.dao.DbConfig
  */
 object XQConnectionHelper {
 
-  // TODO: make these properties configurable
-  //val host = "localhost"
-  //val port = "8080"
-
   /**
    * @return XQConnection
    */
   def getConnection()(implicit conf: DbConfig) = {
-    println("Datasource properties: " + getDataSource(conf.hostName, conf.port.toString()).getSupportedPropertyNames().mkString(";")) 
-    getDataSource(conf.hostName, conf.port.toString()).getConnection()
+    val xqds = getDataSource(conf.hostName, conf.port.toString())
+    Logger.debug("ExistXQDataSource properties: " + xqds.getSupportedPropertyNames().mkString(";")) 
+    xqds.getConnection()
   }
 
   /**
