@@ -1,7 +1,7 @@
-package ch.bsisa.hyperbird.dao
+package ch.bsisa.hyperbird.dao.xqs
 
-import net.xqj.exist.ExistXQDataSource // Depends on lib/exist-xqj-x.x.x.jar
-import com.felstar.xqs.XQS
+import net.xqj.exist.ExistXQDataSource
+import ch.bsisa.hyperbird.dao.DbConfig
 
 /**
  * Helper object providing generic javax.xml.xquery.XQConnection
