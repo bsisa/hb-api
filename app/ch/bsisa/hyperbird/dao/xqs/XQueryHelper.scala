@@ -2,7 +2,6 @@ package ch.bsisa.hyperbird.dao.xqs
 
 import ch.bsisa.hyperbird.Implicits._
 import com.felstar.xqs.XQS
-import ch.bsisa.hyperbird.dao.XQConnectionHelper
 
 /**
  * Helper object to query XML database using XQuery.
