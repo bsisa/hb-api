@@ -15,10 +15,16 @@ object XQSQueries extends Queries {
    * Implements Queries
    */
   def allHbCollectionsQuery(implicit conf: DbConfig): String = {
-    //TODO: Check this effectively lists collections from XQJ/XQS
-    val query = s"""xmldb:get-child-collections('${conf.databaseName}')"""
+    //TODO: The response produced by xmldb:get-child-collections('${conf.databaseName}') 
+    // does not produce valid XML but a list of strings.
+    // Review this query.
+    // val query = s"""xmldb:get-child-collections('${conf.databaseName}')"""
+    // TODO: We could Queries trait could enforce Option[String] as return type 
+    // allowing for clean Not implemented messages from the API.
+    val query = s""""NOT IMPLEMENTED"""" 
     Logger.debug("allHbCollectionsQuery: " + query)
     query
+    
   }
 
   /**
