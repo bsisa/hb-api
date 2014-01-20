@@ -1,5 +1,6 @@
 package ch.bsisa.hyperbird.dao
 
+import ch.bsisa.hyperbird.Implicits._
 import com.felstar.xqs.XQS
 import java.util.Properties
 

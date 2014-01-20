@@ -10,15 +10,15 @@ import com.felstar.xqs.XQS
 object XQConnectionHelper {
 
   // TODO: make these properties configurable
-  val host = "localhost"
-  val port = "8080"
+  //val host = "localhost"
+  //val port = "8080"
 
   /**
    * @return XQConnection
    */
-  def getConnection() = {
-    println("Datasource properties: " + getDataSource(host, port).getSupportedPropertyNames().mkString(";")) 
-    getDataSource(host, port).getConnection()
+  def getConnection()(implicit conf: DbConfig) = {
+    println("Datasource properties: " + getDataSource(conf.hostName, conf.port.toString()).getSupportedPropertyNames().mkString(";")) 
+    getDataSource(conf.hostName, conf.port.toString()).getConnection()
   }
 
   /**
