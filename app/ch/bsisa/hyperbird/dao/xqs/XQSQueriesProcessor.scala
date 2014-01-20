@@ -31,7 +31,6 @@ object XQSQueriesProcessor extends Controller with QueriesProcessor {
       } yield {
         // Convert the XML result to JSON format
         val jsonSeqElem = JsonXmlConverter.xmlSeqToJson(xmlSeqElem)
-        Logger.debug("jsonSeqElem: " + jsonSeqElem)
         // Produce a SimpleResult
         Ok(jsonSeqElem).as(JSON)
       }
