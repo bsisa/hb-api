@@ -34,6 +34,15 @@ class DbConfig {
     case Some(dbPort) => dbPort
     case None => throw DbConfigException("Database configuration hb.db.port missing")
   }
+  
+  /**
+   * Database REST service prefix 
+   */
+  val restPrefix: String = Play.current.configuration.getString("hb.db.restPrefix") match {
+    case Some(dbRestPrefix) => dbRestPrefix
+    case None => throw DbConfigException("Database configuration hb.db.restPrefix missing")
+  }
+  
   /**
    * Database name
    */
