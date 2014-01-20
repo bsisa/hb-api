@@ -1,31 +1,45 @@
 package ch.bsisa.hyperbird.security
 
-import play.api.{Logger, Application}
+import play.api.{ Logger, Application }
 import securesocial.core._
 import securesocial.core.providers.Token
 import securesocial.core.IdentityId
 
+import ch.bsisa.hyperbird.dao.xqs.XQConnectionHelper
+
 /**
  * SecureSocial UserService implementation targeted at eXist database.
- * 
+ *
  * @author Patrick Refondini
  */
-class ExistDbUserService (application: Application) extends UserServicePlugin(application) {
+class ExistDbUserService(application: Application) extends UserServicePlugin(application) {
   private var users = Map[String, Identity]()
   private var tokens = Map[String, Token]()
 
   def find(id: IdentityId): Option[Identity] = {
-    if ( Logger.isDebugEnabled ) {
+    if (Logger.isDebugEnabled) {
       Logger.debug("users = %s".format(users))
     }
     users.get(id.userId + id.providerId)
+
+    //    val user = User.findByUserId(userId);
+    //    user match {
+    //      case Some(user) => {
+    //        val socialUser = new SocialUser(userId, null, null, user.name, Option(user.email), Option(user.photo), AuthenticationMethod("userPassword"), null, null, Some(PasswordInfo(PasswordHasher.BCryptHasher, BCrypt.hashpw(user.password, BCrypt.gensalt(10)))))
+    //        Option(socialUser)
+    //      }
+    //      case None => {
+    //         None
+    //      }
+    //    }
+
   }
 
   def findByEmailAndProvider(email: String, providerId: String): Option[Identity] = {
-    if ( Logger.isDebugEnabled ) {
+    if (Logger.isDebugEnabled) {
       Logger.debug("users = %s".format(users))
     }
-    users.values.find( u => u.email.map( e => e == email && u.identityId.providerId == providerId).getOrElse(false))
+    users.values.find(u => u.email.map(e => e == email && u.identityId.providerId == providerId).getOrElse(false))
   }
 
   def save(user: Identity): Identity = {
@@ -35,6 +49,53 @@ class ExistDbUserService (application: Application) extends UserServicePlugin(ap
     // actions and event callbacks. The same goes for the find(id: IdentityId) method.
     user
   }
+
+  // Check: 
+  // * http://stackoverflow.com/questions/16124184/play-framework-securesocial-userpass-implementation
+  // * http://www.shrikar.com/blog/2013/10/26/playframework-securesocial-and-mongodb
+  
+  //  def save(user: Identity): Identity = {
+  //    user.id.providerId match {
+  //      case "facebook" => {
+  //
+  //      }
+  //      case "google" => {
+  //
+  //      }
+  //      case "twitter" => {
+  //      }
+  //
+  //      case "userpass" => {
+  //        val eUser = User.findByEmail(user.id.id) match {
+  //          case Some(eUser) => {
+  //            //Existing User - update only
+  //          }
+  //          case None => {
+  //            val appUser: User = new User(NotAssigned, "student", user.id.providerId, user.fullName, user.id.id, user.passwordInfo.get.password, null, null, null, null, null, "active")
+  //            User.create(appUser)
+  //          }
+  //        }
+  //      }
+  //    }
+  //    user
+  //  }
+
+//  val socialUser = new SocialUser(
+//    userId,
+//    null,
+//    null,
+//    user.name,
+//    Option(user.email),
+//    Option(user.photo),
+//    AuthenticationMethod("userPassword"),
+//    null,
+//    null,
+//    Some(
+//      PasswordInfo(
+//        PasswordHasher.BCryptHasher,
+//        BCrypt.hashpw(
+//          "password",
+//          BCrypt.gensalt(10)))))
 
   def save(token: Token) {
     tokens += (token.uuid -> token)

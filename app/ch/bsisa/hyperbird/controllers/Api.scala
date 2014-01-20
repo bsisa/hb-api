@@ -33,11 +33,11 @@ object Api extends Controller {
   }
 
   def collection(collectionId: String) = Action.async {
-    XQueryWSHelper.query(WSQueries.fileteredCollectionQuery(collectionId))
+    XQueryWSHelper.query(WSQueries.filteredCollectionQuery(collectionId))
   }
 
-  def fileteredCollection(collectionId: String, xpath: String) = Action.async {
-    XQueryWSHelper.query(WSQueries.fileteredCollectionQuery(collectionId, xpath))
+  def filteredCollection(collectionId: String, xpath: String) = Action.async {
+    XQueryWSHelper.query(WSQueries.filteredCollectionQuery(collectionId, xpath))
   }
 
   def elfinWithinCollection(collectionId: String, elfinId: String) = Action.async {

@@ -16,7 +16,7 @@ GET   /api/collection/                               ch.bsisa.hyperbird.controll
 #GET   /api/collection/:collectionId                ch.bsisa.hyperbird.controllers.Api.fileteredCollection(collectionId, xpath ?= "//ELFIN")
 GET   /api/collection/:collectionId                  ch.bsisa.hyperbird.controllers.Api.collection(collectionId)
 GET   /api/collection/elfin/:collectionId/:elfinId   ch.bsisa.hyperbird.controllers.Api.elfinWithinCollection(collectionId, elfinId)
-GET   /api/collection/xpath/:collectionId/*xpath     ch.bsisa.hyperbird.controllers.Api.fileteredCollection(collectionId, xpath)
+GET   /api/collection/xpath/:collectionId           ch.bsisa.hyperbird.controllers.Api.filteredCollection(collectionId, xpath)
 
 
 #######################################################################
