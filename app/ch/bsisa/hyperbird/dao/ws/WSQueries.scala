@@ -22,7 +22,7 @@ object WSQueries extends Queries {
    * Implements Queries
    */
   def allHbCollectionsQuery(implicit conf: DbConfig): String = {
-    val query = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}?_howmany=${highPagingLimit}"""
+    val query = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}/?_howmany=${highPagingLimit}"""
     Logger.debug("allHbCollectionsQuery: " + query)
     query
   }
@@ -31,7 +31,7 @@ object WSQueries extends Queries {
    * Implements Queries
    */
   def fileteredCollectionQuery(collectionId: String, xpath: String = "//ELFIN")(implicit conf: DbConfig): String = {
-    val query = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}${collectionId}?_query=${xpath}&_howmany=${highPagingLimit}"""
+    val query = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}/${collectionId}?_query=${xpath}&_howmany=${highPagingLimit}"""
     Logger.debug("fileteredCollectionQuery: " + query)
     query    
   }
@@ -40,7 +40,7 @@ object WSQueries extends Queries {
    * Implements Queries
    */
   def elfinQuery(collectionId: String, elfinId: String)(implicit conf: DbConfig): String = {
-    val query = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}${collectionId}?_query=//ELFIN%5B@Id=%27${elfinId}%27%5D&_howmany=${highPagingLimit}"""
+    val query = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}/${collectionId}?_query=//ELFIN%5B@Id=%27${elfinId}%27%5D&_howmany=${highPagingLimit}"""
     Logger.debug("elfin: " + query)
     query
   }
@@ -49,7 +49,7 @@ object WSQueries extends Queries {
    * Implements Queries
    */
   def elfinQuery(elfinId: String)(implicit conf: DbConfig): String = {
-    val query = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}?_query=//ELFIN%5B@Id=%27${elfinId}%27%5D&_howmany=${highPagingLimit}"""
+    val query = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}/?_query=//ELFIN%5B@Id=%27${elfinId}%27%5D&_howmany=${highPagingLimit}"""
     Logger.debug("elfin: " + query)
     query
   }  
