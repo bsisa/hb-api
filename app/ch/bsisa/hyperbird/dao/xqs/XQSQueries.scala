@@ -30,7 +30,7 @@ object XQSQueries extends Queries {
   /**
    * Implements Queries
    */
-  def fileteredCollectionQuery(collectionId: String, xpath: String = "//ELFIN")(implicit conf: DbConfig): String = {
+  def filteredCollectionQuery(collectionId: String, xpath: String = "//ELFIN")(implicit conf: DbConfig): String = {
     val query = s"""collection('${conf.databaseName}/${collectionId}')${xpath}"""
     Logger.debug("fileteredCollectionQuery: " + query)
     query    
