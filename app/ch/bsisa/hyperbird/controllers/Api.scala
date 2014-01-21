@@ -14,6 +14,7 @@ import ch.bsisa.hyperbird.dao.ws.WSQueries
 import ch.bsisa.hyperbird.dao.ws.XQueryWSHelper
 import ch.bsisa.hyperbird.dao.xqs.XQSQueriesProcessor
 import ch.bsisa.hyperbird.dao.xqs.XQSQueries
+import ch.bsisa.hyperbird.dao.UserDAO
 
 /**
  * REST API controller.
@@ -46,6 +47,28 @@ object Api extends Controller {
 
   def elfin(elfinId: String) = Action.async {
     XQueryWSHelper.query(WSQueries.elfinQuery(elfinId))
+  }
+
+  def createUser() = Action {
+    UserDAO.create
+    Ok("{message: 'createUser test completed'}").as(JSON)
+  }
+  
+  def updateUser() = Action {
+    UserDAO.update
+    Ok("{message: 'updateUser test completed'}").as(JSON)
+  }  
+
+  def deleteUser() = Action {
+    UserDAO.delete
+    Ok("{message: 'deleteUser test completed'}").as(JSON)
+  }
+
+  def findUser(userName: String) = Action {
+    // Convert the XML result to JSON format
+    val jsonSeqElem = JsonXmlConverter.xmlSeqToJson(UserDAO.find(userName))
+    // Produce a SimpleResult
+    Ok(jsonSeqElem).as(JSON)
   }
 
 }

@@ -1,0 +1,21 @@
+
+#####################################################################################
+#
+# HyperBird configurations
+#
+#####################################################################################
+
+
+hb { 
+	
+	db { 
+		# Database configurations
+		"protocol": "http://",
+		"hostName": "localhost",
+		"port": 8080,
+		"restPrefix": "/exist/rest" ,
+		"name": "/db/hb",
+		"user": "YOUR_USER",
+		"password": "YOUR_USER_PWD" 
+	}
+}

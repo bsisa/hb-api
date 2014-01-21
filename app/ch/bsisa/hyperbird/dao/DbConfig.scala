@@ -50,6 +50,16 @@ class DbConfig {
     case Some(dbName) => dbName
     case None => throw DbConfigException("Database configuration hb.db.name missing")
   }
+  
+  val userName: String = Play.current.configuration.getString("hb.db.user") match {
+    case Some(dbUserName) => dbUserName
+    case None => throw DbConfigException("Database configuration hb.db.user missing")
+  }
+  
+  val password: String = Play.current.configuration.getString("hb.db.password") match {
+    case Some(dbPassword) => dbPassword
+    case None => throw DbConfigException("Database configuration hb.db.password missing")
+  }
 
 }
 

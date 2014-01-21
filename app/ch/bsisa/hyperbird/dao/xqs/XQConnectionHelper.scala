@@ -14,7 +14,7 @@ object XQConnectionHelper {
    * @return XQConnection
    */
   def getConnection()(implicit conf: DbConfig) = {
-    val xqds = getDataSource(conf.hostName, conf.port.toString())
+    val xqds = getDataSource(serverName = conf.hostName, port = conf.port.toString(), user = conf.userName, password = conf.password)
     Logger.debug("ExistXQDataSource properties: " + xqds.getSupportedPropertyNames().mkString(";")) 
     xqds.getConnection()
   }
@@ -24,11 +24,16 @@ object XQConnectionHelper {
    *
    * @param serverName
    * @param port
+   * @param user
+   * @param password
    */
-  private def getDataSource(serverName: String, port: String): ExistXQDataSource = {
+  private def getDataSource(serverName: String, port: String, user: String, password: String): ExistXQDataSource = {
+    Logger.debug(s"Creating datasource for server: ${serverName}, port: ${port}, user: ${user}")
     val xqs = new ExistXQDataSource()
     xqs.setProperty("serverName", serverName)
     xqs.setProperty("port", port)
+    xqs.setUser(user)
+    xqs.setPassword(password)
     xqs
   }
 
