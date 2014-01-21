@@ -3,51 +3,51 @@
 # ~~~~
 
 # Home page
-GET    /                                              ch.bsisa.hyperbird.controllers.Application.index
+GET    /                                          ch.bsisa.hyperbird.controllers.Application.index
 # Map static resources from the /public folder to the /assets URL path
-GET    /assets/*file                                  controllers.Assets.at(path="/public", file)
+GET    /assets/*file                              controllers.Assets.at(path="/public", file)
 
 
 #######################################################################
 #                     hb-api API routes                               #
 #######################################################################
-GET    /api/elfin/:elfinId                            ch.bsisa.hyperbird.controllers.Api.elfin(elfinId)
-GET    /api/collection/                               ch.bsisa.hyperbird.controllers.Api.collections
-#GET   /api/collection/:collectionId                ch.bsisa.hyperbird.controllers.Api.fileteredCollection(collectionId, xpath ?= "//ELFIN")
-GET    /api/collection/:collectionId                  ch.bsisa.hyperbird.controllers.Api.collection(collectionId)
-GET    /api/collection/elfin/:collectionId/:elfinId   ch.bsisa.hyperbird.controllers.Api.elfinWithinCollection(collectionId, elfinId)
-GET    /api/collection/xpath/:collectionId            ch.bsisa.hyperbird.controllers.Api.filteredCollection(collectionId, xpath)
+# TODO: suppress
+GET    /api/elfin/:elfinId                        ch.bsisa.hyperbird.controllers.Api.elfin(elfinId)
+# Latest proposal
+GET    /api/melfin/                               ch.bsisa.hyperbird.controllers.Api.collections
+GET    /api/melfin/:collectionId                  ch.bsisa.hyperbird.controllers.Api.filteredCollection(collectionId, xpath ?= "//ELFIN")
+GET    /api/melfin/:collectionId/:elfinId   ch.bsisa.hyperbird.controllers.Api.elfinWithinCollection(collectionId, elfinId)
 
 # User creation must use PUT here using GET for basic test.
-GET    /api/user/create                               ch.bsisa.hyperbird.controllers.Api.createUser
-GET    /api/user/update                               ch.bsisa.hyperbird.controllers.Api.updateUser
-GET    /api/user/delete                               ch.bsisa.hyperbird.controllers.Api.deleteUser
-GET    /api/user/:userName                            ch.bsisa.hyperbird.controllers.Api.findUser(userName)
+GET    /api/user/create                           ch.bsisa.hyperbird.controllers.Api.createUser
+GET    /api/user/update                           ch.bsisa.hyperbird.controllers.Api.updateUser
+GET    /api/user/delete                           ch.bsisa.hyperbird.controllers.Api.deleteUser
+GET    /api/user/:userName                        ch.bsisa.hyperbird.controllers.Api.findUser(userName)
 
 
 #######################################################################
 #                     SecureSocial Routes                             #
 #######################################################################
 # Login page
-GET    /login                                         securesocial.controllers.LoginPage.login
-GET    /logout                                        securesocial.controllers.LoginPage.logout
+GET    /login                                     securesocial.controllers.LoginPage.login
+GET    /logout                                    securesocial.controllers.LoginPage.logout
 
 # User Registration and password handling 
-GET    /signup                                        securesocial.controllers.Registration.startSignUp
-POST   /signup                                        securesocial.controllers.Registration.handleStartSignUp
-GET    /signup/:token                                 securesocial.controllers.Registration.signUp(token)
-POST   /signup/:token                                 securesocial.controllers.Registration.handleSignUp(token)
-GET    /reset                                         securesocial.controllers.Registration.startResetPassword
-POST   /reset                                         securesocial.controllers.Registration.handleStartResetPassword
-GET    /reset/:token                                  securesocial.controllers.Registration.resetPassword(token)
-POST   /reset/:token                                  securesocial.controllers.Registration.handleResetPassword(token)
-GET    /password                                      securesocial.controllers.PasswordChange.page
-POST   /password                                      securesocial.controllers.PasswordChange.handlePasswordChange
+GET    /signup                                    securesocial.controllers.Registration.startSignUp
+POST   /signup                                    securesocial.controllers.Registration.handleStartSignUp
+GET    /signup/:token                             securesocial.controllers.Registration.signUp(token)
+POST   /signup/:token                             securesocial.controllers.Registration.handleSignUp(token)
+GET    /reset                                     securesocial.controllers.Registration.startResetPassword
+POST   /reset                                     securesocial.controllers.Registration.handleStartResetPassword
+GET    /reset/:token                              securesocial.controllers.Registration.resetPassword(token)
+POST   /reset/:token                              securesocial.controllers.Registration.handleResetPassword(token)
+GET    /password                                  securesocial.controllers.PasswordChange.page
+POST   /password                                  securesocial.controllers.PasswordChange.handlePasswordChange
 
 # Providers entry points
-GET    /authenticate/:provider                        securesocial.controllers.ProviderController.authenticate(provider)
-POST   /authenticate/:provider                        securesocial.controllers.ProviderController.authenticateByPost(provider)
-GET    /not-authorized                                securesocial.controllers.ProviderController.notAuthorized
+GET    /authenticate/:provider                    securesocial.controllers.ProviderController.authenticate(provider)
+POST   /authenticate/:provider                    securesocial.controllers.ProviderController.authenticateByPost(provider)
+GET    /not-authorized                            securesocial.controllers.ProviderController.notAuthorized
 
 
 
