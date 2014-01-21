@@ -21,8 +21,8 @@ GET      /api/melfin/:collectionId/:elfinId   ch.bsisa.hyperbird.controllers.Api
 # User creation must use PUT here using GET for basic test.
 POST     /api/user/                           ch.bsisa.hyperbird.controllers.Api.createUser
 GET      /api/user/:userName                  ch.bsisa.hyperbird.controllers.Api.findUser(userName)
-PUT      /api/user/:userName                  ch.bsisa.hyperbird.controllers.Api.updateUser
-DELETE   /api/user/:userName                  ch.bsisa.hyperbird.controllers.Api.deleteUser
+PUT      /api/user/                           ch.bsisa.hyperbird.controllers.Api.updateUser
+DELETE   /api/user/                           ch.bsisa.hyperbird.controllers.Api.deleteUser
 
 #######################################################################
 #                     SecureSocial Routes                             #
