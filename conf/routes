@@ -16,7 +16,8 @@ GET           /api/elfin/:elfinId                       ch.bsisa.hyperbird.contr
 # Latest proposal
 GET           /api/melfin/                              ch.bsisa.hyperbird.controllers.Api.collections
 GET           /api/melfin/:collectionId                 ch.bsisa.hyperbird.controllers.Api.filteredCollection(collectionId, xpath ?= "//ELFIN")
-GET           /api/melfin/:collectionId/:elfinId        ch.bsisa.hyperbird.controllers.Api.elfinWithinCollection(collectionId, elfinId) # format=(json|xml|pdf|xls|...)
+# format=(json|xml|pdf|xls|...)
+GET           /api/melfin/:collectionId/:elfinId        ch.bsisa.hyperbird.controllers.Api.elfinWithinCollection(collectionId, elfinId) 
 
 #GET           /api/melfin/:collectionId/:elfinId/:filename        ch.bsisa.hyperbird.controllers.Api.getElfinAttachment(collectionId, elfinId)
 #POST           /api/melfin/:collectionId/:elfinId/:filename        ch.bsisa.hyperbird.controllers.Api.createElfinAttachment(collectionId, elfinId)
