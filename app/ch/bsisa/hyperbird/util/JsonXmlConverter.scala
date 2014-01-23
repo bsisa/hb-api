@@ -78,7 +78,7 @@ object JsonXmlConverter {
   /**
    * Converts a JSON string to XML.
    */
-  def jsonStrintToXml(jsonStr: String) = {
+  def jsonStringToXml(jsonStr: String) = {
     Xml.toXml(parse(jsonStr))
   }
 
