@@ -15,6 +15,7 @@ import ch.bsisa.hyperbird.dao.ws.XQueryWSHelper
 import ch.bsisa.hyperbird.dao.xqs.XQSQueriesProcessor
 import ch.bsisa.hyperbird.dao.xqs.XQSQueries
 import ch.bsisa.hyperbird.dao.UserDAO
+import ch.bsisa.hyperbird.dao.ElfinDAO
 
 /**
  * REST API controller.
@@ -58,9 +59,14 @@ object Api extends Controller {
   }
 
   /**
-   * Updates ELFIN within the specified collectionId with Id elfinId
+   * Updates ELFIN within the specified collectionId with Id elfinId.
+   * The data used to update this ELFIN will only be accepted if provided in JSON format.
    */
-  def updateElfin(collectionId: String, elfinId: String) = Action {
+  def updateElfin(collectionId: String, elfinId: String) = Action(parse.json) { request =>
+    Logger.debug(s"request.contentType: ${request.contentType}")
+    Logger.debug(s"request.body: ${request.body}")
+    ElfinDAO.update(collectionId, elfinId, JsonXmlConverter.jsonStringToXml(request.body.toString))
+    
     Ok("{message: not implemented}").as(JSON)
   }
 
