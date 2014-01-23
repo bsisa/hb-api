@@ -33,31 +33,53 @@ object Api extends Controller {
     XQueryWSHelper.query(WSQueries.allHbCollectionsQuery)
   }
 
-  def collection(collectionId: String) = Action.async {
-    XQueryWSHelper.query(WSQueries.filteredCollectionQuery(collectionId))
-  }
-
-  def filteredCollection(collectionId: String, xpath: String) = Action.async {
+  /**
+   * Returns the list of elfins contained in the specified collection matching the xpath filter expression with defined format
+   *
+   * TODO: make use of format parameter value, currently returns JSON format only. (format=(json|xml|pdf|xls|...)
+   */
+  def filteredCollection(collectionId: String, xpath: String, format: String) = Action.async {
+    Logger.warn(s"TODO: make use of format parameter value ${format}")
     XQueryWSHelper.query(WSQueries.filteredCollectionQuery(collectionId, xpath))
   }
 
-  def elfinWithinCollection(collectionId: String, elfinId: String) = Action.async {
+  /**
+   * Gets ELFIN corresponding to this collectionId and elfinId
+   */
+  def getElfin(collectionId: String, elfinId: String) = Action.async {
     XQueryWSHelper.query(WSQueries.elfinQuery(collectionId, elfinId))
   }
 
-  def elfin(elfinId: String) = Action.async {
-    XQueryWSHelper.query(WSQueries.elfinQuery(elfinId))
+  /**
+   * Creates an ELFIN within the specified collectionId of CLASS className.
+   */
+  def createElfin(collectionId: String, className: String) = Action {
+    Ok("{message: not implemented}").as(JSON)
+  }
+
+  /**
+   * Updates ELFIN within the specified collectionId with Id elfinId
+   */
+  def updateElfin(collectionId: String, elfinId: String) = Action {
+    Ok("{message: not implemented}").as(JSON)
+  }
+
+  /**
+   * Updates ELFIN within the specified collectionId with Id elfinId
+   */
+  def deleteElfin(collectionId: String, elfinId: String) = Action {
+    Ok("{message: not implemented}").as(JSON)
   }
 
   def createUser() = Action {
     UserDAO.create
     Ok("{message: 'createUser test completed'}").as(JSON)
   }
-  
+
   def updateUser() = Action {
     UserDAO.update
     Ok("{message: 'updateUser test completed'}").as(JSON)
-  }  
+  }
 
   def deleteUser() = Action {
     UserDAO.delete
