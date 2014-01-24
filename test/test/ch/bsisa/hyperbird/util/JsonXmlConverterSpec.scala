@@ -14,25 +14,10 @@ import play.api.libs.json.JsError
  */
 class JsonXmlConverterSpec extends Specification {
 
-  // G20040930101030005/G20040203114894000
+
   val TestDir = "./test/resources/"
-
   val elfinTest001Xml = XML.loadFile(TestDir + "elfin-test-001.xml")
-  //  val source = scala.io.Source.fromFile(TestDir + "elfin-test-001.json")
-  //  val elfinTest001JsonString = source.getLines mkString "\n"
-  //  source.close()
-
-  println("=================================================================================== ")
-  println("================================= CONVERSION ====================================== ")
-  println("=================================================================================== ")
-  //println("elfinXmlElem: " + elfinXmlElem)
-  //println(JsonXmlConverter.xmlElemToJson(elfinTest001Xml))
-  //println("elfinJsonString: " + elfinJsonString)
-  println("=================================================================================== ")
-  println("================================= CONVERSION ====================================== ")
-  println("=================================================================================== ")
-
-  val expectedElfinTest001_Id = "G20040203114894000"
+  val expectedElfinTest001_Id = "G20040203114894000"    
   val expectedElfinTest001_ID_G = "G20040930101030005"
 
   // Make sure the XML we load contains the information 
