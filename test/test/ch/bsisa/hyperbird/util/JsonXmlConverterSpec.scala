@@ -2,11 +2,16 @@ package test.ch.bsisa.hyperbird.util
 
 import org.specs2.mutable._
 import play.api.libs.json.Json
-import ch.bsisa.hyperbird.util.JsonXmlConverter
+import ch.bsisa.hyperbird.util.format.JsonXmlConverter
 import scala.xml.XML
 import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsError
 
+/**
+ * Tests serialisation deserialisation of Elfin object to and from XML format.
+ * 
+ * @author Patrick Refondini
+ */
 class JsonXmlConverterSpec extends Specification {
 
   // G20040930101030005/G20040203114894000

@@ -9,7 +9,7 @@ import play.api.mvc._
 import scala.concurrent.Future
 import scala.xml.XML
 import ch.bsisa.hyperbird.Implicits._
-import ch.bsisa.hyperbird.util.JsonXmlConverter
+import ch.bsisa.hyperbird.util.format.JsonXmlConverter
 import ch.bsisa.hyperbird.dao.ws.WSQueries
 import ch.bsisa.hyperbird.dao.ws.XQueryWSHelper
 import ch.bsisa.hyperbird.dao.xqs.XQSQueriesProcessor

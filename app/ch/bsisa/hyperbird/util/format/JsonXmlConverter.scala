@@ -1,4 +1,4 @@
-package ch.bsisa.hyperbird.util
+package ch.bsisa.hyperbird.util.format
 
 import net.liftweb.json._
 import net.liftweb.json.JsonAST.render

@@ -7,10 +7,15 @@ import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc._
 import play.api.mvc.Results._
 import scala.concurrent.Future
-import ch.bsisa.hyperbird.util.JsonXmlConverter
+import ch.bsisa.hyperbird.util.format.JsonXmlConverter
 import ch.bsisa.hyperbird.dao.QueriesProcessor
 
 
+/**
+ * Implements QueriesProcessor for XQJ/XQS driver.
+ * 
+ * @author Patrick Refondini
+ */
 object XQSQueriesProcessor extends Controller with QueriesProcessor {
 
   /**

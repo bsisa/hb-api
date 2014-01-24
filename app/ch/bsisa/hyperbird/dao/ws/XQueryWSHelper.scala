@@ -7,15 +7,18 @@ import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc._
 import play.api.mvc.Results._
 import scala.concurrent.Future
-import ch.bsisa.hyperbird.util.JsonXmlConverter
+import ch.bsisa.hyperbird.util.format.JsonXmlConverter
 import ch.bsisa.hyperbird.dao.QueriesProcessor
 
+/**
+ * Implements QueriesProcessor for REST service.
+ * 
+ * @author Patrick Refondini
+ */
 object XQueryWSHelper extends Controller with QueriesProcessor {
 
-  /**
-   * Implements QueriesProcessor
-   */
-  def query(query: String): Future[SimpleResult] = {
+
+  override def query(query: String): Future[SimpleResult] = {
     // Perform call to eXist REST service to get collections list
     val responseFuture: Future[Response] = WS.url(query).get()
 
