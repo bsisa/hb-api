@@ -1,0 +1,1535 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:annotation>
+        <xs:documentation xml:lang="fr">
+            <![CDATA[20051125. BSI/GdP. Suppression de l'attribut MUTATION de l'ELFIN et ajout d'un noeud MUTATIONS/MUTATION. Ajout des attributs SOURCE à ELFIN. Ajout de l'Attribut CLASSE à LIGNE]]>
+        </xs:documentation>
+        <xs:documentation xml:lang="fr"
+            ><![CDATA[20050308. BSI/GdP. Ajout de l'attribut MUTATION à ELFIN. Ajout des attributs ETA et ETAS à PASSAGE. Suppression de l'obligation d'avoir GEOSELECTION. ]]></xs:documentation>
+        <xs:documentation xml:lang="fr"
+            ><![CDATA[20040819. BSI/OG/GdP. Ajout d'un attribut FONCTION a LIGNE. Ajout de ENTREE et SORTIE dans les fonctions de PASSAGE (traitement des tissus) et ajout de BASE aux fonctions de POINT.]]></xs:documentation>
+        <xs:documentation xml:lang="fr"
+            ><![CDATA[20040819. BSI/GdP. Introduction de IdRefType pour les id de type G12345678901234567#123.]]></xs:documentation>
+        <xs:documentation xml:lang="fr"
+            ><![CDATA[20040818. BSI/GdP. Corrections mineures de champs rendus non obligatoires.]]></xs:documentation>
+        <xs:documentation xml:lang="fr"
+            ><![CDATA[20040816. BSI/PYS/GdP/OG. Ajout de KSIS, ALPHAS et ANGLES à POINT. Ajout de l'attribut VALEUR dans le type CAR et suppression de la définition mixte. Autorisation de plusieurs LIGNEs et plusieurs ZONEs par FORME. Ajout d'un attribute REMARQUE dans LIGNE, ZONE et SYMBOLE. Ajout de l'attribut POS à SYMBOLE.]]></xs:documentation>
+        <xs:documentation xml:lang="fr"
+            ><![CDATA[20040623. BSI/GdP/OG. Refonte et simplification du bloc FORME: Quatre formes possibles : POINT, LIGNE, ZONE et SYMBOLE. Corrections mineures]]></xs:documentation>
+        <xs:documentation xml:lang="fr"
+            ><![CDATA[20040623. BSI/GdP. Modification de PARTENAIREType en PERSONNEType et ETATType en STATEType pour la compatibilité JAXB]]></xs:documentation>
+        <xs:documentation xml:lang="fr"><![CDATA[20040614. BSI/GdP. GeoXML v4.0]]></xs:documentation>
+        <xs:documentation xml:lang="fr"><![CDATA[20040105. BSI/OG. Adaptation pour HB3.2 selon DTD 20031001
+            GdP et CD. Modification de FORME. Ajout attribut POS dans RENVOI. Passage de CALCUL en LC]]></xs:documentation>
+        <xs:documentation xml:lang="fr"><![CDATA[20030530. BSI/GdP. Suppression de CAR7. Ajout des balises
+            PAR, PROPRIETAIRE, CARSET, RENVOI, L et C. Modification de HISTORIQUE, FRACTION, GESTION
+            (ajout de L). Modification de ANNEXE (ajout de RENVOI)]]></xs:documentation>
+        <xs:documentation xml:lang="fr"
+            ><![CDATA[(C) 2004 BSI Bureau de Service et d'ingénierie SA]]></xs:documentation>
+    </xs:annotation>
+    <!-- MELFIN -->
+    <xs:element name="MELFIN">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Un MultiELFIN est une collection d'objets GeoXML
+                désignés par ELFIN]]></xs:documentation>
+            <xs:documentation xml:lang="fr"><![CDATA[Un MonoELFIN est un MELFIN particulier ne contenant
+                qu'un seul ELFIN]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="ELFIN" maxOccurs="unbounded" minOccurs="0"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <!-- ELFIN -->
+    <xs:element name="ELFIN">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Un ELFIN est la description d'un objet unique identifié
+                (ELément FINi). Il est identifié de manière unique par la combinaison de ses
+                attributs ID_G et ID]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="MUTATIONS" minOccurs="0" maxOccurs="1"></xs:element>
+                <xs:element ref="GEOSELECTION" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="IDENTIFIANT" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="CARACTERISTIQUE" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="PARTENAIRE" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="ACTIVITE" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="FORME" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="ANNEXE" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="DIVERS" minOccurs="0" maxOccurs="1"/>
+            </xs:sequence>
+            <xs:attributeGroup ref="ELFIN.attributeGroup"/>
+        </xs:complexType>
+    </xs:element>
+    <!-- ELFIN.attributeGroup -->
+    <xs:attributeGroup name="ELFIN.attributeGroup">
+        <!-- Id -->
+        <xs:attribute name="Id" type="IdIDType" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Identifiant unique d'un ELFIN. Son format est "G"
+                    suivi de 17 chiffres (AAAAMMJJHHMMSSmmm).]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <!-- ID_G -->
+        <xs:attribute name="ID_G" type="IdType" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Identifiant de la collection d'origine de l'ELFIN.
+                    Son format est "G" suivi de 17 chiffres (AAAAMMJJHHMMSSmmm).]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <!-- CLASSE -->
+        <xs:attribute name="CLASSE" type="xs:normalizedString" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[Nom de la classe de l'objet ELFIN]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="GROUPE" type="xs:normalizedString" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[Nom du groupe de l'objet ELFIN]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="TYPE">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Nom du type de l'ELFIN. La valeur de cet attribut
+                    est restreint à BIEN, ACTIVITE, PERSONNE ou DOCUMENT.]]></xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:token">
+                    <xs:enumeration value="BIEN"/>
+                    <xs:enumeration value="ACTIVITE"/>
+                    <xs:enumeration value="PERSONNE"/>
+                    <xs:enumeration value="DOCUMENT"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="NATURE" type="xs:normalizedString" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[La NATURE est le nom du flux traversant l'objet (par
+                    exemple eau, électricité, trafic).]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="SOURCE" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr">
+                    <![CDATA[La source qui a servi à créer l'objet courant. Un URI sour la forme IDG/ClasseId.]]>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:attributeGroup>
+    <!-- MUTATIONS -->
+    <xs:element name="MUTATIONS">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"
+                ><![CDATA[Groupe d'information pour le tracking des mutations]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="MUTATION" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <!-- MUTATION -->
+    <xs:element name="MUTATION">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Un événement de mutation.]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:attributeGroup ref="MUTATION.attributeGroup"/>
+        </xs:complexType>
+    </xs:element>
+    <!-- MUTATION.attributeGroupe -->
+    <xs:attributeGroup name="MUTATION.attributeGroup">
+        <xs:attribute name="DATE" type="xs:normalizedString" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Le timestamp de la mutation]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ROLE" type="xs:normalizedString" use="required">
+            <xs:annotation><xs:documentation xml:lang="fr"><![CDATA[Le rôle de l'utilisateur qui a opéré la mutation]]></xs:documentation></xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="MOT_DE_PASSE" type="xs:normalizedString" use="optional">
+            <xs:annotation><xs:documentation xml:lang="fr">
+                <![CDATA[Le mot de passe de l'utilisateur. Optionnel]]>
+            </xs:documentation></xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="UTILISATEUR" type="xs:normalizedString" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr">
+                    <![CDATA[Le nom de l'utilisateur qui a opéré la mutation]]>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:attributeGroup>
+    <!-- CENTROIDE -->
+    <xs:element name="GEOSELECTION">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Le groupe GEOSELECTION contient l'ensemble des
+                centroïdes utilisés pour la géosélection
+                (sélection des objets contenus dans une zone définie).]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="CENTROIDE" minOccurs="1" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <!-- GEOSELECTION -->
+    <xs:element name="CENTROIDE">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"
+            ><![CDATA[Point unique servant à la géosélection]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:attributeGroup ref="CENTROIDE.attributeGroup"/>
+        </xs:complexType>
+    </xs:element>
+    <!-- GEOSELECTION.attributeGroup -->
+    <xs:attributeGroup name="CENTROIDE.attributeGroup">
+        <xs:attribute name="TYPE" type="TYPEType" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[Espace dans lequel est situé le point]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="XM" type="xs:double" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[Coordonnée X du centroïde]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="YM" type="xs:double" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[Coordonnée Y du centroïde]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ZM" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[Coordonnée Z optionnelle du centroïde]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="RM" type="xs:double" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[Rayon d'action du centroïde]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:attributeGroup>
+    <!-- IDENTIFIANT -->
+    <xs:element name="IDENTIFIANT">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Le bloc IDENTIFIANT regroupe toutes les informations
+                adminsitratives de l'objet]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="AUT" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="GER" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="RES" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="NOM" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="ALIAS" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="ORIGINE" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="OBJECTIF" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="QUALITE" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="COMPTE" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="DE" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="A" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="PAR" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="VALEUR_A_NEUF" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="VALEUR" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="MOTCLE" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <!-- AUTEUR -->
+    <xs:element name="AUT" type="xs:normalizedString">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Le champ AUTEUR comporte les initiales de la personne
+                ayant créé l'objet]]></xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <!-- GERANT -->
+    <xs:element name="GER" type="xs:normalizedString">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Le champ GERANT comporte les initiales de la personne
+                gérant l'objet]]></xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <!-- RESPONSABLE -->
+    <xs:element name="RES" type="xs:normalizedString">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Le champ RESPONSABLE comporte les initiales de la
+                personne responsable des informations contenues dans l'objet (souvent le responsable juridique)]]></xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <!-- NOM -->
+    <xs:element name="NOM" type="xs:normalizedString">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"
+                ><![CDATA[Le NOM de l'objet sert à identifier l'objet par sa famille]]></xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <!-- ALIAS -->
+    <xs:element name="ALIAS" type="xs:normalizedString">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[L'ALIAS de l'objet donne une information
+                d'identification de l'objet, complémentaire au NOM]]></xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <!-- ORIGINE -->
+    <xs:element name="ORIGINE" type="xs:normalizedString">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[L'ORIGINE d'un objet identifie la source
+                utilisée pour les informations]]></xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <!-- OBJECTIF -->
+    <xs:element name="OBJECTIF" type="xs:normalizedString">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Le champ OBJECTIF contient le numéro de
+                dossier auquel se rattache l'objet]]></xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <!-- OBJECTIF -->
+    <xs:element name="QUALITE" type="xs:normalizedString">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Le champ QUALITE est utilisé pour
+                spécifier la fiabilité des données ou leur
+                priorité de traitement]]></xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <!-- COMPTE -->
+    <xs:element name="COMPTE" type="xs:normalizedString">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Le champ COMPTE contient le numéro de compte
+                financier utilisé pour la gestion de cet objet]]></xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <!-- DE -->
+    <xs:element name="DE" type="xs:normalizedString">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"
+                ><![CDATA[DE contient la date d'entrée en fonction de l'objet]]></xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <!-- A -->
+    <xs:element name="A" type="xs:normalizedString">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"
+                ><![CDATA[A contient la date effective de mise hors service de l'objet]]></xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <!-- PAR -->
+    <xs:element name="PAR" type="xs:normalizedString">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[PAR contient la date prévue de mise hors
+                service de l'objet]]></xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <!-- VALEUR_A_NEUF -->
+    <xs:element name="VALEUR_A_NEUF" type="xs:double">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[VALEUR_A_NEUF contient la valeur de l'objet à son achat
+                ou à sa mise en service]]></xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <!-- VALEUR -->
+    <xs:element name="VALEUR" type="xs:double">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[VALEUR contient la valeur actuelle de l'objet, soit
+                VALEUR_A_NEUF moins le coût de dégradation en fonction du temps
+                passé et de sa durée de vie]]></xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <!-- MOTCLE -->
+    <xs:element name="MOTCLE" type="xs:string">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[MOTCLE contient une valeur libre permettant de grouper
+                les objets selon un mot clé défini par l'utilisateur de vie]]></xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <!-- FORME -->
+    <xs:element name="FORME">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Le bloc FORME contient les informations de localisation
+                de l'objet]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="POINT" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="LIGNE" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="ZONE" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="SYMBOLE" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <!-- POINT -->
+    <xs:element name="POINT">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Le bloc POINT contient des coordonnées point
+                de l'objet. Celles-ci peuvent être GEOGRAPHIQUES ou SCHEMATIQUES et
+                spécifiées dans l'objet ou
+                référencées dans un autre objet.]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:attributeGroup ref="POINT.attributeGroup"/>
+        </xs:complexType>
+    </xs:element>
+    <!-- POINT.attributeGroup -->
+    <xs:attributeGroup name="POINT.attributeGroup">
+        <xs:attribute name="POS" type="xs:positiveInteger" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Définition de la position du point de
+                    passage dans la liste des points]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="X" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[La coordonnée X du point]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="Y" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[La coordonnée Y du point]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="Z" default="0" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[La coordonnée Z optionnelle du point]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="KSI" default="0" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Le KSI du point utilisé dans les calculs
+                    par éléments finis et limité aux valeurs entre
+                    -1.0 et 1.0]]></xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:double">
+                    <xs:minInclusive value="-1.0"/>
+                    <xs:maxInclusive value="1.0"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="ANGLE" default="0" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Angle du point, utilisé pour les
+                    représentation symboliques]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ALPHA" default="0" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                    ><![CDATA[Coefficient alpha utilisé dans les calculs]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="XS" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[La coordonnée X du point]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="YS" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[La coordonnée Y du point]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ZS" default="0" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[La coordonnée Z optionnelle du point]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="KSIS" default="0" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Le KSI du point utilisé dans les calculs
+                    par éléments finis et limité aux valeurs entre
+                    -1.0 et 1.0]]></xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:double">
+                    <xs:minInclusive value="-1.0"/>
+                    <xs:maxInclusive value="1.0"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="ANGLES" default="0" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Angle du point, utilisé pour les
+                    représentation symboliques]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ALPHAS" default="0" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                    ><![CDATA[Coefficient alpha utilisé dans les calculs]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="Id" type="IdRefType" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[L'identifiant de l'objet référencé]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ID_G" type="IdType" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[L'identifiant de la collection contenant l'objet
+                    référencé.]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="FONCTION" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Définition de la fonction du noeud dans
+                    le calcul par éléments finis]]></xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:token">
+                    <xs:enumeration value="LIBRE"/>
+                    <xs:enumeration value="LIE"/>
+                    <xs:enumeration value="BASE"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="CLASSE" type="xs:normalizedString" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[Nom de la classe de l'objet référencé]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="GROUPE" type="xs:normalizedString" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[Le GROUPE de l'objet référencé]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="REMARQUE" type="xs:string">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Champ laissé libre pour inscription de
+                    remarques de l'utilisateur]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:attributeGroup>
+    <!-- PASSAGE -->
+    <xs:element name="PASSAGE">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Le bloc PASSAGE contient la référence d'un point
+                de l'objet ou externe.]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="PIECE" minOccurs="0" maxOccurs="1"/>
+            </xs:sequence>
+            <xs:attributeGroup ref="PASSAGE.attributeGroup"/>
+        </xs:complexType>
+    </xs:element>
+    <!-- PASSAGE.attributeGroup -->
+    <xs:attributeGroup name="PASSAGE.attributeGroup">
+        <xs:attribute name="POS" type="xs:positiveInteger" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                    ><![CDATA[Définition de la position du passage dans la liste des passages]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="KSI" default="0" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Le KSI du point utilisé dans les calculs
+                    par éléments finis et limité aux valeurs entre
+                    -1.0 et 1.0]]></xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:double">
+                    <xs:minInclusive value="-1.0"/>
+                    <xs:maxInclusive value="1.0"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="ANGLE" default="0" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Angle du point, utilisé pour les
+                    représentation symboliques]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ALPHA" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                    ><![CDATA[Coefficient alpha utilisé dans les calculs]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="KSIS" default="0" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Le KSI du point utilisé dans les calculs
+                    par éléments finis et limité aux valeurs entre
+                    -1.0 et 1.0]]></xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:double">
+                    <xs:minInclusive value="-1.0"/>
+                    <xs:maxInclusive value="1.0"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="ANGLES" default="0" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Angle du point, utilisé pour les
+                    représentation symboliques]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ALPHAS" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                    ><![CDATA[Coefficient alpha utilisé dans les calculs]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="Id" type="IdRefType" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[L'identifiant de l'objet référencé]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ID_G" type="IdType" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[L'identifiant de la collection contenant l'objet
+                    référencé.]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="FONCTION" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Définition de la fonction du noeud dans
+                    le calcul par éléments finis]]></xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:token">
+                    <xs:enumeration value="DEBUT"/>
+                    <xs:enumeration value="MILIEU"/>
+                    <xs:enumeration value="FIN"/>
+                    <xs:enumeration value="PASSAGE"/>
+                    <xs:enumeration value="ACTUATEUR"/>
+                    <xs:enumeration value="DEPART"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="CLASSE" type="xs:normalizedString" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[Nom de la classe de l'objet référencé]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="GROUPE" type="xs:normalizedString" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[Le GROUPE de l'objet référencé]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="REMARQUE" type="xs:string">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Champ laissé libre pour inscription de
+                    remarques de l'utilisateur]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:attributeGroup>
+    <!-- GUIDE -->
+    <xs:element name="GUIDE">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"
+                ><![CDATA[Le bloc GUIDE contient la référence d'un segment d'un objet ligne externe.]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="PIECE" minOccurs="0" maxOccurs="1"/>
+            </xs:sequence>
+            <xs:attributeGroup ref="GUIDE.attributeGroup"/>
+        </xs:complexType>
+    </xs:element>
+    <!-- GUIDE.attributeGroup -->
+    <xs:attributeGroup name="GUIDE.attributeGroup">
+        <xs:attribute name="POS" type="xs:positiveInteger" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                    ><![CDATA[Définition de la position du guide dans la liste des passages]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="KSI" default="0" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Le KSI du point utilisé dans les calculs
+                    par éléments finis et limité aux valeurs entre
+                    -1.0 et 1.0]]></xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:double">
+                    <xs:minInclusive value="-1.0"/>
+                    <xs:maxInclusive value="1.0"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="KSI2" default="0" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Le KSI du point utilisé dans les calculs
+                    par éléments finis et limité aux valeurs entre
+                    -1.0 et 1.0]]></xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:double">
+                    <xs:minInclusive value="-1.0"/>
+                    <xs:maxInclusive value="1.0"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="ETA" default="0" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                    ><![CDATA[Déport du point de passage par rapport à l'axe de la ligne en géographie]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ALPHA" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                    ><![CDATA[Coefficient alpha utilisé dans les calculs]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="KSIS" default="0" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Le KSI du point utilisé dans les calculs
+                    par éléments finis et limité aux valeurs entre
+                    -1.0 et 1.0]]></xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:double">
+                    <xs:minInclusive value="-1.0"/>
+                    <xs:maxInclusive value="1.0"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="KSIS2" default="0" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Le KSI du point utilisé dans les calculs
+                    par éléments finis et limité aux valeurs entre
+                    -1.0 et 1.0]]></xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:double">
+                    <xs:minInclusive value="-1.0"/>
+                    <xs:maxInclusive value="1.0"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="ETAS" default="0" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                    ><![CDATA[Déport du point de passage par rapport à l'axe de la ligne en schématique]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ALPHAS" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                    ><![CDATA[Coefficient alpha utilisé dans les calculs]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="Id" type="IdRefType" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[L'identifiant de l'objet référencé]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ID_G" type="IdType" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[L'identifiant de la collection contenant l'objet
+                    référencé.]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="CLASSE" type="xs:normalizedString" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[Nom de la classe de l'objet référencé]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="REMARQUE" type="xs:string">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Champ laissé libre pour inscription de
+                    remarques de l'utilisateur]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:attributeGroup>
+    <!-- PIECE -->
+    <xs:element name="PIECE">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Une PIECE référence un objet
+                externe contenant la description du matériel disposé sur un
+                noeud, ainsi que trois caractéristiques.]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="CAR1" type="CARType" minOccurs="0" maxOccurs="1"/>
+                <xs:element name="CAR2" type="CARType" minOccurs="0" maxOccurs="1"/>
+                <xs:element name="CAR3" type="CARType" minOccurs="0" maxOccurs="1"/>
+            </xs:sequence>
+            <xs:attributeGroup ref="PIECE.attributeGroup"/>
+        </xs:complexType>
+    </xs:element>
+    <!-- PIECE.attributeGroup -->
+    <xs:attributeGroup name="PIECE.attributeGroup">
+        <xs:attribute name="ALIAS" type="xs:normalizedString" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[L'ALIAS de la pièce référencée]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="Id" type="IdType" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[L'identifiant de l'objet pièce référencé]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ID_G" type="IdType" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[L'identifiant de la collection contenant l'objet
+                    pièce référencé]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="SYMBOLE" type="xs:normalizedString" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Nom du symbole utilisé pour
+                    représenter la pièce lors de la production de plans]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="LONGUEUR_UTILE" type="xs:double" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[La longueur utile représentée
+                    par la pièce et utilisée lors des calculs de flux.]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute default="0.0" name="ANGLE" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[L'angle utilisé pour la
+                    représentation symbolique de la pièce]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute default="1.0" name="ECHELLE_X" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Le facteur d'échelle selon l'axe des X
+                    appliqué au symbole]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute default="1.0" name="ECHELLE_Y" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Le facteur d'échelle selon l'axe des X
+                    appliqué au symbole]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute default="1.0" name="ECHELLE_Z" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Le facteur d'échelle selon l'axe des Z
+                    appliqué au symbole]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:attributeGroup>
+    <!-- LIGNE -->
+    <xs:element name="LIGNE">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Le bloc LIGNE contient une représentation
+                linéaire de l'objet. Les lignes sont définies par des PASSAGEs]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="PASSAGE" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="GUIDE" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+            <xs:attributeGroup ref="LIGNE.attributeGroup"/>
+        </xs:complexType>
+    </xs:element>
+    <!-- LIGNE.attributeGroup -->
+    <xs:attributeGroup name="LIGNE.attributeGroup">
+        <xs:attribute name="POS" type="xs:positiveInteger" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[L'attribute POS définit la position
+                    de l'objet référencé dans la liste des limites]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute default="AVAL" name="DIRECTION" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Direction spécifie la direction de la
+                    représentation linéaire. Important lors de la construction
+                    topologique de réseau]]></xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:token">
+                    <xs:enumeration value="AVAL"/>
+                    <xs:enumeration value="AMONT"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="Id" type="IdRefType" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[L'identifiant de l'objet référencé]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ID_G" type="IdType" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[L'identifiant de la collection contenant l'objet
+                    référencé.]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="CLASSE" type="xs:normalizedString" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[La classe de l'objet
+                    référencé.]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="FONCTION" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Définition de la fonction du noeud dans
+                    le calcul par éléments finis]]></xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:token">
+                    <xs:enumeration value="FRONTIERE"/>
+                    <xs:enumeration value="AXE"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="REMARQUE" type="xs:string">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Champ laissé libre pour inscription de
+                    remarques de l'utilisateur]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:attributeGroup>
+    <!-- ZONE -->
+    <xs:element name="ZONE">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Le bloc ZONE contient les représentations
+                surfaciques de l'objet. Les zones sont définies par un ensemble LIGNEs]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="LIGNE" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+            <xs:attribute name="POS" type="xs:positiveInteger" use="optional">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fr"><![CDATA[L'attribute POS définit la position
+                    de l'objet référencé dans la liste des zones]]></xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="Id" type="IdRefType" use="optional">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fr"
+                        ><![CDATA[L'identifiant de l'objet référencé]]></xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="ID_G" type="IdType" use="optional">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fr"><![CDATA[L'identifiant de la collection contenant l'objet
+                    référencé.]]></xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="CLASSE" type="xs:normalizedString" use="optional">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fr"><![CDATA[La classe de l'objet
+                    référencé.]]></xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="REMARQUE" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fr"><![CDATA[Champ laissé libre pour inscription de
+                    remarques de l'utilisateur]]></xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+        </xs:complexType>
+    </xs:element>
+    <!-- SYMBOLE -->
+    <xs:element name="SYMBOLE">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"
+                ><![CDATA[Le bloc SYMBOLE définit un symbole et/ou une légende pouvant représenter l'objet]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="LIBELLE" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+            <xs:attributeGroup ref="SYMBOLE.attributeGroup"/>
+        </xs:complexType>
+    </xs:element>
+    <!-- SYMBOLE.attributeGroup -->
+    <xs:attributeGroup name="SYMBOLE.attributeGroup">
+        <xs:attribute name="POS" type="xs:positiveInteger" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                    ><![CDATA[Définition de la position du symbole dans la liste des symboles]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="NOM" type="xs:normalizedString" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                    ><![CDATA[Ce champ définit le nom du symbole à utiliser dans les plans]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="CONTEXTE" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Ce champ définit le contexte dans lequel
+                    ce symbole est utilisé]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="X" default="0.0" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Coordonnée X (delta ou absolu, voir ALPHA) du symbole par rapport au
+                    centroïde de l'objet]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="Y" default="0.0" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Coordonnée Y (delta ou absolu, voir ALPHA) du symbole par rapport au
+                    centroïde de l'objet]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ALPHA" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                    ><![CDATA[Delta ou absolu des coordonnées du symbole]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ANGLE" default="0.0" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Angle du symbole]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ECHELLE_X" default="1.0" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                    ><![CDATA[Facteur d'échelle à appliquer au symbole selon l'axe des x]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ECHELLE_Y" default="1.0" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                    ><![CDATA[Facteur d'échelle à appliquer au symbole selon l'axe des y]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ECHELLE_Z" default="1.0" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                    ><![CDATA[Facteur d'échelle à appliquer au symbole selon l'axe des z]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="REMARQUE" type="xs:string">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Champ laissé libre pour inscription de
+                    remarques de l'utilisateur]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:attributeGroup>
+    <!-- LIBELLE -->
+    <xs:element name="LIBELLE">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Le bloc LIBELLE définit les informations
+                utilisées lors du légendage de plans]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:attributeGroup ref="LIBELLE.attributeGroup"/>
+        </xs:complexType>
+    </xs:element>
+    <!-- LIBELLE.attributeGroup -->
+    <xs:attributeGroup name="LIBELLE.attributeGroup">
+        <xs:attribute name="POS" type="xs:positiveInteger" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                    ><![CDATA[Définition de la position du libellé dans le symbole]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="TEXTE" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                    ><![CDATA[Texte du libellé. Selon traitement peut être un XPath vers le noeud qui contient le texte]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="X" default="0.0" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Coordonnée X (delta ou absolu, voir ALPHA) du libellé de légende par rapport au
+                    symbole père de l'objet]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="Y" default="0.0" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Coordonnée Y (delta ou absolu, voir ALPHA) du libellé de légende par rapport au
+                    symbole père de l'objet]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ALPHA" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                    ><![CDATA[Delta ou absolu des coordonnées du libellé]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="TAILLE" default="1.0" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Taille des caractères du libellé de la
+                    légende en mètres]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ANGLE" default="0.0" type="xs:double" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Angle du texte]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="REMARQUE" type="xs:string">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Champ laissé libre pour inscription de
+                    remarques de l'utilisateur]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:attributeGroup>
+    <!-- CARACTERISTIQUE -->
+    <xs:element name="CARACTERISTIQUE">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Le bloc CARACTERISTIQUE regroupe l'ensemble des
+                informations de l'objet]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="CAR1" minOccurs="0" maxOccurs="1" type="CARType"/>
+                <xs:element name="CAR2" minOccurs="0" maxOccurs="1" type="CARType"/>
+                <xs:element name="CAR3" minOccurs="0" maxOccurs="1" type="CARType"/>
+                <xs:element name="CAR4" minOccurs="0" maxOccurs="1" type="CARType"/>
+                <xs:element name="CAR5" minOccurs="0" maxOccurs="1" type="CARType"/>
+                <xs:element name="CAR6" minOccurs="0" maxOccurs="1" type="CARType"/>
+                <xs:element ref="CARSET" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="ETAT" minOccurs="0" maxOccurs="1"/>
+                <xs:element name="CALCUL" minOccurs="0" maxOccurs="1" type="CALCULType"/>
+                <xs:element name="FRACTION" minOccurs="0" maxOccurs="1" type="MATRICEType"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="CARType">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Type générique
+                définissant CAR1 à CAR6]]></xs:documentation>
+        </xs:annotation>
+        <xs:attributeGroup ref="CARType.attributeGroup"/>
+    </xs:complexType>
+    <!-- CARType.attributeGroup -->
+    <xs:attributeGroup name="CARType.attributeGroup">
+        <xs:attribute name="NOM" type="xs:normalizedString" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[Le nom de la caractéristique]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="UNITE" type="xs:normalizedString" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[L'unité de la caractéristique]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="VALEUR" type="xs:normalizedString" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[La valeur de la caractéristique]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:attributeGroup>
+    <!-- CARSET_CARType -->
+    <xs:complexType name="CARSET_CARType">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Type générique de
+                caractéristique incluse dans CARSET. Etend CARType]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="CARType">
+                <xs:attribute name="POS" type="xs:positiveInteger" use="required"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <!-- CARSET -->
+    <xs:element name="CARSET">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[CARSET contient un ensemble de
+                caractéristique supplémentaires]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="CAR" minOccurs="0" maxOccurs="unbounded" type="CARSET_CARType"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <!-- ETAT -->
+    <xs:element name="ETAT">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Les états contiennent des informations
+                transitoires utilisées lors des calculs de flux par
+                éléments finis.]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="ETAT1" minOccurs="0" maxOccurs="1" type="STATEType"/>
+                <xs:element name="ETAT2" minOccurs="0" maxOccurs="1" type="STATEType"/>
+                <xs:element name="ETAT3" minOccurs="0" maxOccurs="1" type="STATEType"/>
+                <xs:element name="ETAT4" minOccurs="0" maxOccurs="1" type="STATEType"/>
+                <xs:element name="ETAT5" minOccurs="0" maxOccurs="1" type="STATEType"/>
+                <xs:element name="ETAT6" minOccurs="0" maxOccurs="1" type="STATEType"/>
+                <xs:element name="ETAT7" minOccurs="0" maxOccurs="1" type="STATEType"/>
+                <xs:element name="ETAT8" minOccurs="0" maxOccurs="1" type="STATEType"/>
+                <xs:element name="ETAT9" minOccurs="0" maxOccurs="1" type="STATEType"/>
+                <xs:element name="ETAT10" minOccurs="0" maxOccurs="1" type="STATEType"/>
+                <xs:element name="ETAT11" minOccurs="0" maxOccurs="1" type="STATEType"/>
+                <xs:element name="ETAT12" minOccurs="0" maxOccurs="1" type="STATEType"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <!-- STATEType -->
+    <xs:complexType mixed="true" name="STATEType">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Type générique
+                décrivant un ETAT]]></xs:documentation>
+        </xs:annotation>
+        <xs:attributeGroup ref="STATEType.attributeGroup"/>
+    </xs:complexType>
+    <!-- STATECELLType.attributeGroup -->
+    <xs:attributeGroup name="STATEType.attributeGroup">
+        <xs:attribute name="B" type="xs:string" use="optional"/>
+        <xs:attribute name="C" type="xs:string" use="optional"/>
+    </xs:attributeGroup>
+    <!-- CALCULType -->
+    <xs:complexType name="CALCULType">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Le bloc CALCUL contient les dimensions de l'objet et
+                l'ensemble des paramètres utilisés lors des calculs]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="MATRICEType">
+                <xs:sequence>
+                    <xs:element ref="DIMENSION" minOccurs="0" maxOccurs="6"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <!-- DIMENSION -->
+    <xs:element name="DIMENSION">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Une dimension définit la valeur d'une
+                dimension ainsi que son nom et son type]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType mixed="true">
+            <xs:attribute name="NOM" use="required">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fr"><![CDATA[Le nom de la dimension restreint à LONGUEUR,
+                        SURFACE ou RAYON]]></xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:token">
+                        <xs:enumeration value="LONGUEUR"/>
+                        <xs:enumeration value="SURFACE"/>
+                        <xs:enumeration value="RAYON"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:attribute>
+            <xs:attribute name="TYPE" type="TYPEType" use="required">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fr"><![CDATA[Le type de dimension GEOGRAPHIQUE ou
+                        SCHEMATIQUE]]></xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+        </xs:complexType>
+    </xs:element>
+    <!-- MATRICEtype -->
+    <xs:complexType name="MATRICEType">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"
+            ><![CDATA[MATRICE définit un bloc matricielle]]></xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element ref="L" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+    <!-- L -->
+    <xs:element name="L">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"
+            ><![CDATA[L définit une ligne d'une matrice de valeurs]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="C" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+            <xs:attribute name="POS" type="xs:positiveInteger" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <!-- C -->
+    <xs:element name="C">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"
+                ><![CDATA[C définit une cellule d'une matrice de valeurs]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType mixed="true">
+            <xs:attribute name="POS" type="xs:positiveInteger" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <!-- PARTENAIRES -->
+    <xs:element name="GERANT" type="PERSONNEType"/>
+    <xs:element name="USAGER" type="PERSONNEType"/>
+    <xs:element name="FOURNISSEUR" type="PERSONNEType"/>
+    <xs:element name="PROPRIETAIRE" type="PERSONNEType"/>
+    <!-- PARTENAIRE -->
+    <xs:element name="PARTENAIRE">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[PARTENAIRE décrit les personnes externes
+                concernées par l'objet]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="GERANT" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="USAGER" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="FOURNISSEUR" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="PROPRIETAIRE" minOccurs="0" maxOccurs="1"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <!-- PERSONNEType -->
+    <xs:complexType mixed="true" name="PERSONNEType">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Type générique de partenaire. Le
+                contenu du noeud contient une description du partenaire.]]></xs:documentation>
+        </xs:annotation>
+        <xs:attributeGroup ref="PERSONNEType.attributeGroup"/>
+    </xs:complexType>
+    <!-- PERSONNEType.attributeGroup -->
+    <xs:attributeGroup name="PERSONNEType.attributeGroup">
+        <xs:attribute name="Id" type="IdType" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Identifiant de l'objet partenaire (PERSONNE)
+                    référencé]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ID_G" type="IdType" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Identifiant de la collection contenant l'objet
+                    partenaire référencé]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="NOM" type="xs:normalizedString" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Le nom de l'objet partenaire PERSONNE
+                    référencé]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="GROUPE" type="xs:normalizedString" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                    ><![CDATA[Le groupe de l'objet partenaire PERSONNE référencé]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:attributeGroup>
+    <!-- ACTIVITE -->
+    <xs:element name="ACTIVITE">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Le bloc ACTIVITE regroupe le traçage de l'ensemble des
+                actions évenementielles et financières sur l'objet.]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="EVENEMENT" minOccurs="0" maxOccurs="1"/>
+                <xs:element name="GESTION" minOccurs="0" maxOccurs="1" type="MATRICEType"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <!-- EVENEMENT -->
+    <xs:element name="EVENEMENT">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Le bloc événement contient
+                l'historique des actions liées à l'objet]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="ECHEANCE" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <!-- ECHEANCE -->
+    <xs:element name="ECHEANCE">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Une ECHEANCE est une action unique passée ou
+                future effectuée sur l'objet]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:attributeGroup ref="ECHEANCE.attributeGroup"/>
+        </xs:complexType>
+    </xs:element>
+    <!-- ECHEANCE.attributeGroup -->
+    <xs:attributeGroup name="ECHEANCE.attributeGroup">
+        <xs:attribute name="DATE" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[La date de l'événement]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ACTION" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Action effectuée]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="PAR_QUI" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Initiales ou nom de la personne qui a
+                    effectué l'action]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="POUR_QUI" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Initiales ou nom de la personne qui a
+                    bénéficié de l'action]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="E_DATE" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                ><![CDATA[Echéance de l'envoi en conséquence]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="E_ACTION" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"
+                    ><![CDATA[Envoi (action à effectuer suite à l'action initiale).]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="E_PAR_QUI" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Initiales et nom de la personne en charge de
+                    réaliser l'envoi]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="E_POUR_QUI" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Initiales ou nom de la personne
+                    bénéfiaciant de l'envoi]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="E_STATUT" use="required">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Statut de l'envoi. Peut prendre comme valeur
+                    uniquement OK ou A EFFECTUER]]></xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:token">
+                    <xs:enumeration value="OK"/>
+                    <xs:enumeration value="A EFFECTUER"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="REMARQUE" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr"><![CDATA[Remarque liée à l'action et à l'envoi,
+                    laissée libre à l'utilisateur]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:attributeGroup>
+    <!-- ANNEXE -->
+    <xs:element name="ANNEXE">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Le bloc ANNEXE contient les renvois aux documents
+                externes liés à l'objet]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="RENVOI" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <!-- RENVOI -->
+    <xs:element name="RENVOI">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Le RENVOI définit un lien unique vers un
+                document externe. Le contenu du noeud définit la description du renvoi]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType mixed="true">
+            <xs:attribute name="POS" type="xs:positiveInteger" use="required">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fr"
+                        ><![CDATA[La position du renvoi dans la liste des renvois]]></xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="LIEN" type="xs:anyURI" use="required">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fr"
+                    ><![CDATA[Le lien avec le document référencé]]></xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+        </xs:complexType>
+    </xs:element>
+    <!-- DIVERS -->
+    <xs:element name="DIVERS">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Le bloc DIVERS contient des informations
+                générales sur l'objet]]></xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="REMARQUE" minOccurs="0" maxOccurs="1" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation xml:lang="fr"><![CDATA[Le noeud REMARQUE contient des informations
+                            factuelles sur l'objet]]></xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="METHODE" minOccurs="0" maxOccurs="1" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation xml:lang="fr"><![CDATA[Le noeud METHODE contient une
+                            méthode d'application à l'objet]]></xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <!-- Id_ID_GType -->
+    <xs:simpleType name="IdIDType">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Type d'identifiant unique GeoXML et ID XML. Son format
+                est "G" suivi de 17 chiffres (AAAAMMJJHHMMSSmmm).]]></xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:ID">
+            <xs:pattern value="G[0-9]{17}"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <!-- Id_ID_GType -->
+    <xs:simpleType name="IdType">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Type d'identifiant unique GeoXML. Son format est "G"
+                suivi de 17 chiffres (AAAAMMJJHHMMSSmmm).]]></xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:normalizedString">
+            <xs:pattern value="G[0-9]{17}"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <!-- IdRefType -->
+    <xs:simpleType name="IdRefType">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr"><![CDATA[Type d'identifiant unique GeoXML. Son format est "G"
+                suivi de 17 chiffres (AAAAMMJJHHMMSSmmm).]]></xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:normalizedString">
+            <xs:pattern value="G[0-9]{17}#[0-9]*"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <!-- TYPEType -->
+    <xs:simpleType name="TYPEType">
+        <xs:restriction base="xs:token">
+            <xs:enumeration value="GEOGRAPHIE">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fr"><![CDATA[Espace de coordonnées
+                        fédérales géographiques]]></xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="SCHEMATIQUE">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fr"><![CDATA[Espace de coordonnées
+                        fédérales ou autres schématiques]]></xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>

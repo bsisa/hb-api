@@ -7,7 +7,7 @@ when using `play dist`.
 
 == Managed dependencies ==
 
-Check build.sbt, project/plugins.sbt 
+Check build.sbt, project/plugins.sbt, and project/Build.scala
 
 
 == Unmanaged dependencies ==

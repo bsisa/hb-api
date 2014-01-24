@@ -3,6 +3,7 @@ logs
 project/project
 project/target
 target
+#test/results
 tmp
 .history
 dist

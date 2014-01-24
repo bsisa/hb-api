@@ -8,6 +8,7 @@ import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsError
 
 /**
+ * @deprecated See ElfinXmlSerialisation instead
  * Tests serialisation deserialisation of Elfin object to and from XML format.
  * 
  * @author Patrick Refondini
@@ -15,8 +16,10 @@ import play.api.libs.json.JsError
 class JsonXmlConverterSpec extends Specification {
 
 
-  val TestDir = "./test/resources/"
-  val elfinTest001Xml = XML.loadFile(TestDir + "elfin-test-001.xml")
+  val TestResourcesDir = "./test/resources/"
+  val TestResultsDir = "./test/results/"
+    
+  val elfinTest001Xml = XML.loadFile(TestResourcesDir + "elfin-test-001.xml")
   val expectedElfinTest001_Id = "G20040203114894000"    
   val expectedElfinTest001_ID_G = "G20040930101030005"
 
@@ -63,7 +66,11 @@ class JsonXmlConverterSpec extends Specification {
   
   //println("elfinTest001JsValueBackToXmlString: " + elfinTest001JsValueBackToXmlString)
   
-  scala.xml.XML.save("./test/resources/result.xml", elfinTest001JsValueBackToXml.iterator.next)
+  // Dump the XML to file for manual review.
+  // This is an example of XML data structure modification and loss:
+  // Attributes Id, ID_G,... are all transformed to XML elements.
+  // FORME/POINT elements have disappeared and their attributes flattened. 
+  scala.xml.XML.save(TestResultsDir + "wrongResult.xml", elfinTest001JsValueBackToXml.iterator.next)
 
   // Make sure information found in original XML we load 
   // is also found in JSON back to XML outcome
