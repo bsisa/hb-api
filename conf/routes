@@ -11,6 +11,12 @@ GET      /assets/*file                          controllers.Assets.at(path="/pub
 #######################################################################
 #                     hb-api API routes                               #
 #######################################################################
+# TODO: suppress
+# GET           /api/elfin/:elfinId                       ch.bsisa.hyperbird.controllers.Api.elfin(elfinId)
+# Latest proposal
+# GET           /api/melfin/                              ch.bsisa.hyperbird.controllers.Api.collections
+# GET           /api/melfin/:collectionId                 ch.bsisa.hyperbird.controllers.Api.filteredCollection(collectionId, xpath ?= "//ELFIN", format ?= "json")
+# GET           /api/melfin/:collectionId/:elfinId        ch.bsisa.hyperbird.controllers.Api.getElfin(collectionId, elfinId) # format=(json|xml|pdf|xls|...)
 
 # TODO: define expected result format
 GET      /api/melfin/                           ch.bsisa.hyperbird.controllers.Api.collections
@@ -20,7 +26,7 @@ GET      /api/melfin/:collectionId              ch.bsisa.hyperbird.controllers.A
 
 # Elfin CRUD operations
 GET      /api/melfin/:collectionId/:elfinId     ch.bsisa.hyperbird.controllers.Api.getElfin(collectionId, elfinId) 
-POST     /api/melfin/:collectionId/:className   ch.bsisa.hyperbird.controllers.Api.createElfin(collectionId,className)
+POST     /api/melfin/:collectionId/:className   ch.bsisa.hyperbird.controllers.Api.createElfin(collectionId, className)
 PUT      /api/melfin/:collectionId/:elfinId     ch.bsisa.hyperbird.controllers.Api.updateElfin(collectionId, elfinId)
 DELETE   /api/melfin/:collectionId/:elfinId     ch.bsisa.hyperbird.controllers.Api.deleteElfin(collectionId, elfinId)
 
