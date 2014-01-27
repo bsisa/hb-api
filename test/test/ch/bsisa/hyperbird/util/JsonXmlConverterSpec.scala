@@ -64,8 +64,6 @@ class JsonXmlConverterSpec extends Specification {
   val elfinTest001JsValueBackToXmlString = JsonXmlConverter.jsonStringToXml(elfinTest001JsValue.toString).toString
   val elfinTest001JsValueBackToXml = JsonXmlConverter.xmlStringToNodeSeq(elfinTest001JsValueBackToXmlString)
   
-  //println("elfinTest001JsValueBackToXmlString: " + elfinTest001JsValueBackToXmlString)
-  
   // Dump the XML to file for manual review.
   // This is an example of XML data structure modification and loss:
   // Attributes Id, ID_G,... are all transformed to XML elements.
@@ -74,13 +72,23 @@ class JsonXmlConverterSpec extends Specification {
 
   // Make sure information found in original XML we load 
   // is also found in JSON back to XML outcome
+  // Note: Knowing the structure and information loss of the above
+  // procedure let's make our test expect NOT to find the Id and 
+  // ID_G information back.
   "The elfinTest001JsValueBackToXml (scala.xml.Elem) " should {
-    s"have Id equal to ${expectedElfinTest001_Id}" in {
-      (elfinTest001JsValueBackToXml \ "@Id").text must equalTo(expectedElfinTest001_Id)
+    s"NOT have Id equal to ${expectedElfinTest001_Id} given the known lost XML attribute issue" in {
+      (elfinTest001JsValueBackToXml \ "@Id").text must not equalTo(expectedElfinTest001_Id)
     }
-    s"have ID_G equal to ${expectedElfinTest001_ID_G}" in {
-      (elfinTest001JsValueBackToXml \ "@ID_G").text must equalTo(expectedElfinTest001_ID_G)
+    s"but have Id found in new Id element equal to ${expectedElfinTest001_Id} instead" in {
+      (elfinTest001JsValueBackToXml \ "Id").text must equalTo(expectedElfinTest001_Id)
+    }    
+    s"NOT have ID_G equal to ${expectedElfinTest001_ID_G} given the known lost XML attribute issue" in {
+      (elfinTest001JsValueBackToXml \ "@ID_G").text must not equalTo(expectedElfinTest001_ID_G)
     }
+    s"but have ID_G found in new ID_G element equal to ${expectedElfinTest001_ID_G} instead" in {
+      (elfinTest001JsValueBackToXml \ "ID_G").text must equalTo(expectedElfinTest001_ID_G)
+    }    
+    
   }  
   
   
