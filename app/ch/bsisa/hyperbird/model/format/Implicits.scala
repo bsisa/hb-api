@@ -2,60 +2,80 @@ package ch.bsisa.hyperbird.model.format
 
 import ch.bsisa.hyperbird.model._
 import play.api.libs.json._
-import play.api.libs.json.ConstraintReads
+import play.api.libs.json.Reads._ // Makes list, seq, ... combinators keywords available 
 import play.api.libs.functional.syntax._
 
 /**
- * Exposes Reads, Writes, Format utilities to allow Elfin
+ * Exposes Reads, Writes, Format utilities to allow MELFIN, ELFIN
  * object seamless serialisation and deserialisation to JSON format.
  *
+ * * First use ScalaJsonInceptions for shortest formatter definition
+ * * Second use ScalaJsonCombinators if simple customisation is needed
+ * * Fallback to Play plain Json API to deal with varargs constructors parameter
+ * 
+ * @see http://www.playframework.com/documentation/2.2.x/ScalaJsonInceptions
+ * @see http://www.playframework.com/documentation/2.2.x/ScalaJsonCombinators
+ * @see http://www.playframework.com/documentation/2.2.x/api/scala/index.html#play.api.libs.json.Reads$
+ * @see http://www.playframework.com/documentation/2.2.x/api/scala/index.html#play.api.libs.json.Writes$
+ * @see http://www.playframework.com/documentation/2.2.x/api/scala/index.html#play.api.libs.json.package
+ * 
  * @author Patrick Refondini
  */
 object Implicits {
 
-//  case class User(id: Long, name: String, friends: List[User])
-//
-//  implicit object UserFormat extends Format[User] {
-//    def reads(json: JsValue): JsResult[User] = JsSuccess(User(
-//      (json \ "id").as[Long],
-//      (json \ "name").as[String],
-//      (json \ "friends").asOpt[List[User]].getOrElse(List())))
-//
-//    def writes(u: User): JsValue = JsObject(List(
-//      "id" -> JsNumber(u.id),
-//      "name" -> JsString(u.name),
-//      "friends" -> JsArray(u.friends.map(fr => JsObject(List("id" -> JsNumber(fr.id),
-//        "name" -> JsString(fr.name)))))))
-//  }
-  
-  
-// See: JSON API http://www.playframework.com/documentation/2.2.x/api/scala/index.html#play.api.libs.json.package  
-//  case class User(id: Long, name: String, friends: List[User])
+  //  case class User(id: Long, name: String, friends: List[User])
+  //
+  //  implicit object UserFormat extends Format[User] {
+  //    def reads(json: JsValue): JsResult[User] = JsSuccess(User(
+  //      (json \ "id").as[Long],
+  //      (json \ "name").as[String],
+  //      (json \ "friends").asOpt[List[User]].getOrElse(List())))
+  //
+  //    def writes(u: User): JsValue = JsObject(List(
+  //      "id" -> JsNumber(u.id),
+  //      "name" -> JsString(u.name),
+  //      "friends" -> JsArray(u.friends.map(fr => JsObject(List("id" -> JsNumber(fr.id),
+  //        "name" -> JsString(fr.name)))))))
+  //  }
 
-//  implicit val userFormat = Json.format[User]
-  
-//  implicit object UserFormat extends Format[User] {
-//    def reads(json: JsValue): JsResult[User] = JsSuccess(User(
-//      (json \ "id").as[Long],
-//      (json \ "name").as[String],
-//      (json \ "friends").asOpt[List[User]].getOrElse(List())))
-//
-//    def writes(u: User): JsValue = JsObject(List(
-//      "id" -> JsNumber(u.id),
-//      "name" -> JsString(u.name),
-//      "friends" -> JsArray(u.friends.map(fr => JsObject(List("id" -> JsNumber(fr.id),
-//        "name" -> JsString(fr.name)))))))
-//  }  
+  // See: JSON API http://www.playframework.com/documentation/2.2.x/api/scala/index.html#play.api.libs.json.package  
+  //  case class User(id: Long, name: String, friends: List[User])
+
+  //  implicit val userFormat = Json.format[User]
+
+  //  implicit object UserFormat extends Format[User] {
+  //    def reads(json: JsValue): JsResult[User] = JsSuccess(User(
+  //      (json \ "id").as[Long],
+  //      (json \ "name").as[String],
+  //      (json \ "friends").asOpt[List[User]].getOrElse(List())))
+  //
+  //    def writes(u: User): JsValue = JsObject(List(
+  //      "id" -> JsNumber(u.id),
+  //      "name" -> JsString(u.name),
+  //      "friends" -> JsArray(u.friends.map(fr => JsObject(List("id" -> JsNumber(fr.id),
+  //        "name" -> JsString(fr.name)))))))
+  //  }  
 
   // See: http://www.playframework.com/documentation/2.2.x/ScalaJsonCombinators
   // Note __ is syntax visual simplification for JsPath
-//  implicit val elfinReads: Reads[Elfin] = (
-//    (__ \ "Id").read[String] and
-//    (__ \ "ID_G").read[String] and
-//    (__ \ "CLASSE").read[String])(Elfin)
-  
+  //  implicit val elfinReads: Reads[Elfin] = (
+  //    (__ \ "Id").read[String] and
+  //    (__ \ "ID_G").read[String] and
+  //    (__ \ "CLASSE").read[String])(Elfin)
+
   // See: http://www.playframework.com/documentation/2.2.x/ScalaJsonInception
-implicit val elfinReads: Reads[Elfin] = Json.reads[Elfin]  
+  implicit val elfinReads: Reads[Elfin] = Json.reads[Elfin]
+
+  
+
+  implicit val MUTATIONReads: Reads[MUTATION] = Json.reads[MUTATION]
+
+  implicit object MUTATIONSReads extends Reads[MUTATIONS] {
+    def reads(json: JsValue): JsResult[MUTATIONS] =
+      JsSuccess(MUTATIONS((json \ "MUTATION").as[List[MUTATION]]: _*))
+  }
+
+  //implicit val ELFINReads: Reads[ELFIN] = Json.reads[ELFIN]
 
   //case class MUTATIONS(MUTATION: ch.bsisa.hyperbird.model.MUTATION*)
 
