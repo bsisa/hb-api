@@ -9,12 +9,11 @@ import play.api.libs.json.Json
 
 /**
  * Tests serialisation deserialisation of Elfin object to and from JSON format.
- * 
+ *
  * @author Patrick Refondini
  */
 class ElfinJsonSerialisation extends Specification {
 
-  
   val jsonString = """
 {
 "ELFIN":{
@@ -33,13 +32,9 @@ class ElfinJsonSerialisation extends Specification {
   }
 }"""
 
-    
-    val jsonValue = Json.parse(jsonString)
-    
-    import play.api.libs.json._
-  import play.api.libs.functional.syntax._
+  val jsonValue = Json.parse(jsonString)
 
-    "The jsonString " should {
+  "The jsonString " should {
     "convert to Elfin object" in {
       val elfinJsValue = jsonValue \ "ELFIN"
       val elfin = elfinJsValue.as[Elfin]
@@ -49,7 +44,5 @@ class ElfinJsonSerialisation extends Specification {
     }
 
   }
-  
-  
-  
+
 }
