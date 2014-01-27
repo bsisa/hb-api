@@ -7,6 +7,6 @@ package ch.bsisa.hyperbird.model
  *     
  * @author Patrick Refondini
  */
-case class Elfin(id: String, group: String, classe: String) {
+case class Elfin(Id: String, ID_G: String, CLASSE: String) {
 
 }

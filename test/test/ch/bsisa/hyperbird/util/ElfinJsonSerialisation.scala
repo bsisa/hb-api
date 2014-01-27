@@ -43,9 +43,9 @@ class ElfinJsonSerialisation extends Specification {
     "convert to Elfin object" in {
       val elfinJsValue = jsonValue \ "ELFIN"
       val elfin = elfinJsValue.as[Elfin]
-      elfin.id must equalTo("G20040203114894000")
-      elfin.classe must equalTo("IMMEUBLE")
-      elfin.group must equalTo("G20040930101030005")
+      elfin.Id must equalTo("G20040203114894000")
+      elfin.CLASSE must equalTo("IMMEUBLE")
+      elfin.ID_G must equalTo("G20040930101030005")
     }
 
   }
