@@ -2,8 +2,10 @@ package ch.bsisa.hyperbird.model.format
 
 import ch.bsisa.hyperbird.model._
 import play.api.libs.json._
-import play.api.libs.json.Reads._ // Makes list, seq, ... combinators keywords available 
+import play.api.libs.json.Reads._
 import play.api.libs.functional.syntax._
+import ch.bsisa.hyperbird.model.SCHEMATIQUE
+import ch.bsisa.hyperbird.model.GEOGRAPHIE
 
 /**
  * Exposes Reads, Writes, Format utilities to allow MELFIN, ELFIN
@@ -12,77 +14,85 @@ import play.api.libs.functional.syntax._
  * * First use ScalaJsonInceptions for shortest formatter definition
  * * Second use ScalaJsonCombinators if simple customisation is needed
  * * Fallback to Play plain Json API to deal with varargs constructors parameter
- * 
+ *
  * @see http://www.playframework.com/documentation/2.2.x/ScalaJsonInceptions
  * @see http://www.playframework.com/documentation/2.2.x/ScalaJsonCombinators
  * @see http://www.playframework.com/documentation/2.2.x/api/scala/index.html#play.api.libs.json.Reads$
  * @see http://www.playframework.com/documentation/2.2.x/api/scala/index.html#play.api.libs.json.Writes$
  * @see http://www.playframework.com/documentation/2.2.x/api/scala/index.html#play.api.libs.json.package
- * 
+ *
  * @author Patrick Refondini
  */
 object Implicits {
 
-  //  case class User(id: Long, name: String, friends: List[User])
-  //
-  //  implicit object UserFormat extends Format[User] {
-  //    def reads(json: JsValue): JsResult[User] = JsSuccess(User(
-  //      (json \ "id").as[Long],
-  //      (json \ "name").as[String],
-  //      (json \ "friends").asOpt[List[User]].getOrElse(List())))
-  //
-  //    def writes(u: User): JsValue = JsObject(List(
-  //      "id" -> JsNumber(u.id),
-  //      "name" -> JsString(u.name),
-  //      "friends" -> JsArray(u.friends.map(fr => JsObject(List("id" -> JsNumber(fr.id),
-  //        "name" -> JsString(fr.name)))))))
-  //  }
-
-  // See: JSON API http://www.playframework.com/documentation/2.2.x/api/scala/index.html#play.api.libs.json.package  
-  //  case class User(id: Long, name: String, friends: List[User])
-
-  //  implicit val userFormat = Json.format[User]
-
-  //  implicit object UserFormat extends Format[User] {
-  //    def reads(json: JsValue): JsResult[User] = JsSuccess(User(
-  //      (json \ "id").as[Long],
-  //      (json \ "name").as[String],
-  //      (json \ "friends").asOpt[List[User]].getOrElse(List())))
-  //
-  //    def writes(u: User): JsValue = JsObject(List(
-  //      "id" -> JsNumber(u.id),
-  //      "name" -> JsString(u.name),
-  //      "friends" -> JsArray(u.friends.map(fr => JsObject(List("id" -> JsNumber(fr.id),
-  //        "name" -> JsString(fr.name)))))))
-  //  }  
-
-  // See: http://www.playframework.com/documentation/2.2.x/ScalaJsonCombinators
-  // Note __ is syntax visual simplification for JsPath
-  //  implicit val elfinReads: Reads[Elfin] = (
-  //    (__ \ "Id").read[String] and
-  //    (__ \ "ID_G").read[String] and
-  //    (__ \ "CLASSE").read[String])(Elfin)
-
   // See: http://www.playframework.com/documentation/2.2.x/ScalaJsonInception
+  // TODO: suppres Elfin entity together with corresponding test once ELFIN entity implemented.
   implicit val elfinReads: Reads[Elfin] = Json.reads[Elfin]
 
-  
+  //implicit val MUTATIONReads: Reads[MUTATION] = Json.reads[MUTATION]
+  implicit val MUTATIONFormat: Format[MUTATION] = Json.format[MUTATION]
 
-  implicit val MUTATIONReads: Reads[MUTATION] = Json.reads[MUTATION]
-
-  implicit object MUTATIONSReads extends Reads[MUTATIONS] {
+  implicit object MUTATIONSFormat extends Format[MUTATIONS] {
     def reads(json: JsValue): JsResult[MUTATIONS] =
       JsSuccess(MUTATIONS((json \ "MUTATION").as[List[MUTATION]]: _*))
+    def writes(ms: MUTATIONS): JsValue = JsObject(
+      for (m <- ms.MUTATION) yield "MUTATION" -> Json.toJson(m))
   }
 
+  implicit object TYPETypeFormat extends Format[TYPEType] {
+
+    def reads(json: JsValue): JsResult[TYPEType] =
+      (json \ "TYPE") match {
+        case JsString(value) => value match {
+          case "SCHEMATIQUE" => JsSuccess(SCHEMATIQUE)
+          case "GEOGRAPHIE" => JsSuccess(GEOGRAPHIE)
+          case invalid => JsError(s"Invalid string value ${invalid} found for TYPE. Valid values are {SCHEMATIQUE,GEOGRAPHIE}")
+        }
+        case _ => JsError(s"Invalid JsValue type received for TYPE. Expecting JsString only.")
+      }
+
+    def writes(t: TYPEType): JsValue = t.toString match {
+      case "SCHEMATIQUE" => JsString("SCHEMATIQUE")
+      case "GEOGRAPHIE" => JsString("GEOGRAPHIE")
+    }
+  }
+
+  implicit val CENTROIDEFormat: Format[CENTROIDE] = Json.format[CENTROIDE]
+
+  case class GEOSELECTION(CENTROIDE: ch.bsisa.hyperbird.model.CENTROIDE*)
+
+  implicit object GEOSELECTIONFormat extends Format[GEOSELECTION] {
+    def reads(json: JsValue): JsResult[GEOSELECTION] =
+      JsSuccess(GEOSELECTION((json \ "CENTROIDE").as[List[CENTROIDE]]: _*))
+    def writes(gs: GEOSELECTION): JsValue = JsObject(
+      for (c <- gs.CENTROIDE) yield "CENTROIDE" -> Json.toJson(c))
+  }
+
+  //  implicit val SCHEMATIQUEFormat: Format[SCHEMATIQUE] = Json.format[SCHEMATIQUE]
+  //  implicit val GEOGRAPHIEFormat: Format[GEOGRAPHIE] = Json.format[GEOGRAPHIE]  
+
+  // implicit val GEOSELECTIONFormat: Format[GEOSELECTION] = 
+  //  
+  //case class GEOSELECTION(CENTROIDE: ch.bsisa.hyperbird.model.CENTROIDE*)
+  //
+  //case class CENTROIDE(TYPE: ch.bsisa.hyperbird.model.TYPEType,
+  //  XM: Double,
+  //  YM: Double,
+  //  ZM: Option[Double] = None,
+  //  RM: Double)
+  //  
+  //object TYPEType {
+  //  def fromString(value: String, scope: scala.xml.NamespaceBinding): TYPEType = value match {
+  //    case "GEOGRAPHIE" => GEOGRAPHIE
+  //    case "SCHEMATIQUE" => SCHEMATIQUE
+  //
+  //  }
+  //}
+  //
+  //case object GEOGRAPHIE extends TYPEType { override def toString = "GEOGRAPHIE" }
+  //case object SCHEMATIQUE extends TYPEType { override def toString = "SCHEMATIQUE" }
+
   //implicit val ELFINReads: Reads[ELFIN] = Json.reads[ELFIN]
-
-  //case class MUTATIONS(MUTATION: ch.bsisa.hyperbird.model.MUTATION*)
-
-  //case class MUTATION(DATE: String,
-  //  ROLE: String,
-  //  MOT_DE_PASSE: Option[String] = None,
-  //  UTILISATEUR: Option[String] = None)  
 
   //  implicit object MutationFormat extends Format[MUTATION] {
   //
