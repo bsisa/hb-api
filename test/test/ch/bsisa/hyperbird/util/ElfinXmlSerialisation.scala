@@ -19,7 +19,7 @@ class ElfinXmlSerialisation extends Specification {
   val TestResultsDir = "./test/results/"
 
   val elfinTest001Xml = XML.loadFile(TestResourcesDir + "elfin-test-001.xml")
-  val expectedElfinTest001_Id = "G20040203114894000"
+  val expectedElfinTest001_Id = "G20040931234567890"
   val expectedElfinTest001_ID_G = "G20040930101030005"
 
   // Make sure the XML we load contains the information 
@@ -46,11 +46,14 @@ class ElfinXmlSerialisation extends Specification {
   }
 
   // Produce JSON from ELFIN object
-  val mutationsJson = Json.toJson(elfin.MUTATIONS)
+  //val mutationsJson = Json.toJson(elfin.MUTATIONS)
+  //val mutationsJson = Json.toJson(elfin.GEOSELECTION)
+  //val mutationsJson = Json.toJson(elfin.IDENTIFIANT)
+  val mutationsJson = Json.toJson(elfin.CARACTERISTIQUE)
 
   // Print JSON to file
   val fs = new java.io.FileWriter(TestResultsDir + "ELFINResult.json")
-  try { fs.write(mutationsJson.toString) } finally { fs.close() }
+  try { fs.write(  Json.prettyPrint(mutationsJson) ) } finally { fs.close() }
 
  
   // Convert Scala objects back to XML without data loss nor structure change.

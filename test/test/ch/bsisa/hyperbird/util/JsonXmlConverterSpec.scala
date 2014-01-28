@@ -20,7 +20,7 @@ class JsonXmlConverterSpec extends Specification {
   val TestResultsDir = "./test/results/"
     
   val elfinTest001Xml = XML.loadFile(TestResourcesDir + "elfin-test-001.xml")
-  val expectedElfinTest001_Id = "G20040203114894000"    
+  val expectedElfinTest001_Id = "G20040931234567890"    
   val expectedElfinTest001_ID_G = "G20040930101030005"
 
   // Make sure the XML we load contains the information 

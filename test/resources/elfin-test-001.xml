@@ -1,4 +1,4 @@
-<ELFIN Id="G20040203114894000" ID_G="G20040930101030005" CLASSE="IMMEUBLE"
+<ELFIN Id="G20040931234567890" ID_G="G20040930101030005" CLASSE="IMMEUBLE"
 	GROUPE="" TYPE="BIEN" NATURE="Patrimoine">
 	<MUTATIONS>
 		<MUTATION DATE="20101106103540000" ROLE="admin" MOT_DE_PASSE="xxxxx"
@@ -18,35 +18,111 @@
 		<A />
 		<PAR />
 		<MOTCLE>ECOLE LE CORBUSIER</MOTCLE>
+		<MOTCLE>ARCHITECTURE</MOTCLE>
+		<MOTCLE>HES</MOTCLE>
 	</IDENTIFIANT>
 	<CARACTERISTIQUE>
 		<CAR1 NOM="Surface au sol" UNITE="m2" VALEUR="617.2340174963703" />
 		<CAR2 NOM="Fonction" UNITE="" VALEUR="locaux d'association" />
 		<CAR3 NOM="Note Recensement" UNITE="" VALEUR="9" />
-		<CAR4 NOM="N° Cadastre" UNITE="" VALEUR="11980" />
-		<CAR5 NOM="Volume ECA" UNITE="m171" VALEUR="2666" />
+		<CAR4 NOM="N° Cadastre" UNITE="" VALEUR="98786" />
+		<CAR5 NOM="Volume ECA" UNITE="m191" VALEUR="3666" />
 		<CAR6 NOM="Nb logements" UNITE="" VALEUR="0" />
 		<CARSET>
 			<CAR VALEUR="Ecole Le Corbusier (ancienne)" POS="1" />
-			<CAR NOM="Ass. Incendie" VALEUR="26161-4" POS="3" />
+			<CAR NOM="Ass. Incendie" VALEUR="36161-2" POS="3" />
 			<CAR NOM="Type" VALEUR="" POS="2" />
 			<CAR VALEUR="478000" POS="7" />
 			<CAR VALEUR="2000" POS="8" />
 			<CAR VALEUR="1000000" POS="5" />
 			<CAR VALEUR="2005" POS="6" />
 		</CARSET>
+		<ETAT>
+			<ETAT1 B="bEtat1Test" C="cEtat1Test">Etat1 TEst 1, chemin des|Tests 7,
+				chemin
+				des|Tests 9, chemin des...
+			</ETAT1>
+			<ETAT2 B="" C="" />
+			<ETAT3 B="" C="" />
+			<ETAT4 B="" C="" />
+			<ETAT5 B="" C="" />
+			<ETAT6 B="" C="" />
+			<ETAT7 B="" C="">Bon</ETAT7>
+			<ETAT8 B="" C="" />
+			<ETAT9 B="" C="" />
+			<ETAT10 B="" C="" />
+			<ETAT11 B="" C="" />
+			<ETAT12 B="" C="" />
+		</ETAT>
 		<CALCUL>
 			<DIMENSION NOM="LONGUEUR" TYPE="GEOGRAPHIE">0</DIMENSION>
 			<DIMENSION NOM="LONGUEUR" TYPE="SCHEMATIQUE">0</DIMENSION>
 			<DIMENSION NOM="SURFACE" TYPE="GEOGRAPHIE">616.79</DIMENSION>
 			<DIMENSION NOM="SURFACE" TYPE="SCHEMATIQUE">0</DIMENSION>
 		</CALCUL>
-		<FRACTION />
+		<FRACTION>
+			<L POS="1">
+				<C POS="1" />
+				<C POS="2">Aide</C>
+				<C POS="3">getHB_Fiche().displayHTMLFile('../Assistant/html/x.html');
+				</C>
+				<C POS="4" />
+			</L>
+			<L POS="2">
+				<C POS="1">Activités</C>
+				<C POS="2">Prestations</C>
+				<C POS="3">getHB_Collection().execAndDisplayXQuery("collection('/db/G21110123456123456')//ELFIN[./@CLASSE='PRESTATION']","","","List.xsl")
+				</C>
+				<C POS="4">Admin,Super</C>
+				<C POS="5">Fournit la liste de toutes les prestations</C>
+			</L>
+			<L POS="3">
+				<C POS="1">Activités</C>
+				<C POS="2">Transactions</C>
+				<C POS="3">getHB_Collection().execAndDisplayXQuery("collection('/db/G21110123456123456')//ELFIN[./@CLASSE='TRANSACTION']","","","List.xsl")
+				</C>
+				<C POS="4">Admin,Super</C>
+				<C POS="5">Fournit la liste des transactions</C>
+			</L>
+			<L POS="4">
+				<C POS="1">Activités</C>
+				<C POS="2">Transactions par compte</C>
+				<C POS="3">getHB_Collection().execAndDisplayXQuery("collection('/db/G21110123456123456')//ELFIN[./@CLASSE='TRANSACTION']","Quel
+					numéro de gérance","IDENTIFIANT/OBJECTIF","List.xsl")
+				</C>
+				<C POS="4">Admin,Super</C>
+				<C POS="5">Fournit la liste des transactions correspondant a un
+					numéro SAI saisi
+				</C>
+			</L>
+			<L POS="5">
+				<C POS="1">Activités</C>
+				<C POS="2">Transactions par date</C>
+				<C POS="3">getHB_Collection().execAndDisplayXQuery("collection('/db/G21110123456123456')//ELFIN[./@CLASSE='TRANSACTION']","Quel
+					numéro de gérance","IDENTIFIANT/DE","List.xsl")
+				</C>
+				<C POS="4">Admin,Super</C>
+				<C POS="5">Fournit la liste des transactionscorrespondant a une date
+					saisie
+				</C>
+			</L>
+			<L POS="6">
+				<C POS="1">Activités</C>
+				<C POS="2">Transactions par montant</C>
+				<C POS="3">getHB_Collection().execAndDisplayXQuery("collection('/db/G21110123456123456')//ELFIN","Montant ","IDENTIFIANT/VALEUR","List.xsl")
+				</C>
+				<C POS="4">Admin,Super</C>
+				<C POS="5">Fournit la liste des transactions correspondant a montant
+					saisi (=)
+				</C>
+			</L>
+		</FRACTION>
 	</CARACTERISTIQUE>
+
 	<PARTENAIRE>
-		<GERANT GROUPE="Responsable chauffage">Leduc Bertrand, CCN 032 725 05 05</GERANT>
+		<GERANT GROUPE="Responsable pompage">M Dupond, XYZ 099 526 07 98</GERANT>
 		<FOURNISSEUR>-</FOURNISSEUR>
-		<PROPRIETAIRE>Ville du Lac</PROPRIETAIRE>
+		<PROPRIETAIRE>Ville d'Entremont</PROPRIETAIRE>
 	</PARTENAIRE>
 	<ACTIVITE>
 		<EVENEMENT />
@@ -70,31 +146,33 @@
 		<POINT POS="8" X="560849.156" Y="204571.312" ALPHA="0" ALPHAS="0"
 			FONCTION="LIBRE" />
 		<LIGNE POS="1" DIRECTION="AVAL" FONCTION="FRONTIERE">
-			<PASSAGE KSI="-1.0" Id="G20040203114894000#2" ID_G="G20040930101030005"
+			<PASSAGE KSI="-1.0" Id="G29990430118894999#2" ID_G="G20040931234567890"
 				FONCTION="DEBUT" CLASSE="IMMEUBLE" />
-			<PASSAGE KSI="-0.5689663284848581" Id="G20040203114894000#3"
+			<PASSAGE KSI="-0.5689663284848581" Id="G20040931234567890#3"
 				ID_G="G20040930101030005" FONCTION="PASSAGE" CLASSE="IMMEUBLE" />
-			<PASSAGE KSI="-0.46060614544580436" Id="G20040203114894000#4"
+			<PASSAGE KSI="-0.46060614544580436" Id="G20040931234567890#4"
 				ID_G="G20040930101030005" FONCTION="PASSAGE" CLASSE="IMMEUBLE" />
-			<PASSAGE KSI="-0.13890982260729923" Id="G20040203114894000#5"
+			<PASSAGE KSI="-0.13890982260729923" Id="G20040931234567890#5"
 				ID_G="G20040930101030005" FONCTION="PASSAGE" CLASSE="IMMEUBLE" />
-			<PASSAGE KSI="0.5393783034064397" Id="G20040203114894000#6"
+			<PASSAGE KSI="0.5393783034064397" Id="G20040931234567890#6"
 				ID_G="G20040930101030005" FONCTION="PASSAGE" CLASSE="IMMEUBLE" />
-			<PASSAGE KSI="0.8608644180052121" Id="G20040203114894000#7"
+			<PASSAGE KSI="0.8608644180052121" Id="G20040931234567890#7"
 				ID_G="G20040930101030005" FONCTION="PASSAGE" CLASSE="IMMEUBLE" />
-			<PASSAGE KSI="1.0" Id="G20040203114894000#8" ID_G="G20040930101030005"
+			<PASSAGE KSI="1.0" Id="G20040931234567890#8" ID_G="G20040930101030005"
 				FONCTION="FIN" CLASSE="IMMEUBLE" />
 		</LIGNE>
 		<ZONE POS="1">
-			<LIGNE POS="1" DIRECTION="AVAL" Id="G20040203114894000#1" ID_G="G20040930101030005" />
+			<LIGNE POS="1" DIRECTION="AVAL" Id="G20040931234567890#1" ID_G="G20040930101030005" />
 		</ZONE>
 	</FORME>
 	<ANNEXE>
 		<RENVOI POS="1"
-			LIEN="../../HB-Objets/G20040930101030005/annexes/G20040203114894000/Ecole_Le_Corbusier_Contrat.pdf">Ecole_Le_Corbusier_Contrat.pdf</RENVOI>
+			LIEN="../../HB-Objets/G20040930101030005/annexes/G20040931234567890/Ecole_Le_Corbusier_Contrat.pdf">Ecole_Le_Corbusier_Contrat.pdf</RENVOI>
 	</ANNEXE>
 	<DIVERS>
-		<REMARQUE>Valeur XXX = valeur à neuf dépréciée. Bâtiment va être démoli.</REMARQUE>
+		<REMARQUE>Valeur XXX = valeur à neuf dépréciée. Bâtiment va être
+			démoli.
+		</REMARQUE>
 		<METHODE />
 	</DIVERS>
 </ELFIN>

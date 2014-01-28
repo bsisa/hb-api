@@ -22,7 +22,7 @@ class ElfinJsonSerialisation extends Specification {
     "GROUPE":"",
     "CLASSE":"IMMEUBLE",
     "ID_G":"G20040930101030005",
-    "Id":"G20040203114894000",
+    "Id":"G20040931234567890",
     "MUTATIONS":{
       "UTILISATEUR":"",
       "MOT_DE_PASSE":"pbourquin",
@@ -38,7 +38,7 @@ class ElfinJsonSerialisation extends Specification {
     "convert to Elfin object" in {
       val elfinJsValue = jsonValue \ "ELFIN"
       val elfin = elfinJsValue.as[Elfin]
-      elfin.Id must equalTo("G20040203114894000")
+      elfin.Id must equalTo("G20040931234567890")
       elfin.CLASSE must equalTo("IMMEUBLE")
       elfin.ID_G must equalTo("G20040930101030005")
     }
