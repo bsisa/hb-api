@@ -86,6 +86,8 @@ class ElfinXmlSerialisation extends Specification {
   //val mutationsJson = Json.toJson(elfin.GEOSELECTION)
   //val mutationsJson = Json.toJson(elfin.IDENTIFIANT)
   val mutationsJson = Json.toJson(elfin.CARACTERISTIQUE)
+  //val mutationsJson = Json.toJson(elfin.PARTENAIRE)
+  //val mutationsJson = Json.toJson(elfin.ACTIVITE)
 
   // ==================================================================
   // play.api.libs.json.JsValue => JSON file

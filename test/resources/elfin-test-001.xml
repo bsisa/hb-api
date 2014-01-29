@@ -92,7 +92,8 @@
 				</C>
 				<C POS="4">Admin,Super</C>
 				<C POS="5">Fournit la liste des transactions correspondant a un
-					numéro SAI saisi
+					numéro
+					SAI saisi
 				</C>
 			</L>
 			<L POS="5">
@@ -109,7 +110,8 @@
 			<L POS="6">
 				<C POS="1">Activités</C>
 				<C POS="2">Transactions par montant</C>
-				<C POS="3">getHB_Collection().execAndDisplayXQuery("collection('/db/G21110123456123456')//ELFIN","Montant ","IDENTIFIANT/VALEUR","List.xsl")
+				<C POS="3">getHB_Collection().execAndDisplayXQuery("collection('/db/G21110123456123456')//ELFIN","Montant
+					","IDENTIFIANT/VALEUR","List.xsl")
 				</C>
 				<C POS="4">Admin,Super</C>
 				<C POS="5">Fournit la liste des transactions correspondant a montant
@@ -125,8 +127,24 @@
 		<PROPRIETAIRE>Ville d'Entremont</PROPRIETAIRE>
 	</PARTENAIRE>
 	<ACTIVITE>
-		<EVENEMENT />
-		<GESTION />
+		<EVENEMENT>
+			<ECHEANCE DATE="2008-11-04" ACTION="vsv" PAR_QUI="sv"
+				POUR_QUI="sv" E_DATE="sv" E_ACTION="sv" E_PAR_QUI="sv" E_POUR_QUI="sv"
+				E_STATUT="A EFFECTUER" REMARQUE="sv" />
+		</EVENEMENT>
+		<GESTION>
+			<L POS="1">
+				<C POS="1">Article</C>
+				<C POS="2">Budget</C>
+				<C POS="3">Projet</C>
+				<C POS="4">Adjudication</C>
+				<C POS="5">Facture</C>
+				<C POS="6">Bon de paiement</C>
+				<C POS="7">dont Remise</C>
+				<C POS="8">Garantie</C>
+				<C POS="9">Transitoire</C>
+			</L>
+		</GESTION>
 	</ACTIVITE>
 	<FORME>
 		<POINT POS="1" X="560841.8" Y="204560.6" ALPHA="0" ALPHAS="0"
