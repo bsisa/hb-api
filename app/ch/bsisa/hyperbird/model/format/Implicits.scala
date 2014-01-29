@@ -5,28 +5,32 @@ import ch.bsisa.hyperbird.model.proto._
 import ch.bsisa.hyperbird.model.SCHEMATIQUE
 import ch.bsisa.hyperbird.model.GEOGRAPHIE
 import ch.bsisa.hyperbird.util.format.JsonXmlConverter
-
 import play.api.libs.json._
 import play.api.libs.json.Reads._
 import play.api.libs.functional.syntax._
-
 import scalaxb._
+import java.io.StringWriter
 
 /**
  * Exposes play.api.libs.json.Format (Reads and Writes) utilities to allow
- * ch.bsisa.hyperbird.model.MELFIN, ch.bsisa.hyperbird.model.ELFIN and
- * subtree structures case classes seamless serialisation and
+ * {{{
+ * ch.bsisa.hyperbird.model.MELFIN
+ * ch.bsisa.hyperbird.model.ELFIN 
+ * }}}
+ * and subtree structures case classes seamless serialisation and
  * deserialisation to JSON format.
  *
- * * First use ScalaJsonInceptions for shortest formatter definition
- * * Second use ScalaJsonCombinators if simple customisation is needed
- * * Fallback to Play plain Json API to deal with varargs constructors parameter
+ - First use ScalaJsonInceptions for shortest formatter definition
+ - Second use ScalaJsonCombinators if simple customisation is needed
+ - Fallback to Play plain Json API to deal with varargs constructors parameter
  *
- * @see http://www.playframework.com/documentation/2.2.x/ScalaJsonInceptions
- * @see http://www.playframework.com/documentation/2.2.x/ScalaJsonCombinators
- * @see http://www.playframework.com/documentation/2.2.x/api/scala/index.html#play.api.libs.json.Reads$
- * @see http://www.playframework.com/documentation/2.2.x/api/scala/index.html#play.api.libs.json.Writes$
- * @see http://www.playframework.com/documentation/2.2.x/api/scala/index.html#play.api.libs.json.package
+ * 
+ * @see [[http://www.playframework.com/documentation/2.2.x/ScalaJsonInception]]
+ * @see [[http://www.playframework.com/documentation/2.2.x/ScalaJsonCombinators]]
+ * @see [[http://www.playframework.com/documentation/2.2.x/api/scala/index.html#play.api.libs.json.Reads$]]
+ * @see [[http://www.playframework.com/documentation/2.2.x/api/scala/index.html#play.api.libs.json.Writes$]]
+ * @see [[http://www.playframework.com/documentation/2.2.x/api/scala/index.html#play.api.libs.json.package]]
+ *  
  *
  * @author Patrick Refondini
  */
@@ -165,7 +169,7 @@ object Implicits {
     def writes(st: STATEType): JsValue = Json.obj(
       "B" -> st.B,
       "C" -> st.C,
-      "MIXED-CONTENT" -> "not implemented") //TODO: GET MIXED CONTENT
+      "MIXED-CONTENT" -> getMixedContent(st.mixed)) //TODO: GET MIXED CONTENT
   }
 
   //ETAT
@@ -198,7 +202,7 @@ object Implicits {
 
     def writes(c: C): JsValue = Json.obj(
       "POS" -> c.POS.toLong, // TODO: xs:positiveInteger XSD definition leads to BigInt. This seems not wise, to check. Using Long for simplification.
-      "MIXED-CONTENT" -> "not implemented") //TODO: GET MIXED CONTENT
+      "MIXED-CONTENT" -> getMixedContent(c.mixed)) //TODO: GET MIXED CONTENT
   }
 
   /**
@@ -281,7 +285,7 @@ object Implicits {
     def writes(d: DIMENSION): JsValue = Json.obj(
       "NOM" -> Json.toJson[NOM](d.NOM),
       "TYPE" -> Json.toJson[TYPEType](d.TYPE),
-      "MIXED-CONTENT" -> "not implemented") //TODO: GET MIXED CONTENT
+      "MIXED-CONTENT" -> getMixedContent(d.mixed)) //TODO: GET MIXED CONTENT
   }
 
   // CALCULType
@@ -301,13 +305,35 @@ object Implicits {
   //    CARACTERISTIQUE
   implicit val CARACTERISTIQUEFormat: Format[CARACTERISTIQUE] = Json.format[CARACTERISTIQUE]
 
-  // TODO: implement
-  //  def getMixedContentText(mixed: Seq[scalaxb.DataRecord[Any]) : String = {
-  //    for {
-  //      record <- mixed
-  //    } yield record
-  //    " test"
-  //  }
+
+  /**
+   * Extracts mixed content text nodes as String assuming there is no "real" mix content.
+   *
+   * TODO: validate the current assumption that geoXML.xsd
+   * mixed content never really contains mix of text and
+   * XML nodes element but only contains text nodes.
+   * Then change the geoXML.xsd accordingly.
+   * Regenerate Scalaxb model from new XSD.
+   * Then make sure the current function calls can/must be suppressed.
+   */
+  def getMixedContent(mixed: Seq[scalaxb.DataRecord[Any]]): String = {
+
+    // Get mixed content as as sequence of scala.xml.NodeSeq
+    val nodeSeqSeq = for {
+      record <- mixed
+    } yield scalaxb.toXML(record, "MIXED-CONTENT", ch.bsisa.hyperbird.model.proto.defaultScope)
+
+    // Output sequence of scala.xml.NodeSeq to String
+    val sw = new StringWriter()
+    import scala.xml.XML
+    for (nodeSeq <- nodeSeqSeq) {
+      for (node <- nodeSeq) {
+        //XML.write(sw, node, "", false, null)
+        sw.write(node.text)
+      }
+    }
+    sw.toString
+  }
 
   ///////////////////////////////////////////////////////////////////////////
 

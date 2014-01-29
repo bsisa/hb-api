@@ -9,7 +9,19 @@ import play.api.libs.json.Json
 import play.api.libs.json._
 
 /**
- * Tests serialisation deserialisation of Elfin object to and from XML format.
+ * Tests full ELFIN serialisation deserialisation lifcycle.
+ *
+ * '''XML to JSON'''
+ * - XML file => scala.xml.Elem
+ * - scala.xml.Elem => ch.bsisa.hyperbird.model.ELFIN
+ * - ch.bsisa.hyperbird.model.ELFIN => play.api.libs.json.JsValue
+ * - play.api.libs.json.JsValue => JSON file
+ *
+ * '''JSON to XML'''
+ * - JSON file => play.api.libs.json.JsValue
+ * - play.api.libs.json.JsValue => ch.bsisa.hyperbird.model.ELFIN
+ * - ch.bsisa.hyperbird.model.ELFIN => scala.xml.Elem
+ * - scala.xml.Elem => XML file
  *
  * @author Patrick Refondini
  */
@@ -18,9 +30,13 @@ class ElfinXmlSerialisation extends Specification {
   val TestResourcesDir = "./test/resources/"
   val TestResultsDir = "./test/results/"
 
-  val elfinTest001Xml = XML.loadFile(TestResourcesDir + "elfin-test-001.xml")
   val expectedElfinTest001_Id = "G20040931234567890"
   val expectedElfinTest001_ID_G = "G20040930101030005"
+
+  // ================================================================== 
+  // XML file => scala.xml.Elem
+  // ==================================================================    
+  val elfinTest001Xml = XML.loadFile(TestResourcesDir + "elfin-test-001.xml")
 
   // Make sure the XML we load contains the information 
   // we want to look for after transformation to JSON  
@@ -33,7 +49,9 @@ class ElfinXmlSerialisation extends Specification {
     }
   }
 
-  // Convert XML to Scala objects
+  // ================================================================== 
+  // scala.xml.Elem => ch.bsisa.hyperbird.model.ELFIN
+  // ==================================================================
   val elfin = scalaxb.fromXML[ELFIN](elfinTest001Xml)
 
   "The elfin object (ch.bsisa.hyperbird.model.ELFIN) " should {
@@ -45,18 +63,54 @@ class ElfinXmlSerialisation extends Specification {
     }
   }
 
+  val etat1MixedContent = elfin.CARACTERISTIQUE.get.ETAT.get.ETAT1.get.mixed
+  val expectedEtat1MixedContent = """Etat1 TEst 1, chemin des|Tests 7,
+				chemin
+				des|Tests 9, chemin des...
+			"""
+
+  "elfinTest001Xml to Scala object ELFIN " should {
+    s"have elfin.CARACTERISTIQUE.get.ETAT.get.ETAT1.get.mixed equal to expectedEtat1MixedContent" in {
+      getMixedContent(etat1MixedContent) must equalTo(expectedEtat1MixedContent)
+    }
+  }
+
+  // Print JSON to file
+
+  // ================================================================== 
+  // ch.bsisa.hyperbird.model.ELFIN => play.api.libs.json.JsValue 
+  // ==================================================================
+
   // Produce JSON from ELFIN object
   //val mutationsJson = Json.toJson(elfin.MUTATIONS)
   //val mutationsJson = Json.toJson(elfin.GEOSELECTION)
   //val mutationsJson = Json.toJson(elfin.IDENTIFIANT)
   val mutationsJson = Json.toJson(elfin.CARACTERISTIQUE)
 
-  // Print JSON to file
-  val fs = new java.io.FileWriter(TestResultsDir + "ELFINResult.json")
-  try { fs.write(  Json.prettyPrint(mutationsJson) ) } finally { fs.close() }
+  // ==================================================================
+  // play.api.libs.json.JsValue => JSON file
+  // ==================================================================
+  val fileWriter = new java.io.FileWriter(TestResultsDir + "ELFINResult.json")
+  try { fileWriter.write(Json.prettyPrint(mutationsJson)) } finally { fileWriter.close() }
 
- 
-  // Convert Scala objects back to XML without data loss nor structure change.
+  // ==================================================================
+  // JSON file => play.api.libs.json.JsValue
+  // ==================================================================
+  val jsonString = scala.io.Source.fromFile(TestResultsDir + "ELFINResult.json").mkString
+  val parsedJsonInput = Json.parse(jsonString)
+
+  // ==================================================================
+  // play.api.libs.json.JsValue => ch.bsisa.hyperbird.model.ELFIN
+  // ==================================================================
+  val elfinJsValue = parsedJsonInput \ "ELFIN"
+  // @TODO
+  //val elfinFromFile = elfinJsValue.as[ELFIN] 
+
+  // ==================================================================
+  // ch.bsisa.hyperbird.model.ELFIN => scala.xml.Elem
+  // ==================================================================  
+  // Convert Scala objects back to XML without data loss nor structure 
+  // change.
   val elfinBackToXml = scalaxb.toXML[ELFIN](elfin, None, Some("ELFIN"), ch.bsisa.hyperbird.model.proto.defaultScope)
 
   "The elfinBackToXml (scala.xml.Elem) " should {
@@ -68,6 +122,9 @@ class ElfinXmlSerialisation extends Specification {
     }
   }
 
+  // ==================================================================
+  // scala.xml.Elem => XML file
+  // ==================================================================
   // Dump the XML to file for manual review
   scala.xml.XML.save(TestResultsDir + "scalaxbResult.xml", elfinBackToXml.iterator.next)
 
