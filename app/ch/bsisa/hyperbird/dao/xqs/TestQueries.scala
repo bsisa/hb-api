@@ -3,7 +3,7 @@ package ch.bsisa.hyperbird.dao.xqs
 import ch.bsisa.hyperbird.util.format.JsonXmlConverter
 
 /**
- * @TODO: to be removed
+ * @todo: to be removed
  * 
  * Predefined XQueries meant for prototyping/testing
  * 

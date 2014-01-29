@@ -3,7 +3,7 @@ package ch.bsisa.hyperbird.model
 /**
  * 
  * Object modeled after ELFIN GeoXML reference geoxml-20051125.xsd
- * @TODO complete implementation. 
+ * @todo complete implementation. 
  *     
  * @author Patrick Refondini
  */
