@@ -28,8 +28,6 @@ import play.api.libs.json._
  */
 class ElfinXmlSerialisation extends Specification {
 
-
-
   val TestResourcesDir = "./test/resources/"
   val TestResultsDir = "./test/results/"
 
@@ -86,7 +84,7 @@ class ElfinXmlSerialisation extends Specification {
 
   // Produce JSON from ELFIN object
   val elfinJson = Json.toJson(elfin)
-  
+
   val mutationsJson = Json.toJson(elfin.MUTATIONS)
   val geoselectionJson = Json.toJson(elfin.GEOSELECTION)
   val identifiantJson = Json.toJson(elfin.IDENTIFIANT)
@@ -95,14 +93,14 @@ class ElfinXmlSerialisation extends Specification {
   val activiteJson = Json.toJson(elfin.ACTIVITE)
   val formeJson = Json.toJson(elfin.FORME)
   val annexeJson = Json.toJson(elfin.ANNEXE)
-  val diversJson = Json.toJson(elfin.DIVERS)  
+  val diversJson = Json.toJson(elfin.DIVERS)
 
   // ==================================================================
   // play.api.libs.json.JsValue => JSON file
   // ==================================================================
 
   JsonXmlConverter.printJsonToFile(elfinJson, TestResultsDir + "ELFINResult.json")
-  
+
   JsonXmlConverter.printJsonToFile(mutationsJson, TestResultsDir + "MUTATIONSResult.json")
   JsonXmlConverter.printJsonToFile(geoselectionJson, TestResultsDir + "GEOSELECTIONResult.json")
   JsonXmlConverter.printJsonToFile(identifiantJson, TestResultsDir + "IDENTIFIANTResult.json")
@@ -118,16 +116,32 @@ class ElfinXmlSerialisation extends Specification {
   // ==================================================================
   val parsedJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "ELFINResult.json")
 
+  val mutationsJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "MUTATIONSResult.json")
+  val geoselectionJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "GEOSELECTIONResult.json")
+  val identifiantJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "IDENTIFIANTResult.json")
+  val caracteristiqueJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "CARACTERISTIQUEResult.json")
+  val partenaireJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "PARTENAIREResult.json")
+  val activiteJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "ACTIVITEResult.json")
+  val formeJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "FORMEResult.json")
   val annexeJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "ANNEXEResult.json")
-  val annexeFromFile = annexeJsonInput.as[ANNEXE] 
-  
+  val diversJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "DIVERSResult.json")
+
   // ==================================================================
   // play.api.libs.json.JsValue => ch.bsisa.hyperbird.model.ELFIN
   // ==================================================================
   //val elfinJsValue = parsedJsonInput \ "ELFIN"
   val elfinJsValue = parsedJsonInput
   // @TODO
-  //val elfinFromFile = elfinJsValue.as[ELFIN] 
+  //val elfinFromFile = elfinJsValue.as[ELFIN]
+//  val mutationsFromFile = annexeJsonInput.as[MUTATIONS]
+//  val geoselectionFromFile = annexeJsonInput.as[GEOSELECTION]
+//  val identifiantFromFile = annexeJsonInput.as[IDENTIFIANT]
+//  val caracteristiqueFromFile = annexeJsonInput.as[CARACTERISTIQUE]
+//  val partenaireFromFile = annexeJsonInput.as[PARTENAIRE]
+//  val activiteFromFile = annexeJsonInput.as[ACTIVITE]
+//  val formeFromFile = annexeJsonInput.as[FORME]
+  val annexeFromFile = annexeJsonInput.as[ANNEXE]
+  //val diversFromFile = annexeJsonInput.as[DIVERS]
 
   // ==================================================================
   // ch.bsisa.hyperbird.model.ELFIN => scala.xml.Elem

@@ -91,8 +91,12 @@ object Implicits {
   implicit object MUTATIONSFormat extends Format[MUTATIONS] {
     def reads(json: JsValue): JsResult[MUTATIONS] =
       JsSuccess(MUTATIONS((json \ "MUTATION").as[List[MUTATION]]: _*))
-    def writes(ms: MUTATIONS): JsValue = JsObject(
-      for (m <- ms.MUTATION) yield "MUTATION" -> Json.toJson(m))
+    def writes(ms: MUTATIONS): JsValue = {
+      val mutationJsSeq = for (m <- ms.MUTATION) yield Json.toJson(m)
+      Json.obj("MUTATION" -> JsArray(mutationJsSeq))
+    }
+
+    //Json.obj("RENVOI" -> JsArray(renvoiArr))
   }
 
   // ==================================================================
@@ -121,8 +125,10 @@ object Implicits {
   implicit object GEOSELECTIONFormat extends Format[GEOSELECTION] {
     def reads(json: JsValue): JsResult[GEOSELECTION] =
       JsSuccess(GEOSELECTION((json \ "CENTROIDE").as[List[CENTROIDE]]: _*))
-    def writes(gs: GEOSELECTION): JsValue = JsObject(
-      for (c <- gs.CENTROIDE) yield "CENTROIDE" -> Json.toJson(c))
+    def writes(gs: GEOSELECTION): JsValue = {
+      val centroideJsSeq = for (c <- gs.CENTROIDE) yield Json.toJson(c)
+      Json.obj("CENTROIDE" -> JsArray(centroideJsSeq))
+    }
   }
 
   // ==================================================================
@@ -186,8 +192,11 @@ object Implicits {
   implicit object CARSETFormat extends Format[CARSET] {
     def reads(json: JsValue): JsResult[CARSET] =
       JsSuccess(CARSET((json \ "CAR").as[List[CARSET_CARType]]: _*))
-    def writes(cs: CARSET): JsValue = JsObject(
-      for (c <- cs.CAR) yield "CAR" -> Json.toJson(c)(CARTypableFormat)) // Note: Force CARTypableFormat between it and CARSET_CARTypeFormat
+    def writes(cs: CARSET): JsValue = {
+      // Note: Force CARTypableFormat between it and CARSET_CARTypeFormat
+      val carJsSeq = for (c <- cs.CAR) yield Json.toJson(c)(CARTypableFormat)
+      Json.obj("CAR" -> JsArray(carJsSeq))
+    }
   }
 
   implicit object STATETypeFormat extends Format[STATEType] {
@@ -327,8 +336,10 @@ object Implicits {
       val mType = MATRICEType(lList: _*)
       JsSuccess(mType)
     }
-    def writes(ls: MATRICETypable): JsValue = JsObject(
-      for (l <- ls.L) yield "L" -> Json.toJson(l))
+    def writes(ls: MATRICETypable): JsValue = {
+      val lineJsSeq = for (l <- ls.L) yield Json.toJson(l)
+      Json.obj("L" -> JsArray(lineJsSeq))
+    }
   }
 
   //    CARACTERISTIQUE
@@ -394,8 +405,10 @@ object Implicits {
   implicit object EVENEMENTFormat extends Format[EVENEMENT] {
     def reads(json: JsValue): JsResult[EVENEMENT] =
       JsSuccess(EVENEMENT((json \ "ECHEANCE").as[List[ECHEANCE]]: _*))
-    def writes(es: EVENEMENT): JsValue = JsObject(
-      for (e <- es.ECHEANCE) yield "ECHEANCE" -> Json.toJson(e))
+    def writes(es: EVENEMENT): JsValue = {
+      val echeanceJsSeq = for (e <- es.ECHEANCE) yield Json.toJson(e)
+      Json.obj("ECHEANCE" -> JsArray(echeanceJsSeq))
+    }
   }
 
   // ACTIVITE => EVENEMENT => ECHEANCE => E_STATUT  GESTION => MATRICETypable
@@ -509,8 +522,7 @@ object Implicits {
       case JsSuccess(lien, path) => JsSuccess(new java.net.URI(lien))
       case JsError(e) => JsError(e)
     }
-    //def writes(l: java.net.URI): JsValue = JsString(l.toString)   //use l.toASCIIString if encoding to ASCII is required
-    def writes(l: java.net.URI): JsValue = JsString(l.toASCIIString) //use l.toASCIIString if encoding to ASCII is required
+    def writes(l: java.net.URI): JsValue = JsString(l.toASCIIString) //use l.toASCIIString if encoding to ASCII is required, l.toString otherwise
   }
 
   implicit object RENVOIFormat extends Format[RENVOI] {
@@ -524,20 +536,10 @@ object Implicits {
 
       posLienContent match {
         case JsSuccess((pos, lien, content), path) =>
-          println("\n\n1) SUCCESS!!!\n\n")
-          println(s"content: ${content}")
-          //val node = JsonXmlConverter.xmlStringToNodeSeq(content)
           val node: scala.xml.NodeSeq = scala.xml.Text(content)
-          println(s"2) node: ${node}")
           val dataRecord = DataRecord.fromAny(node)
-          //val dataRecord = DataRecord(None, None, None, None, content)
-          println(s"3) dataRecord: ${dataRecord}")
           val recordsSeq = Seq(dataRecord)
-          println(s"4) recordsSeq: ${recordsSeq}")
-          val renvoi = RENVOI(recordsSeq, pos, lien)
-          println(s"5) renvoi: ${renvoi}")
-          println("\n\nrenvoi built!!!\n\n")
-          JsSuccess(renvoi)
+          JsSuccess(RENVOI(recordsSeq, pos, lien))
         case JsError(errors) => JsError(errors) // forward JsError(errors) "as is"
       }
     }
@@ -557,14 +559,10 @@ object Implicits {
         case JsError(e) => JsError(e) // Simply forward 
       }
     }
-
-//    def writes(as: ANNEXE): JsValue = Json.obj("RENVOI" -> Json.arr(
-//      for (r <- as.RENVOI) yield Json.toJson(r)))
     def writes(annexes: ANNEXE): JsValue = {
-          val renvoiArr = for (r <- annexes.RENVOI) yield Json.toJson(r) 
-          Json.obj("RENVOI" -> JsArray(renvoiArr) )
+      val renvoiArr = for (r <- annexes.RENVOI) yield Json.toJson(r)
+      Json.obj("RENVOI" -> JsArray(renvoiArr))
     }
-
   }
 
   // DIVERS
