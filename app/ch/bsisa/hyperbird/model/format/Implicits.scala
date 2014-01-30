@@ -95,8 +95,6 @@ object Implicits {
       val mutationJsSeq = for (m <- ms.MUTATION) yield Json.toJson(m)
       Json.obj("MUTATION" -> JsArray(mutationJsSeq))
     }
-
-    //Json.obj("RENVOI" -> JsArray(renvoiArr))
   }
 
   // ==================================================================

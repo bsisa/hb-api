@@ -133,13 +133,14 @@ class ElfinXmlSerialisation extends Specification {
   val elfinJsValue = parsedJsonInput
   // @TODO
   //val elfinFromFile = elfinJsValue.as[ELFIN]
-//  val mutationsFromFile = annexeJsonInput.as[MUTATIONS]
-//  val geoselectionFromFile = annexeJsonInput.as[GEOSELECTION]
-//  val identifiantFromFile = annexeJsonInput.as[IDENTIFIANT]
-//  val caracteristiqueFromFile = annexeJsonInput.as[CARACTERISTIQUE]
-//  val partenaireFromFile = annexeJsonInput.as[PARTENAIRE]
-//  val activiteFromFile = annexeJsonInput.as[ACTIVITE]
-//  val formeFromFile = annexeJsonInput.as[FORME]
+  // @TODO more array problem to solve.
+  //val mutationsFromFile = annexeJsonInput.as[MUTATIONS]
+  //  val geoselectionFromFile = annexeJsonInput.as[GEOSELECTION]
+  //  val identifiantFromFile = annexeJsonInput.as[IDENTIFIANT]
+  //  val caracteristiqueFromFile = annexeJsonInput.as[CARACTERISTIQUE]
+  //  val partenaireFromFile = annexeJsonInput.as[PARTENAIRE]
+  //  val activiteFromFile = annexeJsonInput.as[ACTIVITE]
+  //  val formeFromFile = annexeJsonInput.as[FORME]
   val annexeFromFile = annexeJsonInput.as[ANNEXE]
   //val diversFromFile = annexeJsonInput.as[DIVERS]
 
