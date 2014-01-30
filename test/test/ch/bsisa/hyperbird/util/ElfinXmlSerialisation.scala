@@ -118,8 +118,8 @@ class ElfinXmlSerialisation extends Specification {
   // ==================================================================
   val parsedJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "ELFINResult.json")
 
-//  val annexeJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "ANNEXEResult.json")
-//  val annexeFromFile = annexeJsonInput.as[ANNEXE] 
+  val annexeJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "ANNEXEResult.json")
+  val annexeFromFile = annexeJsonInput.as[ANNEXE] 
   
   // ==================================================================
   // play.api.libs.json.JsValue => ch.bsisa.hyperbird.model.ELFIN

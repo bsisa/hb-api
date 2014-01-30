@@ -41,7 +41,7 @@ object Implicits {
   implicit val elfinReads: Reads[Elfin] = Json.reads[Elfin]
 
   /**
-   * Extracts mixed content text nodes as String assuming there is no "real" mix content, 
+   * Extracts mixed content text nodes as String assuming there is no "real" mix content,
    * that is no mix of XML elements and text nodes but only text nodes.
    *
    * TODO: validate the current assumption that geoXML.xsd
@@ -63,7 +63,7 @@ object Implicits {
       nodeSeq <- nodeSeqSeq
       node <- nodeSeq
     } yield node.text
-     
+
     //Return the content as a String
     textSeq.mkString
   }
@@ -551,7 +551,6 @@ object Implicits {
   // ANNEXE => RENVOI => LIEN
   implicit object ANNEXEFormat extends Format[ANNEXE] {
     def reads(json: JsValue): JsResult[ANNEXE] = {
-      println(s"""ANNEXEFormat.reads json: ${json}""")
       val jsResult = (json \ "RENVOI").validate[List[RENVOI]]
       jsResult match {
         case JsSuccess(renvois, path) => JsSuccess(ANNEXE(renvois: _*))
@@ -559,8 +558,13 @@ object Implicits {
       }
     }
 
-    def writes(as: ANNEXE): JsValue = JsObject(
-      for (r <- as.RENVOI) yield "RENVOI" -> Json.toJson(r))
+//    def writes(as: ANNEXE): JsValue = Json.obj("RENVOI" -> Json.arr(
+//      for (r <- as.RENVOI) yield Json.toJson(r)))
+    def writes(annexes: ANNEXE): JsValue = {
+          val renvoiArr = for (r <- annexes.RENVOI) yield Json.toJson(r) 
+          Json.obj("RENVOI" -> JsArray(renvoiArr) )
+    }
+
   }
 
   // DIVERS
