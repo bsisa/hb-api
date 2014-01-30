@@ -2,6 +2,8 @@ package ch.bsisa.hyperbird.util.format
 
 import net.liftweb.json._
 import net.liftweb.json.JsonAST.render
+import play.api.libs.json.Json
+import play.api.libs.json.JsValue
 
 /**
  * Helps converting to and from String, XML and JSON formats.
@@ -10,6 +12,12 @@ import net.liftweb.json.JsonAST.render
  * Check https://github.com/lift/framework/tree/master/core/json
  * SBT dependency: "net.liftweb" %% "lift-json" % "2.5"
  * for details.
+ * 
+ * Beware of serious limitations such as loosing empty element 
+ * and transforming attributes to elements while doing a full
+ * XML => JSON => XML lifecyle. Which is by design not a mistake
+ * but a loss of information between the two formats {XML,JSON}
+ * when no additional meta information is provided.
  *
  * @author Patrick Refondini
  */
@@ -81,5 +89,21 @@ object JsonXmlConverter {
   def jsonStringToXml(jsonStr: String) = {
     Xml.toXml(parse(jsonStr))
   }
+  
+  /**
+   * Dumps a JsValue to file.
+   */
+  def printJsonToFile(json: JsValue, filePath: String): Unit = {
+    val fileWriter = new java.io.FileWriter(filePath)
+    try { fileWriter.write(Json.prettyPrint(json)) } finally { fileWriter.close() }
+  }
+  
+  /**
+   * Loads a JsValue from file.
+   */
+  def loadJsonFromFile(pathToJsonFile: String): JsValue = {
+    val jsonString = scala.io.Source.fromFile(pathToJsonFile).mkString
+    Json.parse(jsonString)
+  }  
 
 }

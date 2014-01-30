@@ -3,6 +3,7 @@ package test.ch.bsisa.hyperbird.util
 import ch.bsisa.hyperbird.model._
 import ch.bsisa.hyperbird.model.format.Implicits._
 import ch.bsisa.hyperbird.model.proto._
+import ch.bsisa.hyperbird.util.format.JsonXmlConverter
 import org.specs2.mutable._
 import scala.xml.XML
 import play.api.libs.json.Json
@@ -26,6 +27,8 @@ import play.api.libs.json._
  * @author Patrick Refondini
  */
 class ElfinXmlSerialisation extends Specification {
+
+
 
   val TestResourcesDir = "./test/resources/"
   val TestResultsDir = "./test/results/"
@@ -82,29 +85,47 @@ class ElfinXmlSerialisation extends Specification {
   // ==================================================================
 
   // Produce JSON from ELFIN object
-  //val mutationsJson = Json.toJson(elfin.MUTATIONS)
-  //val mutationsJson = Json.toJson(elfin.GEOSELECTION)
-  //val mutationsJson = Json.toJson(elfin.IDENTIFIANT)
-  val mutationsJson = Json.toJson(elfin.CARACTERISTIQUE)
-  //val mutationsJson = Json.toJson(elfin.PARTENAIRE)
-  //val mutationsJson = Json.toJson(elfin.ACTIVITE)
+  val elfinJson = Json.toJson(elfin)
+  
+  val mutationsJson = Json.toJson(elfin.MUTATIONS)
+  val geoselectionJson = Json.toJson(elfin.GEOSELECTION)
+  val identifiantJson = Json.toJson(elfin.IDENTIFIANT)
+  val caracteristiqueJson = Json.toJson(elfin.CARACTERISTIQUE)
+  val partenaireJson = Json.toJson(elfin.PARTENAIRE)
+  val activiteJson = Json.toJson(elfin.ACTIVITE)
+  val formeJson = Json.toJson(elfin.FORME)
+  val annexeJson = Json.toJson(elfin.ANNEXE)
+  val diversJson = Json.toJson(elfin.DIVERS)  
 
   // ==================================================================
   // play.api.libs.json.JsValue => JSON file
   // ==================================================================
-  val fileWriter = new java.io.FileWriter(TestResultsDir + "ELFINResult.json")
-  try { fileWriter.write(Json.prettyPrint(mutationsJson)) } finally { fileWriter.close() }
+
+  JsonXmlConverter.printJsonToFile(elfinJson, TestResultsDir + "ELFINResult.json")
+  
+  JsonXmlConverter.printJsonToFile(mutationsJson, TestResultsDir + "MUTATIONSResult.json")
+  JsonXmlConverter.printJsonToFile(geoselectionJson, TestResultsDir + "GEOSELECTIONResult.json")
+  JsonXmlConverter.printJsonToFile(identifiantJson, TestResultsDir + "IDENTIFIANTResult.json")
+  JsonXmlConverter.printJsonToFile(caracteristiqueJson, TestResultsDir + "CARACTERISTIQUEResult.json")
+  JsonXmlConverter.printJsonToFile(partenaireJson, TestResultsDir + "PARTENAIREResult.json")
+  JsonXmlConverter.printJsonToFile(activiteJson, TestResultsDir + "ACTIVITEResult.json")
+  JsonXmlConverter.printJsonToFile(formeJson, TestResultsDir + "FORMEResult.json")
+  JsonXmlConverter.printJsonToFile(annexeJson, TestResultsDir + "ANNEXEResult.json")
+  JsonXmlConverter.printJsonToFile(diversJson, TestResultsDir + "DIVERSResult.json")
 
   // ==================================================================
   // JSON file => play.api.libs.json.JsValue
   // ==================================================================
-  val jsonString = scala.io.Source.fromFile(TestResultsDir + "ELFINResult.json").mkString
-  val parsedJsonInput = Json.parse(jsonString)
+  val parsedJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "ELFINResult.json")
 
+//  val annexeJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "ANNEXEResult.json")
+//  val annexeFromFile = annexeJsonInput.as[ANNEXE] 
+  
   // ==================================================================
   // play.api.libs.json.JsValue => ch.bsisa.hyperbird.model.ELFIN
   // ==================================================================
-  val elfinJsValue = parsedJsonInput \ "ELFIN"
+  //val elfinJsValue = parsedJsonInput \ "ELFIN"
+  val elfinJsValue = parsedJsonInput
   // @TODO
   //val elfinFromFile = elfinJsValue.as[ELFIN] 
 
@@ -113,6 +134,7 @@ class ElfinXmlSerialisation extends Specification {
   // ==================================================================  
   // Convert Scala objects back to XML without data loss nor structure 
   // change.
+  //val elfinBackToXml = scalaxb.toXML[ELFIN](elfinFromFile, None, Some("ELFIN"), ch.bsisa.hyperbird.model.proto.defaultScope)
   val elfinBackToXml = scalaxb.toXML[ELFIN](elfin, None, Some("ELFIN"), ch.bsisa.hyperbird.model.proto.defaultScope)
 
   "The elfinBackToXml (scala.xml.Elem) " should {

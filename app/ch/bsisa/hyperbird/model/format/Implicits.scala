@@ -41,7 +41,8 @@ object Implicits {
   implicit val elfinReads: Reads[Elfin] = Json.reads[Elfin]
 
   /**
-   * Extracts mixed content text nodes as String assuming there is no "real" mix content.
+   * Extracts mixed content text nodes as String assuming there is no "real" mix content, 
+   * that is no mix of XML elements and text nodes but only text nodes.
    *
    * TODO: validate the current assumption that geoXML.xsd
    * mixed content never really contains mix of text and
@@ -52,21 +53,19 @@ object Implicits {
    */
   def getMixedContent(mixed: Seq[scalaxb.DataRecord[Any]]): String = {
 
-    // Get mixed content as as sequence of scala.xml.NodeSeq
+    // Get mixed content as as Seq of scala.xml.NodeSeq
     val nodeSeqSeq = for {
       record <- mixed
-    } yield scalaxb.toXML(record, "MIXED-CONTENT", ch.bsisa.hyperbird.model.proto.defaultScope)
+    } yield scalaxb.toXML(record, "TEMP-ELEMENT", ch.bsisa.hyperbird.model.proto.defaultScope)
 
-    // Output sequence of scala.xml.NodeSeq to String
-    val sw = new StringWriter()
-    import scala.xml.XML
-    for (nodeSeq <- nodeSeqSeq) {
-      for (node <- nodeSeq) {
-        //XML.write(sw, node, "", false, null)
-        sw.write(node.text)
-      }
-    }
-    sw.toString
+    // Extract text content from the sequence of node sequence.
+    val textSeq = for {
+      nodeSeq <- nodeSeqSeq
+      node <- nodeSeq
+    } yield node.text
+     
+    //Return the content as a String
+    textSeq.mkString
   }
 
   /**
@@ -458,7 +457,7 @@ object Implicits {
   }
 
   implicit val PASSAGEFormat: Format[PASSAGE] = Json.format[PASSAGE]
-  implicit val GUIDEFormat: Format[GUIDE] = Json.format[GUIDE]  
+  implicit val GUIDEFormat: Format[GUIDE] = Json.format[GUIDE]
 
   implicit object DIRECTIONFormat extends Format[DIRECTION] {
 
@@ -476,9 +475,9 @@ object Implicits {
       case "AVAL" => JsString("AVAL")
       case "AMONT" => JsString("AMONT")
     }
-  }  
-  
-//  
+  }
+
+  //  
   implicit object FONCTIONType2Format extends Format[FONCTIONType2] {
 
     def reads(json: JsValue): JsResult[FONCTIONType2] =
@@ -495,15 +494,98 @@ object Implicits {
       case "FRONTIERE" => JsString("FRONTIERE")
       case "AXE" => JsString("AXE")
     }
-  }  
- 
-  implicit val LIGNEFormat: Format[LIGNE] = Json.format[LIGNE]  
+  }
+
+  implicit val LIGNEFormat: Format[LIGNE] = Json.format[LIGNE]
   implicit val LIBELLEFormat: Format[LIBELLE] = Json.format[LIBELLE]
   implicit val SYMBOLEFormat: Format[SYMBOLE] = Json.format[SYMBOLE]
   implicit val ZONEFormat: Format[ZONE] = Json.format[ZONE]
 
   implicit val FORMEFormat: Format[FORME] = Json.format[FORME]
-  
+
+  // ANNEXE => RENVOI => LIEN
+  implicit object URIFormat extends Format[java.net.URI] {
+    def reads(json: JsValue): JsResult[java.net.URI] = (json).validate[String] match {
+      case JsSuccess(lien, path) => JsSuccess(new java.net.URI(lien))
+      case JsError(e) => JsError(e)
+    }
+    //def writes(l: java.net.URI): JsValue = JsString(l.toString)   //use l.toASCIIString if encoding to ASCII is required
+    def writes(l: java.net.URI): JsValue = JsString(l.toASCIIString) //use l.toASCIIString if encoding to ASCII is required
+  }
+
+  implicit object RENVOIFormat extends Format[RENVOI] {
+
+    def reads(json: JsValue): JsResult[RENVOI] = {
+      val posLienContent: JsResult[(BigInt, java.net.URI, String)] = for {
+        pos <- (json \ "POS").validate[BigInt]
+        lien <- (json \ "LIEN").validate[java.net.URI]
+        content <- (json \ "MIXED-CONTENT").validate[String]
+      } yield (pos, lien, content)
+
+      posLienContent match {
+        case JsSuccess((pos, lien, content), path) =>
+          println("\n\n1) SUCCESS!!!\n\n")
+          println(s"content: ${content}")
+          //val node = JsonXmlConverter.xmlStringToNodeSeq(content)
+          val node: scala.xml.NodeSeq = scala.xml.Text(content)
+          println(s"2) node: ${node}")
+          val dataRecord = DataRecord.fromAny(node)
+          //val dataRecord = DataRecord(None, None, None, None, content)
+          println(s"3) dataRecord: ${dataRecord}")
+          val recordsSeq = Seq(dataRecord)
+          println(s"4) recordsSeq: ${recordsSeq}")
+          val renvoi = RENVOI(recordsSeq, pos, lien)
+          println(s"5) renvoi: ${renvoi}")
+          println("\n\nrenvoi built!!!\n\n")
+          JsSuccess(renvoi)
+        case JsError(errors) => JsError(errors) // forward JsError(errors) "as is"
+      }
+    }
+
+    def writes(r: RENVOI): JsValue = Json.obj(
+      "POS" -> r.POS,
+      "LIEN" -> r.LIEN,
+      "MIXED-CONTENT" -> getMixedContent(r.mixed))
+  }
+
+  // ANNEXE => RENVOI => LIEN
+  implicit object ANNEXEFormat extends Format[ANNEXE] {
+    def reads(json: JsValue): JsResult[ANNEXE] = {
+      println(s"""ANNEXEFormat.reads json: ${json}""")
+      val jsResult = (json \ "RENVOI").validate[List[RENVOI]]
+      jsResult match {
+        case JsSuccess(renvois, path) => JsSuccess(ANNEXE(renvois: _*))
+        case JsError(e) => JsError(e) // Simply forward 
+      }
+    }
+
+    def writes(as: ANNEXE): JsValue = JsObject(
+      for (r <- as.RENVOI) yield "RENVOI" -> Json.toJson(r))
+  }
+
+  // DIVERS
+  implicit val DIVERSFormat: Format[DIVERS] = Json.format[DIVERS]
+
+  implicit object TYPEFormat extends Format[TYPE] {
+
+    def reads(json: JsValue): JsResult[TYPE] =
+      (json \ "TYPE") match {
+        case JsString(value) => value match {
+          case "BIEN" => JsSuccess(BIEN)
+          case "ACTIVITE" => JsSuccess(ACTIVITEValue)
+          case "PERSONNE" => JsSuccess(PERSONNE)
+          case "DOCUMENT" => JsSuccess(DOCUMENT)
+          case invalid => JsError(s"Invalid string value ${invalid} found for TYPE. Valid values are {BIEN,ACTIVITE,PERSONNE,DOCUMENT}")
+        }
+        case _ => JsError(s"Invalid JsValue type received for TYPE. Expecting JsString only.")
+      }
+
+    def writes(t: TYPE): JsValue = JsString(t.toString)
+
+  }
+
+  implicit val ELFINFormat: Format[ELFIN] = Json.format[ELFIN]
+
   ///////////////////////////////////////////////////////////////////////////
 
 }
