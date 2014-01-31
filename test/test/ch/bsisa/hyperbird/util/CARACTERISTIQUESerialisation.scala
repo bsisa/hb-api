@@ -12,13 +12,16 @@ import play.api.libs.json._
 /**
  * Tests JSON ELFIN.ANNEXE serialisation deserialisation
  *
- *
+ * Tip: from sbt play console run: 
+ * {{{
+ * test-only test.ch.bsisa.hyperbird.util.CARACTERISTIQUESerialisation
+ * }}}
+ * to have only the current test run.
+ * 
  * @author Patrick Refondini
  */
-class CARACTERISTIQUESerialisation extends Specification {
+class CARACTERISTIQUESerialisation extends BaseSerialisationSpec {
 
-  val TestResourcesDir = "./test/resources/"
-  //val TestResultsDir = "./test/results/"
   val CARACTERISTIQUEJsonFilePath = TestResourcesDir + "CARACTERISTIQUE.json"
 
   val caracteristiqueJsonInput = JsonXmlConverter.loadJsonFromFile(CARACTERISTIQUEJsonFilePath)

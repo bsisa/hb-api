@@ -12,15 +12,16 @@ import play.api.libs.json._
 /**
  * Tests JSON ELFIN.ANNEXE.RENVOI serialisation deserialisation
  *
- * Tip: from play console use commmand `test-only test.ch.bsisa.hyperbird.util.RENVOISerialisation`
- * to run this test only.
+ * Tip: from sbt play console run: 
+ * {{{
+ * test-only test.ch.bsisa.hyperbird.util.RENVOISerialisation
+ * }}}
+ * to have only the current test run.
  *
  * @author Patrick Refondini
  */
-class RENVOISerialisation extends Specification {
+class RENVOISerialisation extends BaseSerialisationSpec {
 
-  val TestResourcesDir = "./test/resources/"
-  val TestResultsDir = "./test/results/"
   val RENVOIJsonFilePath = TestResourcesDir + "RENVOI.json"
 
   val renvoiJsonInput = JsonXmlConverter.loadJsonFromFile(RENVOIJsonFilePath)

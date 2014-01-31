@@ -13,13 +13,10 @@ import play.api.libs.json.JsError
  * 
  * @author Patrick Refondini
  */
-class JsonXmlConverterSpec extends Specification {
-
-
-  val TestResourcesDir = "./test/resources/"
-  val TestResultsDir = "./test/results/"
+class JsonXmlConverterSpec extends BaseSerialisationSpec {
     
   val elfinTest001Xml = XML.loadFile(TestResourcesDir + "elfin-test-001.xml")
+  
   val expectedElfinTest001_Id = "G20040931234567890"    
   val expectedElfinTest001_ID_G = "G20040930101030005"
 

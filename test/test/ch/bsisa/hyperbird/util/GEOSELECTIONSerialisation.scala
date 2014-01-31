@@ -12,13 +12,16 @@ import play.api.libs.json._
 /**
  * Tests JSON ELFIN.ANNEXE serialisation deserialisation
  *
- *
+ * Tip: from sbt play console run: 
+ * {{{
+ * test-only test.ch.bsisa.hyperbird.util.GEOSELECTIONSerialisation
+ * }}}
+ * to have only the current test run.
+ * 
  * @author Patrick Refondini
  */
-class GEOSELECTIONSerialisation extends Specification {
+class GEOSELECTIONSerialisation extends BaseSerialisationSpec {
 
-  val TestResourcesDir = "./test/resources/"
-  //val TestResultsDir = "./test/results/"
   val GEOSELECTIONJsonFilePath = TestResourcesDir + "GEOSELECTION.json"
 
   val geoselectionJsonInput = JsonXmlConverter.loadJsonFromFile(GEOSELECTIONJsonFilePath)

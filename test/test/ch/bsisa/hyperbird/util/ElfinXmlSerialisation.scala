@@ -26,10 +26,8 @@ import play.api.libs.json._
  *
  * @author Patrick Refondini
  */
-class ElfinXmlSerialisation extends Specification {
+class ElfinXmlSerialisation extends BaseSerialisationSpec {
 
-  val TestResourcesDir = "./test/resources/"
-  val TestResultsDir = "./test/results/"
 
   val expectedElfinTest001_Id = "G20040931234567890"
   val expectedElfinTest001_ID_G = "G20040930101030005"
