@@ -197,8 +197,8 @@ object Implicits {
     }
 
     def writes(cs: CARSET): JsValue = {
-      // Note: Force CARTypableFormat between it and CARSET_CARTypeFormat
-      val carJsSeq = for (c <- cs.CAR) yield Json.toJson(c)(CARTypableFormat)
+      // Note: Force CARSET_CARTypeFormat between it and CARTypableFormat
+      val carJsSeq = for (c <- cs.CAR) yield Json.toJson(c)(CARSET_CARTypeFormat)
       Json.obj("CAR" -> JsArray(carJsSeq))
     }
   }

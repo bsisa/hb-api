@@ -29,6 +29,9 @@ class CARACTERISTIQUESerialisation extends Specification {
       caracteristiqueFromFile.CAR1.get.NOM.get must be equalTo ("Surface au sol")
       caracteristiqueFromFile.CAR1.get.UNITE.get must be equalTo ("m2")
       caracteristiqueFromFile.CAR1.get.VALEUR.get must be equalTo ("617.2340174963703")
+      
+      caracteristiqueFromFile.CARSET.get.CAR(0).NOM.get must be equalTo (null) 
+      caracteristiqueFromFile.CARSET.get.CAR(1).NOM.get must be equalTo ("Ass. Incendie") 
 
       caracteristiqueFromFile.ETAT.get.ETAT1.get.B.get must be equalTo ("bEtat1Test")
       caracteristiqueFromFile.ETAT.get.ETAT1.get.C.get must be equalTo ("cEtat1Test")
