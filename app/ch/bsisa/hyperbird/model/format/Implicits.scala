@@ -92,7 +92,7 @@ object Implicits {
     def reads(json: JsValue): JsResult[MUTATIONS] = {
       val jsResult = (json \ "MUTATION").validate[List[MUTATION]]
       jsResult match {
-        case JsSuccess(mutations, path) => JsSuccess(MUTATIONS(mutations: _*))
+        case JsSuccess(mutationList, path) => JsSuccess(MUTATIONS(mutationList: _*))
         case JsError(e) => JsError(e) // Simply forward
       }
     }
@@ -126,8 +126,13 @@ object Implicits {
   implicit val CENTROIDEFormat: Format[CENTROIDE] = Json.format[CENTROIDE]
 
   implicit object GEOSELECTIONFormat extends Format[GEOSELECTION] {
-    def reads(json: JsValue): JsResult[GEOSELECTION] =
-      JsSuccess(GEOSELECTION((json \ "CENTROIDE").as[List[CENTROIDE]]: _*))
+    def reads(json: JsValue): JsResult[GEOSELECTION] = {
+      val centroideJsSeq = (json \ "CENTROIDE").validate[List[CENTROIDE]]
+      centroideJsSeq match {
+        case JsSuccess(centroideList,path) => JsSuccess(GEOSELECTION(centroideList: _*))
+        case JsError(e) => JsError(e) // Simply forward
+      }
+    }
     def writes(gs: GEOSELECTION): JsValue = {
       val centroideJsSeq = for (c <- gs.CENTROIDE) yield Json.toJson(c)
       Json.obj("CENTROIDE" -> JsArray(centroideJsSeq))
@@ -193,8 +198,14 @@ object Implicits {
   //  }
 
   implicit object CARSETFormat extends Format[CARSET] {
-    def reads(json: JsValue): JsResult[CARSET] =
-      JsSuccess(CARSET((json \ "CAR").as[List[CARSET_CARType]]: _*))
+    def reads(json: JsValue): JsResult[CARSET] = {
+      val carJsSeq = (json \ "CAR").validate[List[CARSET_CARType]]
+      carJsSeq match {
+        case JsSuccess(carList,path) => JsSuccess(CARSET(carList: _*))
+        case JsError(e) => JsError(e) // Simply forward 
+      }      
+    }
+      
     def writes(cs: CARSET): JsValue = {
       // Note: Force CARTypableFormat between it and CARSET_CARTypeFormat
       val carJsSeq = for (c <- cs.CAR) yield Json.toJson(c)(CARTypableFormat)
@@ -335,9 +346,11 @@ object Implicits {
   // FRACTION => MATRICETypable (abtract trait) => MATRICEType (ok)
   implicit object MATRICETypableFormat extends Format[MATRICETypable] {
     def reads(json: JsValue): JsResult[MATRICEType] = {
-      val lList = (json \ "L").as[List[L]]
-      val mType = MATRICEType(lList: _*)
-      JsSuccess(mType)
+      val lineJsSeq = (json \ "L").validate[List[L]]
+      lineJsSeq match {
+        case JsSuccess(lineList,path) => JsSuccess(MATRICEType(lineList: _*))
+        case JsError(e) => JsError(e) // Simply forward
+      } 
     }
     def writes(ls: MATRICETypable): JsValue = {
       val lineJsSeq = for (l <- ls.L) yield Json.toJson(l)
@@ -406,8 +419,13 @@ object Implicits {
 
   // EVENEMENT => ECHEANCE => E_STATUT  GESTION => MATRICETypable
   implicit object EVENEMENTFormat extends Format[EVENEMENT] {
-    def reads(json: JsValue): JsResult[EVENEMENT] =
-      JsSuccess(EVENEMENT((json \ "ECHEANCE").as[List[ECHEANCE]]: _*))
+    def reads(json: JsValue): JsResult[EVENEMENT] = {
+      val echeanceJsSeq = (json \ "ECHEANCE").validate[List[ECHEANCE]]
+      echeanceJsSeq match {
+        case JsSuccess(echeanceList,path) => JsSuccess(EVENEMENT(echeanceList: _*))
+        case JsError(e) => JsError(e) // Simply forward 
+      }
+    }
     def writes(es: EVENEMENT): JsValue = {
       val echeanceJsSeq = for (e <- es.ECHEANCE) yield Json.toJson(e)
       Json.obj("ECHEANCE" -> JsArray(echeanceJsSeq))
@@ -558,13 +576,13 @@ object Implicits {
     def reads(json: JsValue): JsResult[ANNEXE] = {
       val jsResult = (json \ "RENVOI").validate[List[RENVOI]]
       jsResult match {
-        case JsSuccess(renvois, path) => JsSuccess(ANNEXE(renvois: _*))
+        case JsSuccess(renvoiList, path) => JsSuccess(ANNEXE(renvoiList: _*))
         case JsError(e) => JsError(e) // Simply forward 
       }
     }
     def writes(annexes: ANNEXE): JsValue = {
-      val renvoiArr = for (r <- annexes.RENVOI) yield Json.toJson(r)
-      Json.obj("RENVOI" -> JsArray(renvoiArr))
+      val renvoiJsSeq = for (r <- annexes.RENVOI) yield Json.toJson(r)
+      Json.obj("RENVOI" -> JsArray(renvoiJsSeq))
     }
   }
 
