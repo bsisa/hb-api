@@ -114,7 +114,7 @@ class ElfinXmlSerialisation extends Specification {
   // ==================================================================
   // JSON file => play.api.libs.json.JsValue
   // ==================================================================
-  val parsedJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "ELFINResult.json")
+  val elfinJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "ELFINResult.json")
 
   val mutationsJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "MUTATIONSResult.json")
   val geoselectionJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "GEOSELECTIONResult.json")
@@ -129,21 +129,30 @@ class ElfinXmlSerialisation extends Specification {
   // ==================================================================
   // play.api.libs.json.JsValue => ch.bsisa.hyperbird.model.ELFIN
   // ==================================================================
-  //val elfinJsValue = parsedJsonInput \ "ELFIN"
-  val elfinJsValue = parsedJsonInput
-  // @TODO
-  //val elfinFromFile = elfinJsValue.as[ELFIN]
-  // @TODO more array problem to solve.
+  val elfinFromFile = elfinJsonInput.as[ELFIN]
+
   val mutationsFromFile = mutationsJsonInput.as[MUTATIONS]
   val geoselectionFromFile = geoselectionJsonInput.as[GEOSELECTION]
   val identifiantFromFile = identifiantJsonInput.as[IDENTIFIANT]
   val caracteristiqueFromFile = caracteristiqueJsonInput.as[CARACTERISTIQUE]
-  //  val partenaireFromFile = annexeJsonInput.as[PARTENAIRE]
-  //  val activiteFromFile = annexeJsonInput.as[ACTIVITE]
-  //  val formeFromFile = annexeJsonInput.as[FORME]
+  val partenaireFromFile = partenaireJsonInput.as[PARTENAIRE]
+  val activiteFromFile = activiteJsonInput.as[ACTIVITE]
+  val formeFromFile = formeJsonInput.as[FORME]
   val annexeFromFile = annexeJsonInput.as[ANNEXE]
-  //val diversFromFile = annexeJsonInput.as[DIVERS]
+  val diversFromFile = diversJsonInput.as[DIVERS]
 
+  //TODO: add tests checking the expected values are found in :
+  // elfinFromFile and its sub elements
+  // mutationsFromFile 
+  // geoselectionFromFile
+  // identifiantFromFile
+  // caracteristiqueFromFile
+  // partenaireFromFile
+  // activiteFromFile
+  // formeFromFile
+  // annexeFromFile
+  // diversFromFile  
+  
   // ==================================================================
   // ch.bsisa.hyperbird.model.ELFIN => scala.xml.Elem
   // ==================================================================  
