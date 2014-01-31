@@ -452,7 +452,7 @@ object Implicits {
 
   implicit object DIRECTIONFormat extends Format[DIRECTION] {
 
-    def reads(json: JsValue): JsResult[DIRECTION] = (json \ "DIRECTION") match {
+    def reads(json: JsValue): JsResult[DIRECTION] = json match {
       case JsString(value) => value match {
         case "AVAL" => JsSuccess(AVAL)
         case "AMONT" => JsSuccess(AMONT)
