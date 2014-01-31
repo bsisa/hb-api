@@ -93,7 +93,7 @@ object Implicits {
       val jsResult = (json \ "MUTATION").validate[List[MUTATION]]
       jsResult match {
         case JsSuccess(mutationList, path) => JsSuccess(MUTATIONS(mutationList: _*))
-        case JsError(e) => JsError("Error reading MUTATIONS") ++ JsError(e) 
+        case JsError(e) => JsError("Error reading MUTATIONS") ++ JsError(e)
       }
     }
     def writes(ms: MUTATIONS): JsValue = {
@@ -108,7 +108,7 @@ object Implicits {
   implicit object TYPETypeFormat extends Format[TYPEType] {
 
     def reads(json: JsValue): JsResult[TYPEType] =
-      (json \ "TYPE") match {
+      json match {
         case JsString(value) => value match {
           case "SCHEMATIQUE" => JsSuccess(SCHEMATIQUE)
           case "GEOGRAPHIE" => JsSuccess(GEOGRAPHIE)
@@ -129,8 +129,8 @@ object Implicits {
     def reads(json: JsValue): JsResult[GEOSELECTION] = {
       val centroideJsSeq = (json \ "CENTROIDE").validate[List[CENTROIDE]]
       centroideJsSeq match {
-        case JsSuccess(centroideList,path) => JsSuccess(GEOSELECTION(centroideList: _*))
-        case JsError(e) => JsError("Error reading GEOSELECTION") ++ JsError(e) 
+        case JsSuccess(centroideList, path) => JsSuccess(GEOSELECTION(centroideList: _*))
+        case JsError(e) => JsError("Error reading GEOSELECTION") ++ JsError(e)
       }
     }
     def writes(gs: GEOSELECTION): JsValue = {
@@ -159,7 +159,7 @@ object Implicits {
 
       nomUniteValeur match {
         case JsSuccess((nom, unite, valeur), path) => JsSuccess(CARType(Option(nom), Option(unite), Option(valeur)))
-        case JsError(errors) => JsError("Error reading CARTypable") ++ JsError(errors) 
+        case JsError(errors) => JsError("Error reading CARTypable") ++ JsError(errors)
       }
     }
 
@@ -176,11 +176,11 @@ object Implicits {
     def reads(json: JsValue): JsResult[CARSET] = {
       val carJsSeq = (json \ "CAR").validate[List[CARSET_CARType]]
       carJsSeq match {
-        case JsSuccess(carList,path) => JsSuccess(CARSET(carList: _*))
-        case JsError(e) => JsError("Error reading CARSET") ++ JsError(e)  
-      }      
+        case JsSuccess(carList, path) => JsSuccess(CARSET(carList: _*))
+        case JsError(e) => JsError("Error reading CARSET") ++ JsError(e)
+      }
     }
-      
+
     def writes(cs: CARSET): JsValue = {
       // Note: Force CARTypableFormat between it and CARSET_CARTypeFormat
       val carJsSeq = for (c <- cs.CAR) yield Json.toJson(c)(CARTypableFormat)
@@ -204,7 +204,7 @@ object Implicits {
           val recordsSeq = Seq(dataRecord)
           val stateType = STATEType(recordsSeq, Option(b), Option(c))
           JsSuccess(stateType)
-        case JsError(errors) => JsError("Error reading STATEType") ++ JsError(errors) 
+        case JsError(errors) => JsError("Error reading STATEType") ++ JsError(errors)
       }
     }
 
@@ -232,7 +232,7 @@ object Implicits {
           val recordsSeq = Seq(dataRecord)
           val column = C(recordsSeq, pos)
           JsSuccess(column)
-        case JsError(errors) => JsError("Error reading C") ++ JsError(errors) 
+        case JsError(errors) => JsError("Error reading C") ++ JsError(errors)
       }
     }
 
@@ -280,7 +280,7 @@ object Implicits {
           val recordsSeq = Seq(dataRecord)
           val dimension = DIMENSION(recordsSeq, nom, typet)
           JsSuccess(dimension)
-        case JsError(errors) => JsError("Error reading DIMENSION") ++ JsError(errors) 
+        case JsError(errors) => JsError("Error reading DIMENSION") ++ JsError(errors)
       }
     }
 
@@ -298,9 +298,9 @@ object Implicits {
     def reads(json: JsValue): JsResult[MATRICEType] = {
       val lineJsSeq = (json \ "L").validate[List[L]]
       lineJsSeq match {
-        case JsSuccess(lineList,path) => JsSuccess(MATRICEType(lineList: _*))
+        case JsSuccess(lineList, path) => JsSuccess(MATRICEType(lineList: _*))
         case JsError(e) => JsError("Error reading MATRICETypable") ++ JsError(e)
-      } 
+      }
     }
     def writes(ls: MATRICETypable): JsValue = {
       val lineJsSeq = for (l <- ls.L) yield Json.toJson(l)
@@ -372,8 +372,8 @@ object Implicits {
     def reads(json: JsValue): JsResult[EVENEMENT] = {
       val echeanceJsSeq = (json \ "ECHEANCE").validate[List[ECHEANCE]]
       echeanceJsSeq match {
-        case JsSuccess(echeanceList,path) => JsSuccess(EVENEMENT(echeanceList: _*))
-        case JsError(e) => JsError("Error reading EVENEMENT") ++ JsError(e)  
+        case JsSuccess(echeanceList, path) => JsSuccess(EVENEMENT(echeanceList: _*))
+        case JsError(e) => JsError("Error reading EVENEMENT") ++ JsError(e)
       }
     }
     def writes(es: EVENEMENT): JsValue = {
@@ -494,7 +494,7 @@ object Implicits {
       case JsError(e) => JsError("Error reading java.net.URI") ++ JsError(e)
     }
     //use l.toASCIIString if encoding to ASCII is required, l.toString otherwise
-    def writes(l: java.net.URI): JsValue = JsString(l.toASCIIString) 
+    def writes(l: java.net.URI): JsValue = JsString(l.toASCIIString)
   }
 
   implicit object RENVOIFormat extends Format[RENVOI] {
@@ -512,7 +512,7 @@ object Implicits {
           val dataRecord = DataRecord.fromAny(node)
           val recordsSeq = Seq(dataRecord)
           JsSuccess(RENVOI(recordsSeq, pos, lien))
-        case JsError(errors) => JsError("Error reading RENVOI") ++ JsError(errors) 
+        case JsError(errors) => JsError("Error reading RENVOI") ++ JsError(errors)
       }
     }
 
@@ -528,7 +528,7 @@ object Implicits {
       val jsResult = (json \ "RENVOI").validate[List[RENVOI]]
       jsResult match {
         case JsSuccess(renvoiList, path) => JsSuccess(ANNEXE(renvoiList: _*))
-        case JsError(e) => JsError("Error reading ANNEXE") ++ JsError(e)  
+        case JsError(e) => JsError("Error reading ANNEXE") ++ JsError(e)
       }
     }
     def writes(annexes: ANNEXE): JsValue = {
