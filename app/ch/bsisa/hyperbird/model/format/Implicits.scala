@@ -547,7 +547,7 @@ object Implicits {
 
   implicit object TYPEFormat extends Format[TYPE] {
 
-    def reads(json: JsValue): JsResult[TYPE] = (json \ "TYPE") match {
+    def reads(json: JsValue): JsResult[TYPE] = json match {
       case JsString(value) => value match {
         case "BIEN" => JsSuccess(BIEN)
         case "ACTIVITE" => JsSuccess(ACTIVITEValue)
@@ -555,7 +555,7 @@ object Implicits {
         case "DOCUMENT" => JsSuccess(DOCUMENT)
         case invalid => JsError(s"Invalid string value ${invalid} found for TYPE. Valid values are {BIEN,ACTIVITE,PERSONNE,DOCUMENT}")
       }
-      case _ => JsError(s"Invalid JsValue type received for TYPE. Expecting JsString only.")
+      case _ => JsError(s"Invalid JsValue type received for TYPE. Expecting JsString with valid values {BIEN,ACTIVITE,PERSONNE,DOCUMENT} only.")
     }
 
     def writes(t: TYPE): JsValue = JsString(t.toString)
