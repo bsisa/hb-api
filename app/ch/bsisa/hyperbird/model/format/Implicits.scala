@@ -400,14 +400,14 @@ object Implicits {
   //       => SYMBOLE => LIBELLE
   implicit object FONCTIONFormat extends Format[FONCTION] {
 
-    def reads(json: JsValue): JsResult[FONCTION] = (json \ "FONCTION") match {
+    def reads(json: JsValue): JsResult[FONCTION] = json match {
       case JsString(value) => value match {
         case "LIBRE" => JsSuccess(LIBRE)
         case "LIE" => JsSuccess(LIE)
         case "BASE" => JsSuccess(BASE)
         case invalid => JsError(s"Invalid string value ${invalid} found for FONCTION. Valid values are {LIBRE,LIE,BASE}")
       }
-      case _ => JsError(s"Invalid JsValue type received for FONCTION. Expecting JsString only.")
+      case _ => JsError(s"Invalid JsValue type received for FONCTION. Expecting JsString with valid values {LIBRE,LIE,BASE} only.")
     }
 
     def writes(f: FONCTION): JsValue = f.toString match {
@@ -423,7 +423,7 @@ object Implicits {
 
   implicit object FONCTIONTypeFormat extends Format[FONCTIONType] {
 
-    def reads(json: JsValue): JsResult[FONCTIONType] = (json \ "FONCTION") match {
+    def reads(json: JsValue): JsResult[FONCTIONType] = json match {
       case JsString(value) => value match {
         case "DEBUT" => JsSuccess(DEBUT)
         case "MILIEU" => JsSuccess(MILIEU)
@@ -433,7 +433,7 @@ object Implicits {
         case "DEPART" => JsSuccess(DEPART)
         case invalid => JsError(s"Invalid string value ${invalid} found for FONCTION. Valid values are {DEBUT,MILIEU,FIN,PASSAGE,ACTUATEUR,DEPART}")
       }
-      case _ => JsError(s"Invalid JsValue type received for FONCTION. Expecting JsString only.")
+      case _ => JsError(s"Invalid JsValue type received for FONCTION. Expecting JsString with valid values {DEBUT,MILIEU,FIN,PASSAGE,ACTUATEUR,DEPART} only.")
     }
 
     def writes(f: FONCTIONType): JsValue = f.toString match {
