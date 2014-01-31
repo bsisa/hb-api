@@ -255,7 +255,7 @@ object Implicits {
   // CALCUL => CALCULType (ok) => DIMENSION (ok) => NOM (ok) => TYPEType (ok)
   implicit object NOMFormat extends Format[NOM] {
 
-    def reads(json: JsValue): JsResult[NOM] = (json \ "NOM") match {
+    def reads(json: JsValue): JsResult[NOM] = json match {
       case JsString(value) => value match {
         case "LONGUEUR" => JsSuccess(LONGUEUR)
         case "SURFACE" => JsSuccess(SURFACE)
