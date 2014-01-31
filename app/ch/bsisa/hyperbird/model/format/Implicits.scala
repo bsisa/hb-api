@@ -89,8 +89,13 @@ object Implicits {
   implicit val MUTATIONFormat: Format[MUTATION] = Json.format[MUTATION]
 
   implicit object MUTATIONSFormat extends Format[MUTATIONS] {
-    def reads(json: JsValue): JsResult[MUTATIONS] =
-      JsSuccess(MUTATIONS((json \ "MUTATION").as[List[MUTATION]]: _*))
+    def reads(json: JsValue): JsResult[MUTATIONS] = {
+      val jsResult = (json \ "MUTATION").validate[List[MUTATION]]
+      jsResult match {
+        case JsSuccess(mutations, path) => JsSuccess(MUTATIONS(mutations: _*))
+        case JsError(e) => JsError(e) // Simply forward
+      }
+    }
     def writes(ms: MUTATIONS): JsValue = {
       val mutationJsSeq = for (m <- ms.MUTATION) yield Json.toJson(m)
       Json.obj("MUTATION" -> JsArray(mutationJsSeq))
