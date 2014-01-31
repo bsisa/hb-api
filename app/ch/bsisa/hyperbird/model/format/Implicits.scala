@@ -469,13 +469,13 @@ object Implicits {
 
   implicit object FONCTIONType2Format extends Format[FONCTIONType2] {
 
-    def reads(json: JsValue): JsResult[FONCTIONType2] = (json \ "FONCTION") match {
+    def reads(json: JsValue): JsResult[FONCTIONType2] = json match {
       case JsString(value) => value match {
         case "FRONTIERE" => JsSuccess(FRONTIERE)
         case "AXE" => JsSuccess(AXE)
         case invalid => JsError(s"Invalid string value ${invalid} found for FONCTION. Valid values are {FRONTIERE,AXE}")
       }
-      case _ => JsError(s"Invalid JsValue type received for FONCTION. Expecting JsString only.")
+      case _ => JsError(s"Invalid JsValue type received for FONCTION. Expecting JsString with valid values {FRONTIERE,AXE} only.")
     }
 
     def writes(f: FONCTIONType2): JsValue = f.toString match {
