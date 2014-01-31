@@ -69,6 +69,14 @@ object Implicits {
   }
 
   /**
+   * Creates a Seq[scalaxb.DataRecord[Any]] structure from provided `content parameter.
+   * This type of data structure is necessary to manage mixed content with Scalaxb.
+   */
+  def setMixedContent(content: String): Seq[scalaxb.DataRecord[Any]] = {
+    Seq(DataRecord.fromAny(scala.xml.Text(content)))
+  }
+
+  /**
    * Generic BigInt formatter. Considers that no BigInt will exceed Long as used in geoXml.xsd
    *
    * WARNING: Assumes BigInt conversion only applies to POS attributes which is currently true for geoXml.xsd
@@ -76,10 +84,12 @@ object Implicits {
    * Long instead for simplification.
    */
   implicit object BigIntFormat extends Format[BigInt] {
+
     def reads(json: JsValue): JsResult[BigInt] = (json).validate[Long] match {
       case JsSuccess(pos, path) => JsSuccess(BigInt.long2bigInt(pos))
       case JsError(e) => JsError("Error reading BigInt") ++ JsError(e)
     }
+
     def writes(b: BigInt): JsValue = JsNumber(b.toLong)
   }
 
@@ -89,6 +99,7 @@ object Implicits {
   implicit val MUTATIONFormat: Format[MUTATION] = Json.format[MUTATION]
 
   implicit object MUTATIONSFormat extends Format[MUTATIONS] {
+
     def reads(json: JsValue): JsResult[MUTATIONS] = {
       val jsResult = (json \ "MUTATION").validate[List[MUTATION]]
       jsResult match {
@@ -96,6 +107,7 @@ object Implicits {
         case JsError(e) => JsError("Error reading MUTATIONS") ++ JsError(e)
       }
     }
+
     def writes(ms: MUTATIONS): JsValue = {
       val mutationJsSeq = for (m <- ms.MUTATION) yield Json.toJson(m)
       Json.obj("MUTATION" -> JsArray(mutationJsSeq))
@@ -126,6 +138,7 @@ object Implicits {
   implicit val CENTROIDEFormat: Format[CENTROIDE] = Json.format[CENTROIDE]
 
   implicit object GEOSELECTIONFormat extends Format[GEOSELECTION] {
+
     def reads(json: JsValue): JsResult[GEOSELECTION] = {
       val centroideJsSeq = (json \ "CENTROIDE").validate[List[CENTROIDE]]
       centroideJsSeq match {
@@ -133,6 +146,7 @@ object Implicits {
         case JsError(e) => JsError("Error reading GEOSELECTION") ++ JsError(e)
       }
     }
+
     def writes(gs: GEOSELECTION): JsValue = {
       val centroideJsSeq = for (c <- gs.CENTROIDE) yield Json.toJson(c)
       Json.obj("CENTROIDE" -> JsArray(centroideJsSeq))
@@ -173,6 +187,7 @@ object Implicits {
   implicit val CARSET_CARTypeFormat: Format[CARSET_CARType] = Json.format[CARSET_CARType]
 
   implicit object CARSETFormat extends Format[CARSET] {
+
     def reads(json: JsValue): JsResult[CARSET] = {
       val carJsSeq = (json \ "CAR").validate[List[CARSET_CARType]]
       carJsSeq match {
@@ -199,10 +214,7 @@ object Implicits {
 
       bAndCAndContent match {
         case JsSuccess((b, c, content), path) =>
-          val node = JsonXmlConverter.xmlStringToNodeSeq(content)
-          val dataRecord = DataRecord.fromAny(node)
-          val recordsSeq = Seq(dataRecord)
-          val stateType = STATEType(recordsSeq, Option(b), Option(c))
+          val stateType = STATEType(setMixedContent(content), Option(b), Option(c))
           JsSuccess(stateType)
         case JsError(errors) => JsError("Error reading STATEType") ++ JsError(errors)
       }
@@ -227,10 +239,7 @@ object Implicits {
 
       posContent match {
         case JsSuccess((pos, content), path) =>
-          val node = JsonXmlConverter.xmlStringToNodeSeq(content)
-          val dataRecord = DataRecord.fromAny(node)
-          val recordsSeq = Seq(dataRecord)
-          val column = C(recordsSeq, pos)
+          val column = C(setMixedContent(content), pos)
           JsSuccess(column)
         case JsError(errors) => JsError("Error reading C") ++ JsError(errors)
       }
@@ -246,16 +255,15 @@ object Implicits {
   // CALCUL => CALCULType (ok) => DIMENSION (ok) => NOM (ok) => TYPEType (ok)
   implicit object NOMFormat extends Format[NOM] {
 
-    def reads(json: JsValue): JsResult[NOM] =
-      (json \ "NOM") match {
-        case JsString(value) => value match {
-          case "LONGUEUR" => JsSuccess(LONGUEUR)
-          case "SURFACE" => JsSuccess(SURFACE)
-          case "RAYON" => JsSuccess(RAYON)
-          case invalid => JsError(s"Invalid string value ${invalid} found for NOM. Valid values are {LONGUEUR,SURFACE,RAYON}")
-        }
-        case _ => JsError(s"Invalid JsValue type received for NOM. Expecting JsString only.")
+    def reads(json: JsValue): JsResult[NOM] = (json \ "NOM") match {
+      case JsString(value) => value match {
+        case "LONGUEUR" => JsSuccess(LONGUEUR)
+        case "SURFACE" => JsSuccess(SURFACE)
+        case "RAYON" => JsSuccess(RAYON)
+        case invalid => JsError(s"Invalid string value ${invalid} found for NOM. Valid values are {LONGUEUR,SURFACE,RAYON}")
       }
+      case _ => JsError(s"Invalid JsValue type received for NOM. Expecting JsString only.")
+    }
 
     def writes(n: NOM): JsValue = n.toString match {
       case "LONGUEUR" => JsString("LONGUEUR")
@@ -267,18 +275,16 @@ object Implicits {
   implicit object DIMENSIONFormat extends Format[DIMENSION] {
 
     def reads(json: JsValue): JsResult[DIMENSION] = {
+
       val nomTypeContent: JsResult[(NOM, TYPEType, String)] = for {
-        nom <- (json \ "NOM").validate[NOM] // TODO: xs:positiveInteger XSD definition leads to BigInt. This seems not wise, to check. Using Long for simplification.
+        nom <- (json \ "NOM").validate[NOM]
         typet <- (json \ "TYPE").validate[TYPEType]
         content <- (json \ "MIXED-CONTENT").validate[String]
       } yield (nom, typet, content)
 
       nomTypeContent match {
         case JsSuccess((nom, typet, content), path) =>
-          val node = JsonXmlConverter.xmlStringToNodeSeq(content)
-          val dataRecord = DataRecord.fromAny(node)
-          val recordsSeq = Seq(dataRecord)
-          val dimension = DIMENSION(recordsSeq, nom, typet)
+          val dimension = DIMENSION(setMixedContent(content), nom, typet)
           JsSuccess(dimension)
         case JsError(errors) => JsError("Error reading DIMENSION") ++ JsError(errors)
       }
@@ -295,6 +301,7 @@ object Implicits {
 
   // FRACTION => MATRICETypable (abtract trait) => MATRICEType (ok)
   implicit object MATRICETypableFormat extends Format[MATRICETypable] {
+
     def reads(json: JsValue): JsResult[MATRICEType] = {
       val lineJsSeq = (json \ "L").validate[List[L]]
       lineJsSeq match {
@@ -302,6 +309,7 @@ object Implicits {
         case JsError(e) => JsError("Error reading MATRICETypable") ++ JsError(e)
       }
     }
+
     def writes(ls: MATRICETypable): JsValue = {
       val lineJsSeq = for (l <- ls.L) yield Json.toJson(l)
       Json.obj("L" -> JsArray(lineJsSeq))
@@ -315,6 +323,7 @@ object Implicits {
   implicit object PERSONNETypeFormat extends Format[PERSONNEType] {
 
     def reads(json: JsValue): JsResult[PERSONNEType] = {
+
       val idIdgNomGroupeContent: JsResult[(String, String, String, String, String)] = for {
         id <- (json \ "Id").validate[String]
         idg <- (json \ "ID_G").validate[String]
@@ -325,10 +334,7 @@ object Implicits {
 
       idIdgNomGroupeContent match {
         case JsSuccess((id, idg, nom, groupe, content), path) =>
-          val node = JsonXmlConverter.xmlStringToNodeSeq(content)
-          val dataRecord = DataRecord.fromAny(node)
-          val recordsSeq = Seq(dataRecord)
-          val personne = PERSONNEType(recordsSeq, Option(id), Option(idg), Option(nom), Option(groupe))
+          val personne = PERSONNEType(setMixedContent(content), Option(id), Option(idg), Option(nom), Option(groupe))
           JsSuccess(personne)
         case JsError(errors) => JsError("Error reading PERSONNEType") ++ JsError(errors)
       }
@@ -339,7 +345,7 @@ object Implicits {
       "ID_G" -> JsString(p.ID_G.getOrElse("null")),
       "NOM" -> JsString(p.NOM.getOrElse("null")),
       "GROUPE" -> JsString(p.GROUPE.getOrElse("null")),
-      "MIXED-CONTENT" -> getMixedContent(p.mixed)) //TODO: GET MIXED CONTENT
+      "MIXED-CONTENT" -> getMixedContent(p.mixed))
   }
 
   // PARTENAIRE => {GERANT,USAGER,FOURNISSEUR,PROPRIETAIRE} => PERSONNEType
@@ -348,15 +354,14 @@ object Implicits {
   // ACTIVITE => EVENEMENT => ECHEANCE => E_STATUT  GESTION => MATRICETypable
   implicit object E_STATUTFormat extends Format[E_STATUT] {
 
-    def reads(json: JsValue): JsResult[E_STATUT] =
-      (json \ "E_STATUT") match {
-        case JsString(value) => value match {
-          case "OK" => JsSuccess(OK)
-          case "A EFFECTUER" => JsSuccess(AEFFECTUER)
-          case invalid => JsError(s"Invalid string value ${invalid} found for E_STATUT. Valid values are {OK,A EFFECTUER}")
-        }
-        case _ => JsError(s"Invalid JsValue type received for E_STATUT. Expecting JsString only.")
+    def reads(json: JsValue): JsResult[E_STATUT] = (json \ "E_STATUT") match {
+      case JsString(value) => value match {
+        case "OK" => JsSuccess(OK)
+        case "A EFFECTUER" => JsSuccess(AEFFECTUER)
+        case invalid => JsError(s"Invalid string value ${invalid} found for E_STATUT. Valid values are {OK,A EFFECTUER}")
       }
+      case _ => JsError(s"Invalid JsValue type received for E_STATUT. Expecting JsString only.")
+    }
 
     def writes(e: E_STATUT): JsValue = e.toString match {
       case "OK" => JsString("OK")
@@ -369,13 +374,16 @@ object Implicits {
 
   // EVENEMENT => ECHEANCE => E_STATUT  GESTION => MATRICETypable
   implicit object EVENEMENTFormat extends Format[EVENEMENT] {
+
     def reads(json: JsValue): JsResult[EVENEMENT] = {
+
       val echeanceJsSeq = (json \ "ECHEANCE").validate[List[ECHEANCE]]
       echeanceJsSeq match {
         case JsSuccess(echeanceList, path) => JsSuccess(EVENEMENT(echeanceList: _*))
         case JsError(e) => JsError("Error reading EVENEMENT") ++ JsError(e)
       }
     }
+
     def writes(es: EVENEMENT): JsValue = {
       val echeanceJsSeq = for (e <- es.ECHEANCE) yield Json.toJson(e)
       Json.obj("ECHEANCE" -> JsArray(echeanceJsSeq))
@@ -392,16 +400,15 @@ object Implicits {
   //       => SYMBOLE => LIBELLE
   implicit object FONCTIONFormat extends Format[FONCTION] {
 
-    def reads(json: JsValue): JsResult[FONCTION] =
-      (json \ "FONCTION") match {
-        case JsString(value) => value match {
-          case "LIBRE" => JsSuccess(LIBRE)
-          case "LIE" => JsSuccess(LIE)
-          case "BASE" => JsSuccess(BASE)
-          case invalid => JsError(s"Invalid string value ${invalid} found for FONCTION. Valid values are {LIBRE,LIE,BASE}")
-        }
-        case _ => JsError(s"Invalid JsValue type received for FONCTION. Expecting JsString only.")
+    def reads(json: JsValue): JsResult[FONCTION] = (json \ "FONCTION") match {
+      case JsString(value) => value match {
+        case "LIBRE" => JsSuccess(LIBRE)
+        case "LIE" => JsSuccess(LIE)
+        case "BASE" => JsSuccess(BASE)
+        case invalid => JsError(s"Invalid string value ${invalid} found for FONCTION. Valid values are {LIBRE,LIE,BASE}")
       }
+      case _ => JsError(s"Invalid JsValue type received for FONCTION. Expecting JsString only.")
+    }
 
     def writes(f: FONCTION): JsValue = f.toString match {
       case "LIBRE" => JsString("LIBRE")
@@ -416,19 +423,18 @@ object Implicits {
 
   implicit object FONCTIONTypeFormat extends Format[FONCTIONType] {
 
-    def reads(json: JsValue): JsResult[FONCTIONType] =
-      (json \ "FONCTION") match {
-        case JsString(value) => value match {
-          case "DEBUT" => JsSuccess(DEBUT)
-          case "MILIEU" => JsSuccess(MILIEU)
-          case "FIN" => JsSuccess(FIN)
-          case "PASSAGE" => JsSuccess(PASSAGEValue)
-          case "ACTUATEUR" => JsSuccess(ACTUATEUR)
-          case "DEPART" => JsSuccess(DEPART)
-          case invalid => JsError(s"Invalid string value ${invalid} found for FONCTION. Valid values are {DEBUT,MILIEU,FIN,PASSAGE,ACTUATEUR,DEPART}")
-        }
-        case _ => JsError(s"Invalid JsValue type received for FONCTION. Expecting JsString only.")
+    def reads(json: JsValue): JsResult[FONCTIONType] = (json \ "FONCTION") match {
+      case JsString(value) => value match {
+        case "DEBUT" => JsSuccess(DEBUT)
+        case "MILIEU" => JsSuccess(MILIEU)
+        case "FIN" => JsSuccess(FIN)
+        case "PASSAGE" => JsSuccess(PASSAGEValue)
+        case "ACTUATEUR" => JsSuccess(ACTUATEUR)
+        case "DEPART" => JsSuccess(DEPART)
+        case invalid => JsError(s"Invalid string value ${invalid} found for FONCTION. Valid values are {DEBUT,MILIEU,FIN,PASSAGE,ACTUATEUR,DEPART}")
       }
+      case _ => JsError(s"Invalid JsValue type received for FONCTION. Expecting JsString only.")
+    }
 
     def writes(f: FONCTIONType): JsValue = f.toString match {
       case "DEBUT" => JsString("DEBUT")
@@ -441,19 +447,19 @@ object Implicits {
   }
 
   implicit val PASSAGEFormat: Format[PASSAGE] = Json.format[PASSAGE]
+
   implicit val GUIDEFormat: Format[GUIDE] = Json.format[GUIDE]
 
   implicit object DIRECTIONFormat extends Format[DIRECTION] {
 
-    def reads(json: JsValue): JsResult[DIRECTION] =
-      (json \ "DIRECTION") match {
-        case JsString(value) => value match {
-          case "AVAL" => JsSuccess(AVAL)
-          case "AMONT" => JsSuccess(AMONT)
-          case invalid => JsError(s"Invalid string value ${invalid} found for DIRECTION. Valid values are {AVAL,AMONT}")
-        }
-        case _ => JsError(s"Invalid JsValue type received for DIRECTION. Expecting JsString only.")
+    def reads(json: JsValue): JsResult[DIRECTION] = (json \ "DIRECTION") match {
+      case JsString(value) => value match {
+        case "AVAL" => JsSuccess(AVAL)
+        case "AMONT" => JsSuccess(AMONT)
+        case invalid => JsError(s"Invalid string value ${invalid} found for DIRECTION. Valid values are {AVAL,AMONT}")
       }
+      case _ => JsError(s"Invalid JsValue type received for DIRECTION. Expecting JsString only.")
+    }
 
     def writes(f: DIRECTION): JsValue = f.toString match {
       case "AVAL" => JsString("AVAL")
@@ -461,18 +467,16 @@ object Implicits {
     }
   }
 
-  //  
   implicit object FONCTIONType2Format extends Format[FONCTIONType2] {
 
-    def reads(json: JsValue): JsResult[FONCTIONType2] =
-      (json \ "FONCTION") match {
-        case JsString(value) => value match {
-          case "FRONTIERE" => JsSuccess(FRONTIERE)
-          case "AXE" => JsSuccess(AXE)
-          case invalid => JsError(s"Invalid string value ${invalid} found for FONCTION. Valid values are {FRONTIERE,AXE}")
-        }
-        case _ => JsError(s"Invalid JsValue type received for FONCTION. Expecting JsString only.")
+    def reads(json: JsValue): JsResult[FONCTIONType2] = (json \ "FONCTION") match {
+      case JsString(value) => value match {
+        case "FRONTIERE" => JsSuccess(FRONTIERE)
+        case "AXE" => JsSuccess(AXE)
+        case invalid => JsError(s"Invalid string value ${invalid} found for FONCTION. Valid values are {FRONTIERE,AXE}")
       }
+      case _ => JsError(s"Invalid JsValue type received for FONCTION. Expecting JsString only.")
+    }
 
     def writes(f: FONCTIONType2): JsValue = f.toString match {
       case "FRONTIERE" => JsString("FRONTIERE")
@@ -489,10 +493,12 @@ object Implicits {
 
   // ANNEXE => RENVOI => LIEN
   implicit object URIFormat extends Format[java.net.URI] {
+
     def reads(json: JsValue): JsResult[java.net.URI] = (json).validate[String] match {
       case JsSuccess(lien, path) => JsSuccess(new java.net.URI(lien))
       case JsError(e) => JsError("Error reading java.net.URI") ++ JsError(e)
     }
+
     //use l.toASCIIString if encoding to ASCII is required, l.toString otherwise
     def writes(l: java.net.URI): JsValue = JsString(l.toASCIIString)
   }
@@ -508,10 +514,7 @@ object Implicits {
 
       posLienContent match {
         case JsSuccess((pos, lien, content), path) =>
-          val node: scala.xml.NodeSeq = scala.xml.Text(content)
-          val dataRecord = DataRecord.fromAny(node)
-          val recordsSeq = Seq(dataRecord)
-          JsSuccess(RENVOI(recordsSeq, pos, lien))
+          JsSuccess(RENVOI(setMixedContent(content), pos, lien))
         case JsError(errors) => JsError("Error reading RENVOI") ++ JsError(errors)
       }
     }
@@ -524,6 +527,7 @@ object Implicits {
 
   // ANNEXE => RENVOI => LIEN
   implicit object ANNEXEFormat extends Format[ANNEXE] {
+
     def reads(json: JsValue): JsResult[ANNEXE] = {
       val jsResult = (json \ "RENVOI").validate[List[RENVOI]]
       jsResult match {
@@ -531,6 +535,7 @@ object Implicits {
         case JsError(e) => JsError("Error reading ANNEXE") ++ JsError(e)
       }
     }
+
     def writes(annexes: ANNEXE): JsValue = {
       val renvoiJsSeq = for (r <- annexes.RENVOI) yield Json.toJson(r)
       Json.obj("RENVOI" -> JsArray(renvoiJsSeq))
@@ -542,17 +547,16 @@ object Implicits {
 
   implicit object TYPEFormat extends Format[TYPE] {
 
-    def reads(json: JsValue): JsResult[TYPE] =
-      (json \ "TYPE") match {
-        case JsString(value) => value match {
-          case "BIEN" => JsSuccess(BIEN)
-          case "ACTIVITE" => JsSuccess(ACTIVITEValue)
-          case "PERSONNE" => JsSuccess(PERSONNE)
-          case "DOCUMENT" => JsSuccess(DOCUMENT)
-          case invalid => JsError(s"Invalid string value ${invalid} found for TYPE. Valid values are {BIEN,ACTIVITE,PERSONNE,DOCUMENT}")
-        }
-        case _ => JsError(s"Invalid JsValue type received for TYPE. Expecting JsString only.")
+    def reads(json: JsValue): JsResult[TYPE] = (json \ "TYPE") match {
+      case JsString(value) => value match {
+        case "BIEN" => JsSuccess(BIEN)
+        case "ACTIVITE" => JsSuccess(ACTIVITEValue)
+        case "PERSONNE" => JsSuccess(PERSONNE)
+        case "DOCUMENT" => JsSuccess(DOCUMENT)
+        case invalid => JsError(s"Invalid string value ${invalid} found for TYPE. Valid values are {BIEN,ACTIVITE,PERSONNE,DOCUMENT}")
       }
+      case _ => JsError(s"Invalid JsValue type received for TYPE. Expecting JsString only.")
+    }
 
     def writes(t: TYPE): JsValue = JsString(t.toString)
 
