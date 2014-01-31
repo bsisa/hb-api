@@ -354,7 +354,7 @@ object Implicits {
   // ACTIVITE => EVENEMENT => ECHEANCE => E_STATUT  GESTION => MATRICETypable
   implicit object E_STATUTFormat extends Format[E_STATUT] {
 
-    def reads(json: JsValue): JsResult[E_STATUT] = (json \ "E_STATUT") match {
+    def reads(json: JsValue): JsResult[E_STATUT] = json match {
       case JsString(value) => value match {
         case "OK" => JsSuccess(OK)
         case "A EFFECTUER" => JsSuccess(AEFFECTUER)
