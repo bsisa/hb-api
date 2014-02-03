@@ -36,10 +36,6 @@ import java.io.StringWriter
  */
 object Implicits {
 
-  // See: http://www.playframework.com/documentation/2.2.x/ScalaJsonInception
-  // TODO: suppres Elfin entity together with corresponding test once ELFIN entity implemented.
-  implicit val elfinReads: Reads[Elfin] = Json.reads[Elfin]
-
   /**
    * Extracts mixed content text nodes as String assuming there is no "real" mix content,
    * that is no mix of XML elements and text nodes but only text nodes.
