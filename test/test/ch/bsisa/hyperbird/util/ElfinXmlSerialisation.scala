@@ -156,8 +156,8 @@ class ElfinXmlSerialisation extends BaseSerialisationSpec {
   // ==================================================================  
   // Convert Scala objects back to XML without data loss nor structure 
   // change.
-  //val elfinBackToXml = scalaxb.toXML[ELFIN](elfinFromFile, None, Some("ELFIN"), ch.bsisa.hyperbird.model.proto.defaultScope)
-  val elfinBackToXml = scalaxb.toXML[ELFIN](elfin, None, Some("ELFIN"), ch.bsisa.hyperbird.model.proto.defaultScope)
+  val elfinBackToXml = scalaxb.toXML[ELFIN](elfinFromFile, None, Some("ELFIN"), ch.bsisa.hyperbird.model.proto.defaultScope)
+  //val elfinBackToXml = scalaxb.toXML[ELFIN](elfin, None, Some("ELFIN"), ch.bsisa.hyperbird.model.proto.defaultScope)
 
   "The elfinBackToXml (scala.xml.Elem) " should {
     s"have Id equal to ${expectedElfinTest001_Id}" in {
