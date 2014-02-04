@@ -4,25 +4,72 @@ import net.liftweb.json._
 import net.liftweb.json.JsonAST.render
 import play.api.libs.json.Json
 import play.api.libs.json.JsValue
+import play.api.libs.json.JsObject
+import ch.bsisa.hyperbird.model.ELFIN
+import ch.bsisa.hyperbird.model.format.Implicits._
+import ch.bsisa.hyperbird.model.proto._
+import play.api.Logger
 
 /**
  * Helps converting to and from String, XML and JSON formats.
+ * 
+ * Relies on Scalaxb and Play Json formatting (reads,writes)
+ * 
+ * @see ch.bsisa.hyperbird.model
+ * @see ch.bsisa.hyperbird.model.format
+ * @see ch.bsisa.hyperbird.model.proto
  *
- * Thin layer built on top of net.liftweb.json library.
+ * The latter is to become deprecated and shall be removed 
+ * following attributes to element and empty elements loss of 
+ * information detected in our XML => JSON => XML use case.
+ * 
+ * <i>Thin layer built on top of net.liftweb.json library.
  * Check https://github.com/lift/framework/tree/master/core/json
  * SBT dependency: "net.liftweb" %% "lift-json" % "2.5"
  * for details.
  * 
- * Beware of serious limitations such as loosing empty element 
+ * <b>Beware of serious limitations such as loosing empty element 
  * and transforming attributes to elements while doing a full
  * XML => JSON => XML lifecyle. Which is by design not a mistake
  * but a loss of information between the two formats {XML,JSON}
- * when no additional meta information is provided.
- *
+ * when no additional meta information is provided.</b>
+ * </i>
+ * 
  * @author Patrick Refondini
  */
 object JsonXmlConverter {
 
+  
+  /**
+   * Transforms a scala.xml.NodeSeq expected to contain
+   * a MELFIN containing a sequence of ELFIN elements to
+   * a Json object containing an array of ELFIN Json objects.
+   */
+  def elfinsXmlToJson(melfinElem: scala.xml.Elem): JsObject = {
+
+    // Unwrap dummy wrap tag
+    val elfinNodeSeq = melfinElem \\ "ELFIN"
+
+    // Convert XML to scala objects
+    val elfins = for { elfinNode <- elfinNodeSeq } yield scalaxb.fromXML[ELFIN](elfinNode)
+    Logger.debug("elfins objects nb: " + elfins.size)
+
+    // Convert Scala objects to JSON
+    val elfinsJson = for { elfin <- elfins } yield //Json.toJson(elfin)
+    {
+      try {
+        Json.toJson(elfin)
+      } catch { // Encapsulate all exception within our own adding specific info regarding failing ELFIN conversion.
+        case exception: Throwable =>
+          Logger.debug(s"${exception} with elfin: ${elfin.Id}")
+          throw JsonXmlConvertException(s"ELFIN with ID_G: ${elfin.ID_G} and Id: ${elfin.Id} failed to serialise to JSON", exception)
+      }
+    }
+    Json.obj("MELFIN" -> elfinsJson)
+  }  
+  
+
+  
   /**
    * @deprecated - Issues with underlying xmlStringToNodeSeq function using XhtmlParser.
    */
@@ -111,3 +158,8 @@ object JsonXmlConverter {
   }  
 
 }
+
+/**
+ * Database configuration exception class
+ */
+case class JsonXmlConvertException(message: String = null, cause: Throwable = null) extends Exception(message, cause)
