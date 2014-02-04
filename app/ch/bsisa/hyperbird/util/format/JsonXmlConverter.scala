@@ -23,10 +23,14 @@ import play.api.libs.json.JsValue
  */
 object JsonXmlConverter {
 
-  
+  /**
+   * @deprecated - Issues with underlying xmlStringToNodeSeq function using XhtmlParser.
+   */
   def xmlStringToJson(xmlString: String) : String = xmlNodeSeqToJson(xmlStringToNodeSeq(xmlString))
   
   /**
+   * @deprecated - Issues with underlying xmlStringToNodeSeq function using XhtmlParser.
+   * 
    * Converts an xml input in string format to a sequence of Scala xml nodes.
    *
    * Note: scala.xml.XML.load(xmlString) can return a scala.xml.Element. 
@@ -37,8 +41,8 @@ object JsonXmlConverter {
    * @return scala.xml.NodeSeq
    *
    */
-  def xmlStringToNodeSeq(xmlString: String): scala.xml.NodeSeq =
-    scala.xml.parsing.XhtmlParser(scala.io.Source.fromString(xmlString))
+  def xmlStringToNodeSeq(xmlString: String): scala.xml.NodeSeq = scala.xml.XML.loadString(xmlString) 
+    //scala.xml.parsing.XhtmlParser(scala.io.Source.fromString(xmlString))
 
   /**
    * Converts a scala.xml.NodeSeq to a JSON string in a pretty or compact format depending on `pretty` parameter value.
