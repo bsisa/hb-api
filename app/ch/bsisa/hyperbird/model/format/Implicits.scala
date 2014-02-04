@@ -5,9 +5,12 @@ import ch.bsisa.hyperbird.model.proto._
 import ch.bsisa.hyperbird.model.SCHEMATIQUE
 import ch.bsisa.hyperbird.model.GEOGRAPHIE
 import ch.bsisa.hyperbird.util.format.JsonXmlConverter
+
+import play.api.Logger
 import play.api.libs.json._
 import play.api.libs.json.Reads._
 import play.api.libs.functional.syntax._
+
 import scalaxb._
 import java.io.StringWriter
 
@@ -82,11 +85,19 @@ object Implicits {
   implicit object BigIntFormat extends Format[BigInt] {
 
     def reads(json: JsValue): JsResult[BigInt] = (json).validate[Long] match {
-      case JsSuccess(pos, path) => JsSuccess(BigInt.long2bigInt(pos))
+      case JsSuccess(pos, path) =>
+        try {
+          JsSuccess(BigInt.long2bigInt(pos))
+        } catch {
+          case nfe: java.lang.NumberFormatException => 
+            JsError(s"Error reading BigInt from JSON. Could not parse invalid value at path: ${path}")
+          case e: Throwable => JsError(s"Error reading BigInt: ${e.getMessage()}")
+        }
       case JsError(e) => JsError("Error reading BigInt") ++ JsError(e)
     }
 
     def writes(b: BigInt): JsValue = JsNumber(b.toLong)
+
   }
 
   // ==================================================================
@@ -561,5 +572,5 @@ object Implicits {
   implicit val ELFINFormat: Format[ELFIN] = Json.format[ELFIN]
 
   ///////////////////////////////////////////////////////////////////////////
-
+ 
 }
