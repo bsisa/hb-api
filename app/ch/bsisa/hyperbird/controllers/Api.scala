@@ -55,8 +55,10 @@ object Api extends Controller {
   /**
    * Creates an ELFIN within the specified collectionId of CLASS className.
    */
-  def createElfin(collectionId: String, className: String) = Action {
-    Ok("""{"message": "not implemented"}""").as(JSON)
+  def createElfin(collectionId: String, className: String) = Action { request =>
+    Logger.debug("CREATE ELFIN REQUEST: " + request.toString)
+    ElfinDAO.create(collectionId,className)
+    Ok("""{"message": "draft implementation returns nothing at the momemnt..."}""").as(JSON)
   }
 
   /**

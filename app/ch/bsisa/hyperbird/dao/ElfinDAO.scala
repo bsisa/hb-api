@@ -5,6 +5,7 @@ import ch.bsisa.hyperbird.dao.xqs.XQConnectionHelper
 import ch.bsisa.hyperbird.dao.xqs.XQueryHelper
 import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.model.format.ElfinFormat
+import ch.bsisa.hyperbird.dao.ws.XQueryWSHelper
 
 /**
  * Provides CRUD operations for ELFIN
@@ -14,10 +15,13 @@ import ch.bsisa.hyperbird.model.format.ElfinFormat
 object ElfinDAO {
 
   //TODO: full implementation required
-  def create()(implicit conf: DbConfig) = {
-    val insertStatetement =
-      "update insert " + <hb-user name="test1"/> + s" into collection('${conf.databaseName}/security')/hb-users"
-    executeStatement(insertStatetement)
+  def create(elfinID_G: String, elfinCLASSE: String)(implicit conf: DbConfig) = {
+    // Check it provides mandatory ID_G and CLASSE attributes
+    XQueryWSHelper.create(elfinID_G, elfinCLASSE)
+    //update insert collection('/db/hb4/G10000101010101000')
+//    val insertStatetement =
+//      "update insert " + <hb-user name="test1"/> + s" into collection('${conf.databaseName}/security')/hb-users"
+//    executeStatement(insertStatetement)
   }
 
   /**
