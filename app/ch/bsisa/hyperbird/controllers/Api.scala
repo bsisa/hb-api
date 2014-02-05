@@ -16,6 +16,7 @@ import ch.bsisa.hyperbird.dao.xqs.XQSQueriesProcessor
 import ch.bsisa.hyperbird.dao.xqs.XQSQueries
 import ch.bsisa.hyperbird.dao.UserDAO
 import ch.bsisa.hyperbird.dao.ElfinDAO
+import ch.bsisa.hyperbird.model.format.ElfinFormat
 
 /**
  * REST API controller.
@@ -55,7 +56,7 @@ object Api extends Controller {
    * Creates an ELFIN within the specified collectionId of CLASS className.
    */
   def createElfin(collectionId: String, className: String) = Action {
-    Ok("{message: not implemented}").as(JSON)
+    Ok("""{"message": "not implemented"}""").as(JSON)
   }
 
   /**
@@ -63,18 +64,37 @@ object Api extends Controller {
    * The data used to update this ELFIN will only be accepted if provided in JSON format.
    */
   def updateElfin(collectionId: String, elfinId: String) = Action(parse.json) { request =>
-    Logger.debug(s"request.contentType: ${request.contentType}")
-    Logger.debug(s"request.body: ${request.body}")
-    ElfinDAO.update(collectionId, elfinId, JsonXmlConverter.jsonStringToXml(request.body.toString))
-    
-    Ok("{message: not implemented}").as(JSON)
+    try {
+      // Convert elfin JsValue to ELFIN object
+      val elfin = ElfinFormat.fromJson(request.body)
+
+      // Test identifiers consistency between URL and JSON body
+      if (elfin.ID_G.equals(collectionId) && elfin.Id.equals(elfinId)) {
+        // Update database with new elfin
+        ElfinDAO.update(elfin)
+        // Sent success response
+        Ok(s"""{"message": "elfin.ID_G/Id: ${elfin.ID_G}/${elfin.Id} update successful"}""").as(JSON)
+      } else {
+        val errorMsg = s"PUT URL ELFIN ID_G/Id: ${collectionId}/${elfinId} unique identifier does not match PUT body JSON ELFIN provided ID_G/Id: ${elfin.ID_G}/${elfin.Id}. Update cancelled."
+        Logger.warn(errorMsg)
+        // Sent failure response following identifiers inconsistency detection 
+        InternalServerError(errorMsg)
+      }
+    } catch {
+      case e: Throwable =>
+        val errorMsg = s"Failed to perform updateElfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
+        Logger.warn(errorMsg)
+        // Sent failure response following json to object, database operation or any other exception. 
+        InternalServerError(errorMsg)
+    }
+
   }
 
   /**
    * Updates ELFIN within the specified collectionId with Id elfinId
    */
   def deleteElfin(collectionId: String, elfinId: String) = Action {
-    Ok("{message: not implemented}").as(JSON)
+    Ok("""{"message": "not implemented"}""").as(JSON)
   }
 
   def createUser() = Action {

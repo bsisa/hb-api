@@ -3,6 +3,8 @@ package ch.bsisa.hyperbird.dao
 import play.api.Logger
 import ch.bsisa.hyperbird.dao.xqs.XQConnectionHelper
 import ch.bsisa.hyperbird.dao.xqs.XQueryHelper
+import ch.bsisa.hyperbird.model.ELFIN
+import ch.bsisa.hyperbird.model.format.ElfinFormat
 
 /**
  * Provides CRUD operations for ELFIN
@@ -18,13 +20,17 @@ object ElfinDAO {
     executeStatement(insertStatetement)
   }
 
-  //TODO: full implementation required  
-  def update(collectionId: String, elfinId: String, elfin: scala.xml.NodeSeq)(implicit conf: DbConfig) = {
-    Logger.debug(s"Updating elfin: ${elfin.toString}")
-    val insertStatetement =
-      s"update replace collection('${conf.databaseName}/${collectionId})//ELFIN[@Id='${elfinId}'] with ${elfin.toString}"
-    executeStatement(insertStatetement)
-  }
+  /**
+   * Updates XML database ELFIN representation corresponding to the provided ELFIN object.
+   * <i>The database API do not provide any feedback on that operation.</i>
+   */
+  def update(elfin : ELFIN)(implicit conf: DbConfig) = {
+    Logger.debug(s"Updating elfin.ID_G/Id: ${elfin.ID_G}/${elfin.Id}")
+    val elfinXml = ElfinFormat.toXml(elfin)
+    val updateStatetement =
+      s"update replace collection('${conf.databaseName}/${elfin.ID_G}')//ELFIN[@Id='${elfin.Id}'] with ${elfinXml.mkString}"
+    executeStatement(updateStatetement)
+  }  
 
   def find(userName: String)(implicit conf: DbConfig): Seq[scala.xml.Elem] = {
     val query = s"""collection('${conf.databaseName}/security')/hb-users/hb-user[@name='${userName}']"""
