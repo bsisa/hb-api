@@ -20,6 +20,7 @@ import ch.bsisa.hyperbird.model.format.ElfinFormat
 import ch.bsisa.hyperbird.util.ElfinIdGenerator
 import ch.bsisa.hyperbird.model.ELFIN
 import play.api.libs.json.Json
+import ch.bsisa.hyperbird.util.ElfinUtil
 
 /**
  * REST API controller.
@@ -32,7 +33,11 @@ import play.api.libs.json.Json
 object Api extends Controller {
 
   /**
-   * TODO: review specifications. Listing collections
+   * TODO: review specifications. Listing collections.
+   * <ul>
+   * <li>Do we really have any use case for this ?</li>
+   * <li>What type of data to return in geoXml.xsd world ?</li>
+   * </ul>
    */
   def collections = Action.async {
     XQueryWSHelper.query(WSQueries.allHbCollectionsQuery)
@@ -54,27 +59,14 @@ object Api extends Controller {
   def getNewElfin(classeName: String) = Action.async {
     // TODO: make this configurable. (In hb_init ? Itself found in catalogueCollectionId at the moment!!!)
     val catalogueCollectionId = "G20140101000012345"
-    val newElfinId = ElfinIdGenerator.getNewElfinId
 
-    val futureElfin = XQueryWSHelper.find(WSQueries.filteredCollectionQuery(catalogueCollectionId, s"//ELFIN[@CLASSE='${classeName}']"))
-    val futureElfinWithId: Future[ELFIN] = futureElfin.map(elfin =>
-      new ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION,
-        elfin.IDENTIFIANT,
-        elfin.CARACTERISTIQUE,
-        elfin.PARTENAIRE,
-        elfin.ACTIVITE,
-        elfin.FORME,
-        elfin.ANNEXE,
-        elfin.DIVERS,
-        newElfinId,
-        elfin.ID_G,
-        elfin.CLASSE,
-        elfin.GROUPE,
-        elfin.TYPE,
-        elfin.NATURE,
-        elfin.SOURCE) // elfin.Id = ElfinIdGenerator.getNewElfinId
-        // attribution of ID_G ??? from template ?
-        )
+    // Use generic find query with catalogue collection id and ELFIN@CLASSE parameter 
+    val futureElfin = XQueryWSHelper.find(
+      WSQueries.filteredCollectionQuery(catalogueCollectionId, s"//ELFIN[@CLASSE='${classeName}']"))
+
+    // Clone futureElfin[ELFIN] and assign a new generated ELFIN.Id to it
+    val futureElfinWithId: Future[ELFIN] = futureElfin.map(elfin => ElfinUtil.assignElfinId(elfin))
+
     futureElfinWithId.map(elfin =>
       try {
         val elfinsJson = ElfinFormat.toJson(elfin)
@@ -95,29 +87,26 @@ object Api extends Controller {
   /**
    * Creates an ELFIN within the specified collectionId of CLASS className.
    */
-  def createElfin(collectionId: String, elfinId: String) = Action(parse.json) { request =>
+  def createElfin(collectionId: String, elfinId: String) = Action.async(parse.json) { request =>
 
     try {
-      // Convert elfin JsValue to ELFIN object
-      val elfin = ElfinFormat.fromJson(request.body)
+      // Convert elfin JsValue to ELFIN object and replace its ID_G with collectionId
+      val elfin = ElfinUtil.replaceElfinID_G(elfin = ElfinFormat.fromJson(request.body), newElfinID_G = collectionId)
 
       // Test identifiers consistency between URL and JSON body
-      if (elfin.ID_G.equals(collectionId) && elfin.Id.equals(elfinId)) {
+      if (elfin.Id.equals(elfinId)) {
         // Update database with new elfin
         ElfinDAO.create(elfin)
-
-        // TODO: re-query the new ELFIN from the database as the only way we currently 
-        // have to detect creation failure due to failing access rights or other issues.        
-
-        // Sent success response
-        Ok(s"""{"message": "elfin.ID_G/Id: ${elfin.ID_G}/${elfin.Id} create successful"}""").as(JSON)
+        // Re-query the new ELFIN from the database as the only way we currently 
+        // have to detect creation failure due to failing access rights or other issues.
+        XQueryWSHelper.query(WSQueries.elfinQuery(collectionId, elfinId))
       } else {
         val errorMsg = s"PUT URL ELFIN ID_G/Id: ${collectionId}/${elfinId} unique identifier does not match PUT body JSON ELFIN provided ID_G/Id: ${elfin.ID_G}/${elfin.Id}. Creation cancelled."
-        manageException(errorMsg = Option(errorMsg))
+        manageFutureException(errorMsg = Option(errorMsg))
       }
     } catch {
       case e: Throwable =>
-        manageException(exception = Option(e), errorMsg = Option(s"Failed to perform creation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
+        manageFutureException(exception = Option(e), errorMsg = Option(s"Failed to perform creation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
     }
 
   }
@@ -136,7 +125,8 @@ object Api extends Controller {
         // Update database with new elfin
         ElfinDAO.update(elfin)
         // Sent success response
-        Ok(s"""{"message": "elfin.ID_G/Id: ${elfin.ID_G}/${elfin.Id} update successful"}""").as(JSON)
+        //Ok(s"""{"message": "elfin.ID_G/Id: ${elfin.ID_G}/${elfin.Id} update successful"}""").as(JSON)
+        Ok(ElfinFormat.toJson(elfin)).as(JSON)
       } else {
         val errorMsg = s"PUT URL ELFIN ID_G/Id: ${collectionId}/${elfinId} unique identifier does not match PUT body JSON ELFIN provided ID_G/Id: ${elfin.ID_G}/${elfin.Id}. Update cancelled."
         manageException(errorMsg = Option(errorMsg))
@@ -178,14 +168,23 @@ object Api extends Controller {
     Ok(jsonSeqElem).as(JSON)
   }
 
+  /**
+   * Utility method to return exception, error message in a generic JSON error message.
+   */
   private def manageException(exception: Option[Throwable] = None, errorMsg: Option[String] = None): SimpleResult = {
     Logger.warn("Api exception: " + exception.getOrElse("").toString + " - " + errorMsg.getOrElse(""))
     val jsonExceptionMsg = Json.obj(
       "ERROR" -> exception.getOrElse("application.validation.failure").toString,
       "DESCRIPTION" -> errorMsg.getOrElse(exception.getOrElse("None").toString).toString // TODO: review
       )
-    // Sent failure response following json to object, database operation or any other exception. 
     InternalServerError(jsonExceptionMsg).as(JSON)
   }
+
+  /**
+   * Encapsulate `manageException` in a asynchronous call for use in Action.async context.
+   * @see manageException
+   */
+  private def manageFutureException(exception: Option[Throwable] = None, errorMsg: Option[String] = None): Future[SimpleResult] =
+    scala.concurrent.Future { manageException(exception, errorMsg) }
 
 }
