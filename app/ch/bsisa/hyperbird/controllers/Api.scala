@@ -141,9 +141,26 @@ object Api extends Controller {
   /**
    * Updates ELFIN within the specified collectionId with Id elfinId
    */
-  def deleteElfin(collectionId: String, elfinId: String) = Action {
-    //ElfinDAO.delete(elfin)
-    Ok("""{"message": "not implemented"}""").as(JSON)
+  def deleteElfin(collectionId: String, elfinId: String) = Action(parse.json) { request =>
+    try {
+      // Convert elfin JsValue to ELFIN object
+      val elfin = ElfinFormat.fromJson(request.body)
+
+      // Test identifiers consistency between URL and JSON body
+      if (elfin.ID_G.equals(collectionId) && elfin.Id.equals(elfinId)) {
+        // Delete elfin from database
+        ElfinDAO.delete(elfin)
+        // Send deleted elfin back to give a chance for cancellation (re-creation)
+        Ok(ElfinFormat.toJson(elfin)).as(JSON)
+      } else {
+        val errorMsg = s"DELETE URL ELFIN ID_G/Id: ${collectionId}/${elfinId} unique identifier does not match PUT body JSON ELFIN provided ID_G/Id: ${elfin.ID_G}/${elfin.Id}. Deletion cancelled."
+        manageException(errorMsg = Option(errorMsg))
+      }
+    } catch {
+      case e: Throwable =>
+        val errorMsg = s"Failed to perform update for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
+        manageException(exception = Option(e), errorMsg = Option(errorMsg))
+    }
   }
 
   def createUser() = Action {
