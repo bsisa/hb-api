@@ -46,10 +46,10 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
         val melfinJson = ElfinFormat.elfinsJsonToMelfinJson(elfinsJson)
         Ok(melfinJson).as(JSON)
       } catch {
-        case jxce: JsonXmlConvertException =>
+        case e: Throwable =>
           val jsonExceptionMsg = Json.obj(
-            "ERROR" -> jxce.getMessage(),
-            "DESCRIPTION" -> jxce.getCause().toString())
+            "ERROR" -> e.toString(),
+            "DESCRIPTION" -> e.getMessage())
           // Returns HTTP error code with valid JSON response containing description of exception 
           // TODO: check this with API users.
           InternalServerError(jsonExceptionMsg).as(JSON)
