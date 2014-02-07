@@ -46,6 +46,23 @@ object Api extends Controller {
   }
 
   /**
+   * Gets new ELFIN instance from catalogue for provided CLASSE. This instance do not exist in database yet.
+   */
+  def getNewElfin(classeName: String) = Action.async {
+    // TODO: make this configurable. (In hb_init ? Itself found in catalogueCollectionId at the moment!!!)
+    val catalogueCollectionId = "G20140101000012345"
+    XQueryWSHelper.query(WSQueries.filteredCollectionQuery(catalogueCollectionId, s"//ELFIN[@CLASSE='${classeName}']"))
+
+    // TODO: instanciate an ELFIN object build from template with a NEW generated Id.
+    //    val futureElfin = XQueryWSHelper.find(WSQueries.filteredCollectionQuery(catalogueCollectionId, s"//ELFIN[@CLASSE='${classeName}']"))
+    //    futureElfin.map( elfin => 
+    //    	// elfin.Id = ElfinIdGenerator.getNewElfinId
+    //    	// attribution of ID_G ??? from template ?
+    //    )
+
+  }
+
+  /**
    * Gets ELFIN corresponding to this collectionId and elfinId
    */
   def getElfin(collectionId: String, elfinId: String) = Action.async {
@@ -55,10 +72,36 @@ object Api extends Controller {
   /**
    * Creates an ELFIN within the specified collectionId of CLASS className.
    */
-  def createElfin(collectionId: String, className: String) = Action { request =>
-    Logger.debug("CREATE ELFIN REQUEST: " + request.toString)
-    ElfinDAO.create(collectionId,className)
-    Ok("""{"message": "draft implementation returns nothing at the momemnt..."}""").as(JSON)
+  def createElfin(collectionId: String, elfinId: String) = Action(parse.json) { request =>
+
+    try {
+      // Convert elfin JsValue to ELFIN object
+      val elfin = ElfinFormat.fromJson(request.body)
+
+      // Test identifiers consistency between URL and JSON body
+      if (elfin.ID_G.equals(collectionId) && elfin.Id.equals(elfinId)) {
+        // Update database with new elfin
+        ElfinDAO.create(elfin)
+
+        // TODO: re-query the new ELFIN from the database as the only way we currently 
+        // have to detect creation failure due to failing access rights or other issues.        
+
+        // Sent success response
+        Ok(s"""{"message": "elfin.ID_G/Id: ${elfin.ID_G}/${elfin.Id} create successful"}""").as(JSON)
+      } else {
+        val errorMsg = s"PUT URL ELFIN ID_G/Id: ${collectionId}/${elfinId} unique identifier does not match PUT body JSON ELFIN provided ID_G/Id: ${elfin.ID_G}/${elfin.Id}. Creation cancelled."
+        Logger.warn(errorMsg)
+        // Sent failure response following identifiers inconsistency detection 
+        InternalServerError(errorMsg)
+      }
+    } catch {
+      case e: Throwable =>
+        val errorMsg = s"Failed to perform creation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
+        Logger.warn(errorMsg)
+        // Sent failure response following json to object, database operation or any other exception. 
+        InternalServerError(errorMsg)
+    }
+
   }
 
   /**
@@ -84,18 +127,18 @@ object Api extends Controller {
       }
     } catch {
       case e: Throwable =>
-        val errorMsg = s"Failed to perform updateElfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
+        val errorMsg = s"Failed to perform update for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
         Logger.warn(errorMsg)
         // Sent failure response following json to object, database operation or any other exception. 
         InternalServerError(errorMsg)
     }
-
   }
 
   /**
    * Updates ELFIN within the specified collectionId with Id elfinId
    */
   def deleteElfin(collectionId: String, elfinId: String) = Action {
+    //ElfinDAO.delete(elfin)
     Ok("""{"message": "not implemented"}""").as(JSON)
   }
 

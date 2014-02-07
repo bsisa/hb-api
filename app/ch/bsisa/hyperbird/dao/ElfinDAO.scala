@@ -6,6 +6,7 @@ import ch.bsisa.hyperbird.dao.xqs.XQueryHelper
 import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.model.format.ElfinFormat
 import ch.bsisa.hyperbird.dao.ws.XQueryWSHelper
+import ch.bsisa.hyperbird.util.ElfinIdGenerator
 
 /**
  * Provides CRUD operations for ELFIN
@@ -14,44 +15,43 @@ import ch.bsisa.hyperbird.dao.ws.XQueryWSHelper
  */
 object ElfinDAO {
 
-  //TODO: full implementation required
-  def create(elfinID_G: String, elfinCLASSE: String)(implicit conf: DbConfig) = {
-    // Check it provides mandatory ID_G and CLASSE attributes
-    XQueryWSHelper.create(elfinID_G, elfinCLASSE)
-    //update insert collection('/db/hb4/G10000101010101000')
-//    val insertStatetement =
-//      "update insert " + <hb-user name="test1"/> + s" into collection('${conf.databaseName}/security')/hb-users"
-//    executeStatement(insertStatetement)
+
+  /**
+   * Creates XML database ELFIN representation corresponding to the provided ELFIN object 
+   * into the database.
+   * <i>The database API do not provide any feedback on that operation.</i>
+   */
+  def create(elfin: ELFIN)(implicit conf: DbConfig) = {
+    XQueryWSHelper.create(elfin)
   }
 
   /**
    * Updates XML database ELFIN representation corresponding to the provided ELFIN object.
    * <i>The database API do not provide any feedback on that operation.</i>
    */
-  def update(elfin : ELFIN)(implicit conf: DbConfig) = {
+  def update(elfin: ELFIN)(implicit conf: DbConfig) = {
     Logger.debug(s"Updating elfin.ID_G/Id: ${elfin.ID_G}/${elfin.Id}")
     val elfinXml = ElfinFormat.toXml(elfin)
     val updateStatetement =
       s"update replace collection('${conf.databaseName}/${elfin.ID_G}')//ELFIN[@Id='${elfin.Id}'] with ${elfinXml.mkString}"
     executeStatement(updateStatetement)
-  }  
-
-  def find(userName: String)(implicit conf: DbConfig): Seq[scala.xml.Elem] = {
-    val query = s"""collection('${conf.databaseName}/security')/hb-users/hb-user[@name='${userName}']"""
-    // Perform call to eXist via XQS/XQJ
-    XQueryHelper.seqOfElem(query)
-  }
-
-  //TODO: full implementation required
-  def delete()(implicit conf: DbConfig) = {
-    val insertStatetement = s"""for $$hbuser in collection('${conf.databaseName}/security')/hb-users/hb-user[@name='test1']
-return
-    update delete $$hbuser"""
-    executeStatement(insertStatetement)
   }
 
   /**
-   * designed to executes XUpdate statements
+   * Deletes XML database ELFIN representation corresponding to the provided ELFIN object.
+   * <i>The database API do not provide any feedback on that operation.</i>
+   */  
+  def delete(elfin: ELFIN)(implicit conf: DbConfig) = {
+    Logger.debug(s"Updating elfin.ID_G/Id: ${elfin.ID_G}/${elfin.Id}")
+    val elfinXml = ElfinFormat.toXml(elfin)
+    val deleteStatetement =
+      s"update delete collection('${conf.databaseName}/${elfin.ID_G}')//ELFIN[@Id='${elfin.Id}']"
+    executeStatement(deleteStatetement)
+  }
+
+  
+  /**
+   * Helper function designed to executes XUpdate statements
    *
    * Note: do not use prepareExpression(statement)
    * it will fail to validate XUpdate instructions.
@@ -66,6 +66,24 @@ return
     } finally {
       conn.close()
     }
+  }
+
+  /////////////////////////////////////////////////////////////////////
+  //////////////    hb-user tests TO BE DELETED   /////////////////////
+  /////////////////////////////////////////////////////////////////////
+
+  def find(userName: String)(implicit conf: DbConfig): Seq[scala.xml.Elem] = {
+    val query = s"""collection('${conf.databaseName}/security')/hb-users/hb-user[@name='${userName}']"""
+    // Perform call to eXist via XQS/XQJ
+    XQueryHelper.seqOfElem(query)
+  }
+
+  //TODO: full implementation required
+  def delete()(implicit conf: DbConfig) = {
+    val insertStatetement = s"""for $$hbuser in collection('${conf.databaseName}/security')/hb-users/hb-user[@name='test1']
+return
+    update delete $$hbuser"""
+    executeStatement(insertStatetement)
   }
 
 }

@@ -16,8 +16,7 @@ trait Updates {
    * Creates a new ELFIN in the underlying database given the provided ELFIN.ID_G and ELFIN.CLASSE attributes values.
    * The returned ELFIN object contains a new ELFIN.Id value and other CLASSE dependent initial values.
    */
-  //def create(elfinID_G: String, elfinCLASSE: String)(implicit conf: DbConfig): ELFIN
-  def create(elfinID_G: String, elfinCLASSE: String)(implicit conf: DbConfig): Unit
+  def create(elfin: ELFIN)(implicit conf: DbConfig): Unit
 
   /**
    * Replace an existing ELFIN in the underlying database with the new provided ELFIN.
@@ -27,6 +26,6 @@ trait Updates {
   /**
    * Deletes any ELFIN from the underlying database which matches the provided ELFIN.ID_G and ELFIN.Id parameters.
    */
-  def delete(elfinID_G: String, elfinId: String)(implicit conf: DbConfig): Unit
+  def delete(elfin: ELFIN)(implicit conf: DbConfig): Unit
 
 }

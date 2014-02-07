@@ -1,6 +1,5 @@
 package ch.bsisa.hyperbird.dao.ws
 
-import ch.bsisa.hyperbird.util.format.JsonXmlConverter
 import ch.bsisa.hyperbird.dao.QueriesProcessor
 import ch.bsisa.hyperbird.util.format.JsonXmlConvertException
 import play.api.Logger
@@ -22,6 +21,8 @@ import java.text.SimpleDateFormat
 import ch.bsisa.hyperbird.model.format.ElfinFormat
 import com.ning.http.client.Realm.AuthScheme
 import ch.bsisa.hyperbird.util.ElfinIdGenerator
+import ch.bsisa.hyperbird.model.format.ElfinFormat.ElfinFormatException
+import ch.bsisa.hyperbird.model.MELFIN
 
 /**
  * Implements QueriesProcessor for REST service.
@@ -30,54 +31,92 @@ import ch.bsisa.hyperbird.util.ElfinIdGenerator
  */
 object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
 
+  /**
+   * Returns 0 to n `ELFIN` encapsulated in a `MELFIN`, in JSON format
+   * itself contained in a `Future[SimpleResult]`
+   */
   override def query(query: String): Future[SimpleResult] = {
-    // Perform call to eXist REST service to get collections list
-    val responseFuture: Future[Response] = WS.url(query).get()
+
+    val elfinsFuture = queryElfins(query)
 
     // Keep asynchronous calls asynchronous to allow Play free threads
-    val resultFuture: Future[SimpleResult] = responseFuture.map { resp =>
-      // We expect to receive XML content
-      Logger.debug(s"Result of type ${resp.ahcResponse.getContentType} received")
-      // Parse XML (Need to wrap the list of XML elements received to obtain valid XML.)
-      val melfinElem = scala.xml.XML.loadString("<MELFIN>" + resp.body.mkString + "</MELFIN>")
+    val simpleResFuture: Future[SimpleResult] = elfinsFuture.map { elfinsResp =>
       try {
-        // Transform XML to JSON 
-        val melfinJs = JsonXmlConverter.elfinsXmlToJson(melfinElem)
-        // Return valid JSON response
-        Status(resp.status)(melfinJs).as(JSON)
+        val elfinsJson = ElfinFormat.elfinsToJson(elfinsResp)
+        val melfinJson = ElfinFormat.elfinsJsonToMelfinJson(elfinsJson)
+        Ok(melfinJson).as(JSON)
       } catch {
         case jxce: JsonXmlConvertException =>
           val jsonExceptionMsg = Json.obj(
             "ERROR" -> jxce.getMessage(),
             "DESCRIPTION" -> jxce.getCause().toString())
-          // Return valid JSON response containing description of exception 
-          // TODO: It might be better to return an HTTP error code check this with API users.
-          Status(resp.status)(jsonExceptionMsg).as(JSON)
+          // Returns HTTP error code with valid JSON response containing description of exception 
+          // TODO: check this with API users.
+          InternalServerError(jsonExceptionMsg).as(JSON)
       }
+    }
+    simpleResFuture
+  }
+
+  /**
+   * WS specific implementation to query 0 to n ELFIN
+   */
+  def queryElfins(query: String): Future[Seq[ELFIN]] = {
+    // Perform call to eXist REST service to get collections list
+    val responseFuture: Future[Response] = WS.url(query).get()
+
+    // Keep asynchronous calls asynchronous to allow Play free threads
+    val resultFuture: Future[Seq[ELFIN]] = responseFuture.map { resp =>
+      // We expect to receive XML content
+      Logger.debug(s"Result of type ${resp.ahcResponse.getContentType} received")
+      // Parse XML (Need to wrap the list of XML elements received to obtain valid XML.)
+      val melfinElem = scala.xml.XML.loadString("<MELFIN>" + resp.body.mkString + "</MELFIN>")
+      val elfins = ElfinFormat.elfinsFromXml(melfinElem)
+      elfins
     }
     resultFuture
   }
 
-  override def delete(elfinID_G: String, elfinId: String)(implicit conf: DbConfig): Unit = ???
+  /**
+   * WS specific implementation to query 0 to 1 ELFIN.
+   */
+  def find(query: String): Future[ELFIN] = {
+    // Perform call to eXist REST service to get collections list
+    val responseFuture: Future[Response] = WS.url(query).get()
 
-  override def replace(elfin: ch.bsisa.hyperbird.model.ELFIN)(implicit conf: DbConfig): Unit = ???
+    // Keep asynchronous calls asynchronous to allow Play free threads
+    val resultFuture: Future[ELFIN] = responseFuture.map { resp =>
+      // We expect to receive XML content
+      Logger.debug(s"Result of type ${resp.ahcResponse.getContentType} received")
+      // Parse XML (Need to wrap the list of XML elements received to obtain valid XML.)
+      //val melfinElem = scala.xml.XML.loadString("<MELFIN>" + resp.body.mkString + "</MELFIN>")
+      val elfinElem = scala.xml.XML.loadString(resp.body.mkString)
+      // Transform XML to ELFIN object
+      val elfins = ElfinFormat.fromXml(elfinElem)
+      elfins
+    }
+    resultFuture
+  }
 
+  override def delete(elfin: ELFIN)(implicit conf: DbConfig): Unit = ???
 
+  override def replace(elfin: ELFIN)(implicit conf: DbConfig): Unit = ???
 
   /**
-   *  Draft implementation - might need to return created ELFIN or caller should query expected new ELFIN.
+   *  Creates the provided ELFIN in the database providing no feedback on the operation.
    */
-  override def create(elfinID_G: String, elfinCLASSE: String)(implicit conf: DbConfig): Unit = {
-    val elfinId = ElfinIdGenerator.getNewElfinId
-    val fileName = ElfinIdGenerator.getElfinFileName(elfinId, elfinCLASSE)
-    val createStatement = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}/${elfinID_G}/${fileName}"""
-    val elfinXML = <MELFIN><ELFIN Id={ "'" + elfinId + "'" } CLASSE={ "'" + elfinCLASSE + "'" }></ELFIN></MELFIN>
+  override def create(elfin: ELFIN)(implicit conf: DbConfig): Unit = {
+    val fileName = ElfinIdGenerator.getElfinFileName(elfin.Id, elfin.CLASSE)
+    val createStatement = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}/${elfin.ID_G}/${fileName}"""
+    // Keep consistent with current database state where each 
+    // ELFIN element is contained alone in a MELFIN element. 
+    val melfinXML = ElfinFormat.toXml(MELFIN(elfin))
 
     Logger.debug("createStatement : " + createStatement)
 
-    // TODO: more investigation to catch authentication failures instead of silently failing.
+    // TODO: more investigation to catch basic authentication failures instead of silently failing.
     val responseFuture: Future[Response] = WS.url(createStatement).
-      withAuth(conf.userName, conf.password, AuthScheme.BASIC).put(elfinXML)
+      withAuth(conf.userName, conf.password, AuthScheme.BASIC).put(melfinXML)
 
   }
 

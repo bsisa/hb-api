@@ -24,9 +24,12 @@ GET      /api/melfin/                           ch.bsisa.hyperbird.controllers.A
 # Returns the list of elfins contained in the specified collection matching the xpath filter expression with defined format 
 GET      /api/melfin/:collectionId              ch.bsisa.hyperbird.controllers.Api.filteredCollection(collectionId, xpath ?= "//ELFIN", format ?= "json")
 
+# Elfin - Obtain new elfin from catalogue. Not stored in the database until Api.createElfin applied to it. 
+GET      /api/melfin/catalogue/:className     ch.bsisa.hyperbird.controllers.Api.getNewElfin(className)
+
 # Elfin CRUD operations
 GET      /api/melfin/:collectionId/:elfinId     ch.bsisa.hyperbird.controllers.Api.getElfin(collectionId, elfinId) 
-POST     /api/melfin/:collectionId/:className   ch.bsisa.hyperbird.controllers.Api.createElfin(collectionId, className)
+POST     /api/melfin/:collectionId/:elfinId		ch.bsisa.hyperbird.controllers.Api.createElfin(collectionId, elfinId)
 PUT      /api/melfin/:collectionId/:elfinId     ch.bsisa.hyperbird.controllers.Api.updateElfin(collectionId, elfinId)
 DELETE   /api/melfin/:collectionId/:elfinId     ch.bsisa.hyperbird.controllers.Api.deleteElfin(collectionId, elfinId)
 
