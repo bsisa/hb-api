@@ -69,8 +69,8 @@ object Api extends Controller {
 
     futureElfinWithId.map(elfin =>
       try {
-        val elfinsJson = ElfinFormat.toJson(elfin)
-        Ok(elfinsJson).as(JSON)
+        val elfinJson = ElfinFormat.toJson(elfin)
+        Ok(elfinJson).as(JSON)
       } catch {
         case e: Throwable =>
           manageException(exception = Option(e))
@@ -81,7 +81,19 @@ object Api extends Controller {
    * Gets ELFIN corresponding to this collectionId and elfinId
    */
   def getElfin(collectionId: String, elfinId: String) = Action.async {
-    XQueryWSHelper.query(WSQueries.elfinQuery(collectionId, elfinId))
+    //XQueryWSHelper.query(WSQueries.elfinQuery(collectionId, elfinId))
+    val futureElfin = XQueryWSHelper.find(WSQueries.elfinQuery(collectionId, elfinId))
+
+    futureElfin.map ( elfin =>
+      try {
+        val elfinJson = ElfinFormat.toJson(elfin)
+        Ok(elfinJson).as(JSON)
+      } catch {
+        case e: Throwable =>
+          manageException(exception = Option(e), errorMsg = Option(s"Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
+      }
+    )
+
   }
 
   /**

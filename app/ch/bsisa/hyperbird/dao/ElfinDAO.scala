@@ -42,11 +42,15 @@ object ElfinDAO {
    * <i>The database API do not provide any feedback on that operation.</i>
    */  
   def delete(elfin: ELFIN)(implicit conf: DbConfig) = {
-    Logger.debug(s"Updating elfin.ID_G/Id: ${elfin.ID_G}/${elfin.Id}")
-    val elfinXml = ElfinFormat.toXml(elfin)
-    val deleteStatetement =
-      s"update delete collection('${conf.databaseName}/${elfin.ID_G}')//ELFIN[@Id='${elfin.Id}']"
-    executeStatement(deleteStatetement)
+    Logger.debug(s"Deleting elfin.ID_G/Id: ${elfin.ID_G}/${elfin.Id}")
+    XQueryWSHelper.delete(elfin)    
+
+    // Update delete eXist XUpdate implementation allow successfull deletion of nodes 
+    // but not of resources such as removing a file from a collection 
+//    val elfinXml = ElfinFormat.toXml(elfin)
+//    val deleteStatetement =
+//      s"update delete collection('${conf.databaseName}/${elfin.ID_G}')//ELFIN[@Id='${elfin.Id}']"
+//    executeStatement(deleteStatetement)
   }
 
   
