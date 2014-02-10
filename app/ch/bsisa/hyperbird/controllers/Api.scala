@@ -14,7 +14,6 @@ import ch.bsisa.hyperbird.dao.ws.WSQueries
 import ch.bsisa.hyperbird.dao.ws.XQueryWSHelper
 import ch.bsisa.hyperbird.dao.xqs.XQSQueriesProcessor
 import ch.bsisa.hyperbird.dao.xqs.XQSQueries
-import ch.bsisa.hyperbird.dao.UserDAO
 import ch.bsisa.hyperbird.dao.ElfinDAO
 import ch.bsisa.hyperbird.model.format.ElfinFormat
 import ch.bsisa.hyperbird.util.ElfinIdGenerator
