@@ -98,7 +98,19 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
     resultFuture
   }
 
-  override def delete(elfin: ELFIN)(implicit conf: DbConfig): Unit = ???
+  override def delete(elfin: ELFIN)(implicit conf: DbConfig): Unit = {
+    val fileName = ElfinIdGenerator.getElfinFileName(elfin)    
+    val createStatement = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}/${elfin.ID_G}/${fileName}"""
+    // Keep consistent with current database state where each 
+    // ELFIN element is contained alone in a MELFIN element. 
+    val melfinXML = ElfinFormat.toXml(MELFIN(elfin))
+
+    Logger.debug("createStatement : " + createStatement)
+
+    // TODO: more investigation to catch basic authentication failures instead of silently failing.
+    val responseFuture: Future[Response] = WS.url(createStatement).
+      withAuth(conf.userName, conf.password, AuthScheme.BASIC).put(melfinXML)    
+  }
 
   override def replace(elfin: ELFIN)(implicit conf: DbConfig): Unit = ???
 
@@ -106,7 +118,7 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
    *  Creates the provided ELFIN in the database providing no feedback on the operation.
    */
   override def create(elfin: ELFIN)(implicit conf: DbConfig): Unit = {
-    val fileName = ElfinIdGenerator.getElfinFileName(elfin.Id, elfin.CLASSE)
+    val fileName = ElfinIdGenerator.getElfinFileName(elfin)
     val createStatement = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}/${elfin.ID_G}/${fileName}"""
     // Keep consistent with current database state where each 
     // ELFIN element is contained alone in a MELFIN element. 

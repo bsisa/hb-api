@@ -3,7 +3,6 @@ package ch.bsisa.hyperbird.util
 import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.model.format.Implicits._
 import ch.bsisa.hyperbird.model.proto._
-import ch.bsisa.hyperbird.util.ElfinIdGenerator
 
 /**
  * Utility functions to deal with ELFIN immutable state replacement such as updating
