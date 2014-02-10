@@ -65,22 +65,4 @@ object ElfinDAO {
     }
   }
 
-  /////////////////////////////////////////////////////////////////////
-  //////////////    hb-user tests TO BE DELETED   /////////////////////
-  /////////////////////////////////////////////////////////////////////
-
-  def find(userName: String)(implicit conf: DbConfig): Seq[scala.xml.Elem] = {
-    val query = s"""collection('${conf.databaseName}/security')/hb-users/hb-user[@name='${userName}']"""
-    // Perform call to eXist via XQS/XQJ
-    XQueryHelper.seqOfElem(query)
-  }
-
-  //TODO: full implementation required
-  def delete()(implicit conf: DbConfig) = {
-    val insertStatetement = s"""for $$hbuser in collection('${conf.databaseName}/security')/hb-users/hb-user[@name='test1']
-return
-    update delete $$hbuser"""
-    executeStatement(insertStatetement)
-  }
-
 }

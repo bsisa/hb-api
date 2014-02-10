@@ -173,27 +173,6 @@ object Api extends Controller {
     }
   }
 
-  def createUser() = Action {
-    UserDAO.create
-    Ok("{message: 'createUser test completed'}").as(JSON)
-  }
-
-  def updateUser() = Action {
-    UserDAO.update
-    Ok("{message: 'updateUser test completed'}").as(JSON)
-  }
-
-  def deleteUser() = Action {
-    UserDAO.delete
-    Ok("{message: 'deleteUser test completed'}").as(JSON)
-  }
-
-  def findUser(userName: String) = Action {
-    // Convert the XML result to JSON format
-    val jsonSeqElem = JsonXmlConverter.xmlSeqToJson(UserDAO.find(userName))
-    // Produce a SimpleResult
-    Ok(jsonSeqElem).as(JSON)
-  }
 
   /**
    * Utility method to return exception, error message in a generic JSON error message.

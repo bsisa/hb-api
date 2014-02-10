@@ -39,12 +39,6 @@ DELETE   /api/melfin/:collectionId/:elfinId     ch.bsisa.hyperbird.controllers.A
 #PUT           /api/melfin/:collectionId/:elfinId/:filename        ch.bsisa.hyperbird.controllers.Api.updateElfinAttachment(collectionId, elfinId)
 #DELETE           /api/melfin/:collectionId/:elfinId/:filename        ch.bsisa.hyperbird.controllers.Api.deleteElfinAttachment(collectionId, elfinId)
 
-# User creation must use PUT here using GET for basic test.
-POST     /api/user/                             ch.bsisa.hyperbird.controllers.Api.createUser
-GET      /api/user/:userName                    ch.bsisa.hyperbird.controllers.Api.findUser(userName)
-PUT      /api/user/                             ch.bsisa.hyperbird.controllers.Api.updateUser
-DELETE   /api/user/                             ch.bsisa.hyperbird.controllers.Api.deleteUser
-
 #######################################################################
 #                     SecureSocial Routes                             #
 #######################################################################
