@@ -1,4 +1,5 @@
 conf/hyperbird.conf
+conf/securesocial.conf
 logs
 project/project
 project/target
