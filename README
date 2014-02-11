@@ -41,19 +41,19 @@ Other dependencies should follow automatically (Play, Scala,...).
 Tested environment: Open JDK java version "1.7.0_25" et SBT
 version 0.13.0
 
-Au cas où tu n'as pas SBT déjà installé:
+If SBT is not yet installed check:
 
 SBT install
 http://www.scala-sbt.org/release/docs/Getting-Started/Setup.html
 
-Pour Mac il y a des packages homebrew et macport, c.f. lien ci-dessus.
+For MaxOSX there are homebrew and macport packages, c.f. above link.
 
 
-Ensuite dans le projet hb-api il te suffit de taper:
+Then in the hb-api project type:
 sbt
 play
 run
 
-L'URL: http://localhost:9000/
-devrait te retourner une page blanche avec le texte:
+http://localhost:9000/
+should return a blank page with text:
 Welcome to HyperBird 5.0
