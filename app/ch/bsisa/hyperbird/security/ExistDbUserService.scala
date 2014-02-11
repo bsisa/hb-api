@@ -13,25 +13,25 @@ import org.mindrot.jbcrypt.BCrypt
  *
  *
  * == Password hashing with BCrypt ==
- * 
+ *
  * Javadoc information using BCrypt copied and adapted from original
  * org.mindrot.jbcrypt.BCrypt Javadoc available at:
- * 
+ *
  * [[http://www.mindrot.org/files/jBCrypt/jBCrypt-0.2-doc/ jBCrypt-0.2-doc]]
- * 
+ *
  * Note that the current lastest version is 0.3 but online Javadoc link is only available for 0.2.
- * 
+ *
  * === Usage ===
- * 
+ *
  * ==== Hash a password for the first time ====
- * 
+ *
  * Call `hashpw` method with a random salt:
  * {{{
  * String pw_hash = BCrypt.hashpw(plain_password, BCrypt.gensalt());
  * }}}
- * 
+ *
  * ==== Check plain text password matches previously hashed one ====
- * 
+ *
  * Use `checkpw` method:
  * {{{
  * if (BCrypt.checkpw(candidate_password, stored_hash))
@@ -39,9 +39,9 @@ import org.mindrot.jbcrypt.BCrypt
  * else
  * System.out.println("It does not match");
  * }}}
- * 
+ *
  * ==== Computational complexity of the hashing ====
- * 
+ *
  * `gensalt()` method takes an optional parameter (log_rounds) that determines the computational complexity of the hashing:
  * {{{
  * String strong_salt = BCrypt.gensalt(10)
@@ -50,17 +50,17 @@ import org.mindrot.jbcrypt.BCrypt
  * The amount of work increases exponentially (2**log_rounds), so each increment is twice as much work. The default log_rounds is 10, and the valid range is 4 to 31.
  *
  *
- *
  * @author Patrick Refondini
  */
 class ExistDbUserService(application: Application) extends UserServicePlugin(application) {
   private var users = Map[String, Identity]()
   private var tokens = Map[String, Token]()
 
-  def find(id: IdentityId): Option[Identity] = {
+  override def find(id: IdentityId): Option[Identity] = {
     Logger.debug(s"find: id.userId=${id.userId}...")
     // We only want to deal with password authentication at the moment
     val authMethod: AuthenticationMethod = AuthenticationMethod.UserPassword
+
     // Find user details from eXist database ELFIN objects matching 
     // (username :String, provider :String) where provider information is  
     // not required for AuthenticationMethod.UserPassword specific case
@@ -116,7 +116,7 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
   //    }
   //  }
 
-  def findByEmailAndProvider(email: String, providerId: String): Option[Identity] = {
+  override def findByEmailAndProvider(email: String, providerId: String): Option[Identity] = {
     Logger.debug(s"findByEmailAndProvider: email=${email}, providerId=${providerId}")
     if (Logger.isDebugEnabled) {
       Logger.debug("users = %s".format(users))
@@ -124,7 +124,7 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
     users.values.find(u => u.email.map(e => e == email && u.identityId.providerId == providerId).getOrElse(false))
   }
 
-  def save(user: Identity): Identity = {
+  override def save(user: Identity): Identity = {
     Logger.debug(s"save: Identity...")
     users = users + (user.identityId.userId + user.identityId.providerId -> user)
     // this sample returns the same user object, but you could return an instance of your own class
@@ -180,23 +180,24 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
   //          "password",
   //          BCrypt.gensalt(10)))))
 
-  def save(token: Token) {
+  override def save(token: Token) {
     tokens += (token.uuid -> token)
   }
 
-  def findToken(token: String): Option[Token] = {
+  override def findToken(token: String): Option[Token] = {
     tokens.get(token)
   }
 
-  def deleteToken(uuid: String) {
+  override def deleteToken(uuid: String) {
     tokens -= uuid
   }
 
+  // TODO: make sure this is used otherwise remove it. 
   def deleteTokens() {
     tokens = Map()
   }
 
-  def deleteExpiredTokens() {
+  override def deleteExpiredTokens() {
     tokens = tokens.filter(!_._2.isExpired)
   }
 }
