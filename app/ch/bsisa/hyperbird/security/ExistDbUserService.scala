@@ -57,7 +57,7 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
   private var tokens = Map[String, Token]()
 
   override def find(id: IdentityId): Option[Identity] = {
-    Logger.debug(s"find: id.userId=${id.userId}...")
+    Logger.debug(s"ExistDbUserService.find: id.userId=${id.userId}...")
     // We only want to deal with password authentication at the moment
     val authMethod: AuthenticationMethod = AuthenticationMethod.UserPassword
 
@@ -78,8 +78,10 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
 
     if (Logger.isDebugEnabled) {
       Logger.debug(s"IdentityId.providerId=${id.providerId}, IdentityId.userId=${id.userId}")
+      Logger.debug(s"hashedPassword=${hashedPassword}")
       Logger.debug("users = %s".format(users))
     }
+    
     //users.get(id.userId + id.providerId)
 
     if (id.userId == userName) {
@@ -117,7 +119,7 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
   //  }
 
   override def findByEmailAndProvider(email: String, providerId: String): Option[Identity] = {
-    Logger.debug(s"findByEmailAndProvider: email=${email}, providerId=${providerId}")
+    Logger.debug(s"ExistDbUserService.findByEmailAndProvider: email=${email}, providerId=${providerId}")
     if (Logger.isDebugEnabled) {
       Logger.debug("users = %s".format(users))
     }
@@ -125,7 +127,17 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
   }
 
   override def save(user: Identity): Identity = {
-    Logger.debug(s"save: Identity...")
+
+    Logger.debug(s"""ExistDbUserService.save: Identity:
+  user.identityId.providerId=${user.identityId.providerId}
+  user.identityId.userId=${user.identityId.userId}
+  user.email=${user.email.getOrElse("No email!")}
+  user.passwordInfo.get.password=${user.passwordInfo.get.password}
+  user.passwordInfo.get.hasher=${user.passwordInfo.get.hasher.toString()}
+  user.avatarUrl=${user.avatarUrl.getOrElse("NoAvatarURL")}
+  user.passwordInfo.hashCode()= ${user.passwordInfo.hashCode()}""")
+    
+        
     users = users + (user.identityId.userId + user.identityId.providerId -> user)
     // this sample returns the same user object, but you could return an instance of your own class
     // here as long as it implements the Identity trait. This will allow you to use your own class in the protected
@@ -181,23 +193,28 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
   //          BCrypt.gensalt(10)))))
 
   override def save(token: Token) {
+    Logger.debug("ExistDbUserService.save(token)")
     tokens += (token.uuid -> token)
   }
 
   override def findToken(token: String): Option[Token] = {
+    Logger.debug("ExistDbUserService.findToken(token)")
     tokens.get(token)
   }
 
   override def deleteToken(uuid: String) {
+    Logger.debug("ExistDbUserService.deleteToken(token)")
     tokens -= uuid
   }
 
   // TODO: make sure this is used otherwise remove it. 
   def deleteTokens() {
+    Logger.debug("ExistDbUserService.deleteTokens()")
     tokens = Map()
   }
 
   override def deleteExpiredTokens() {
+    Logger.debug("ExistDbUserService.deleteExpiredTokens()")
     tokens = tokens.filter(!_._2.isExpired)
   }
 }
