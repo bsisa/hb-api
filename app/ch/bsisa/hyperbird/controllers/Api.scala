@@ -54,26 +54,31 @@ object Api extends Controller {
 
   /**
    * Gets new ELFIN instance from catalogue for provided CLASSE. This instance do not exist in database yet.
+   * //TODO: review exception management to be able to send back JSON error message in all cases.
    */
   def getNewElfin(classeName: String) = Action.async {
-    // TODO: make this configurable. (In hb_init ? Itself found in catalogueCollectionId at the moment!!!)
-    val catalogueCollectionId = "G20140101000012345"
 
-    // Use generic find query with catalogue collection id and ELFIN@CLASSE parameter 
-    val futureElfin = XQueryWSHelper.find(
-      WSQueries.filteredCollectionQuery(catalogueCollectionId, s"//ELFIN[@CLASSE='${classeName}']"))
+    try {
+      // TODO: make this configurable. (In hb_init ? Itself found in catalogueCollectionId at the moment!!!)
+      val catalogueCollectionId = "G20140101000012345"
 
-    // Clone futureElfin[ELFIN] and assign a new generated ELFIN.Id to it
-    val futureElfinWithId: Future[ELFIN] = futureElfin.map(elfin => ElfinUtil.assignElfinId(elfin))
+      // Use generic find query with catalogue collection id and ELFIN@CLASSE parameter 
+      val futureElfin = XQueryWSHelper.find(
+        WSQueries.filteredCollectionQuery(catalogueCollectionId, s"//ELFIN[@CLASSE='${classeName}']"))
 
-    futureElfinWithId.map(elfin =>
-      try {
+      // Clone futureElfin[ELFIN] and assign a new generated ELFIN.Id to it
+      val futureElfinWithId: Future[ELFIN] = futureElfin.map(elfin => ElfinUtil.assignElfinId(elfin))
+
+      // Send cloned catalogue elfin in JSON format 
+      futureElfinWithId.map { elfin =>
         val elfinJson = ElfinFormat.toJson(elfin)
         Ok(elfinJson).as(JSON)
-      } catch {
-        case e: Throwable =>
-          manageException(exception = Option(e))
-      })
+      }
+
+    } catch {
+      case e: Throwable =>
+        manageFutureException(exception = Option(e))
+    }
   }
 
   /**
@@ -171,7 +176,6 @@ object Api extends Controller {
         manageException(exception = Option(e), errorMsg = Option(errorMsg))
     }
   }
-
 
   /**
    * Utility method to return exception, error message in a generic JSON error message.

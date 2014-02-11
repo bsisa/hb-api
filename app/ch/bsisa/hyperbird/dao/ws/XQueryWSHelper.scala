@@ -23,6 +23,7 @@ import com.ning.http.client.Realm.AuthScheme
 import ch.bsisa.hyperbird.util.ElfinIdGenerator
 import ch.bsisa.hyperbird.model.format.ElfinFormat.ElfinFormatException
 import ch.bsisa.hyperbird.model.MELFIN
+import ch.bsisa.hyperbird.dao.ResultNotFound
 
 /**
  * Implements QueriesProcessor for REST service.
@@ -88,23 +89,29 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
     val resultFuture: Future[ELFIN] = responseFuture.map { resp =>
       // We expect to receive XML content
       Logger.debug(s"Result of type ${resp.ahcResponse.getContentType} received")
-      // Parse XML (Need to wrap the list of XML elements received to obtain valid XML.)
-      //val melfinElem = scala.xml.XML.loadString("<MELFIN>" + resp.body.mkString + "</MELFIN>")
-      val elfinElem = scala.xml.XML.loadString(resp.body.mkString)
-      // Transform XML to ELFIN object
-      val elfins = ElfinFormat.fromXml(elfinElem)
-      elfins
+      val bodyString = resp.body.mkString
+      if ( !(bodyString.length > 0) ) {
+        throw ResultNotFound(s"No ELFIN found for query: ${query}")
+      } else {
+        //Logger.debug(s"Result body: '${bodyString}'")
+        // Parse XML (Need to wrap the list of XML elements received to obtain valid XML.)
+        //val melfinElem = scala.xml.XML.loadString("<MELFIN>" + resp.body.mkString + "</MELFIN>")
+        val elfinElem = scala.xml.XML.loadString(bodyString)
+        // Transform XML to ELFIN object
+        val elfins = ElfinFormat.fromXml(elfinElem)
+        elfins
+      }
     }
     resultFuture
   }
 
   override def delete(elfin: ELFIN)(implicit conf: DbConfig): Unit = {
-    val fileName = ElfinIdGenerator.getElfinFileName(elfin)    
+    val fileName = ElfinIdGenerator.getElfinFileName(elfin)
     val elfinResourceUrl = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}/${elfin.ID_G}/${fileName}"""
     Logger.debug("elfinResourceUrl for DELETE : " + elfinResourceUrl)
     // TODO: more investigation to catch basic authentication failures instead of silently failing.
     val responseFuture: Future[Response] = WS.url(elfinResourceUrl).
-      withAuth(conf.userName, conf.password, AuthScheme.BASIC).delete    
+      withAuth(conf.userName, conf.password, AuthScheme.BASIC).delete
   }
 
   override def replace(elfin: ELFIN)(implicit conf: DbConfig): Unit = ???

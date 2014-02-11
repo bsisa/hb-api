@@ -33,12 +33,12 @@ Note that XQS.scala depends on lib/xqjapi.jar at compile time.
 
 == How to run ==
 
-Les pré-requis sont:
+Prerequisites are:
 * Java
 * SBT
-Le reste des dépendances devraient suivre (Play, Scala,...).
+Other dependencies should follow automatically (Play, Scala,...).  
 
-Mon environnement tourne sous Open JDK java version "1.7.0_25" et SBT
+Tested environment: Open JDK java version "1.7.0_25" et SBT
 version 0.13.0
 
 Au cas où tu n'as pas SBT déjà installé:
