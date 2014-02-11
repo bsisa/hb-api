@@ -11,6 +11,46 @@ import org.mindrot.jbcrypt.BCrypt
 /**
  * SecureSocial UserService implementation targeted at eXist database.
  *
+ *
+ * == Password hashing with BCrypt ==
+ * 
+ * Javadoc information using BCrypt copied and adapted from original
+ * org.mindrot.jbcrypt.BCrypt Javadoc available at:
+ * 
+ * [[http://www.mindrot.org/files/jBCrypt/jBCrypt-0.2-doc/ jBCrypt-0.2-doc]]
+ * 
+ * Note that the current lastest version is 0.3 but online Javadoc link is only available for 0.2.
+ * 
+ * === Usage ===
+ * 
+ * ==== Hash a password for the first time ====
+ * 
+ * Call `hashpw` method with a random salt:
+ * {{{
+ * String pw_hash = BCrypt.hashpw(plain_password, BCrypt.gensalt());
+ * }}}
+ * 
+ * ==== Check plain text password matches previously hashed one ====
+ * 
+ * Use `checkpw` method:
+ * {{{
+ * if (BCrypt.checkpw(candidate_password, stored_hash))
+ * System.out.println("It matches");
+ * else
+ * System.out.println("It does not match");
+ * }}}
+ * 
+ * ==== Computational complexity of the hashing ====
+ * 
+ * `gensalt()` method takes an optional parameter (log_rounds) that determines the computational complexity of the hashing:
+ * {{{
+ * String strong_salt = BCrypt.gensalt(10)
+ * String stronger_salt = BCrypt.gensalt(12)
+ * }}}
+ * The amount of work increases exponentially (2**log_rounds), so each increment is twice as much work. The default log_rounds is 10, and the valid range is 4 to 31.
+ *
+ *
+ *
  * @author Patrick Refondini
  */
 class ExistDbUserService(application: Application) extends UserServicePlugin(application) {
@@ -19,26 +59,32 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
 
   def find(id: IdentityId): Option[Identity] = {
     Logger.debug(s"find: id.userId=${id.userId}...")
-    // We only want to deal with password authentication
+    // We only want to deal with password authentication at the moment
     val authMethod: AuthenticationMethod = AuthenticationMethod.UserPassword
+    // Find user details from eXist database ELFIN objects matching 
+    // (username :String, provider :String) where provider information is  
+    // not required for AuthenticationMethod.UserPassword specific case
+    val userName = "pat"
+    val userFirstName = "Patrick"
+    val userLastName = "Refondini"
+    val userEmail = "refon@pobox.com"
+    val userPhoto = None
+
+    // Get password hash from database
     val password = "test"
-    val pwdInfo: PasswordInfo = new PasswordInfo(PasswordHasher.BCryptHasher, BCrypt.hashpw(password, BCrypt.gensalt(10)))
+    val hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12))
+
+    val pwdInfo: PasswordInfo = new PasswordInfo(PasswordHasher.BCryptHasher, hashedPassword)
 
     if (Logger.isDebugEnabled) {
       Logger.debug(s"IdentityId.providerId=${id.providerId}, IdentityId.userId=${id.userId}")
-
       Logger.debug("users = %s".format(users))
     }
     //users.get(id.userId + id.providerId)
 
-    if (id.userId == "pat") {
-      val userName = "Patrick"
-      val userEmail = "refon@pobox.com"
-      val firstName = "Patrick"
-      val lastName = "Refondini"
-      val socialUser = new SocialUser(
-        id, firstName, lastName, userName, Option(userEmail),
-        None, authMethod, None, None, Some(pwdInfo))
+    if (id.userId == userName) {
+      val socialUser = new SocialUser(id, userFirstName, userLastName, userName, Option(userEmail),
+        userPhoto, authMethod, None, None, Some(pwdInfo))
       Option(socialUser)
     } else {
       None
