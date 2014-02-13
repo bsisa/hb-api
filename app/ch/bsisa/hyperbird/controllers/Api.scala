@@ -60,6 +60,7 @@ object Api extends Controller {
 
     try {
       // TODO: make this configurable. (In hb_init ? Itself found in catalogueCollectionId at the moment!!!)
+      //TODO: REMOVE HARDCODED VALUES NOW FOUND IN CollectionsConfig
       val catalogueCollectionId = "G20140101000012345"
 
       // Use generic find query with catalogue collection id and ELFIN@CLASSE parameter 

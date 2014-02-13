@@ -19,4 +19,10 @@ object Implicits {
    */
   implicit val dbConfig = new DbConfig
 
+  
+  /**
+   * Database configurations
+   */
+  implicit val collectionsConfig = new CollectionsConfig
+  
 }

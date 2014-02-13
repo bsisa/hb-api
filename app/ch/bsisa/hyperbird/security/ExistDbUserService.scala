@@ -1,5 +1,9 @@
 package ch.bsisa.hyperbird.security
 
+import java.util.Calendar
+import java.util.Date
+import java.util.GregorianCalendar
+
 import play.api.{ Logger, Application }
 import securesocial.core._
 import securesocial.core.providers.Token
@@ -7,6 +11,16 @@ import securesocial.core.IdentityId
 import securesocial.core.providers.utils.PasswordHasher
 import ch.bsisa.hyperbird.dao.xqs.XQConnectionHelper
 import org.mindrot.jbcrypt.BCrypt
+import ch.bsisa.hyperbird.dao.ws.XQueryWSHelper
+import ch.bsisa.hyperbird.dao.ws.WSQueries
+import scala.concurrent.Future
+import ch.bsisa.hyperbird.model.ELFIN
+import ch.bsisa.hyperbird.util.ElfinUtil
+import ch.bsisa.hyperbird.model.format.ElfinFormat
+import ch.bsisa.hyperbird.dao.ElfinDAO
+
+import ch.bsisa.hyperbird.Implicits._
+import play.api.libs.concurrent.Execution.Implicits._
 
 /**
  * SecureSocial UserService implementation targeted at eXist database.
@@ -81,7 +95,7 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
       Logger.debug(s"hashedPassword=${hashedPassword}")
       Logger.debug("users = %s".format(users))
     }
-    
+
     //users.get(id.userId + id.providerId)
 
     if (id.userId == userName) {
@@ -120,6 +134,14 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
 
   override def findByEmailAndProvider(email: String, providerId: String): Option[Identity] = {
     Logger.debug(s"ExistDbUserService.findByEmailAndProvider: email=${email}, providerId=${providerId}")
+    // FIND HB USER ///////////////////////////////////////////////////
+    val futureUserElfin = XQueryWSHelper.find(WSQueries.elfinQuery("", ""))
+
+    futureUserElfin.map { userElfin =>
+
+    }
+    // FIND HB USER ///////////////////////////////////////////////////    
+
     if (Logger.isDebugEnabled) {
       Logger.debug("users = %s".format(users))
     }
@@ -136,8 +158,61 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
   user.passwordInfo.get.hasher=${user.passwordInfo.get.hasher.toString()}
   user.avatarUrl=${user.avatarUrl.getOrElse("NoAvatarURL")}
   user.passwordInfo.hashCode()= ${user.passwordInfo.hashCode()}""")
-    
-        
+
+    // CREATE NEW USER IN HB DB ///////////////////////////////////////////////////
+    //TODO: REMOVE HARDCODED VALUES NOW FOUND IN CollectionsConfig
+    val configurationCollectionId = "G10000101010101000"
+    //TODO: REMOVE HARDCODED VALUES NOW FOUND IN CollectionsConfig
+    val catalogueCollectionId = "G20140101000012345"
+    val classeName = "USER"
+
+    // Let's set userValidFrom to now 
+    val userValidFrom = new Date()
+    // Let's set userValidUntil to userValidFrom + a year.
+    val userValidUntil = {
+      val gregCal = new GregorianCalendar()
+      gregCal.setTime(userValidFrom)
+      gregCal.setLenient(false)
+      gregCal.roll(Calendar.YEAR, 1)
+      gregCal.getTime()
+    }
+    // This will have to be provided a user creation time
+    val userPersonId = "NOT CONFIGURED"
+    val userPersonID_G = "NOT CONFIGURED"
+
+    // Use generic find query with catalogue collection id and ELFIN@CLASSE parameter 
+    val futureElfin = XQueryWSHelper.find(
+      WSQueries.filteredCollectionQuery(catalogueCollectionId, s"//ELFIN[@CLASSE='${classeName}']"))
+
+    // Clone futureElfin[ELFIN] and assign a new generated ELFIN.Id to it
+    val futureElfinWithId: Future[ELFIN] = futureElfin.map(elfin => ElfinUtil.assignElfinId(elfin))
+
+    // Update and create new user 
+    val futureElfinWithCorrectID_G = futureElfinWithId.map(userElfin => ElfinUtil.replaceElfinID_G(userElfin, newElfinID_G = configurationCollectionId))
+
+    // Convert elfin JsValue to ELFIN object and replace its ID_G with collectionId
+    //val elfinWithCorrectID_G = ElfinUtil.replaceElfinID_G(userElfin, newElfinID_G = configurationCollectionId)
+
+    futureElfinWithCorrectID_G.map { elfinWithCorrectID_G =>
+
+      val elfinWithCorrectIDENTIFIANT = ElfinUtil.replaceElfinUserProperties(
+        elfin = elfinWithCorrectID_G,
+        userName = user.identityId.userId,
+        userPwdInfo = user.passwordInfo.get.password,
+        validFrom = userValidFrom,
+        validUntil = userValidUntil,
+        personId = userPersonId,
+        personID_G = userPersonID_G)
+
+      // Update database with new elfin
+      ElfinDAO.create(elfinWithCorrectIDENTIFIANT)
+      // TODO: define a validation to provide feedback whether or not the user has effectively been created.
+      Logger.debug(s"ExistDbUserService.save: NEW USER with elfinId: ${elfinWithCorrectIDENTIFIANT.Id} and elfinID_G: ${elfinWithCorrectIDENTIFIANT.ID_G} SHALL HAVE BEEN CREATED TO DATABASE... ")
+
+    }
+
+    // CREATE NEW USER IN HB DB ///////////////////////////////////////////////////      
+
     users = users + (user.identityId.userId + user.identityId.providerId -> user)
     // this sample returns the same user object, but you could return an instance of your own class
     // here as long as it implements the Identity trait. This will allow you to use your own class in the protected
@@ -217,4 +292,5 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
     Logger.debug("ExistDbUserService.deleteExpiredTokens()")
     tokens = tokens.filter(!_._2.isExpired)
   }
+
 }

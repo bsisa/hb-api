@@ -3,6 +3,7 @@ package ch.bsisa.hyperbird.dao
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import play.api.Logger
+import ch.bsisa.hyperbird.CollectionsConfig
 
 /**
  * List of queries expected to be implemented by classes using this trait.
@@ -33,6 +34,12 @@ trait Queries {
    * Returns a query to access a single ELFIN given its unique elfin id.
    */
   def elfinQuery(elfinId: String)(implicit conf: DbConfig): String
+  
+  
+  /**
+   * Returns a query to access a single ELFIN of CLASSE USER identified by the given email.
+   */
+  def elfinUserPerEmailQuery(email: String)(implicit dbConf: DbConfig, collectionsConf: CollectionsConfig): String
 
 }
 

@@ -1,8 +1,8 @@
 package ch.bsisa.hyperbird.dao.xqs
 
 import ch.bsisa.hyperbird.dao.{Queries,DbConfig}
-
 import play.api.Logger
+import ch.bsisa.hyperbird.CollectionsConfig
 
 /**
  * Implements Queries trait accessing database using XQS/XQJ drivers.
@@ -54,5 +54,15 @@ object XQSQueries extends Queries {
     query
   }  
 
+  
+  /**
+   * Returns a query to access a single ELFIN of CLASSE USER identified by the given email.
+   * TODO: Not implemented yet.
+   */
+  def elfinUserPerEmailQuery(email: String)(implicit dbConf: DbConfig, collectionsConf: CollectionsConfig): String = {
+    val query = s""""NOT IMPLEMENTED"""" 
+    Logger.debug("elfinUserPerEmailQuery: " + query)
+    query    
+  }  
   
 }

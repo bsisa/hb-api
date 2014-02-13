@@ -18,4 +18,10 @@ hb {
 		"user": "YOUR_USER",
 		"password": "YOUR_USER_PWD" 
 	}
+	collection {
+	    # Contains initialisaton configurations and users, roles
+		"configuration": "G10000101010101000"
+		# Contains ELFIN objects catalogue
+		"catalogue": "G20140101000012345"
+	}	
 }

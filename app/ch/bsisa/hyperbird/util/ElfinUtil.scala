@@ -43,7 +43,9 @@ object ElfinUtil {
    * Replaces the elfin.IDENTIFIANT value by an IDENTIFIANT containing the provided user 
    * specific values instead.
    */
-  def replaceElfinUserProperties(elfin: ELFIN, userName: String, userPwdInfo: String, validFrom: Date, validUntil: Date, personId: String, personIDG: String) = {
+  def replaceElfinUserProperties(
+      elfin: ELFIN, userName: String, userPwdInfo: String, validFrom: Date, validUntil: Date, 
+      personId: String, personID_G: String) = {
 
     val dateDE = DateUtil.elfinIdentifiantDateFormat.format(validFrom)
     val dateA = DateUtil.elfinIdentifiantDateFormat.format(validUntil)
