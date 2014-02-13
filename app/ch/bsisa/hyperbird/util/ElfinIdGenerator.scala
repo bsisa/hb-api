@@ -23,27 +23,10 @@ object ElfinIdGenerator {
   val DateMatchGroupName = "dateMatch"
 
   /**
-   * Constant simple date format pattern used for Id/ID_G date and time part
-   */
-  val DateFormatPattern = "yyyyMMddHHmmssSSS"
-
-  /**
-   * Define a date formatter for elfin.Id/ID_G.
-   *
-   * <i>Note: By default never ever let a java.text.DateFormat be lenient,
-   * this is a terrible default behaviour.</i>
-   */
-  val elfinUniqueIdDateFormat = {
-    val formatter = new SimpleDateFormat(DateFormatPattern)
-    formatter.setLenient(false)
-    formatter
-  }
-
-  /**
    * Creates a new unique ELFIN.Id upon each call.
    * // TODO: Move to actor to deal with counter.
    */
-  def getNewElfinId(): String = "G" + elfinUniqueIdDateFormat.format(new Date())
+  def getNewElfinId(): String = "G" + DateUtil.elfinUniqueIdDateFormat.format(new Date())
 
   def getElfinFileName(elfin: ELFIN): String = {
 
