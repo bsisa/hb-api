@@ -23,5 +23,7 @@ hb {
 		"configuration": "G10000101010101000"
 		# Contains ELFIN objects catalogue
 		"catalogue": "G20140101000012345"
+		# Contains database stored XQueries
+		"xqueries": "G10000101010101001"
 	}	
 }

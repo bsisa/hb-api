@@ -25,6 +25,14 @@ class CollectionsConfig {
     case None => throw CollectionsConfigException(s"Catalogue collection identifier information ${CollectionsConfig.CatalogueCollectionKey} missing")
   }
 
+  /**
+   * XQueries collection
+   */
+  val xqueriesCollectionId: String = Play.current.configuration.getString(CollectionsConfig.XQueriesCollectionKey) match {
+    case Some(xqueriesCollectionId) => xqueriesCollectionId
+    case None => throw CollectionsConfigException(s"XQueries collection identifier information ${CollectionsConfig.XQueriesCollectionKey} missing")
+  }
+
 }
 
 /**
@@ -39,5 +47,6 @@ object CollectionsConfig {
 
   private val ConfigurationCollectionKey = "hb.collection.configuration"
   private val CatalogueCollectionKey = "hb.collection.catalogue"
+  private val XQueriesCollectionKey = "hb.collection.xqueries"
 
 }
