@@ -114,6 +114,13 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
       withAuth(conf.userName, conf.password, AuthScheme.BASIC).delete
   }
 
+  /** 
+   *  Currently not implemented. We rely on XQJ/XQS for updates.
+   *  @see ch.bsisa.hyperbird.dao.ElfinDAO.update 
+   *  
+   *  TODO: implement this method and rely on it for ElfinDAO.update for simplicity. 
+   *  Not high priority.
+   */
   override def replace(elfin: ELFIN)(implicit conf: DbConfig): Unit = ???
 
   /**
