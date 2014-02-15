@@ -69,7 +69,7 @@ object WSQueries extends Queries {
     // http://localhost:8080/exist/rest/db/hb4/queries/ELFIN_USER_find_by_email.xq?email=inaminute@pobox.com
 	  // TODO: have something generic like elfinForXQuery(parameter*) where parameter are tuples (name,value) ...
     val xqueryResourceName = "ELFIN_USER_find_by_email.xq"
-    val query = s"""${dbConf.protocol}${dbConf.hostName}:${dbConf.port}${dbConf.restPrefix}${dbConf.databaseName}/${collectionsConf.xqueriesCollectionId}?email={email}&_howmany=${highPagingLimit}&_wrap=${wrap}"""
+    val query = s"""${dbConf.protocol}${dbConf.hostName}:${dbConf.port}${dbConf.restPrefix}${dbConf.databaseName}/${collectionsConf.xqueriesCollectionId}/${xqueryResourceName}?email=${email}&_howmany=${highPagingLimit}&_wrap=${wrap}"""
     // The XQuery has access to the entire HTTP context, including parameters and session attributes.
 
     // ELFIN_USER_find_by_email.xq
