@@ -1,7 +1,22 @@
 package ch.bsisa.hyperbird.dao.ws
 
+import ch.bsisa.hyperbird.Implicits._
 import ch.bsisa.hyperbird.dao.QueriesProcessor
+import ch.bsisa.hyperbird.dao.Updates
+import ch.bsisa.hyperbird.dao.DbConfig
+import ch.bsisa.hyperbird.dao.ResultNotFound
+import ch.bsisa.hyperbird.model.ELFIN
+import ch.bsisa.hyperbird.model.format.ElfinFormat.ElfinFormatException
+import ch.bsisa.hyperbird.model.MELFIN
+import ch.bsisa.hyperbird.model.format.ElfinFormat
+import ch.bsisa.hyperbird.util.ElfinIdGenerator
 import ch.bsisa.hyperbird.util.format.JsonXmlConvertException
+import com.ning.http.client.Realm.AuthScheme
+import java.util.Calendar
+import java.util.GregorianCalendar
+import java.util.Date
+import java.text.SimpleDateFormat
+import net.liftweb.json.DateFormat
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
@@ -10,20 +25,7 @@ import play.api.libs.ws.WS
 import play.api.mvc._
 import play.api.mvc.Results._
 import scala.concurrent.Future
-import ch.bsisa.hyperbird.dao.Updates
-import ch.bsisa.hyperbird.dao.DbConfig
-import ch.bsisa.hyperbird.model.ELFIN
-import java.util.Calendar
-import java.util.GregorianCalendar
-import java.util.Date
-import net.liftweb.json.DateFormat
-import java.text.SimpleDateFormat
-import ch.bsisa.hyperbird.model.format.ElfinFormat
-import com.ning.http.client.Realm.AuthScheme
-import ch.bsisa.hyperbird.util.ElfinIdGenerator
-import ch.bsisa.hyperbird.model.format.ElfinFormat.ElfinFormatException
-import ch.bsisa.hyperbird.model.MELFIN
-import ch.bsisa.hyperbird.dao.ResultNotFound
+
 
 /**
  * Implements QueriesProcessor for REST service.
@@ -140,5 +142,36 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
       withAuth(conf.userName, conf.password, AuthScheme.BASIC).put(melfinXML)
 
   }
+  
+  
+  /**
+   * WS specific implementation to query 0 to 1 ELFIN.
+   */
+  def findElfinUserPerEmailQuery(email: String): Future[ELFIN] = {
+    // Perform call to eXist REST service to get collections list
+    val query = WSQueries.elfinUserPerEmailQuery(email)
+    val responseFuture: Future[Response] = WS.url(query).withHeaders(("Content-Type","application/xquery")).get
+
+    // Keep asynchronous calls asynchronous to allow Play free threads
+    val resultFuture: Future[ELFIN] = responseFuture.map { resp =>
+      // We expect to receive XML content
+      Logger.debug(s"Result of type ${resp.ahcResponse.getContentType} received")
+      val bodyString = resp.body.mkString
+      if ( !(bodyString.length > 0) ) {
+        throw ResultNotFound(s"No ELFIN found for query: ${query}")
+      } else {
+        //Logger.debug(s"Result body: '${bodyString}'")
+        // Parse XML (Need to wrap the list of XML elements received to obtain valid XML.)
+        //val melfinElem = scala.xml.XML.loadString("<MELFIN>" + resp.body.mkString + "</MELFIN>")
+        val elfinElem = scala.xml.XML.loadString(bodyString)
+        // Transform XML to ELFIN object
+        val elfins = ElfinFormat.fromXml(elfinElem)
+        elfins
+      }
+    }
+    resultFuture
+  }  
+  
+  
 
 }

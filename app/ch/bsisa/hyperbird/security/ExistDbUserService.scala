@@ -135,10 +135,12 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
   override def findByEmailAndProvider(email: String, providerId: String): Option[Identity] = {
     Logger.debug(s"ExistDbUserService.findByEmailAndProvider: email=${email}, providerId=${providerId}")
     // FIND HB USER ///////////////////////////////////////////////////
-    val futureUserElfin = XQueryWSHelper.find(WSQueries.elfinQuery("", ""))
+    val futureUserElfin = XQueryWSHelper.findElfinUserPerEmailQuery(email)
 
     futureUserElfin.map { userElfin =>
-
+    	Logger.debug(s"""=======================================================
+    	    userElfin: ${userElfin} 
+    	=======================================================""")
     }
     // FIND HB USER ///////////////////////////////////////////////////    
 
