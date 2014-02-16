@@ -5,8 +5,9 @@ import ch.bsisa.hyperbird.model.format.Implicits._
 import ch.bsisa.hyperbird.model.proto._
 import ch.bsisa.hyperbird.model.NOM
 import ch.bsisa.hyperbird.model.IDENTIFIANT
-
 import java.util.Date
+import ch.bsisa.hyperbird.model.PARTENAIRE
+import ch.bsisa.hyperbird.model.PERSONNEType
 
 /**
  * Utility functions to deal with ELFIN immutable state replacement such as updating
@@ -23,7 +24,7 @@ object ElfinUtil {
    */
   def assignElfinId(elfin: ELFIN): ELFIN = {
     val newElfinId = ElfinIdGenerator.getNewElfinId
-    new ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, elfin.CARACTERISTIQUE,
+    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, elfin.CARACTERISTIQUE,
       elfin.PARTENAIRE, elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, newElfinId,
       elfin.ID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
   }
@@ -34,25 +35,36 @@ object ElfinUtil {
    */
   def replaceElfinID_G(elfin: ELFIN, newElfinID_G: String): ELFIN = {
 
-    new ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, elfin.CARACTERISTIQUE,
+    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, elfin.CARACTERISTIQUE,
       elfin.PARTENAIRE, elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, elfin.Id,
       newElfinID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
   }
 
   /**
-   * Replaces the elfin.IDENTIFIANT value by an IDENTIFIANT containing the provided user 
+   * Replaces the elfin.IDENTIFIANT value by an IDENTIFIANT containing the provided user
    * specific values instead.
    */
   def replaceElfinUserProperties(
-      elfin: ELFIN, userName: String, userPwdInfo: String, validFrom: Date, validUntil: Date, 
-      personId: String, personID_G: String) = {
+    elfin: ELFIN, userName: String, userPwdInfo: String, validFrom: Date, validUntil: Date,
+    personId: String, personID_G: String) = {
 
     val dateDE = DateUtil.elfinIdentifiantDateFormat.format(validFrom)
     val dateA = DateUtil.elfinIdentifiantDateFormat.format(validUntil)
 
-    val userIdentifiant = new IDENTIFIANT(NOM = Option(userName), ALIAS = Option(userPwdInfo), DE = Option(dateDE), A = Option(dateA))
-    new ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, Option(userIdentifiant), elfin.CARACTERISTIQUE,
-      elfin.PARTENAIRE, elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, elfin.Id,
+    val userDetailsReference = PERSONNEType(mixed = Nil,
+      Id = Option(personId),
+      ID_G = Option(personID_G),
+      NOM = None,
+      GROUPE = None)
+
+    val userDetailsContainer = PARTENAIRE(GERANT = None,
+      USAGER = Option(userDetailsReference),
+      FOURNISSEUR = None,
+      PROPRIETAIRE = None)
+
+    val userIdentifiant = IDENTIFIANT(NOM = Option(userName), ALIAS = Option(userPwdInfo), DE = Option(dateDE), A = Option(dateA))
+    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, Option(userIdentifiant), elfin.CARACTERISTIQUE,
+      Option(userDetailsContainer), elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, elfin.Id,
       elfin.ID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
   }
 
