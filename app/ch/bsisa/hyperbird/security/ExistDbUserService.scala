@@ -138,7 +138,7 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
     val futureUserElfin = XQueryWSHelper.findElfinUserPerEmailQuery(email)
 
     futureUserElfin.map { userElfin =>
-    	Logger.debug(s"""=======================================================
+      Logger.debug(s"""=======================================================
     	    userElfin: ${userElfin} 
     	=======================================================""")
     }
@@ -162,14 +162,11 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
   user.passwordInfo.hashCode()= ${user.passwordInfo.hashCode()}""")
 
     // CREATE NEW USER IN HB DB ///////////////////////////////////////////////////
-    //TODO: REMOVE HARDCODED VALUES NOW FOUND IN CollectionsConfig
-    val configurationCollectionId = "G10000101010101000"
-    //TODO: REMOVE HARDCODED VALUES NOW FOUND IN CollectionsConfig
-    val catalogueCollectionId = "G20140101000012345"
-    val classeName = "USER"
+    val userClasseName = "USER"
 
     // Let's set userValidFrom to now 
     val userValidFrom = new Date()
+    
     // Let's set userValidUntil to userValidFrom + a year.
     val userValidUntil = {
       val gregCal = new GregorianCalendar()
@@ -178,27 +175,19 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
       gregCal.roll(Calendar.YEAR, 1)
       gregCal.getTime()
     }
-    // This will have to be provided a user creation time
-    val userPersonId = "NOT CONFIGURED"
-    val userPersonID_G = "NOT CONFIGURED"
 
-    // Use generic find query with catalogue collection id and ELFIN@CLASSE parameter 
-    val futureElfin = XQueryWSHelper.find(
-      WSQueries.filteredCollectionQuery(catalogueCollectionId, s"//ELFIN[@CLASSE='${classeName}']"))
+    // TODO: replace hardcoded link by correct reference. This is only used for test draft.
+    // This will have to be provided at user creation time
+    val userPersonId = "G20140207193832484"
+    val userPersonID_G = "G10000101010101000"
 
-    // Clone futureElfin[ELFIN] and assign a new generated ELFIN.Id to it
-    val futureElfinWithId: Future[ELFIN] = futureElfin.map(elfin => ElfinUtil.assignElfinId(elfin))
-
+    val futureElfinUser: Future[ELFIN] =  ElfinDAO.getNewFromCatalogue(userClasseName)
+    
     // Update and create new user 
-    val futureElfinWithCorrectID_G = futureElfinWithId.map(userElfin => ElfinUtil.replaceElfinID_G(userElfin, newElfinID_G = configurationCollectionId))
-
-    // Convert elfin JsValue to ELFIN object and replace its ID_G with collectionId
-    //val elfinWithCorrectID_G = ElfinUtil.replaceElfinID_G(userElfin, newElfinID_G = configurationCollectionId)
-
-    futureElfinWithCorrectID_G.map { elfinWithCorrectID_G =>
-
-      val elfinWithCorrectIDENTIFIANT = ElfinUtil.replaceElfinUserProperties(
-        elfin = elfinWithCorrectID_G,
+    futureElfinUser.map { elfinUserToUpdate =>
+      
+      val updatedElfinUser = ElfinUtil.replaceElfinUserProperties(
+        elfinUser = elfinUserToUpdate,
         userName = user.identityId.userId,
         userPwdInfo = user.passwordInfo.get.password,
         validFrom = userValidFrom,
@@ -207,10 +196,9 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
         personID_G = userPersonID_G)
 
       // Update database with new elfin
-      ElfinDAO.create(elfinWithCorrectIDENTIFIANT)
+      ElfinDAO.create(updatedElfinUser)
       // TODO: define a validation to provide feedback whether or not the user has effectively been created.
-      Logger.debug(s"ExistDbUserService.save: NEW USER with elfinId: ${elfinWithCorrectIDENTIFIANT.Id} and elfinID_G: ${elfinWithCorrectIDENTIFIANT.ID_G} SHALL HAVE BEEN CREATED TO DATABASE... ")
-
+      Logger.debug(s"ExistDbUserService.save: NEW USER with elfinId: ${updatedElfinUser.Id} and elfinID_G: ${updatedElfinUser.ID_G} SHALL HAVE BEEN CREATED TO DATABASE... ")
     }
 
     // CREATE NEW USER IN HB DB ///////////////////////////////////////////////////      

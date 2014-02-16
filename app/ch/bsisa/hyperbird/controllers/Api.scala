@@ -53,23 +53,14 @@ object Api extends Controller {
   }
 
   /**
-   * Gets new ELFIN instance from catalogue for provided CLASSE. This instance do not exist in database yet.
+   * Gets new ELFIN instance from catalogue for provided CLASSE. This instance does not exist in database yet.
    * //TODO: review exception management to be able to send back JSON error message in all cases.
    */
   def getNewElfin(classeName: String) = Action.async {
 
     try {
-      // TODO: make this configurable. (In hb_init ? Itself found in catalogueCollectionId at the moment!!!)
-      //TODO: REMOVE HARDCODED VALUES NOW FOUND IN CollectionsConfig
-      val catalogueCollectionId = "G20140101000012345"
-
-      // Use generic find query with catalogue collection id and ELFIN@CLASSE parameter 
-      val futureElfin = XQueryWSHelper.find(
-        WSQueries.filteredCollectionQuery(catalogueCollectionId, s"//ELFIN[@CLASSE='${classeName}']"))
-
-      // Clone futureElfin[ELFIN] and assign a new generated ELFIN.Id to it
-      val futureElfinWithId: Future[ELFIN] = futureElfin.map(elfin => ElfinUtil.assignElfinId(elfin))
-
+      val futureElfinWithId: Future[ELFIN] =  ElfinDAO.getNewFromCatalogue(classeName)
+      
       // Send cloned catalogue elfin in JSON format 
       futureElfinWithId.map { elfin =>
         val elfinJson = ElfinFormat.toJson(elfin)

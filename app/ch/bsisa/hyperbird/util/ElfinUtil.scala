@@ -8,6 +8,7 @@ import ch.bsisa.hyperbird.model.IDENTIFIANT
 import java.util.Date
 import ch.bsisa.hyperbird.model.PARTENAIRE
 import ch.bsisa.hyperbird.model.PERSONNEType
+import ch.bsisa.hyperbird.CollectionsConfig
 
 /**
  * Utility functions to deal with ELFIN immutable state replacement such as updating
@@ -45,9 +46,11 @@ object ElfinUtil {
    * specific values instead.
    */
   def replaceElfinUserProperties(
-    elfin: ELFIN, userName: String, userPwdInfo: String, validFrom: Date, validUntil: Date,
-    personId: String, personID_G: String) = {
+    elfinUser: ELFIN, userName: String, userPwdInfo: String, validFrom: Date, validUntil: Date,
+    personId: String, personID_G: String)(implicit collectionsConfig: CollectionsConfig) = {
 
+    val elfin = ElfinUtil.replaceElfinID_G(elfinUser, newElfinID_G = collectionsConfig.configurationCollectionId)
+    
     val dateDE = DateUtil.elfinIdentifiantDateFormat.format(validFrom)
     val dateA = DateUtil.elfinIdentifiantDateFormat.format(validUntil)
 
