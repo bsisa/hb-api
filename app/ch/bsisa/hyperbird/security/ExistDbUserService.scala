@@ -162,11 +162,12 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
   user.passwordInfo.hashCode()= ${user.passwordInfo.hashCode()}""")
 
     // CREATE NEW USER IN HB DB ///////////////////////////////////////////////////
+
     val userClasseName = "USER"
 
     // Let's set userValidFrom to now 
     val userValidFrom = new Date()
-    
+
     // Let's set userValidUntil to userValidFrom + a year.
     val userValidUntil = {
       val gregCal = new GregorianCalendar()
@@ -181,11 +182,11 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
     val userPersonId = "G20140207193832484"
     val userPersonID_G = "G10000101010101000"
 
-    val futureElfinUser: Future[ELFIN] =  ElfinDAO.getNewFromCatalogue(userClasseName)
-    
+    val futureElfinUser: Future[ELFIN] = ElfinDAO.getNewFromCatalogue(userClasseName)
+
     // Update and create new user 
     futureElfinUser.map { elfinUserToUpdate =>
-      
+
       val updatedElfinUser = ElfinUtil.replaceElfinUserProperties(
         elfinUser = elfinUserToUpdate,
         userName = user.identityId.userId,
@@ -197,6 +198,13 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
 
       // Update database with new elfin
       ElfinDAO.create(updatedElfinUser)
+      // TODO: define a validation to provide feedback whether or not the user has effectively been created.
+      Logger.debug(s"ExistDbUserService.save: NEW USER with elfinId: ${updatedElfinUser.Id} and elfinID_G: ${updatedElfinUser.ID_G} SHALL HAVE BEEN CREATED TO DATABASE... ")
+    }
+
+    val futureUpdatedElfin = ElfinDAO.createUser(userName = user.identityId.userId, userPwdInfo = user.passwordInfo.get.password)
+
+    futureUpdatedElfin.map { updatedElfinUser =>
       // TODO: define a validation to provide feedback whether or not the user has effectively been created.
       Logger.debug(s"ExistDbUserService.save: NEW USER with elfinId: ${updatedElfinUser.Id} and elfinID_G: ${updatedElfinUser.ID_G} SHALL HAVE BEEN CREATED TO DATABASE... ")
     }
