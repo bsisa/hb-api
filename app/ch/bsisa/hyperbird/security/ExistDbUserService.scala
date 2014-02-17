@@ -184,6 +184,9 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
     users.values.find(u => u.email.map(e => e == email && u.identityId.providerId == providerId).getOrElse(false))
   }
 
+  /**
+   * TODO: implement create or replace logic. Only create at the moment.
+   */
   override def save(user: Identity): Identity = {
 
     Logger.debug(s"""ExistDbUserService.save: Identity:
