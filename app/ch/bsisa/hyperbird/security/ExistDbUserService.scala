@@ -198,15 +198,28 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
   user.avatarUrl=${user.avatarUrl.getOrElse("NoAvatarURL")}
   user.passwordInfo.hashCode()= ${user.passwordInfo.hashCode()}""")
 
-    // Create a new user in the database
-    val futureUpdatedElfin = ElfinDAO.createUser(userName = user.identityId.userId, userPwdInfo = user.passwordInfo.get.password)
-
-    futureUpdatedElfin.map { updatedElfinUser =>
-      // TODO: define a validation to provide feedback whether or not the user has effectively been created.
-      Logger.debug(s"ExistDbUserService.save: NEW USER with elfinId: ${updatedElfinUser.Id} and elfinID_G: ${updatedElfinUser.ID_G} SHALL HAVE BEEN CREATED TO DATABASE... ")
+    try {
+      val futureElfinUser = ElfinDAO.findUser(user.identityId.userId)
+    	futureElfinUser.map{ elfinUser =>
+    	  // We currently only update the password
+    	  //val elfinUserUpdated = ElfinUtil.replaceElfinUserProperties(elfinUser, elfinUser.IDENTIFIANT.get.NOM.get, user.passwordInfo.get.password, validFrom, validUntil, personId, personID_G)
+    	  val elfinUserUpdated = ElfinUtil.replaceElfinUserPasswordInfo(elfinUser, user.passwordInfo.get.password)
+    	  ElfinDAO.update(elfinUserUpdated)  
+    	  Logger.debug("Updated passwordInfo")
+      }	
+      
+    } catch {
+      case rnf: ResultNotFound => {
+        // Create a new user in the database
+        val futureUpdatedElfin = ElfinDAO.createUser(userName = user.identityId.userId, userPwdInfo = user.passwordInfo.get.password)
+        futureUpdatedElfin.map { updatedElfinUser =>
+          // TODO: define a validation to provide feedback whether or not the user has effectively been created.
+          Logger.debug(s"ExistDbUserService.save: NEW USER with elfinId: ${updatedElfinUser.Id} and elfinID_G: ${updatedElfinUser.ID_G} SHALL HAVE BEEN CREATED TO DATABASE... ")
+        }
+      }
     }
 
-//    users = users + (user.identityId.userId + user.identityId.providerId -> user)
+    //    users = users + (user.identityId.userId + user.identityId.providerId -> user)
     // this sample returns the same user object, but you could return an instance of your own class
     // here as long as it implements the Identity trait. This will allow you to use your own class in the protected
     // actions and event callbacks. The same goes for the find(id: IdentityId) method.

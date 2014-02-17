@@ -50,7 +50,7 @@ object ElfinUtil {
     personId: String, personID_G: String)(implicit collectionsConfig: CollectionsConfig) = {
 
     val elfin = ElfinUtil.replaceElfinID_G(elfinUser, newElfinID_G = collectionsConfig.configurationCollectionId)
-    
+
     val dateDE = DateUtil.elfinIdentifiantDateFormat.format(validFrom)
     val dateA = DateUtil.elfinIdentifiantDateFormat.format(validUntil)
 
@@ -69,6 +69,36 @@ object ElfinUtil {
     ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, Option(userIdentifiant), elfin.CARACTERISTIQUE,
       Option(userDetailsContainer), elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, elfin.Id,
       elfin.ID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
+  }
+
+  /**
+   * Replaces the elfin.IDENTIFIANT value by an IDENTIFIANT containing the provided user
+   * specific values instead.
+   */
+  def replaceElfinUserPasswordInfo(
+    elfinUser: ELFIN, userPwdInfo: String)(implicit collectionsConfig: CollectionsConfig) = {
+
+    val userIdentifiant = IDENTIFIANT(
+      NOM = elfinUser.IDENTIFIANT.get.NOM,
+      ALIAS = Option(userPwdInfo),
+      DE = elfinUser.IDENTIFIANT.get.DE,
+      A = elfinUser.IDENTIFIANT.get.A)
+
+    ELFIN(
+      MUTATIONS = elfinUser.MUTATIONS, GEOSELECTION = elfinUser.GEOSELECTION,
+      IDENTIFIANT = Option(userIdentifiant), CARACTERISTIQUE = elfinUser.CARACTERISTIQUE,
+      elfinUser.PARTENAIRE,
+      elfinUser.ACTIVITE,
+      elfinUser.FORME,
+      elfinUser.ANNEXE,
+      elfinUser.DIVERS,
+      elfinUser.Id,
+      ID_G = elfinUser.ID_G,
+      CLASSE = elfinUser.CLASSE,
+      GROUPE = elfinUser.GROUPE,
+      TYPE = elfinUser.TYPE,
+      NATURE = elfinUser.NATURE,
+      SOURCE = elfinUser.SOURCE)
   }
 
 }
