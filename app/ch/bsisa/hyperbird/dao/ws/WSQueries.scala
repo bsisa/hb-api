@@ -67,7 +67,7 @@ object WSQueries extends Queries {
     // Example call:
     // Content-Type: application/xquery
     // http://localhost:8080/exist/rest/db/hb4/queries/ELFIN_USER_find_by_email.xq?email=inaminute@pobox.com
-	  // TODO: have something generic like elfinForXQuery(parameter*) where parameter are tuples (name,value) ...
+    // TODO: have something generic like elfinForXQuery(parameter*) where parameter are tuples (name,value) ...
     val xqueryResourceName = "ELFIN_USER_find_by_email.xq"
     val query = s"""${dbConf.protocol}${dbConf.hostName}:${dbConf.port}${dbConf.restPrefix}${dbConf.databaseName}/${collectionsConf.xqueriesCollectionId}/${xqueryResourceName}?email=${email}&_howmany=${highPagingLimit}&_wrap=${wrap}"""
     // The XQuery has access to the entire HTTP context, including parameters and session attributes.
@@ -84,6 +84,12 @@ object WSQueries extends Queries {
     //    $user
 
     //val query = s"""${dbConf.protocol}${dbConf.hostName}:${dbConf.port}${dbConf.restPrefix}${dbConf.databaseName}/${collectionsConf.configurationCollectionId}?_query=//ELFIN%5B@Id=%27${email}%27%5D&_howmany=${highPagingLimit}&_wrap=${wrap}"""
+    query
+  }
+
+  def elfinUserPerNameQuery(name: String)(implicit dbConf: DbConfig, collectionsConf: CollectionsConfig): String = {
+    val xqueryResourceName = "ELFIN_USER_find_by_name.xq"
+    val query = s"""${dbConf.protocol}${dbConf.hostName}:${dbConf.port}${dbConf.restPrefix}${dbConf.databaseName}/${collectionsConf.xqueriesCollectionId}/${xqueryResourceName}?email=${name}&_howmany=${highPagingLimit}&_wrap=${wrap}"""
     query
   }
 

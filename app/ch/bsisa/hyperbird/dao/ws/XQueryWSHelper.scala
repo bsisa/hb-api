@@ -171,7 +171,6 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
     }
     resultFuture
   }  
-  
-  
+ 
 
 }

@@ -3,7 +3,6 @@ package ch.bsisa.hyperbird.security
 import java.util.Calendar
 import java.util.Date
 import java.util.GregorianCalendar
-
 import play.api.{ Logger, Application }
 import securesocial.core._
 import securesocial.core.providers.Token
@@ -18,9 +17,13 @@ import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.util.ElfinUtil
 import ch.bsisa.hyperbird.model.format.ElfinFormat
 import ch.bsisa.hyperbird.dao.ElfinDAO
-
 import ch.bsisa.hyperbird.Implicits._
 import play.api.libs.concurrent.Execution.Implicits._
+import ch.bsisa.hyperbird.dao.ResultNotFound
+import ch.bsisa.hyperbird.model.IDENTIFIANT
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import scala.concurrent.duration.MILLISECONDS
 
 /**
  * SecureSocial UserService implementation targeted at eXist database.
@@ -72,39 +75,70 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
 
   override def find(id: IdentityId): Option[Identity] = {
     Logger.debug(s"ExistDbUserService.find: id.userId=${id.userId}...")
+
     // We only want to deal with password authentication at the moment
     val authMethod: AuthenticationMethod = AuthenticationMethod.UserPassword
+
+    val userFirstName = "Undefined"
+    val userLastName = "Undefined"
+    val userPhoto = None
+    try {
+      val futureElfinUser = ElfinDAO.findUser(id.userId)
+      val futureSocialUserFromFutureElfinUser = futureElfinUser.map { elfinUser =>
+        val passwordInfo = elfinUser.IDENTIFIANT.get.ALIAS.get
+        val pwdInfo: PasswordInfo = new PasswordInfo(PasswordHasher.BCryptHasher, passwordInfo)
+        val userDetailsId = elfinUser.PARTENAIRE.get.USAGER.get.Id.get
+        val userDetailsID_G = elfinUser.PARTENAIRE.get.USAGER.get.ID_G.get
+        val futureUserDetails = XQueryWSHelper.find(WSQueries.elfinQuery(userDetailsID_G, userDetailsId))
+        val futureSocialUser = futureUserDetails.map { userDetails =>
+          val email: String = userDetails.CARACTERISTIQUE.get.CAR5.get.VALEUR.get
+          val socialUser = new SocialUser(id, userFirstName, userLastName, id.userId, Option(email),
+            userPhoto, authMethod, None, None, Some(pwdInfo))
+          Option(socialUser)
+        }
+        futureSocialUser
+      }
+      // Peal one future layer out of two
+      val futureSocialUser = for {
+        futureSocialUser <- futureSocialUserFromFutureElfinUser
+        socialUser <- futureSocialUser
+      } yield socialUser
+      // Wait for the result of the last future layer
+      Await.result[Option[securesocial.core.SocialUser]](futureSocialUser, Duration(8000, MILLISECONDS))
+    } catch {
+      case rnf: ResultNotFound => None
+    }
 
     // Find user details from eXist database ELFIN objects matching 
     // (username :String, provider :String) where provider information is  
     // not required for AuthenticationMethod.UserPassword specific case
-    val userName = "pat"
-    val userFirstName = "Patrick"
-    val userLastName = "Refondini"
-    val userEmail = "refon@pobox.com"
-    val userPhoto = None
+    //    val userName = "pat"
+    //    val userFirstName = "Patrick"
+    //    val userLastName = "Refondini"
+    //    val userEmail = "refon@pobox.com"
+    //    val userPhoto = None
 
     // Get password hash from database
-    val password = "test"
-    val hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12))
+    //    val password = "test"
+    //    val hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12))
 
-    val pwdInfo: PasswordInfo = new PasswordInfo(PasswordHasher.BCryptHasher, hashedPassword)
-
-    if (Logger.isDebugEnabled) {
-      Logger.debug(s"IdentityId.providerId=${id.providerId}, IdentityId.userId=${id.userId}")
-      Logger.debug(s"hashedPassword=${hashedPassword}")
-      Logger.debug("users = %s".format(users))
-    }
+    //    val pwdInfo: PasswordInfo = new PasswordInfo(PasswordHasher.BCryptHasher, hashedPassword)
+    //
+    //    if (Logger.isDebugEnabled) {
+    //      Logger.debug(s"IdentityId.providerId=${id.providerId}, IdentityId.userId=${id.userId}")
+    //      Logger.debug(s"hashedPassword=${hashedPassword}")
+    //      Logger.debug("users = %s".format(users))
+    //    }
 
     //users.get(id.userId + id.providerId)
 
-    if (id.userId == userName) {
-      val socialUser = new SocialUser(id, userFirstName, userLastName, userName, Option(userEmail),
-        userPhoto, authMethod, None, None, Some(pwdInfo))
-      Option(socialUser)
-    } else {
-      None
-    }
+    //    if (id.userId == userName) {
+    //      val socialUser = new SocialUser(id, userFirstName, userLastName, userName, Option(userEmail),
+    //        userPhoto, authMethod, None, None, Some(pwdInfo))
+    //      Option(socialUser)
+    //    } else {
+    //      None
+    //    }
     //    val user = User.findByUserId(userId);
     //    user match {
     //      case Some(user) => {
@@ -161,47 +195,7 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
   user.avatarUrl=${user.avatarUrl.getOrElse("NoAvatarURL")}
   user.passwordInfo.hashCode()= ${user.passwordInfo.hashCode()}""")
 
-    // CREATE NEW USER IN HB DB ///////////////////////////////////////////////////
-
-    val userClasseName = "USER"
-
-    // Let's set userValidFrom to now 
-    val userValidFrom = new Date()
-
-    // Let's set userValidUntil to userValidFrom + a year.
-    val userValidUntil = {
-      val gregCal = new GregorianCalendar()
-      gregCal.setTime(userValidFrom)
-      gregCal.setLenient(false)
-      gregCal.roll(Calendar.YEAR, 1)
-      gregCal.getTime()
-    }
-
-    // TODO: replace hardcoded link by correct reference. This is only used for test draft.
-    // This will have to be provided at user creation time
-    val userPersonId = "G20140207193832484"
-    val userPersonID_G = "G10000101010101000"
-
-    val futureElfinUser: Future[ELFIN] = ElfinDAO.getNewFromCatalogue(userClasseName)
-
-    // Update and create new user 
-    futureElfinUser.map { elfinUserToUpdate =>
-
-      val updatedElfinUser = ElfinUtil.replaceElfinUserProperties(
-        elfinUser = elfinUserToUpdate,
-        userName = user.identityId.userId,
-        userPwdInfo = user.passwordInfo.get.password,
-        validFrom = userValidFrom,
-        validUntil = userValidUntil,
-        personId = userPersonId,
-        personID_G = userPersonID_G)
-
-      // Update database with new elfin
-      ElfinDAO.create(updatedElfinUser)
-      // TODO: define a validation to provide feedback whether or not the user has effectively been created.
-      Logger.debug(s"ExistDbUserService.save: NEW USER with elfinId: ${updatedElfinUser.Id} and elfinID_G: ${updatedElfinUser.ID_G} SHALL HAVE BEEN CREATED TO DATABASE... ")
-    }
-
+    // Create a new user in the database
     val futureUpdatedElfin = ElfinDAO.createUser(userName = user.identityId.userId, userPwdInfo = user.passwordInfo.get.password)
 
     futureUpdatedElfin.map { updatedElfinUser =>
@@ -209,9 +203,7 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
       Logger.debug(s"ExistDbUserService.save: NEW USER with elfinId: ${updatedElfinUser.Id} and elfinID_G: ${updatedElfinUser.ID_G} SHALL HAVE BEEN CREATED TO DATABASE... ")
     }
 
-    // CREATE NEW USER IN HB DB ///////////////////////////////////////////////////      
-
-    users = users + (user.identityId.userId + user.identityId.providerId -> user)
+//    users = users + (user.identityId.userId + user.identityId.providerId -> user)
     // this sample returns the same user object, but you could return an instance of your own class
     // here as long as it implements the Identity trait. This will allow you to use your own class in the protected
     // actions and event callbacks. The same goes for the find(id: IdentityId) method.

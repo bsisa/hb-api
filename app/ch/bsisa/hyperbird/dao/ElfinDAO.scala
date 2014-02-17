@@ -117,6 +117,19 @@ object ElfinDAO {
     }
     futureUpdatedElfin
   }
+  
+  
+  /**
+   * Find XML database ELFIN of CLASSE USER for provided user name.
+   */
+  def findUser(userName: String)(implicit dbConfig: DbConfig, collectionsConfig: CollectionsConfig): Future[ELFIN] = {
+    val userClasseName = "USER"
+    //val query = s"""//ELFIN%5B@CLASSE=%27${userClasseName}%27 and IDENTIFIANT/NOM=%27${userName}%27%5D"""
+    val query = s"""%2F%2FELFIN%5B%40CLASSE%3D%27${userClasseName}%27+and+IDENTIFIANT%2FNOM%3D%27${userName}%27%5D"""
+    
+    XQueryWSHelper.find(WSQueries.filteredCollectionQuery(collectionId = collectionsConfig.configurationCollectionId, xpath = query))
+  }  
+  
 
   /**
    * Helper function designed to executes XUpdate statements
