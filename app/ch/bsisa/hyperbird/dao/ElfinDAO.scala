@@ -132,6 +132,13 @@ object ElfinDAO {
   
 
   /**
+   * Find XML database ELFIN of CLASSE USER for provided email.
+   */  
+  def findUserByEmail(email : String)(implicit dbConfig: DbConfig, collectionsConfig: CollectionsConfig): Future[ELFIN] = {
+    XQueryWSHelper.findElfinUserPerEmailQuery(email)
+  } 
+
+  /**
    * Helper function designed to executes XUpdate statements
    *
    * Note: do not use prepareExpression(statement)

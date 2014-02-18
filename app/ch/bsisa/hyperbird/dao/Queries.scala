@@ -46,5 +46,6 @@ trait Queries {
 /**
  * ResultNotFound exception class
  */
-case class ResultNotFound(message: String = null, cause: Throwable = null) extends Exception(message, cause)
+case class ResultNotFoundException(message: String = null, cause: Throwable = null) extends Exception(message, cause)
+case class ExpectedSingleResultException(message: String = null, cause: Throwable = null) extends Exception(message, cause)
   

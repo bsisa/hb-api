@@ -19,11 +19,13 @@ import ch.bsisa.hyperbird.model.format.ElfinFormat
 import ch.bsisa.hyperbird.dao.ElfinDAO
 import ch.bsisa.hyperbird.Implicits._
 import play.api.libs.concurrent.Execution.Implicits._
-import ch.bsisa.hyperbird.dao.ResultNotFound
+import ch.bsisa.hyperbird.dao.ResultNotFoundException
 import ch.bsisa.hyperbird.model.IDENTIFIANT
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.MILLISECONDS
+import ch.bsisa.hyperbird.dao.ExpectedSingleResultException
+import securesocial.core.providers.UsernamePasswordProvider
 
 /**
  * SecureSocial UserService implementation targeted at eXist database.
@@ -70,118 +72,41 @@ import scala.concurrent.duration.MILLISECONDS
  * @author Patrick Refondini
  */
 class ExistDbUserService(application: Application) extends UserServicePlugin(application) {
-  private var users = Map[String, Identity]()
+  //private var users = Map[String, Identity]()
   private var tokens = Map[String, Token]()
 
   override def find(id: IdentityId): Option[Identity] = {
     Logger.debug(s"ExistDbUserService.find: id.userId=${id.userId}...")
 
-    // We only want to deal with password authentication at the moment
-    val authMethod: AuthenticationMethod = AuthenticationMethod.UserPassword
-
-    val userFirstName = "Undefined"
-    val userLastName = "Undefined"
-    val userPhoto = None
-    try {
-      val futureElfinUser = ElfinDAO.findUser(id.userId)
-      val futureSocialUserFromFutureElfinUser = futureElfinUser.map { elfinUser =>
-        val passwordInfo = elfinUser.IDENTIFIANT.get.ALIAS.get
-        val pwdInfo: PasswordInfo = new PasswordInfo(PasswordHasher.BCryptHasher, passwordInfo)
-        val userDetailsId = elfinUser.PARTENAIRE.get.USAGER.get.Id.get
-        val userDetailsID_G = elfinUser.PARTENAIRE.get.USAGER.get.ID_G.get
-        val futureUserDetails = XQueryWSHelper.find(WSQueries.elfinQuery(userDetailsID_G, userDetailsId))
-        val futureSocialUser = futureUserDetails.map { userDetails =>
-          val email: String = userDetails.CARACTERISTIQUE.get.CAR5.get.VALEUR.get
-          val socialUser = new SocialUser(id, userFirstName, userLastName, id.userId, Option(email),
-            userPhoto, authMethod, None, None, Some(pwdInfo))
-          Option(socialUser)
-        }
-        futureSocialUser
-      }
-      // Peal one future layer out of two
-      val futureSocialUser = for {
-        futureSocialUser <- futureSocialUserFromFutureElfinUser
-        socialUser <- futureSocialUser
-      } yield socialUser
-      // Wait for the result of the last future layer
-      Await.result[Option[securesocial.core.SocialUser]](futureSocialUser, Duration(8000, MILLISECONDS))
-    } catch {
-      case rnf: ResultNotFound => None
+    findUser(ElfinDAO.findUser, id.userId) match {
+      case Some(futureElfinUser) => getIdentity(futureElfinUser)
+      case None => None
     }
-
-    // Find user details from eXist database ELFIN objects matching 
-    // (username :String, provider :String) where provider information is  
-    // not required for AuthenticationMethod.UserPassword specific case
-    //    val userName = "pat"
-    //    val userFirstName = "Patrick"
-    //    val userLastName = "Refondini"
-    //    val userEmail = "refon@pobox.com"
-    //    val userPhoto = None
-
-    // Get password hash from database
-    //    val password = "test"
-    //    val hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12))
-
-    //    val pwdInfo: PasswordInfo = new PasswordInfo(PasswordHasher.BCryptHasher, hashedPassword)
-    //
-    //    if (Logger.isDebugEnabled) {
-    //      Logger.debug(s"IdentityId.providerId=${id.providerId}, IdentityId.userId=${id.userId}")
-    //      Logger.debug(s"hashedPassword=${hashedPassword}")
-    //      Logger.debug("users = %s".format(users))
-    //    }
-
-    //users.get(id.userId + id.providerId)
-
-    //    if (id.userId == userName) {
-    //      val socialUser = new SocialUser(id, userFirstName, userLastName, userName, Option(userEmail),
-    //        userPhoto, authMethod, None, None, Some(pwdInfo))
-    //      Option(socialUser)
-    //    } else {
-    //      None
-    //    }
-    //    val user = User.findByUserId(userId);
-    //    user match {
-    //      case Some(user) => {
-    //        val socialUser = new SocialUser(userId, null, null, user.name, Option(user.email), Option(user.photo), AuthenticationMethod("userPassword"), null, null, Some(PasswordInfo(PasswordHasher.BCryptHasher, BCrypt.hashpw(user.password, BCrypt.gensalt(10)))))
-    //        Option(socialUser)
-    //      }
-    //      case None => {
-    //         None
-    //      }
-    //    }
-
   }
 
-  // As of : http://stackoverflow.com/questions/16124184/play-framework-securesocial-userpass-implementation
-  //  def find(userId: UserId): Option[Identity] = {
-  //    val user = User.findByUserId(userId);
-  //    user match {
-  //      case Some(user) => {
-  //        val socialUser = new SocialUser(userId, null, null, user.name, Option(user.email), Option(user.photo), AuthenticationMethod("userPassword"), null, null, Some(PasswordInfo(PasswordHasher.BCryptHasher, user.password)))
-  //        Option(socialUser)
-  //      }
-  //      case None => {
-  //        None
-  //      }
-  //    }
-  //  }
-
+  
   override def findByEmailAndProvider(email: String, providerId: String): Option[Identity] = {
     Logger.debug(s"ExistDbUserService.findByEmailAndProvider: email=${email}, providerId=${providerId}")
     // FIND HB USER ///////////////////////////////////////////////////
-    val futureUserElfin = XQueryWSHelper.findElfinUserPerEmailQuery(email)
-
-    futureUserElfin.map { userElfin =>
-      Logger.debug(s"""=======================================================
-    	    userElfin: ${userElfin} 
-    	=======================================================""")
-    }
-    // FIND HB USER ///////////////////////////////////////////////////    
-
-    if (Logger.isDebugEnabled) {
-      Logger.debug("users = %s".format(users))
-    }
-    users.values.find(u => u.email.map(e => e == email && u.identityId.providerId == providerId).getOrElse(false))
+    
+    findUser(ElfinDAO.findUserByEmail, email) match {
+      case Some(futureElfinUser) => getIdentity(futureElfinUser)
+      case None => None
+    }    
+    
+//    val futureUserElfin = ElfinDAO.findUserByEmail(email)
+//
+//    futureUserElfin.map { userElfin =>
+//      Logger.debug(s"""=======================================================
+//    	    userElfin: ${userElfin} 
+//    	=======================================================""")
+//    }
+//    // FIND HB USER ///////////////////////////////////////////////////    
+//
+//    if (Logger.isDebugEnabled) {
+//      Logger.debug("users = %s".format(users))
+//    }
+//    users.values.find(u => u.email.map(e => e == email && u.identityId.providerId == providerId).getOrElse(false))
   }
 
   /**
@@ -200,22 +125,28 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
 
     try {
       val futureElfinUser = ElfinDAO.findUser(user.identityId.userId)
-    	futureElfinUser.map{ elfinUser =>
-    	  // We currently only update the password
-    	  //val elfinUserUpdated = ElfinUtil.replaceElfinUserProperties(elfinUser, elfinUser.IDENTIFIANT.get.NOM.get, user.passwordInfo.get.password, validFrom, validUntil, personId, personID_G)
-    	  val elfinUserUpdated = ElfinUtil.replaceElfinUserPasswordInfo(elfinUser, user.passwordInfo.get.password)
-    	  ElfinDAO.update(elfinUserUpdated)  
-    	  Logger.debug("Updated passwordInfo")
-      }	
-      
+      futureElfinUser.map { elfinUser =>
+        // We currently only update the password
+        val elfinUserUpdated = ElfinUtil.replaceElfinUserPasswordInfo(elfinUser, user.passwordInfo.get.password)
+        ElfinDAO.update(elfinUserUpdated)
+        Logger.debug("Updated passwordInfo for user ${user.identityId.userId}")
+      }
+      user
     } catch {
-      case rnf: ResultNotFound => {
+      // This is the regular situation for a new non-existing user
+      case rnf: ResultNotFoundException => {
         // Create a new user in the database
         val futureUpdatedElfin = ElfinDAO.createUser(userName = user.identityId.userId, userPwdInfo = user.passwordInfo.get.password)
         futureUpdatedElfin.map { updatedElfinUser =>
           // TODO: define a validation to provide feedback whether or not the user has effectively been created.
-          Logger.debug(s"ExistDbUserService.save: NEW USER with elfinId: ${updatedElfinUser.Id} and elfinID_G: ${updatedElfinUser.ID_G} SHALL HAVE BEEN CREATED TO DATABASE... ")
+          Logger.debug(s"New user ${user.identityId.userId} with elfinId: ${updatedElfinUser.Id} and elfinID_G: ${updatedElfinUser.ID_G} has been created by ExistDbUserService.save.")
         }
+        user
+      }
+      // This is a real exception 
+      case other: Throwable => {
+        Logger.error(s"Could neither find nor create user: ${user.identityId.userId}. Exception is: ${other.toString}")
+        throw other
       }
     }
 
@@ -223,7 +154,7 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
     // this sample returns the same user object, but you could return an instance of your own class
     // here as long as it implements the Identity trait. This will allow you to use your own class in the protected
     // actions and event callbacks. The same goes for the find(id: IdentityId) method.
-    user
+    //user
   }
 
   // Check: 
@@ -298,5 +229,71 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
     Logger.debug("ExistDbUserService.deleteExpiredTokens()")
     tokens = tokens.filter(!_._2.isExpired)
   }
+
+  /**
+   * Encapsulates identical exception management for different functions searching for user by name or email.
+   */
+  private def findUser(userFinderFunction: (String) => Future[ch.bsisa.hyperbird.model.ELFIN], param: String): Option[Future[ch.bsisa.hyperbird.model.ELFIN]] = {
+    try {
+      Option(userFinderFunction(param))
+    } catch {
+      case rnfe: ResultNotFoundException => {
+        Logger.warn(s"Requested user for ${param} was not found: ${rnfe.toString()}")
+        None
+      }
+      case esre: ExpectedSingleResultException => {
+        Logger.error(s"More than a single user found for ${param}: ${esre.toString()}")
+        None
+      }
+      case ue: Throwable => {
+        Logger.error(s"Unexpected problem for requested user for ${param}: ${ue.toString()}")
+        None
+      }
+    }
+  }
+  
+  /**
+   * Builds the Identity corresponding to the provided IdentityId and Future[ELFIN]
+   */
+  private def getIdentity(futureElfinUser: Future[ELFIN]): Option[Identity] = {
+    // We only want to deal with password authentication at the moment
+    val authMethod: AuthenticationMethod = AuthenticationMethod.UserPassword
+
+    val userFirstName = "Undefined"
+    val userLastName = "Undefined"
+    val userPhoto = None
+
+    try {
+      val futureSocialUserFromFutureElfinUser = futureElfinUser.map { elfinUser =>
+        val userId = elfinUser.IDENTIFIANT.get.NOM.get
+        val providerId = UsernamePasswordProvider.UsernamePassword 
+        val identityId = IdentityId(userId, providerId) 
+        val passwordInfo = elfinUser.IDENTIFIANT.get.ALIAS.get
+        val pwdInfo: PasswordInfo = new PasswordInfo(PasswordHasher.BCryptHasher, passwordInfo)
+        val userDetailsId = elfinUser.PARTENAIRE.get.USAGER.get.Id.get
+        val userDetailsID_G = elfinUser.PARTENAIRE.get.USAGER.get.ID_G.get
+        val futureUserDetails = XQueryWSHelper.find(WSQueries.elfinQuery(userDetailsID_G, userDetailsId))
+        val futureSocialUser = futureUserDetails.map { userDetails =>
+          val email: String = userDetails.CARACTERISTIQUE.get.CAR5.get.VALEUR.get
+          val socialUser = new SocialUser(identityId, userFirstName, userLastName, identityId.userId, Option(email),
+            userPhoto, authMethod, None, None, Some(pwdInfo))
+          Option(socialUser)
+        }
+        futureSocialUser
+      }
+      // Peal one future layer out of two
+      val futureSocialUser = for {
+        futureSocialUser <- futureSocialUserFromFutureElfinUser
+        socialUser <- futureSocialUser
+      } yield socialUser
+      // Wait for the result of the last future layer
+      Await.result[Option[securesocial.core.SocialUser]](futureSocialUser, Duration(8000, MILLISECONDS))
+    } catch {
+      case ue: Throwable => {
+        Logger.error(s"Unexpected problem for requested user: ${ue.toString()}")
+        None
+      }
+    }
+  }  
 
 }
