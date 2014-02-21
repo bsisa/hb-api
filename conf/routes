@@ -65,6 +65,8 @@ GET      /not-authorized                      securesocial.controllers.ProviderC
 
 # Static resource from hb-ui project 
 GET      /*file                               controllers.Assets.at(path="/public", file)
+# Home page redirect
+GET      /                                    ch.bsisa.hyperbird.controllers.Application.angularJsIndex
 
 
 
