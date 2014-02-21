@@ -24,7 +24,7 @@ The distribution will be available at:
     hb-api/target/universal/hb-api-X.Y.Z.zip
 
 
-# Running the distribution # 
+# Running the distribution #
 
 In production mode from the packaged distribution: 
 
