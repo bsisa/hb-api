@@ -40,6 +40,15 @@ import java.io.StringWriter
 object Implicits {
 
   /**
+   * Constant holding JSON property name used to store geoXml.xsd elements mixed-content. 
+   * 
+   * A better but more involved solution would be to modify the geoXml.xsd not to use mixed 
+   * content anymore. In all existing situations there is no good reason to use mixed content 
+   * and it makes developers life more difficult.
+   */
+  val MixedContentJsonPropName = "VALUE"
+
+  /**
    * Extracts mixed content text nodes as String assuming there is no "real" mix content,
    * that is no mix of XML elements and text nodes but only text nodes.
    *
@@ -89,7 +98,7 @@ object Implicits {
         try {
           JsSuccess(BigInt.long2bigInt(pos))
         } catch {
-          case nfe: java.lang.NumberFormatException => 
+          case nfe: java.lang.NumberFormatException =>
             JsError(s"Error reading BigInt from JSON. Could not parse invalid value at path: ${path}")
           case e: Throwable => JsError(s"Error reading BigInt: ${e.getMessage()}")
         }
@@ -216,7 +225,7 @@ object Implicits {
       val bAndCAndContent: JsResult[(String, String, String)] = for {
         b <- (json \ "B").validate[String]
         c <- (json \ "C").validate[String]
-        content <- (json \ "MIXED-CONTENT").validate[String]
+        content <- (json \ MixedContentJsonPropName).validate[String]
       } yield (b, c, content)
 
       bAndCAndContent match {
@@ -230,7 +239,7 @@ object Implicits {
     def writes(st: STATEType): JsValue = Json.obj(
       "B" -> st.B,
       "C" -> st.C,
-      "MIXED-CONTENT" -> getMixedContent(st.mixed))
+      MixedContentJsonPropName -> getMixedContent(st.mixed))
   }
 
   //ETAT
@@ -241,7 +250,7 @@ object Implicits {
     def reads(json: JsValue): JsResult[C] = {
       val posContent: JsResult[(BigInt, String)] = for {
         pos <- (json \ "POS").validate[BigInt]
-        content <- (json \ "MIXED-CONTENT").validate[String]
+        content <- (json \ MixedContentJsonPropName).validate[String]
       } yield (pos, content)
 
       posContent match {
@@ -254,7 +263,7 @@ object Implicits {
 
     def writes(c: C): JsValue = Json.obj(
       "POS" -> c.POS,
-      "MIXED-CONTENT" -> getMixedContent(c.mixed))
+      MixedContentJsonPropName -> getMixedContent(c.mixed))
   }
 
   implicit val LFormat: Format[L] = Json.format[L]
@@ -286,7 +295,7 @@ object Implicits {
       val nomTypeContent: JsResult[(NOM, TYPEType, String)] = for {
         nom <- (json \ "NOM").validate[NOM]
         typet <- (json \ "TYPE").validate[TYPEType]
-        content <- (json \ "MIXED-CONTENT").validate[String]
+        content <- (json \ MixedContentJsonPropName).validate[String]
       } yield (nom, typet, content)
 
       nomTypeContent match {
@@ -300,7 +309,7 @@ object Implicits {
     def writes(d: DIMENSION): JsValue = Json.obj(
       "NOM" -> Json.toJson[NOM](d.NOM),
       "TYPE" -> Json.toJson[TYPEType](d.TYPE),
-      "MIXED-CONTENT" -> getMixedContent(d.mixed))
+      MixedContentJsonPropName -> getMixedContent(d.mixed))
   }
 
   // CALCULType
@@ -336,7 +345,7 @@ object Implicits {
         idg <- (json \ "ID_G").validate[String]
         nom <- (json \ "NOM").validate[String]
         groupe <- (json \ "GROUPE").validate[String]
-        content <- (json \ "MIXED-CONTENT").validate[String]
+        content <- (json \ MixedContentJsonPropName).validate[String]
       } yield (id, idg, nom, groupe, content)
 
       idIdgNomGroupeContent match {
@@ -352,7 +361,7 @@ object Implicits {
       "ID_G" -> JsString(p.ID_G.getOrElse("null")),
       "NOM" -> JsString(p.NOM.getOrElse("null")),
       "GROUPE" -> JsString(p.GROUPE.getOrElse("null")),
-      "MIXED-CONTENT" -> getMixedContent(p.mixed))
+      MixedContentJsonPropName -> getMixedContent(p.mixed))
   }
 
   // PARTENAIRE => {GERANT,USAGER,FOURNISSEUR,PROPRIETAIRE} => PERSONNEType
@@ -516,7 +525,7 @@ object Implicits {
       val posLienContent: JsResult[(BigInt, java.net.URI, String)] = for {
         pos <- (json \ "POS").validate[BigInt]
         lien <- (json \ "LIEN").validate[java.net.URI]
-        content <- (json \ "MIXED-CONTENT").validate[String]
+        content <- (json \ MixedContentJsonPropName).validate[String]
       } yield (pos, lien, content)
 
       posLienContent match {
@@ -529,7 +538,7 @@ object Implicits {
     def writes(r: RENVOI): JsValue = Json.obj(
       "POS" -> r.POS,
       "LIEN" -> r.LIEN,
-      "MIXED-CONTENT" -> getMixedContent(r.mixed))
+      MixedContentJsonPropName -> getMixedContent(r.mixed))
   }
 
   // ANNEXE => RENVOI => LIEN
@@ -572,5 +581,5 @@ object Implicits {
   implicit val ELFINFormat: Format[ELFIN] = Json.format[ELFIN]
 
   ///////////////////////////////////////////////////////////////////////////
- 
+
 }
