@@ -20,6 +20,8 @@ import ch.bsisa.hyperbird.util.ElfinIdGenerator
 import ch.bsisa.hyperbird.model.ELFIN
 import play.api.libs.json.Json
 import ch.bsisa.hyperbird.util.ElfinUtil
+import ch.bsisa.hyperbird.InitConfig
+import ch.bsisa.hyperbird.CollectionsConfig
 
 /**
  * REST API controller.
@@ -30,6 +32,28 @@ import ch.bsisa.hyperbird.util.ElfinUtil
  * @author Guy de Pourtales
  */
 object Api extends Controller {
+
+  /**
+   * Helper function obtaining configuration information.
+   */
+  private def getConfigJson()(implicit initConfig: InitConfig, collectionsConfig: CollectionsConfig): String = {
+    val configJson =
+      s"""{"config": { 
+    "hb_init_ref": { 
+      "Id": ${initConfig.initElfinId}
+      "ID_G": ${collectionsConfig.configurationCollectionId}
+    }
+  }
+}"""
+    configJson
+  }
+
+  /**
+   * Dynamically provides initialisation configuration information useful to hb-ui
+   */
+  def config() = Action {
+    Ok(getConfigJson).as(JSON)
+  }
 
   /**
    * TODO: review specifications. Listing collections.
@@ -59,8 +83,8 @@ object Api extends Controller {
   def getNewElfin(classeName: String) = Action.async {
 
     try {
-      val futureElfinWithId: Future[ELFIN] =  ElfinDAO.getNewFromCatalogue(classeName)
-      
+      val futureElfinWithId: Future[ELFIN] = ElfinDAO.getNewFromCatalogue(classeName)
+
       // Send cloned catalogue elfin in JSON format 
       futureElfinWithId.map { elfin =>
         val elfinJson = ElfinFormat.toJson(elfin)

@@ -25,4 +25,11 @@ object Implicits {
    */
   implicit val collectionsConfig = new CollectionsConfig
   
+  
+  /**
+   * Init configurations
+   */
+  implicit val initConfig = new InitConfig
+    
+  
 }
