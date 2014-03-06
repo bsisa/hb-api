@@ -40,8 +40,8 @@ object Api extends Controller {
     val configJson =
       s"""{"config": { 
     "hb_init_ref": { 
-      "Id": ${initConfig.initElfinId},
-      "ID_G": ${collectionsConfig.configurationCollectionId}
+      "Id": "${initConfig.initElfinId}",
+      "ID_G": "${collectionsConfig.configurationCollectionId}"
     }
   }
 }"""
