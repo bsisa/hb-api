@@ -19,7 +19,7 @@
 # GET           /api/melfin/:collectionId/:elfinId        ch.bsisa.hyperbird.controllers.Api.getElfin(collectionId, elfinId) # format=(json|xml|pdf|xls|...)
 
 # Dynamically provides initialisation configuration information useful to hb-ui 
-GET      /api/config/                         ch.bsisa.hyperbird.controllers.Api.config
+GET      /api/melfin/config/                         ch.bsisa.hyperbird.controllers.Api.config
 
 # TODO: define expected result format
 GET      /api/melfin/                         ch.bsisa.hyperbird.controllers.Api.collections
