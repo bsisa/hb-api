@@ -52,9 +52,8 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
     // Keep asynchronous calls asynchronous to allow Play free threads
     val simpleResFuture: Future[SimpleResult] = elfinsFuture.map { elfinsResp =>
       try {
-        val elfinsJson = ElfinFormat.elfinsToJson(elfinsResp)
-        val melfinJson = ElfinFormat.elfinsJsonToMelfinJson(elfinsJson)
-        Ok(melfinJson).as(JSON)
+        val elfinsJsArray = ElfinFormat.elfinsToJsonArray(elfinsResp)
+        Ok(elfinsJsArray)
       } catch {
         case e: Throwable =>
           val jsonExceptionMsg = Json.obj(

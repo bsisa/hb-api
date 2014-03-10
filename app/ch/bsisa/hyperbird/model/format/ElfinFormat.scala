@@ -6,6 +6,7 @@ import ch.bsisa.hyperbird.model.proto._
 import play.api.libs.json.{ Json, JsObject, JsValue }
 import play.api.Logger
 import ch.bsisa.hyperbird.model.MELFIN
+import play.api.libs.json.JsArray
 
 /**
  * Functions helping to read and write ELFIN, MELFIN model object
@@ -15,19 +16,19 @@ import ch.bsisa.hyperbird.model.MELFIN
  *
  */
 object ElfinFormat {
-  
+
   def toXml(elfin: ELFIN): scala.xml.Node = {
     val nodeSeq = scalaxb.toXML[ELFIN](elfin, None, Some("ELFIN"), ch.bsisa.hyperbird.model.proto.defaultScope)
     nodeSeq(0)
   }
-  
+
   def toXml(melfin: MELFIN): scala.xml.Node = {
     val nodeSeq = scalaxb.toXML[MELFIN](melfin, None, Some("MELFIN"), ch.bsisa.hyperbird.model.proto.defaultScope)
     nodeSeq(0)
-  }  
+  }
 
   def fromXml(elfinXmlElem: scala.xml.Elem): ELFIN = scalaxb.fromXML[ELFIN](elfinXmlElem)
-  
+
   def fromXml(elfinXmlNode: scala.xml.Node): ELFIN = scalaxb.fromXML[ELFIN](elfinXmlNode)
 
   def toJson(elfin: ELFIN): JsValue = {
@@ -44,7 +45,7 @@ object ElfinFormat {
 
   /**
    * Creates a sequence of ELFIN objects from an XML element (MELFIN)
-   * containing a list of ELFIN XML elements.  
+   * containing a list of ELFIN XML elements.
    */
   def elfinsFromXml(melfinElem: scala.xml.Elem): Seq[ELFIN] = {
     // Unwrap wrap tag (should be MELFIN)
@@ -56,19 +57,29 @@ object ElfinFormat {
   }
 
   /**
-   * Formats a sequence of ELFIN objects to a sequence of Json values 
+   * Formats a sequence of ELFIN objects to a sequence of Json values
    * each one being the Json serialisation of its corresponding ELFIN.
    */
   def elfinsToJson(elfins: Seq[ELFIN]): Seq[JsValue] = {
+    //val elfinsJsonArray = Json.arr(elfins)
     val elfinsJson = for { elfin <- elfins } yield toJson(elfin)
     elfinsJson
   }
-  
+
+  /**
+   * Formats a sequence of ELFIN objects to a JsValue which is a JsArray 
+   * of JSON elfins.
+   */
+  def elfinsToJsonArray(elfins: Seq[ELFIN]): JsValue = {
+    val elfinsJsArrayValue = Json.toJson(elfins)
+    elfinsJsArrayValue
+  }
+
   def elfinsJsonToMelfinJson(elfinsJson: Seq[JsValue]): JsObject = {
     // Package Seq[JsValue] where each JsValue is an elfin as a MELFIN
-    Json.obj("MELFIN" -> elfinsJson)    
+    Json.obj("MELFIN" -> elfinsJson)
   }
-  
+
   /**
    * Transforms a scala.xml.Elem MELFIN expected to contain
    * a sequence of ELFIN elements to a Json object containing
