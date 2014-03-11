@@ -169,27 +169,35 @@ object Api extends Controller {
   }
 
   /**
-   * Updates ELFIN within the specified collectionId with Id elfinId
+   * Deletes an ELFIN within the specified collectionId with Id elfinId.
+   * RFC are not cristal clear regarding HTTP DELETE body usage or not but REST
+   * principles states that URL information should uniquely identify a resource
+   * to GET or DELETE.
+   *
+   * For that reason we do not process the request body for DELETE operation. 
+   * In addition trying to process it would fail with REST client such as 
+   * Restangular which does not sent any body for DELETE operations.
    */
-  def deleteElfin(collectionId: String, elfinId: String) = Action(parse.json) { request =>
+  def deleteElfin(collectionId: String, elfinId: String) = Action.async { request =>
     try {
-      // Convert elfin JsValue to ELFIN object
-      val elfin = ElfinFormat.fromJson(request.body)
-
-      // Test identifiers consistency between URL and JSON body
-      if (elfin.ID_G.equals(collectionId) && elfin.Id.equals(elfinId)) {
-        // Delete elfin from database
-        ElfinDAO.delete(elfin)
-        // Send deleted elfin back to give a chance for cancellation (re-creation)
-        Ok(ElfinFormat.toJson(elfin)).as(JSON)
-      } else {
-        val errorMsg = s"DELETE URL ELFIN ID_G/Id: ${collectionId}/${elfinId} unique identifier does not match PUT body JSON ELFIN provided ID_G/Id: ${elfin.ID_G}/${elfin.Id}. Deletion cancelled."
-        manageException(errorMsg = Option(errorMsg))
-      }
+      Logger.info(s"DELETE operation called for ELFIN.ID_G ${collectionId} ELFIN.Id ${elfinId}")
+      // Make sure the resource we want to delete still exists.
+      val futureElfin = XQueryWSHelper.find(WSQueries.elfinQuery(collectionId, elfinId))
+      futureElfin.map(elfin =>
+        try {
+          // Delete elfin from database
+          ElfinDAO.delete(elfin)
+          // Send deleted elfin back to give a chance for cancellation (re-creation) 
+          // provided the REST client does something with it unlike restangular
+          Ok(ElfinFormat.toJson(elfin)).as(JSON)
+        } catch {
+          case e: Throwable =>
+            manageException(exception = Option(e), errorMsg = Option(s"Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
+        })
     } catch {
       case e: Throwable =>
         val errorMsg = s"Failed to perform update for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
-        manageException(exception = Option(e), errorMsg = Option(errorMsg))
+        manageFutureException(exception = Option(e), errorMsg = Option(errorMsg))
     }
   }
 
