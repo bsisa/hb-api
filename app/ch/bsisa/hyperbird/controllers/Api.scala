@@ -22,6 +22,7 @@ import play.api.libs.json.Json
 import ch.bsisa.hyperbird.util.ElfinUtil
 import ch.bsisa.hyperbird.InitConfig
 import ch.bsisa.hyperbird.CollectionsConfig
+import securesocial.core.java.SecureSocial.SecuredAction
 
 /**
  * REST API controller.
@@ -31,7 +32,7 @@ import ch.bsisa.hyperbird.CollectionsConfig
  * @author Patrick Refondini
  * @author Guy de Pourtales
  */
-object Api extends Controller {
+object Api extends Controller with securesocial.core.SecureSocial {
 
   /**
    * Helper function obtaining configuration information.
@@ -51,7 +52,7 @@ object Api extends Controller {
   /**
    * Dynamically provides initialisation configuration information useful to hb-ui
    */
-  def config() = Action {
+  def config() = SecuredAction(ajaxCall = true) {
     Ok(getConfigJson).as(JSON)
   }
 
@@ -62,7 +63,7 @@ object Api extends Controller {
    * <li>What type of data to return in geoXml.xsd world ?</li>
    * </ul>
    */
-  def collections = Action.async {
+  def collections = SecuredAction(ajaxCall = true).async {
     XQueryWSHelper.query(WSQueries.allHbCollectionsQuery)
   }
 
@@ -71,7 +72,7 @@ object Api extends Controller {
    *
    * TODO: make use of format parameter value, currently returns JSON format only. (format=(json|xml|pdf|xls|...)
    */
-  def filteredCollection(collectionId: String, xpath: String, format: String) = Action.async {
+  def filteredCollection(collectionId: String, xpath: String, format: String) = SecuredAction(ajaxCall = true).async {
     Logger.warn(s"TODO: make use of format parameter value ${format}")
     XQueryWSHelper.query(WSQueries.filteredCollectionQuery(collectionId, xpath))
   }
@@ -80,7 +81,7 @@ object Api extends Controller {
    * Gets new ELFIN instance from catalogue for provided CLASSE. This instance does not exist in database yet.
    * //TODO: review exception management to be able to send back JSON error message in all cases.
    */
-  def getNewElfin(classeName: String) = Action.async {
+  def getNewElfin(classeName: String) = SecuredAction(ajaxCall = true).async {
 
     try {
       val futureElfinWithId: Future[ELFIN] = ElfinDAO.getNewFromCatalogue(classeName)
@@ -100,8 +101,10 @@ object Api extends Controller {
   /**
    * Gets ELFIN corresponding to this collectionId and elfinId
    */
-  def getElfin(collectionId: String, elfinId: String) = Action.async {
+  def getElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true).async { implicit request =>
 
+    Logger.debug(s"getElfin(collectionId=${collectionId}, elfinId=${elfinId}) called by user: ${request.user}")
+    
     val futureElfin = XQueryWSHelper.find(WSQueries.elfinQuery(collectionId, elfinId))
 
     futureElfin.map(elfin =>
@@ -117,7 +120,7 @@ object Api extends Controller {
   /**
    * Creates an ELFIN within the specified collectionId of CLASS className.
    */
-  def createElfin(collectionId: String, elfinId: String) = Action.async(parse.json) { request =>
+  def createElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true).async(parse.json) { request =>
 
     try {
       // Convert elfin JsValue to ELFIN object and replace its ID_G with collectionId
@@ -145,7 +148,7 @@ object Api extends Controller {
    * Updates ELFIN within the specified collectionId with Id elfinId.
    * The data used to update this ELFIN will only be accepted if provided in JSON format.
    */
-  def updateElfin(collectionId: String, elfinId: String) = Action(parse.json) { request =>
+  def updateElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true)(parse.json) { request =>
     try {
       // Convert elfin JsValue to ELFIN object
       val elfin = ElfinFormat.fromJson(request.body)
@@ -178,9 +181,10 @@ object Api extends Controller {
    * In addition trying to process it would fail with REST client such as 
    * Restangular which does not sent any body for DELETE operations.
    */
-  def deleteElfin(collectionId: String, elfinId: String) = Action.async { request =>
+  def deleteElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true).async { request =>
     try {
-      Logger.info(s"DELETE operation called for ELFIN.ID_G ${collectionId} ELFIN.Id ${elfinId}")
+      // Info level is fine for DELETE operation. They should not be frequent and should be easily traceable.
+      Logger.info(s"deleteElfin(collectionId=${collectionId}, elfinId=${elfinId}) called by user: ${request.user}")
       // Make sure the resource we want to delete still exists.
       val futureElfin = XQueryWSHelper.find(WSQueries.elfinQuery(collectionId, elfinId))
       futureElfin.map(elfin =>
