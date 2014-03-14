@@ -93,30 +93,7 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
     // Perform call to eXist REST service to get collections list
     val responseFuture: Future[Response] = WS.url(query).get()
 
-    proceedWithElfinUserResponse(responseFuture, query)
-    
-//    // Keep asynchronous calls asynchronous to allow Play free threads
-//    val resultFuture: Future[ELFIN] = responseFuture.map { resp =>
-//      // We expect to receive XML content
-//      Logger.debug(s"Result of type ${resp.ahcResponse.getContentType} received")
-//      val bodyString = resp.body.mkString
-//      if (!(bodyString.length > 0)) {
-//        throw ResultNotFoundException(s"No ELFIN found for query: ${query}")
-//      } else {
-//        // Parse XML (Need to wrap the list of XML elements received to obtain valid XML in case several ELFIN are returned.)
-//        val melfinElem = scala.xml.XML.loadString(s"<MELFIN>${bodyString}</MELFIN>")
-//        val elfinNodeSeq = melfinElem \\ "ELFIN"
-//        if (elfinNodeSeq.size > 1) {
-//          throw ExpectedSingleResultException(s"Found more than a single ELFIN (${elfinNodeSeq.size}) for query: ${query}")
-//        } else {
-//          val elfinElem = elfinNodeSeq(0)
-//          // Transform XML to ELFIN object
-//          val elfin = ElfinFormat.fromXml(elfinElem)
-//          elfin
-//        }
-//      }
-//    }
-//    resultFuture
+    proceedWithSingleElfinResponse(responseFuture, query)
   }
 
   override def delete(elfin: ELFIN)(implicit conf: DbConfig): Unit = {
@@ -156,45 +133,21 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
   }
 
   /**
-   * WS specific implementation to query 0 to 1 ELFIN.
+   * WS specific implementation to query 0 to 1 ELFIN (ELFIN CLASSE='USER') user by its actor email (ELFIN CLASSE='ACTOR').
    */
   def findElfinUserPerEmailQuery(email: String): Future[ELFIN] = {
     // Perform call to eXist REST service to get collections list
     val query = WSQueries.elfinUserPerEmailQuery(email)
     val responseFuture: Future[Response] = WS.url(query).withHeaders(("Content-Type", "application/xquery")).get
 
-    proceedWithElfinUserResponse(responseFuture, query)
-    
-//    // Keep asynchronous calls asynchronous to allow Play free threads
-//    val resultFuture: Future[ELFIN] = responseFuture.map { resp =>
-//      // We expect to receive XML content
-//      Logger.debug(s"Result of type ${resp.ahcResponse.getContentType} received")
-//      val bodyString = resp.body.mkString
-//      if (!(bodyString.length > 0)) {
-//        throw ResultNotFoundException(s"No ELFIN found for query: ${query}")
-//      } else {
-//        // Parse XML (Need to wrap the list of XML elements received to obtain valid XML in case several ELFIN are returned.)
-//        val melfinElem = scala.xml.XML.loadString(s"<MELFIN>${bodyString}</MELFIN>")
-//        val elfinNodeSeq = melfinElem \\ "ELFIN"
-//        if (elfinNodeSeq.size > 1) {
-//          throw ExpectedSingleResultException(s"Found more than a single ELFIN (${elfinNodeSeq.size}) for query: ${query}")
-//        } else {
-//          val elfinElem = elfinNodeSeq(0)
-//          // Transform XML to ELFIN object
-//          val elfin = ElfinFormat.fromXml(elfinElem)
-//          elfin
-//        }
-//      }
-//    }
-//    resultFuture    
-    
+    proceedWithSingleElfinResponse(responseFuture, query)
   }
 
   
   /**
-   * Proceeds with response for ELFIN user query.
+   * Proceeds with response for ELFIN queries expecting a single result.
    */
-  private def proceedWithElfinUserResponse(elfinUserResponseFuture: Future[Response], query : String) : Future[ELFIN] = {
+  private def proceedWithSingleElfinResponse(elfinUserResponseFuture: Future[Response], query : String) : Future[ELFIN] = {
   
     // Keep asynchronous calls asynchronous to allow Play free threads
     val resultFuture: Future[ELFIN] = elfinUserResponseFuture.map { resp =>
