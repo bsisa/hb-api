@@ -23,6 +23,8 @@ import ch.bsisa.hyperbird.util.ElfinUtil
 import ch.bsisa.hyperbird.InitConfig
 import ch.bsisa.hyperbird.CollectionsConfig
 import securesocial.core.java.SecureSocial.SecuredAction
+import ch.bsisa.hyperbird.dao.ResultNotFoundException
+import java.net.ConnectException
 
 /**
  * REST API controller.
@@ -79,22 +81,25 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
   /**
    * Gets new ELFIN instance from catalogue for provided CLASSE. This instance does not exist in database yet.
-   * //TODO: review exception management to be able to send back JSON error message in all cases.
    */
   def getNewElfin(classeName: String) = SecuredAction(ajaxCall = true).async {
 
-    try {
-      val futureElfinWithId: Future[ELFIN] = ElfinDAO.getNewFromCatalogue(classeName)
+    val futureElfinWithId: Future[ELFIN] = ElfinDAO.getNewFromCatalogue(classeName)
 
-      // Send cloned catalogue elfin in JSON format 
-      futureElfinWithId.map { elfin =>
-        val elfinJson = ElfinFormat.toJson(elfin)
-        Ok(elfinJson).as(JSON)
+    // Send cloned catalogue elfin in JSON format 
+    futureElfinWithId.map { elfin =>
+      val elfinJson = ElfinFormat.toJson(elfin)
+      Ok(elfinJson).as(JSON)
+    }.recover {
+      case resNotFound: ResultNotFoundException => {
+        manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"Failed to obtain new ELFIN from catalogue for classeName: ${classeName}: ${resNotFound}"))
       }
-
-    } catch {
-      case e: Throwable =>
-        manageFutureException(exception = Option(e))
+      case connectException: ConnectException => {
+        manageConnectException(exception = connectException, errorMsg = Option(s"No database connection could be established."))
+      }
+      case e: Throwable => {
+        manageException(exception = Option(e), errorMsg = Option(s"Failed to obtain new ELFIN from catalogue for classeName: ${classeName}: ${e}"))
+      }
     }
   }
 
@@ -104,17 +109,23 @@ object Api extends Controller with securesocial.core.SecureSocial {
   def getElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true).async { implicit request =>
 
     Logger.debug(s"getElfin(collectionId=${collectionId}, elfinId=${elfinId}) called by user: ${request.user}")
-    
+
     val futureElfin = XQueryWSHelper.find(WSQueries.elfinQuery(collectionId, elfinId))
 
-    futureElfin.map(elfin =>
-      try {
-        val elfinJson = ElfinFormat.toJson(elfin)
-        Ok(elfinJson).as(JSON)
-      } catch {
-        case e: Throwable =>
-          manageException(exception = Option(e), errorMsg = Option(s"Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
-      })
+    futureElfin.map { elfin =>
+      val elfinJson = ElfinFormat.toJson(elfin)
+      Ok(elfinJson).as(JSON)
+    }.recover {
+      case resNotFound: ResultNotFoundException => {
+        manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"No elfin found for ID_G: ${collectionId}, Id: ${elfinId}"))
+      }
+      case connectException: ConnectException => {
+        manageConnectException(exception = connectException, errorMsg = Option(s"No database connection could be established."))
+      }
+      case e: Throwable => {
+        manageException(exception = Option(e), errorMsg = Option(s"Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
+      }
+    }
   }
 
   /**
@@ -177,8 +188,8 @@ object Api extends Controller with securesocial.core.SecureSocial {
    * principles states that URL information should uniquely identify a resource
    * to GET or DELETE.
    *
-   * For that reason we do not process the request body for DELETE operation. 
-   * In addition trying to process it would fail with REST client such as 
+   * For that reason we do not process the request body for DELETE operation.
+   * In addition trying to process it would fail with REST client such as
    * Restangular which does not sent any body for DELETE operations.
    */
   def deleteElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true).async { request =>
@@ -205,23 +216,54 @@ object Api extends Controller with securesocial.core.SecureSocial {
     }
   }
 
-  /**
-   * Utility method to return exception, error message in a generic JSON error message.
-   */
-  private def manageException(exception: Option[Throwable] = None, errorMsg: Option[String] = None): SimpleResult = {
-    Logger.warn("Api exception: " + exception.getOrElse("").toString + " - " + errorMsg.getOrElse(""))
+  // 566 - Custom code for connect exception
+  def manageConnectException(exception: ConnectException, errorMsg: Option[String] = None): SimpleResult = {
+    Logger.warn("Api exception: " + exception.toString + " - " + errorMsg.getOrElse(""))
     val jsonExceptionMsg = Json.obj(
-      "ERROR" -> exception.getOrElse("application.validation.failure").toString,
-      "DESCRIPTION" -> errorMsg.getOrElse(exception.getOrElse("None").toString).toString // TODO: review
-      )
-    InternalServerError(jsonExceptionMsg).as(JSON)
+      "ERROR" -> "db.connection.failure",
+      "DESCRIPTION" -> errorMsg.getOrElse("").toString)
+    Status(566)(jsonExceptionMsg)
+  }
+
+  /**
+   * Encapsulate `manageConnectException` in a asynchronous call for use in Action.async context.
+   * @see manageException
+   */
+  def manageFutureConnectException(exception: ConnectException, errorMsg: Option[String] = None): Future[SimpleResult] =
+    scala.concurrent.Future { manageConnectException(exception, errorMsg) }
+
+  def manageResutlNotFoundException(exception: ResultNotFoundException, errorMsg: Option[String] = None): SimpleResult = {
+    Logger.warn("Api exception: " + exception.toString + " - " + errorMsg.getOrElse(""))
+    val jsonExceptionMsg = Json.obj(
+      "ERROR" -> "no.result.found",
+      "DESCRIPTION" -> errorMsg.getOrElse("").toString)
+    NotFound(jsonExceptionMsg)
   }
 
   /**
    * Encapsulate `manageException` in a asynchronous call for use in Action.async context.
    * @see manageException
    */
-  private def manageFutureException(exception: Option[Throwable] = None, errorMsg: Option[String] = None): Future[SimpleResult] =
+  def manageFutureResutlNotFoundException(exception: ResultNotFoundException, errorMsg: Option[String] = None): Future[SimpleResult] =
+    scala.concurrent.Future { manageResutlNotFoundException(exception, errorMsg) }
+
+  /**
+   * Utility method to return exception, error message in a generic JSON error message.
+   */
+  def manageException(exception: Option[Throwable] = None, errorMsg: Option[String] = None): SimpleResult = {
+    Logger.warn("Api exception: " + exception.getOrElse("").toString + " - " + errorMsg.getOrElse(""))
+    val jsonExceptionMsg = Json.obj(
+      "ERROR" -> exception.getOrElse("application.validation.failure").toString,
+      "DESCRIPTION" -> errorMsg.getOrElse(exception.getOrElse("None").toString).toString // TODO: review
+      )
+    InternalServerError(jsonExceptionMsg)
+  }
+
+  /**
+   * Encapsulate `manageException` in a asynchronous call for use in Action.async context.
+   * @see manageException
+   */
+  def manageFutureException(exception: Option[Throwable] = None, errorMsg: Option[String] = None): Future[SimpleResult] =
     scala.concurrent.Future { manageException(exception, errorMsg) }
 
 }
