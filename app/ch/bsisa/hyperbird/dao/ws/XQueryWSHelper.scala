@@ -147,10 +147,10 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
   /**
    * Proceeds with response for ELFIN queries expecting a single result.
    */
-  private def proceedWithSingleElfinResponse(elfinUserResponseFuture: Future[Response], query : String) : Future[ELFIN] = {
+  private def proceedWithSingleElfinResponse(singleElfinResponseFuture: Future[Response], query : String) : Future[ELFIN] = {
   
     // Keep asynchronous calls asynchronous to allow Play free threads
-    val resultFuture: Future[ELFIN] = elfinUserResponseFuture.map { resp =>
+    val resultFuture: Future[ELFIN] = singleElfinResponseFuture.map { resp =>
       // We expect to receive XML content
       Logger.debug(s"Result of type ${resp.ahcResponse.getContentType} received")
       val bodyString = resp.body.mkString
