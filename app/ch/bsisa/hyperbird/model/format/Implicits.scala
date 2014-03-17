@@ -40,10 +40,10 @@ import java.io.StringWriter
 object Implicits {
 
   /**
-   * Constant holding JSON property name used to store geoXml.xsd elements mixed-content. 
-   * 
-   * A better but more involved solution would be to modify the geoXml.xsd not to use mixed 
-   * content anymore. In all existing situations there is no good reason to use mixed content 
+   * Constant holding JSON property name used to store geoXml.xsd elements mixed-content.
+   *
+   * A better but more involved solution would be to modify the geoXml.xsd not to use mixed
+   * content anymore. In all existing situations there is no good reason to use mixed content
    * and it makes developers life more difficult.
    */
   val MixedContentJsonPropName = "VALUE"
@@ -172,7 +172,99 @@ object Implicits {
   // ==================================================================
   // ch.bsisa.hyperbird.model.IDENTIFIANT and sub tree
   // ==================================================================  
-  implicit val IDENTIFIANTFormat: Format[IDENTIFIANT] = Json.format[IDENTIFIANT]
+  //implicit val IDENTIFIANTFormat: Format[IDENTIFIANT] = Json.format[IDENTIFIANT]
+
+  implicit object IDENTIFIANTFormat extends Format[IDENTIFIANT] {
+
+    def reads(json: JsValue): JsResult[IDENTIFIANT] = {
+
+      /*
+"NOM": "01 426 013 50",
+        "ALIAS": "Jehanne-de-Hochberg 13, rue",
+        "ORIGINE": "RA",
+        "OBJECTIF": "733",
+        "COMPTE": "06.39.503.33",
+        "DE": "1965",
+        "A": "",
+        "PAR": "",
+        "MOTCLE": [
+            "ECOLE JEANNE_DE_HOCHBERG",
+            "SECOND - hello",
+            "THIRD - hello"
+        ]
+*/
+      val identifiantContent: JsResult[(String, String, String, String, String, String, String, String, String, String, String, String, Double, Double, List[String])] = for {
+        aut <- (json \ "AUT").validate[String]
+        ger <- (json \ "GER").validate[String]
+        res <- (json \ "RES").validate[String]
+        nom <- (json \ "NOM").validate[String]
+        alias <- (json \ "ALIAS").validate[String]
+        origine <- (json \ "ORIGINE").validate[String]
+        objectif <- (json \ "OBJECTIF").validate[String]
+        qualite <- (json \ "QUALITE").validate[String]
+        compte <- (json \ "COMPTE").validate[String]
+        de <- (json \ "DE").validate[String]
+        a <- (json \ "A").validate[String]
+        par <- (json \ "PAR").validate[String]
+        valeur_a_neuf <- (json \ "VALEUR_A_NEUF").validate[Double]
+        valeur <- (json \ "VALEUR").validate[Double]
+        motscle <- (json \ "MOTCLE").validate[List[String]]
+      } yield (aut, ger, res, nom, alias, origine, objectif, qualite, compte, de, a, par, valeur_a_neuf, valeur, motscle)
+
+      identifiantContent match {
+        case JsSuccess((aut, ger, res, nom, alias, origine, objectif, qualite, compte, de, a, par, valeur_a_neuf, valeur, motscle), path) =>
+          JsSuccess(IDENTIFIANT(Option(aut), Option(ger), Option(res), Option(nom), Option(alias), Option(origine), Option(objectif), Option(qualite), Option(compte), Option(de), Option(a), Option(par), Option(valeur_a_neuf), Option(valeur), motscle))
+        case JsError(errors) => JsError("Error reading IDENTIFIANT") ++ JsError(errors)
+      }
+
+      /*
+      val motcleJsSeq = (json \ "MOTCLE").validate[List[String]]
+      motcleJsSeq match {
+        case JsSuccess(motcleList, path) => JsSuccess(MOTCLE(motcleList: _*))
+        case JsError(e) => JsError("Error reading MOTCLE") ++ JsError(e)
+      }
+*/
+    }
+
+    def writes(identifiant: IDENTIFIANT): JsValue = {
+      
+      val motscleJsSeq = for (motcle <- identifiant.MOTCLE) yield Json.toJson(motcle)
+      import scala.math.BigDecimal.int2bigDecimal
+
+      //JsNumber(identifiant.VALEUR_A_NEUF.getOrElse(JsNull)
+      val valeur_a_neuf = identifiant.VALEUR_A_NEUF match {
+        case Some(value) => JsNumber(value)
+        case None => JsNull
+      }
+      
+      val valeur = identifiant.VALEUR match {
+        case Some(value) => JsNumber(value)
+        case None => JsNull
+      }
+
+      val jsvalue = Json.obj(
+        "AUT" -> JsString(identifiant.AUT.getOrElse("null")),
+        "GER" -> JsString(identifiant.GER.getOrElse("null")),
+        "RES" -> JsString(identifiant.RES.getOrElse("null")),
+        "NOM" -> JsString(identifiant.NOM.getOrElse("null")),
+        "ALIAS" -> JsString(identifiant.ALIAS.getOrElse("null")),
+        "ORIGINE" -> JsString(identifiant.ORIGINE.getOrElse("null")),
+        "OBJECTIF" -> JsString(identifiant.OBJECTIF.getOrElse("null")),
+        "QUALITE" -> JsString(identifiant.QUALITE.getOrElse("null")),
+        "COMPTE" -> JsString(identifiant.COMPTE.getOrElse("null")),
+        "DE" -> JsString(identifiant.DE.getOrElse("null")),
+        "A" -> JsString(identifiant.A.getOrElse("null")),
+        "PAR" -> JsString(identifiant.PAR.getOrElse("null")),
+        "VALEUR_A_NEUF" -> valeur_a_neuf,
+        "VALEUR" -> valeur,
+        "MOTCLE" -> JsArray(motscleJsSeq))
+      jsvalue
+    }
+
+    //      val carJsSeq = for (c <- cs.CAR) yield Json.toJson(c)(CARSET_CARTypeFormat)
+    //      Json.obj("CAR" -> JsArray(carJsSeq))
+
+  }
 
   // ==================================================================
   // ch.bsisa.hyperbird.model.CARACTERISTIQUE and sub tree
