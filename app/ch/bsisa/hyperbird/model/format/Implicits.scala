@@ -172,97 +172,143 @@ object Implicits {
   // ==================================================================
   // ch.bsisa.hyperbird.model.IDENTIFIANT and sub tree
   // ==================================================================  
+
+  // One liner works fine if no model modification is required
   //implicit val IDENTIFIANTFormat: Format[IDENTIFIANT] = Json.format[IDENTIFIANT]
 
+  // Custom Reads/Writes might offer more fine grain control over complex validation
+  //  implicit val IDENTIFIANTReads: Reads[IDENTIFIANT] = (
+  //    (JsPath \ "AUT").readNullable[String] and
+  //    (JsPath \ "GER").readNullable[String] and
+  //    (JsPath \ "RES").readNullable[String] and
+  //    (JsPath \ "NOM").readNullable[String] and
+  //    (JsPath \ "ALIAS").readNullable[String] and
+  //    (JsPath \ "ORIGINE").readNullable[String] and
+  //    (JsPath \ "OBJECTIF").readNullable[String] and
+  //    (JsPath \ "QUALITE").readNullable[String] and
+  //    (JsPath \ "COMPTE").readNullable[String] and
+  //    (JsPath \ "DE").readNullable[String] and
+  //    (JsPath \ "A").readNullable[String] and
+  //    (JsPath \ "PAR").readNullable[String] and
+  //    (JsPath \ "VALEUR_A_NEUF").readNullable[Double] and
+  //    (JsPath \ "VALEUR").readNullable[Double] and
+  //    (JsPath \ "MOTCLE").read[Seq[String]])(IDENTIFIANT.apply _)
+
+  /**
+   * This object is not part of the XML data model but here to have 
+   * JSON object array instead of JSON primitive array:
+   * 
+   * Objects array: 
+   * "MOTCLE": [{ "VALUE": "FIRST" }, {"VALUE": "SECOND"}, {"VALUE": "THIRD"}]
+   * 
+   * Primitives array:
+   * "MOTCLE": ["FIRST", "SECOND", "THIRD"]
+   * 
+   * This is helpful to keep dealing with AngularJS 2-way data binding 
+   * in scopes straight forward.
+   * 
+   * https://github.com/angular/angular.js/wiki/Understanding-Scopes
+   * 
+   */
+  case class MOTCLEValue(VALUE: String)
+
+  implicit object MOTCLEValueFormat extends Format[MOTCLEValue] {
+
+    def reads(json: JsValue): JsResult[MOTCLEValue] = {
+      val motcleContent: JsResult[(String)] = for {
+        value <- (json \ "VALUE").validate[String]
+      } yield (value)
+
+      motcleContent match {
+        case JsSuccess((value), path) =>
+          val motcleValue = MOTCLEValue(value)
+          JsSuccess(motcleValue)
+        case JsError(errors) => JsError("Error reading MOTCLEValue") ++ JsError(errors)
+      }
+    }
+
+    def writes(motcleValue: MOTCLEValue): JsValue = Json.obj(
+      "VALUE" -> motcleValue.VALUE)
+  }
+
+  
   implicit object IDENTIFIANTFormat extends Format[IDENTIFIANT] {
 
     def reads(json: JsValue): JsResult[IDENTIFIANT] = {
 
-      /*
-"NOM": "01 426 013 50",
-        "ALIAS": "Jehanne-de-Hochberg 13, rue",
-        "ORIGINE": "RA",
-        "OBJECTIF": "733",
-        "COMPTE": "06.39.503.33",
-        "DE": "1965",
-        "A": "",
-        "PAR": "",
-        "MOTCLE": [
-            "ECOLE JEANNE_DE_HOCHBERG",
-            "SECOND - hello",
-            "THIRD - hello"
-        ]
-*/
-      val identifiantContent: JsResult[(String, String, String, String, String, String, String, String, String, String, String, String, Double, Double, List[String])] = for {
-        aut <- (json \ "AUT").validate[String]
-        ger <- (json \ "GER").validate[String]
-        res <- (json \ "RES").validate[String]
-        nom <- (json \ "NOM").validate[String]
-        alias <- (json \ "ALIAS").validate[String]
-        origine <- (json \ "ORIGINE").validate[String]
-        objectif <- (json \ "OBJECTIF").validate[String]
-        qualite <- (json \ "QUALITE").validate[String]
-        compte <- (json \ "COMPTE").validate[String]
-        de <- (json \ "DE").validate[String]
-        a <- (json \ "A").validate[String]
-        par <- (json \ "PAR").validate[String]
-        valeur_a_neuf <- (json \ "VALEUR_A_NEUF").validate[Double]
-        valeur <- (json \ "VALEUR").validate[Double]
-        motscle <- (json \ "MOTCLE").validate[List[String]]
+      // Read the motcle object layer additional to geoXML data model 
+      val listOfJsMotcle = (json \ "MOTCLE").validate[List[MOTCLEValue]]
+      val motsCleJsResult = listOfJsMotcle match {
+        case JsSuccess(motcles, path) => {
+          // Transform the data structure: 
+          // "MOTCLE": [{ "VALUE": "FIRST" }, {"VALUE": "SECOND"}, {"VALUE": "THIRD"}]
+          // to: 
+          // "MOTCLE": ["FIRST", "SECOND", "THIRD"]
+          val motcleStringList = for (motcle <- motcles) yield motcle.VALUE
+          JsSuccess(motcleStringList, path)
+        }
+        case JsError(errors) => JsError("Error reading MOTCLE") ++ JsError(errors)
+      }
+
+      val identifiantContent: JsResult[(Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[Double], Option[Double], Seq[String])] = for {
+        aut <- (json \ "AUT").validate[Option[String]]
+        ger <- (json \ "GER").validate[Option[String]]
+        res <- (json \ "RES").validate[Option[String]]
+        nom <- (json \ "NOM").validate[Option[String]]
+        alias <- (json \ "ALIAS").validate[Option[String]]
+        origine <- (json \ "ORIGINE").validate[Option[String]]
+        objectif <- (json \ "OBJECTIF").validate[Option[String]]
+        qualite <- (json \ "QUALITE").validate[Option[String]]
+        compte <- (json \ "COMPTE").validate[Option[String]]
+        de <- (json \ "DE").validate[Option[String]]
+        a <- (json \ "A").validate[Option[String]]
+        par <- (json \ "PAR").validate[Option[String]]
+        valeur_a_neuf <- (json \ "VALEUR_A_NEUF").validate[Option[Double]]
+        valeur <- (json \ "VALEUR").validate[Option[Double]]
+        motscle <- motsCleJsResult
       } yield (aut, ger, res, nom, alias, origine, objectif, qualite, compte, de, a, par, valeur_a_neuf, valeur, motscle)
 
       identifiantContent match {
         case JsSuccess((aut, ger, res, nom, alias, origine, objectif, qualite, compte, de, a, par, valeur_a_neuf, valeur, motscle), path) =>
-          JsSuccess(IDENTIFIANT(Option(aut), Option(ger), Option(res), Option(nom), Option(alias), Option(origine), Option(objectif), Option(qualite), Option(compte), Option(de), Option(a), Option(par), Option(valeur_a_neuf), Option(valeur), motscle))
+          JsSuccess(IDENTIFIANT(aut, ger, res, nom, alias, origine, objectif, qualite, compte, de, a, par, valeur_a_neuf, valeur, motscle))
         case JsError(errors) => JsError("Error reading IDENTIFIANT") ++ JsError(errors)
       }
 
-      /*
-      val motcleJsSeq = (json \ "MOTCLE").validate[List[String]]
-      motcleJsSeq match {
-        case JsSuccess(motcleList, path) => JsSuccess(MOTCLE(motcleList: _*))
-        case JsError(e) => JsError("Error reading MOTCLE") ++ JsError(e)
-      }
-*/
     }
 
     def writes(identifiant: IDENTIFIANT): JsValue = {
-      
-      val motscleJsSeq = for (motcle <- identifiant.MOTCLE) yield Json.toJson(motcle)
-      import scala.math.BigDecimal.int2bigDecimal
 
-      //JsNumber(identifiant.VALEUR_A_NEUF.getOrElse(JsNull)
+      // Create additional object level array for MOTCLE
+      val motscleJsSeq = for (motcle <- identifiant.MOTCLE) yield Json.obj("VALUE" -> JsString(motcle))
+
       val valeur_a_neuf = identifiant.VALEUR_A_NEUF match {
         case Some(value) => JsNumber(value)
         case None => JsNull
       }
-      
+
       val valeur = identifiant.VALEUR match {
         case Some(value) => JsNumber(value)
         case None => JsNull
       }
 
       val jsvalue = Json.obj(
-        "AUT" -> JsString(identifiant.AUT.getOrElse("null")),
-        "GER" -> JsString(identifiant.GER.getOrElse("null")),
-        "RES" -> JsString(identifiant.RES.getOrElse("null")),
-        "NOM" -> JsString(identifiant.NOM.getOrElse("null")),
-        "ALIAS" -> JsString(identifiant.ALIAS.getOrElse("null")),
-        "ORIGINE" -> JsString(identifiant.ORIGINE.getOrElse("null")),
-        "OBJECTIF" -> JsString(identifiant.OBJECTIF.getOrElse("null")),
-        "QUALITE" -> JsString(identifiant.QUALITE.getOrElse("null")),
-        "COMPTE" -> JsString(identifiant.COMPTE.getOrElse("null")),
-        "DE" -> JsString(identifiant.DE.getOrElse("null")),
-        "A" -> JsString(identifiant.A.getOrElse("null")),
-        "PAR" -> JsString(identifiant.PAR.getOrElse("null")),
+        "AUT" -> JsString(identifiant.AUT.getOrElse(null)),
+        "GER" -> JsString(identifiant.GER.getOrElse(null)),
+        "RES" -> JsString(identifiant.RES.getOrElse(null)),
+        "NOM" -> JsString(identifiant.NOM.getOrElse(null)),
+        "ALIAS" -> JsString(identifiant.ALIAS.getOrElse(null)),
+        "ORIGINE" -> JsString(identifiant.ORIGINE.getOrElse(null)),
+        "OBJECTIF" -> JsString(identifiant.OBJECTIF.getOrElse(null)),
+        "QUALITE" -> JsString(identifiant.QUALITE.getOrElse(null)),
+        "COMPTE" -> JsString(identifiant.COMPTE.getOrElse(null)),
+        "DE" -> JsString(identifiant.DE.getOrElse(null)),
+        "A" -> JsString(identifiant.A.getOrElse(null)),
+        "PAR" -> JsString(identifiant.PAR.getOrElse(null)),
         "VALEUR_A_NEUF" -> valeur_a_neuf,
         "VALEUR" -> valeur,
         "MOTCLE" -> JsArray(motscleJsSeq))
       jsvalue
     }
-
-    //      val carJsSeq = for (c <- cs.CAR) yield Json.toJson(c)(CARSET_CARTypeFormat)
-    //      Json.obj("CAR" -> JsArray(carJsSeq))
 
   }
 
