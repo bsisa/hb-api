@@ -30,5 +30,9 @@ hb {
 		# hb.init Elfin.Id . 
 		# Note: This Elfin.ID_G must match the hb.collection.configuration collection id.
 		"id": "G20050101000012345"
-	}	
+	}
+	api {
+		# REST base URL. Use for instance by Restangular.   
+		"baseUrl": "http://localhost:9000/api/melfin/"
+	}
 }

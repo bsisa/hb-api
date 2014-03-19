@@ -30,6 +30,12 @@ object Implicits {
    * Init configurations
    */
   implicit val initConfig = new InitConfig
+  
+  
+  /**
+   * Api configurations
+   */
+  implicit val apiConfig = new ApiConfig  
     
   
 }

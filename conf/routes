@@ -19,7 +19,7 @@
 # GET           /api/melfin/:collectionId/:elfinId        ch.bsisa.hyperbird.controllers.Api.getElfin(collectionId, elfinId) # format=(json|xml|pdf|xls|...)
 
 # Dynamically provides initialisation configuration information useful to hb-ui geoxml service
-GET      /conf                         ch.bsisa.hyperbird.controllers.Application.conf
+GET      /conf.js                         ch.bsisa.hyperbird.controllers.Application.conf
 
 # Dynamically provides initialisation configuration information useful to hb-ui 
 GET      /api/melfin/config                         ch.bsisa.hyperbird.controllers.Api.config
