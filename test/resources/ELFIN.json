@@ -88,62 +88,62 @@
       "ETAT1" : {
         "B" : "bEtat1Test",
         "C" : "cEtat1Test",
-        "" : "Etat1 TEst 1, chemin des|Tests 7,\n\t\t\t\tchemin\n\t\t\t\tdes|Tests 9, chemin des...\n\t\t\t"
+        "MIXED-CONTENT" : "Etat1 TEst 1, chemin des|Tests 7,\n\t\t\t\tchemin\n\t\t\t\tdes|Tests 9, chemin des...\n\t\t\t"
       },
       "ETAT2" : {
         "B" : "",
         "C" : "",
-        "" : ""
+        "MIXED-CONTENT" : ""
       },
       "ETAT3" : {
         "B" : "",
         "C" : "",
-        "" : ""
+        "MIXED-CONTENT" : ""
       },
       "ETAT4" : {
         "B" : "",
         "C" : "",
-        "" : ""
+        "MIXED-CONTENT" : ""
       },
       "ETAT5" : {
         "B" : "",
         "C" : "",
-        "" : ""
+        "MIXED-CONTENT" : ""
       },
       "ETAT6" : {
         "B" : "",
         "C" : "",
-        "" : ""
+        "MIXED-CONTENT" : ""
       },
       "ETAT7" : {
         "B" : "",
         "C" : "",
-        "" : "Bon"
+        "MIXED-CONTENT" : "Bon"
       },
       "ETAT8" : {
         "B" : "",
         "C" : "",
-        "" : ""
+        "MIXED-CONTENT" : ""
       },
       "ETAT9" : {
         "B" : "",
         "C" : "",
-        "" : ""
+        "MIXED-CONTENT" : ""
       },
       "ETAT10" : {
         "B" : "",
         "C" : "",
-        "" : ""
+        "MIXED-CONTENT" : ""
       },
       "ETAT11" : {
         "B" : "",
         "C" : "",
-        "" : ""
+        "MIXED-CONTENT" : ""
       },
       "ETAT12" : {
         "B" : "",
         "C" : "",
-        "" : ""
+        "MIXED-CONTENT" : ""
       }
     },
     "CALCUL" : {
@@ -151,125 +151,125 @@
       "DIMENSION" : [ {
         "NOM" : "LONGUEUR",
         "TYPE" : "GEOGRAPHIE",
-        "" : "0"
+        "MIXED-CONTENT" : "0"
       }, {
         "NOM" : "LONGUEUR",
         "TYPE" : "SCHEMATIQUE",
-        "" : "0"
+        "MIXED-CONTENT" : "0"
       }, {
         "NOM" : "SURFACE",
         "TYPE" : "GEOGRAPHIE",
-        "" : "616.79"
+        "MIXED-CONTENT" : "616.79"
       }, {
         "NOM" : "SURFACE",
         "TYPE" : "SCHEMATIQUE",
-        "" : "0"
+        "MIXED-CONTENT" : "0"
       } ]
     },
     "FRACTION" : {
       "L" : [ {
         "C" : [ {
           "POS" : 1,
-          "" : ""
+          "MIXED-CONTENT" : ""
         }, {
           "POS" : 2,
-          "" : "Aide"
+          "MIXED-CONTENT" : "Aide"
         }, {
           "POS" : 3,
-          "" : "getHB_Fiche().displayHTMLFile('../Assistant/html/x.html');\n\t\t\t\t"
+          "MIXED-CONTENT" : "getHB_Fiche().displayHTMLFile('../Assistant/html/x.html');\n\t\t\t\t"
         }, {
           "POS" : 4,
-          "" : ""
+          "MIXED-CONTENT" : ""
         } ],
         "POS" : 1
       }, {
         "C" : [ {
           "POS" : 1,
-          "" : "Activités"
+          "MIXED-CONTENT" : "Activités"
         }, {
           "POS" : 2,
-          "" : "Prestations"
+          "MIXED-CONTENT" : "Prestations"
         }, {
           "POS" : 3,
-          "" : "getHB_Collection().execAndDisplayXQuery(\"collection('/db/G21110123456123456')//ELFIN[./@CLASSE='PRESTATION']\",\"\",\"\",\"List.xsl\")\n\t\t\t\t"
+          "MIXED-CONTENT" : "getHB_Collection().execAndDisplayXQuery(\"collection('/db/G21110123456123456')//ELFIN[./@CLASSE='PRESTATION']\",\"\",\"\",\"List.xsl\")\n\t\t\t\t"
         }, {
           "POS" : 4,
-          "" : "Admin,Super"
+          "MIXED-CONTENT" : "Admin,Super"
         }, {
           "POS" : 5,
-          "" : "Fournit la liste de toutes les prestations"
+          "MIXED-CONTENT" : "Fournit la liste de toutes les prestations"
         } ],
         "POS" : 2
       }, {
         "C" : [ {
           "POS" : 1,
-          "" : "Activités"
+          "MIXED-CONTENT" : "Activités"
         }, {
           "POS" : 2,
-          "" : "Transactions"
+          "MIXED-CONTENT" : "Transactions"
         }, {
           "POS" : 3,
-          "" : "getHB_Collection().execAndDisplayXQuery(\"collection('/db/G21110123456123456')//ELFIN[./@CLASSE='TRANSACTION']\",\"\",\"\",\"List.xsl\")\n\t\t\t\t"
+          "MIXED-CONTENT" : "getHB_Collection().execAndDisplayXQuery(\"collection('/db/G21110123456123456')//ELFIN[./@CLASSE='TRANSACTION']\",\"\",\"\",\"List.xsl\")\n\t\t\t\t"
         }, {
           "POS" : 4,
-          "" : "Admin,Super"
+          "MIXED-CONTENT" : "Admin,Super"
         }, {
           "POS" : 5,
-          "" : "Fournit la liste des transactions"
+          "MIXED-CONTENT" : "Fournit la liste des transactions"
         } ],
         "POS" : 3
       }, {
         "C" : [ {
           "POS" : 1,
-          "" : "Activités"
+          "MIXED-CONTENT" : "Activités"
         }, {
           "POS" : 2,
-          "" : "Transactions par compte"
+          "MIXED-CONTENT" : "Transactions par compte"
         }, {
           "POS" : 3,
-          "" : "getHB_Collection().execAndDisplayXQuery(\"collection('/db/G21110123456123456')//ELFIN[./@CLASSE='TRANSACTION']\",\"Quel\n\t\t\t\t\tnuméro de gérance\",\"IDENTIFIANT/OBJECTIF\",\"List.xsl\")\n\t\t\t\t"
+          "MIXED-CONTENT" : "getHB_Collection().execAndDisplayXQuery(\"collection('/db/G21110123456123456')//ELFIN[./@CLASSE='TRANSACTION']\",\"Quel\n\t\t\t\t\tnuméro de gérance\",\"IDENTIFIANT/OBJECTIF\",\"List.xsl\")\n\t\t\t\t"
         }, {
           "POS" : 4,
-          "" : "Admin,Super"
+          "MIXED-CONTENT" : "Admin,Super"
         }, {
           "POS" : 5,
-          "" : "Fournit la liste des transactions correspondant a un\n\t\t\t\t\tnuméro\n\t\t\t\t\tSAI saisi\n\t\t\t\t"
+          "MIXED-CONTENT" : "Fournit la liste des transactions correspondant a un\n\t\t\t\t\tnuméro\n\t\t\t\t\tSAI saisi\n\t\t\t\t"
         } ],
         "POS" : 4
       }, {
         "C" : [ {
           "POS" : 1,
-          "" : "Activités"
+          "MIXED-CONTENT" : "Activités"
         }, {
           "POS" : 2,
-          "" : "Transactions par date"
+          "MIXED-CONTENT" : "Transactions par date"
         }, {
           "POS" : 3,
-          "" : "getHB_Collection().execAndDisplayXQuery(\"collection('/db/G21110123456123456')//ELFIN[./@CLASSE='TRANSACTION']\",\"Quel\n\t\t\t\t\tnuméro de gérance\",\"IDENTIFIANT/DE\",\"List.xsl\")\n\t\t\t\t"
+          "MIXED-CONTENT" : "getHB_Collection().execAndDisplayXQuery(\"collection('/db/G21110123456123456')//ELFIN[./@CLASSE='TRANSACTION']\",\"Quel\n\t\t\t\t\tnuméro de gérance\",\"IDENTIFIANT/DE\",\"List.xsl\")\n\t\t\t\t"
         }, {
           "POS" : 4,
-          "" : "Admin,Super"
+          "MIXED-CONTENT" : "Admin,Super"
         }, {
           "POS" : 5,
-          "" : "Fournit la liste des transactionscorrespondant a une date\n\t\t\t\t\tsaisie\n\t\t\t\t"
+          "MIXED-CONTENT" : "Fournit la liste des transactionscorrespondant a une date\n\t\t\t\t\tsaisie\n\t\t\t\t"
         } ],
         "POS" : 5
       }, {
         "C" : [ {
           "POS" : 1,
-          "" : "Activités"
+          "MIXED-CONTENT" : "Activités"
         }, {
           "POS" : 2,
-          "" : "Transactions par montant"
+          "MIXED-CONTENT" : "Transactions par montant"
         }, {
           "POS" : 3,
-          "" : "getHB_Collection().execAndDisplayXQuery(\"collection('/db/G21110123456123456')//ELFIN\",\"Montant\n\t\t\t\t\t\",\"IDENTIFIANT/VALEUR\",\"List.xsl\")\n\t\t\t\t"
+          "MIXED-CONTENT" : "getHB_Collection().execAndDisplayXQuery(\"collection('/db/G21110123456123456')//ELFIN\",\"Montant\n\t\t\t\t\t\",\"IDENTIFIANT/VALEUR\",\"List.xsl\")\n\t\t\t\t"
         }, {
           "POS" : 4,
-          "" : "Admin,Super"
+          "MIXED-CONTENT" : "Admin,Super"
         }, {
           "POS" : 5,
-          "" : "Fournit la liste des transactions correspondant a montant\n\t\t\t\t\tsaisi (=)\n\t\t\t\t"
+          "MIXED-CONTENT" : "Fournit la liste des transactions correspondant a montant\n\t\t\t\t\tsaisi (=)\n\t\t\t\t"
         } ],
         "POS" : 6
       } ]
@@ -281,21 +281,21 @@
       "ID_G" : "null",
       "NOM" : "null",
       "GROUPE" : "Responsable pompage",
-      "" : "M Dupond, XYZ 099 526 07 98"
+      "MIXED-CONTENT" : "M Dupond, XYZ 099 526 07 98"
     },
     "FOURNISSEUR" : {
       "Id" : "null",
       "ID_G" : "null",
       "NOM" : "null",
       "GROUPE" : "null",
-      "" : "-"
+      "MIXED-CONTENT" : "-"
     },
     "PROPRIETAIRE" : {
       "Id" : "null",
       "ID_G" : "null",
       "NOM" : "null",
       "GROUPE" : "null",
-      "" : "Ville d'Entremont"
+      "MIXED-CONTENT" : "Ville d'Entremont"
     }
   },
   "ACTIVITE" : {
@@ -317,31 +317,31 @@
       "L" : [ {
         "C" : [ {
           "POS" : 1,
-          "" : "Article"
+          "MIXED-CONTENT" : "Article"
         }, {
           "POS" : 2,
-          "" : "Budget"
+          "MIXED-CONTENT" : "Budget"
         }, {
           "POS" : 3,
-          "" : "Projet"
+          "MIXED-CONTENT" : "Projet"
         }, {
           "POS" : 4,
-          "" : "Adjudication"
+          "MIXED-CONTENT" : "Adjudication"
         }, {
           "POS" : 5,
-          "" : "Facture"
+          "MIXED-CONTENT" : "Facture"
         }, {
           "POS" : 6,
-          "" : "Bon de paiement"
+          "MIXED-CONTENT" : "Bon de paiement"
         }, {
           "POS" : 7,
-          "" : "dont Remise"
+          "MIXED-CONTENT" : "dont Remise"
         }, {
           "POS" : 8,
-          "" : "Garantie"
+          "MIXED-CONTENT" : "Garantie"
         }, {
           "POS" : 9,
-          "" : "Transitoire"
+          "MIXED-CONTENT" : "Transitoire"
         } ],
         "POS" : 1
       } ]
@@ -540,7 +540,7 @@
     "RENVOI" : [ {
       "POS" : 1,
       "LIEN" : "../../HB-Objets/G20040930101030005/annexes/G20040931234567890/Ecole_Le_Corbusier_Contrat.pdf",
-      "" : "Ecole_Le_Corbusier_Contrat.pdf"
+      "MIXED-CONTENT" : "Ecole_Le_Corbusier_Contrat.pdf"
     } ]
   },
   "DIVERS" : {
