@@ -67,62 +67,62 @@
         "ETAT1": {
             "B": "bEtat1Test",
             "C": "cEtat1Test",
-            "MIXED-CONTENT": "Etat1 TEst 1, chemin des|Tests 7,\n\t\t\t\tchemin\n\t\t\t\tdes|Tests 9, chemin des...\n\t\t\t"
+            "VALUE": "Etat1 TEst 1, chemin des|Tests 7,\n\t\t\t\tchemin\n\t\t\t\tdes|Tests 9, chemin des...\n\t\t\t"
         },
         "ETAT2": {
             "B": "",
             "C": "",
-            "MIXED-CONTENT": ""
+            "VALUE": ""
         },
         "ETAT3": {
             "B": "",
             "C": "",
-            "MIXED-CONTENT": ""
+            "VALUE": ""
         },
         "ETAT4": {
             "B": "",
             "C": "",
-            "MIXED-CONTENT": ""
+            "VALUE": ""
         },
         "ETAT5": {
             "B": "",
             "C": "",
-            "MIXED-CONTENT": ""
+            "VALUE": ""
         },
         "ETAT6": {
             "B": "",
             "C": "",
-            "MIXED-CONTENT": ""
+            "VALUE": ""
         },
         "ETAT7": {
             "B": "",
             "C": "",
-            "MIXED-CONTENT": "Bon"
+            "VALUE": "Bon"
         },
         "ETAT8": {
             "B": "",
             "C": "",
-            "MIXED-CONTENT": ""
+            "VALUE": ""
         },
         "ETAT9": {
             "B": "",
             "C": "",
-            "MIXED-CONTENT": ""
+            "VALUE": ""
         },
         "ETAT10": {
             "B": "",
             "C": "",
-            "MIXED-CONTENT": ""
+            "VALUE": ""
         },
         "ETAT11": {
             "B": "",
             "C": "",
-            "MIXED-CONTENT": ""
+            "VALUE": ""
         },
         "ETAT12": {
             "B": "",
             "C": "",
-            "MIXED-CONTENT": ""
+            "VALUE": ""
         }
     },
     "CALCUL": {
@@ -131,22 +131,22 @@
             {
                 "NOM": "LONGUEUR",
                 "TYPE": "GEOGRAPHIE",
-                "MIXED-CONTENT": "0"
+                "VALUE": "0"
             },
             {
                 "NOM": "LONGUEUR",
                 "TYPE": "SCHEMATIQUE",
-                "MIXED-CONTENT": "0"
+                "VALUE": "0"
             },
             {
                 "NOM": "SURFACE",
                 "TYPE": "GEOGRAPHIE",
-                "MIXED-CONTENT": "616.79"
+                "VALUE": "616.79"
             },
             {
                 "NOM": "SURFACE",
                 "TYPE": "SCHEMATIQUE",
-                "MIXED-CONTENT": "0"
+                "VALUE": "0"
             }
         ]
     },
@@ -156,19 +156,19 @@
                 "C": [
                     {
                         "POS": 1,
-                        "MIXED-CONTENT": ""
+                        "VALUE": ""
                     },
                     {
                         "POS": 2,
-                        "MIXED-CONTENT": "Aide"
+                        "VALUE": "Aide"
                     },
                     {
                         "POS": 3,
-                        "MIXED-CONTENT": "getHB_Fiche().displayHTMLFile('../Assistant/html/x.html');\n\t\t\t\t"
+                        "VALUE": "getHB_Fiche().displayHTMLFile('../Assistant/html/x.html');\n\t\t\t\t"
                     },
                     {
                         "POS": 4,
-                        "MIXED-CONTENT": ""
+                        "VALUE": ""
                     }
                 ],
                 "POS": 1
@@ -177,23 +177,23 @@
                 "C": [
                     {
                         "POS": 1,
-                        "MIXED-CONTENT": "Activités"
+                        "VALUE": "Activités"
                     },
                     {
                         "POS": 2,
-                        "MIXED-CONTENT": "Prestations"
+                        "VALUE": "Prestations"
                     },
                     {
                         "POS": 3,
-                        "MIXED-CONTENT": "getHB_Collection().execAndDisplayXQuery(\"collection('/db/G21110123456123456')//ELFIN[./@CLASSE='PRESTATION']\",\"\",\"\",\"List.xsl\")\n\t\t\t\t"
+                        "VALUE": "getHB_Collection().execAndDisplayXQuery(\"collection('/db/G21110123456123456')//ELFIN[./@CLASSE='PRESTATION']\",\"\",\"\",\"List.xsl\")\n\t\t\t\t"
                     },
                     {
                         "POS": 4,
-                        "MIXED-CONTENT": "Admin,Super"
+                        "VALUE": "Admin,Super"
                     },
                     {
                         "POS": 5,
-                        "MIXED-CONTENT": "Fournit la liste de toutes les prestations"
+                        "VALUE": "Fournit la liste de toutes les prestations"
                     }
                 ],
                 "POS": 2
@@ -202,23 +202,23 @@
                 "C": [
                     {
                         "POS": 1,
-                        "MIXED-CONTENT": "Activités"
+                        "VALUE": "Activités"
                     },
                     {
                         "POS": 2,
-                        "MIXED-CONTENT": "Transactions"
+                        "VALUE": "Transactions"
                     },
                     {
                         "POS": 3,
-                        "MIXED-CONTENT": "getHB_Collection().execAndDisplayXQuery(\"collection('/db/G21110123456123456')//ELFIN[./@CLASSE='TRANSACTION']\",\"\",\"\",\"List.xsl\")\n\t\t\t\t"
+                        "VALUE": "getHB_Collection().execAndDisplayXQuery(\"collection('/db/G21110123456123456')//ELFIN[./@CLASSE='TRANSACTION']\",\"\",\"\",\"List.xsl\")\n\t\t\t\t"
                     },
                     {
                         "POS": 4,
-                        "MIXED-CONTENT": "Admin,Super"
+                        "VALUE": "Admin,Super"
                     },
                     {
                         "POS": 5,
-                        "MIXED-CONTENT": "Fournit la liste des transactions"
+                        "VALUE": "Fournit la liste des transactions"
                     }
                 ],
                 "POS": 3
@@ -227,23 +227,23 @@
                 "C": [
                     {
                         "POS": 1,
-                        "MIXED-CONTENT": "Activités"
+                        "VALUE": "Activités"
                     },
                     {
                         "POS": 2,
-                        "MIXED-CONTENT": "Transactions par compte"
+                        "VALUE": "Transactions par compte"
                     },
                     {
                         "POS": 3,
-                        "MIXED-CONTENT": "getHB_Collection().execAndDisplayXQuery(\"collection('/db/G21110123456123456')//ELFIN[./@CLASSE='TRANSACTION']\",\"Quel\n\t\t\t\t\tnuméro de gérance\",\"IDENTIFIANT/OBJECTIF\",\"List.xsl\")\n\t\t\t\t"
+                        "VALUE": "getHB_Collection().execAndDisplayXQuery(\"collection('/db/G21110123456123456')//ELFIN[./@CLASSE='TRANSACTION']\",\"Quel\n\t\t\t\t\tnuméro de gérance\",\"IDENTIFIANT/OBJECTIF\",\"List.xsl\")\n\t\t\t\t"
                     },
                     {
                         "POS": 4,
-                        "MIXED-CONTENT": "Admin,Super"
+                        "VALUE": "Admin,Super"
                     },
                     {
                         "POS": 5,
-                        "MIXED-CONTENT": "Fournit la liste des transactions correspondant a un\n\t\t\t\t\tnuméro\n\t\t\t\t\tSAI saisi\n\t\t\t\t"
+                        "VALUE": "Fournit la liste des transactions correspondant a un\n\t\t\t\t\tnuméro\n\t\t\t\t\tSAI saisi\n\t\t\t\t"
                     }
                 ],
                 "POS": 4
@@ -252,23 +252,23 @@
                 "C": [
                     {
                         "POS": 1,
-                        "MIXED-CONTENT": "Activités"
+                        "VALUE": "Activités"
                     },
                     {
                         "POS": 2,
-                        "MIXED-CONTENT": "Transactions par date"
+                        "VALUE": "Transactions par date"
                     },
                     {
                         "POS": 3,
-                        "MIXED-CONTENT": "getHB_Collection().execAndDisplayXQuery(\"collection('/db/G21110123456123456')//ELFIN[./@CLASSE='TRANSACTION']\",\"Quel\n\t\t\t\t\tnuméro de gérance\",\"IDENTIFIANT/DE\",\"List.xsl\")\n\t\t\t\t"
+                        "VALUE": "getHB_Collection().execAndDisplayXQuery(\"collection('/db/G21110123456123456')//ELFIN[./@CLASSE='TRANSACTION']\",\"Quel\n\t\t\t\t\tnuméro de gérance\",\"IDENTIFIANT/DE\",\"List.xsl\")\n\t\t\t\t"
                     },
                     {
                         "POS": 4,
-                        "MIXED-CONTENT": "Admin,Super"
+                        "VALUE": "Admin,Super"
                     },
                     {
                         "POS": 5,
-                        "MIXED-CONTENT": "Fournit la liste des transactionscorrespondant a une date\n\t\t\t\t\tsaisie\n\t\t\t\t"
+                        "VALUE": "Fournit la liste des transactionscorrespondant a une date\n\t\t\t\t\tsaisie\n\t\t\t\t"
                     }
                 ],
                 "POS": 5
@@ -277,23 +277,23 @@
                 "C": [
                     {
                         "POS": 1,
-                        "MIXED-CONTENT": "Activités"
+                        "VALUE": "Activités"
                     },
                     {
                         "POS": 2,
-                        "MIXED-CONTENT": "Transactions par montant"
+                        "VALUE": "Transactions par montant"
                     },
                     {
                         "POS": 3,
-                        "MIXED-CONTENT": "getHB_Collection().execAndDisplayXQuery(\"collection('/db/G21110123456123456')//ELFIN\",\"Montant\n\t\t\t\t\t\",\"IDENTIFIANT/VALEUR\",\"List.xsl\")\n\t\t\t\t"
+                        "VALUE": "getHB_Collection().execAndDisplayXQuery(\"collection('/db/G21110123456123456')//ELFIN\",\"Montant\n\t\t\t\t\t\",\"IDENTIFIANT/VALEUR\",\"List.xsl\")\n\t\t\t\t"
                     },
                     {
                         "POS": 4,
-                        "MIXED-CONTENT": "Admin,Super"
+                        "VALUE": "Admin,Super"
                     },
                     {
                         "POS": 5,
-                        "MIXED-CONTENT": "Fournit la liste des transactions correspondant a montant\n\t\t\t\t\tsaisi (=)\n\t\t\t\t"
+                        "VALUE": "Fournit la liste des transactions correspondant a montant\n\t\t\t\t\tsaisi (=)\n\t\t\t\t"
                     }
                 ],
                 "POS": 6
