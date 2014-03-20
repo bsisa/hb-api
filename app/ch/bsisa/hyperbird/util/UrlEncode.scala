@@ -20,4 +20,18 @@ object UrlEncode {
     uri.toASCIIString()
   }
 
+  
+  /**
+   * Simply replace white spaces ` ` by `+` sign. 
+   * 
+   * Note: Using full java.net.URLEncoder.encode such as: 
+   * <code>java.net.URLEncoder.encode(queryParameter, scala.io.Codec.UTF8.name)</code>
+   * breaks eXist database REST API. 
+   */
+  def encodeURLQueryParameter(queryParameter: String = null): String = {
+    val encodedParameter = queryParameter.replaceAll(" ", "+")
+    encodedParameter
+  }  
+  
+  
 }

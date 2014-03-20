@@ -31,4 +31,18 @@ class UrlEncodeSpec extends BaseSerialisationSpec {
     }
   }
 
+  val originalQueryParameter_002 = "//ELFIN[IDENTIFIANT/COMPTE='01 501 006 50']"
+  val expectedQueryParameter_002 = "//ELFIN[IDENTIFIANT/COMPTE='01+501+006+50']"
+    
+  s"The Query parameter ${originalQueryParameter_002} " should {
+    s"be encoded to ${expectedQueryParameter_002}" in {
+      val encodeTest_002 = UrlEncode.encodeURLQueryParameter(queryParameter = originalQueryParameter_002)
+      println(s"encodeTest_002 = ${encodeTest_002}")
+      encodeTest_002 must be equalTo (expectedQueryParameter_002)
+    }
+  }
+    
+    
+    
+  
 }

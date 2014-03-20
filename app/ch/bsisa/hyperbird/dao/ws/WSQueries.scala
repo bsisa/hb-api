@@ -3,6 +3,7 @@ package ch.bsisa.hyperbird.dao.ws
 import ch.bsisa.hyperbird.dao.{ Queries, DbConfig }
 import play.api.Logger
 import ch.bsisa.hyperbird.CollectionsConfig
+import ch.bsisa.hyperbird.util.UrlEncode
 
 /**
  * Implements Queries trait accessing database using its REST API web service.
@@ -35,8 +36,9 @@ object WSQueries extends Queries {
    * Implements Queries
    */
   def filteredCollectionQuery(collectionId: String, xpath: String = "//ELFIN")(implicit conf: DbConfig): String = {
-    val query = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}/${collectionId}?_query=${xpath}&_howmany=${highPagingLimit}&_wrap=${wrap}"""
-    Logger.debug("fileteredCollectionQuery: " + query)
+    val encodedXpath = UrlEncode.encodeURLQueryParameter(queryParameter = xpath)
+    val query = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}/${collectionId}?_query=${encodedXpath}&_howmany=${highPagingLimit}&_wrap=${wrap}"""
+    Logger.debug(s"fileteredCollectionQuery: ${query} built with provided xpath filter: ${xpath}")
     query
   }
 
