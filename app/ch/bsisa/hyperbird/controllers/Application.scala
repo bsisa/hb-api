@@ -27,7 +27,7 @@ object Application extends Controller {
   }
   
   def conf = Action {
-    Ok(views.html.conf(getApiBaseUrl)).as("application/javascript")
+    Ok(views.html.conf(getApiBaseUrl)).as("application/javascript; charset=utf-8")
   }
   
 }
