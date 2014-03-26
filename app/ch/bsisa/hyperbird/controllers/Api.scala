@@ -36,6 +36,9 @@ import java.net.ConnectException
  */
 object Api extends Controller with securesocial.core.SecureSocial {
 
+  val JsonFormat = "json"
+  val OriginalFormat = "original"
+
   /**
    * Helper function obtaining configuration information.
    */
@@ -69,23 +72,23 @@ object Api extends Controller with securesocial.core.SecureSocial {
     XQueryWSHelper.query(WSQueries.allHbCollectionsQuery)
   }
 
-  
   /**
-   * Returns the result of executing the specified XQuery file by name. 
+   * Returns the result of executing the specified XQuery file by name.
    *
    * Supported `format` parameter value are `{original|json}`
    */
   def runXQueryFile(xqueryFileName: String, format: String) = SecuredAction(ajaxCall = true).async {
-//  def runXQueryFile(xqueryFileName: String, format: String) = SecuredAction(ajaxCall = true) {
     Logger.debug(s"Run XQuery ${xqueryFileName} with returned format = ${format}")
-    val futureRespContentType = XQueryWSHelper.runXQueryFile(xqueryFileName, format)
-    futureRespContentType.map{ respContentType => 
-    	Ok(s"{xqueryFileName: ${xqueryFileName}, contentType: ${respContentType}}").as(JSON)
+    XQueryWSHelper.runXQueryFile(xqueryFileName).map { response =>
+      format match {
+        case JsonFormat =>
+          val melfinWrappedBody = "<MELFIN>" + response.body.mkString + "</MELFIN>"
+          Ok(ElfinFormat.elfinsToJsonArray(ElfinFormat.elfinsFromXml(scala.xml.XML.loadString(melfinWrappedBody))))
+        case OriginalFormat => Ok(response.body).as(response.ahcResponse.getContentType())
+      }
     }
-  }  
-  
-  
-  
+  }
+
   /**
    * Returns the list of elfins contained in the specified collection matching the xpath filter expression with defined format
    *
