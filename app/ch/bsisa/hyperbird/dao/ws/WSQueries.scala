@@ -95,5 +95,10 @@ object WSQueries extends Queries {
     query
   }
   
+  
+  def getFile(fileName: String)(implicit dbConf: DbConfig, collectionsConf: CollectionsConfig): String = {
+    val query = s"""${dbConf.protocol}${dbConf.hostName}:${dbConf.port}${dbConf.restPrefix}${dbConf.databaseName}/${collectionsConf.xqueriesCollectionId}/${fileName}?_howmany=${highPagingLimit}&_wrap=${wrap}"""
+    query
+  }  
 
 }

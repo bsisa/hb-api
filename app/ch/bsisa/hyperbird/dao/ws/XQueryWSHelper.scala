@@ -152,6 +152,12 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
      responseFuture     
   }
   
+  def getFile(fileName: String) : Future[Response] = {
+     val query = WSQueries.getFile(fileName)
+     val responseFuture: Future[Response] = WS.url(query).withHeaders(("Content-Type", "application/xquery")).get
+     responseFuture     
+  }
+  
   
   /**
    * Proceeds with response for ELFIN queries expecting a single result.

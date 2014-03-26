@@ -25,6 +25,8 @@ import ch.bsisa.hyperbird.CollectionsConfig
 import securesocial.core.java.SecureSocial.SecuredAction
 import ch.bsisa.hyperbird.dao.ResultNotFoundException
 import java.net.ConnectException
+import java.io.InputStream
+import play.api.libs.iteratee.Enumerator
 
 /**
  * REST API controller.
@@ -91,6 +93,18 @@ object Api extends Controller with securesocial.core.SecureSocial {
     }
   }
 
+  /**
+   * Returns the file identified by fileName in binary format.
+   */
+  def getFile(fileName: String) = SecuredAction(ajaxCall = true).async { request =>
+    Logger.debug(s"getFile ${fileName}")
+    XQueryWSHelper.getFile(fileName).map { response =>
+      val asStream: InputStream = response.ahcResponse.getResponseBodyAsStream
+      Ok.chunked(Enumerator.fromStream(asStream))
+    }
+  }
+  
+  
   /**
    * Returns the list of elfins contained in the specified collection matching the xpath filter expression with defined format
    *
