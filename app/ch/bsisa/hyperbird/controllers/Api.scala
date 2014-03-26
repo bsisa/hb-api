@@ -77,9 +77,11 @@ object Api extends Controller with securesocial.core.SecureSocial {
    *
    * Supported `format` parameter value are `{original|json}`
    */
-  def runXQueryFile(xqueryFileName: String, format: String) = SecuredAction(ajaxCall = true).async {
-    Logger.debug(s"Run XQuery ${xqueryFileName} with returned format = ${format}")
-    XQueryWSHelper.runXQueryFile(xqueryFileName).map { response =>
+  def runXQueryFile(xqueryFileName: String, format: String) = SecuredAction(ajaxCall = true).async { request =>
+    val queryString = if ( request.rawQueryString != null && request.rawQueryString.nonEmpty ) Option(request.rawQueryString) else None
+    Logger.debug(s"Run XQuery ${xqueryFileName} with returned format = ${format} and rawQueryString: ${queryString}" )
+    
+    XQueryWSHelper.runXQueryFile(xqueryFileName, queryString ).map { response =>
       format match {
         case JsonFormat =>
           val melfinWrappedBody = "<MELFIN>" + response.body.mkString + "</MELFIN>"
