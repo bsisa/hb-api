@@ -144,6 +144,16 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
   }
 
   
+  def runXQueryFile(xqueryFileName: String, format: String) = {
+     val query = WSQueries.runXQueryFile(xqueryFileName)
+     val responseFuture: Future[Response] = WS.url(query).withHeaders(("Content-Type", "application/xquery")).get
+     responseFuture.map { resp =>
+       Logger.debug(s"runXQueryFile response content type is: ${resp.ahcResponse.getContentType()} ")
+       resp.ahcResponse.getContentType()
+     }
+  }
+  
+  
   /**
    * Proceeds with response for ELFIN queries expecting a single result.
    */

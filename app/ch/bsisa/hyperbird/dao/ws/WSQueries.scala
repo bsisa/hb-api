@@ -81,5 +81,14 @@ object WSQueries extends Queries {
     val query = s"""${dbConf.protocol}${dbConf.hostName}:${dbConf.port}${dbConf.restPrefix}${dbConf.databaseName}/${collectionsConf.xqueriesCollectionId}/${xqueryResourceName}?email=${name}&_howmany=${highPagingLimit}&_wrap=${wrap}"""
     query
   }
+  
+  /**
+   * Returns a query to execute a given xquery file by name
+   */
+  def runXQueryFile(xqueryFileName: String)(implicit dbConf: DbConfig, collectionsConf: CollectionsConfig): String = {
+    val query = s"""${dbConf.protocol}${dbConf.hostName}:${dbConf.port}${dbConf.restPrefix}${dbConf.databaseName}/${collectionsConf.xqueriesCollectionId}/${xqueryFileName}?_howmany=${highPagingLimit}&_wrap=${wrap}"""
+    query    
+  }
+  
 
 }
