@@ -42,8 +42,7 @@ import scala.concurrent.Future
 object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
 
   /**
-   * Returns 0 to n `ELFIN` encapsulated in a `MELFIN`, in JSON format
-   * itself contained in a `Future[SimpleResult]`
+   * Returns 0 to n `ELFIN` as a JSON array contained in a `Future[SimpleResult]`
    */
   override def query(query: String): Future[SimpleResult] = {
 
@@ -80,6 +79,7 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
       Logger.debug(s"Result of type ${resp.ahcResponse.getContentType} received")
       // Parse XML (Need to wrap the list of XML elements received to obtain valid XML.)
       val melfinElem = scala.xml.XML.loadString("<MELFIN>" + resp.body.mkString + "</MELFIN>")
+      // elfinsFromXml unwraps ELFINS from the MELFIN element to return a Seq[ELFIN]
       val elfins = ElfinFormat.elfinsFromXml(melfinElem)
       elfins
     }
