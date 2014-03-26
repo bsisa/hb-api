@@ -64,7 +64,7 @@ object WSQueries extends Queries {
    * Returns a query to access a single ELFIN of CLASSE USER identified by the given email.
    */
   override def elfinUserPerEmailQuery(email: String)(implicit dbConf: DbConfig, collectionsConf: CollectionsConfig): String = {
-    // Use store XQuery for complex request
+    // Use stored XQuery for complex request
     // Example call:
     // Content-Type: application/xquery
     // http://localhost:8080/exist/rest/db/hb4/queries/ELFIN_USER_find_by_email.xq?email=inaminute@pobox.com
