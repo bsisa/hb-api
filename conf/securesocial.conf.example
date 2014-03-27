@@ -7,7 +7,9 @@
 smtp {
 	host=smtp.gmail.com
 	#port=25
+	#port=587
 	ssl=true
+	#tls=true
 	user="your_user"
 	password=your_password
 	from="your_from_address"
