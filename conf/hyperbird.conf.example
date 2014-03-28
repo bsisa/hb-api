@@ -36,10 +36,5 @@ hb {
 	}
 }
 
-# Default Play configurations
-include "application.conf"
-
-# SecureSocial plugin configurations
-include "securesocial.conf"
 
 
