@@ -175,7 +175,9 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
         // Parse XML (Need to wrap the list of XML elements received to obtain valid XML in case several ELFIN are returned.)
         val melfinElem = scala.xml.XML.loadString(s"<MELFIN>${bodyString}</MELFIN>")
         val elfinNodeSeq = melfinElem \\ "ELFIN"
-        if (elfinNodeSeq.size > 1) {
+        if (elfinNodeSeq.size == 0) {
+          throw ResultNotFoundException(s"No ELFIN found for query: ${query}")
+        } else if (elfinNodeSeq.size > 1) {
           throw ExpectedSingleResultException(s"Found more than a single ELFIN (${elfinNodeSeq.size}) for query: ${query}")
         } else {
           val elfinElem = elfinNodeSeq(0)
