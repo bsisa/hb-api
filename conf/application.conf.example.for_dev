@@ -1,0 +1,60 @@
+# This is the main configuration file for the application.
+# ~~~~~
+
+# Router
+# ~~~~~
+# Define the Router object to use for this application.
+# This router will be looked up first when the application is starting up,
+# so make sure this is the entry point.
+# Furthermore, it's assumed your route file is named properly.
+# So for an application router like `my.application.Router`,
+# you may need to define a router file `conf/my.application.routes`.
+# Default to Routes in the root package (and conf/routes)
+# application.router=my.application.Routes
+
+{
+	"evolutionplugin": disabled, // Evolution disabled. Evolution is targeted at SQL not XQuery.
+
+	"logger": {                // You can also configure logback (http://logback.qos.ch/) by providing an application-logger.xml file in the conf directory.
+		"root": "ERROR",       // Root logger
+		"play": "INFO",        // Logger used by the framework
+		"application": "DEBUG" // Logger provided to your application
+	},
+	
+	"application": {
+		"global": "ch.bsisa.hyperbird.Global", // Global object class for this application. GlobalSettings implementation object name
+		"secret": "=qqmx8:J<RSylIJ3FAW/^?>6GMerycMEUwegsBOU@/KyBJtk6SviCs_L_RbFa6k", // The secret key is used to secure cryptographics functions. If you deploy your application to several instances be sure to use the same key!
+		"langs": "en"                          // The application languages
+	}
+
+#####################################################################################
+#
+# In development it is convenient to include HyperBird and SecureSocial 
+# configurations directly in application.conf to benefit from default config using: 
+# play run 
+# Of course hyperbird.conf for dev should not include application.conf nor 
+# securesocial.conf again otherwise leading to infinite loop. That's why production
+# configuration files are all postfixed with _prod:
+# * application_prod.conf
+# * securesocial_prod.conf
+# * hyperbird_prod.conf
+# hyperbird_prod.conf should be renamed for each specific deployment such as: 
+# hyperbird_customer1_prod.conf
+# hyperbird_customer1_qa.conf
+# ...
+# Then starting the server is done in command line, for instance as: 
+# nohup ./hb-api -Dhttp.port=8888 -mem 1024 -J-server -Dconfig.file=/opt/hb/conf/hyperbird_customer1_prod.conf 2>&1 >../logs/hyperbird.log &
+# 
+##################################################################################### 
+		
+# HyperBird configurations
+include "hyperbird_dev.conf"
+
+# SecureSocial plugin configurations
+include "securesocial_dev.conf"
+
+}
+
+
+
+
