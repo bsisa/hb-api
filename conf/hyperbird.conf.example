@@ -5,7 +5,6 @@
 #
 #####################################################################################
 
-
 hb { 
 	
 	db { 
@@ -36,3 +35,11 @@ hb {
 		"baseUrl": "http://localhost:9000/api/melfin/"
 	}
 }
+
+# Default Play configurations
+include "application.conf"
+
+# SecureSocial plugin configurations
+include "securesocial.conf"
+
+
