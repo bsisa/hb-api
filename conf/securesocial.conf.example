@@ -184,13 +184,16 @@ securesocial {
 		#
 		# Enable username support, otherwise SecureSocial will use the emails as user names
 		#
-		withUserNameSupport=false
+		#withUserNameSupport=false
+		withUserNameSupport=true
 		sendWelcomeEmail=true
-		enableGravatarSupport=true
+		#enableGravatarSupport=true
+		enableGravatarSupport=false
 		tokenDuration=60
 		tokenDeleteInterval=5
 		signupSkipLogin=false
 	    #minimumPasswordLength=8
+	    minimumPasswordLength=3
 	    #enableTokenJob=true
 	    #hasher=bcrypt
 	}
