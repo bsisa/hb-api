@@ -1,0 +1,57 @@
+
+#####################################################################################
+#
+# HyperBird configurations
+#
+#####################################################################################
+
+
+hb { 
+	
+	db { 
+		# Database configurations
+		"protocol": "http://",
+		"hostName": "localhost",
+		"port": 8080,
+		"restPrefix": "/exist/rest" ,
+		"name": "/db/hb4",
+		"user": "admin",
+		"password": "existbob" 
+	}
+	collection {
+	    # Contains initialisaton configurations and users, roles
+		"configuration": "G10000101010101000"
+		# Contains ELFIN objects catalogue
+		"catalogue": "G20140101000012345"
+		# Contains database stored XQueries
+		"xqueries": "queries"
+	}
+	init {
+		# hb.init Elfin.Id . 
+		# Note: This Elfin.ID_G must match the hb.collection.configuration collection id.
+		"id": "G20050101000012345"
+	}
+	api {
+		# REST base URL. Use for instance by Restangular.   
+		"baseUrl": "http://localhost:9000/api/melfin/"
+	}	
+}
+
+
+# Default Play configurations
+include "application_prod.conf"
+
+# SecureSocial plugin configurations
+include "securesocial_prod.conf"
+
+smtp {
+	host=smtp.gmail.com
+	#port=25
+	#port=587
+	ssl=true
+	#tls=true
+	user="your_user"
+	password=your_password
+	from="your_from_address"
+}
+
