@@ -4,17 +4,6 @@
 #
 #####################################################################################
 
-smtp {
-	host=smtp.gmail.com
-	#port=25
-	#port=587
-	ssl=true
-	#tls=true
-	user="your_user"
-	password=your_password
-	from="your_from_address"
-}
-
 securesocial {
 	#
 	# If enabled, sets the path to your copy of Bootstrap.css to be used instead of the default one provided by SecureSocial
