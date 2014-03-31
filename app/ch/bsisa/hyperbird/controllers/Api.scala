@@ -27,6 +27,15 @@ import ch.bsisa.hyperbird.dao.ResultNotFoundException
 import java.net.ConnectException
 import java.io.InputStream
 import play.api.libs.iteratee.Enumerator
+import org.apache.poi.ss.usermodel._
+import java.io.OutputStream
+import java.io.ByteArrayOutputStream
+import java.io.ByteArrayInputStream
+import org.apache.poi.ss.util.CellReference
+import scala.concurrent.Await
+import org.jsoup.Jsoup
+
+//import org.apache.poi.ss.usermodel.{WorkbookFactory,Workbook,Sheet,Row,Cell}
 
 /**
  * REST API controller.
@@ -80,10 +89,10 @@ object Api extends Controller with securesocial.core.SecureSocial {
    * Supported `format` parameter value are `{original|json}`
    */
   def runXQueryFile(xqueryFileName: String, format: String) = SecuredAction(ajaxCall = true).async { request =>
-    val queryString = if ( request.rawQueryString != null && request.rawQueryString.nonEmpty ) Option(request.rawQueryString) else None
-    Logger.debug(s"Run XQuery ${xqueryFileName} with returned format = ${format} and rawQueryString: ${queryString}" )
-    
-    XQueryWSHelper.runXQueryFile(xqueryFileName, queryString ).map { response =>
+    val queryString = if (request.rawQueryString != null && request.rawQueryString.nonEmpty) Option(request.rawQueryString) else None
+    Logger.debug(s"Run XQuery ${xqueryFileName} with returned format = ${format} and rawQueryString: ${queryString}")
+
+    XQueryWSHelper.runXQueryFile(xqueryFileName, queryString).map { response =>
       format match {
         case JsonFormat =>
           val melfinWrappedBody = "<MELFIN>" + response.body.mkString + "</MELFIN>"
@@ -97,14 +106,268 @@ object Api extends Controller with securesocial.core.SecureSocial {
    * Returns the file identified by fileName in binary format.
    */
   def getFile(fileName: String) = SecuredAction(ajaxCall = true).async { request =>
-    Logger.debug(s"getFile ${fileName}")
+
+    val queryString = if (request.rawQueryString != null && request.rawQueryString.nonEmpty) Option(request.rawQueryString) else None
+
+    
     XQueryWSHelper.getFile(fileName).map { response =>
       val asStream: InputStream = response.ahcResponse.getResponseBodyAsStream
-      Ok.chunked(Enumerator.fromStream(asStream))
+      // Status(response.status)(response.body).as(response.ahcResponse.getContentType)
+      //Logger.debug(s"getFile ${fileName} content type: ${response.ahcResponse.getContentType}")
+      Logger.debug(s"getFile ${fileName} content type: ${response.ahcResponse.getContentType} and rawQueryString: ${queryString}")
+
+      // Test reading and modifying XLS document using Apache POI.
+      // TODO: move this logic out of here to a POI specific componenent.
+
+      /*
+    InputStream inp = new FileInputStream("workbook.xls");
+    //InputStream inp = new FileInputStream("workbook.xlsx");
+
+    Workbook wb = WorkbookFactory.create(inp);
+    Sheet sheet = wb.getSheetAt(0);
+    Row row = sheet.getRow(1);
+    Cell cell = row.getCell(1);
+    if (cell == null) cell = row.createCell(3);
+    cell.setCellType(Cell.CELL_TYPE_STRING);
+    cell.setCellValue("Hello Dude!");
+
+    // Write the output to a file
+    FileOutputStream fileOut = new FileOutputStream("workbook.xls");
+    wb.write(fileOut);
+    fileOut.close(); 
+       */
+
+      Logger.debug(s"Modifying ${fileName} content using Apache POI !!!")
+
+      val Col0 = 0
+      val Col1 = 1
+      val Col2 = 2
+
+      val Row0 = 0
+      val Row1 = 1
+
+      val ParameterSheetName = "Parametres"
+
+      val AbsRow = true
+      val AbsCol = true
+
+      val XQueryFileNameCellRef = new CellReference(ParameterSheetName, Row0, Col1, AbsRow, AbsCol)
+      
+      val wb: Workbook = WorkbookFactory.create(asStream)
+      val parameterSheet: Sheet = wb.getSheet(XQueryFileNameCellRef.getSheetName()) //wb.getSheetAt(1) 
+      val xqueryFileName =
+        wb.getSheet(XQueryFileNameCellRef.getSheetName())
+          .getRow(XQueryFileNameCellRef.getRow())
+          .getCell(XQueryFileNameCellRef.getCol())
+          .getRichStringCellValue().getString()
+
+      // A8 -> can be decoded to 7,0 using POI
+      val resultDataStartCellRef = new CellReference(7, 0, AbsRow, AbsCol)          
+          
+      //xqueryFileName
+      //      val reportDynamicContent = XQueryWSHelper.runXQueryFile(xqueryFileName, queryString).map { response =>
+      //        response.body.mkString
+      //      }
+
+      val reportDynamicContentFuture = XQueryWSHelper.runXQueryFile(xqueryFileName, queryString).map { response =>
+        response.body.mkString
+      }
+
+      import scala.concurrent.duration._
+      
+      val reportDynamicContent = Await.result(reportDynamicContentFuture,10 minutes) // Reporting may take long! TODO: check for non blocking solution later.      
+      
+      Logger.debug("reportDynamicContent: " + reportDynamicContent)
+          
+      //val dataSheet = wb.getSheetAt(0)
+      //val dataSheet = wb.createSheet("Test");
+      val dataSheet = wb.getSheet("Test");
+
+//      val header = dataSheet.createRow(0);
+//      header.createCell(0).setCellValue("Pricipal Amount (P)");
+//      header.createCell(1).setCellValue("Rate of Interest (r)");
+//      header.createCell(2).setCellValue("Tenure (t)");
+//      header.createCell(3).setCellValue("Interest (P r t)");
+//
+//      val dataRow = dataSheet.createRow(1);
+//      dataRow.createCell(0).setCellValue(14500d);
+//      dataRow.createCell(1).setCellValue(9.25);
+//      dataRow.createCell(2).setCellValue(3d);
+//      dataRow.createCell(3).setCellFormula("A2*B2*C2");
+
+      import scala.collection.JavaConversions._
+      
+      // Parse report HTML table result as org.jsoup.nodes.Document
+      val htmlReportDoc  = Jsoup.parse(reportDynamicContent);
+      // We expect a single table per document
+      val table  = htmlReportDoc.select("table").get(0)
+
+      var rowIdx : Integer = resultDataStartCellRef.getRow()
+      
+      
+      for ( row <- table.select("tr") ) {
+    	  var cellIdx : Integer = resultDataStartCellRef.getCol()
+    	  val dataRow = dataSheet.createRow(rowIdx);
+    	  for ( cell <- row.select("td")) {
+    		  dataRow.createCell(cellIdx).setCellValue(cell.text());  
+    		  cellIdx = cellIdx + 1  
+    	  }
+    	  rowIdx = rowIdx + 1
+      }
+      
+      val firstDataRow = dataSheet.getRow(resultDataStartCellRef.getRow())
+      val colDataRange = Range(resultDataStartCellRef.getCol(): Int, firstDataRow.getLastCellNum() : Int, step = 1) 
+      for (i <- colDataRange) {
+        dataSheet.autoSizeColumn(i);
+      }
+      
+/*
+
+	/*
+Folllowing code parse html table
+*/
+Document doc = Jsoup.parse(htmlData);
+
+/* Display list of headers for tag here i tried to fetch data with class = tableData in table tag
+you can fetch using id or other attribute
+rowCount variable to create row for excel sheet
+*/
+Cell cell;
+for (Element table : doc.select(“table[class=tableData]“)) {
+rowCount++;
+// loop through all tr of table
+for (Element row : table.select(“tr”)) {
+// create row for each
+tag
+header = sheet.createRow(rowCount);
+// loop through all tag of
+tag
+Elements ths = row.select(“th”);
+int count = 0;
+for (Element element : ths) {
+// set header style
+cell = header.createCell(count);
+cell.setCellValue(element.text());
+cell.setCellStyle(headerStyle);
+count++;
+}
+// now loop through all td tag
+Elements tds = row.select(“td:not([rowspan])”);
+count = 0;
+for (Element element : tds) {
+// create cell for each tag
+cell = header.createCell(count);
+cell.setCellValue(element.text());
+count++;
+}
+rowCount++;
+
+// set auto size column for excel sheet
+sheet = wb.getSheetAt(0);
+for (int j = 0; j < row.select("th").size(); j++) {
+sheet.autoSizeColumn(j);
+}
+}
+
+}
+
+
+ */      
+      
+      
+      
+      
+      // Row with request name at column 1
+      //val row0: Row = parameterSheet.getRow(0)
+
+      //val requestNameCell = row0.getCell(1)
+      //val requestName = requestNameCell.getStringCellValue()
+      //      cell01.setCellType(Cell.CELL_TYPE_STRING);
+      //      cell01.setCellValue("Hello Dude 01!");
+
+      // Rows from 1 to n contain parameter name at column 0 and should be filled with parameter values at column 1
+      //val row1: Row = parameterSheet.getRow(1)
+      //val cell : Cell = row.getCell(1)
+
+      //Sheet sheet1 = wb.getSheetAt(0);
+
+
+      // Fill parameters values associated to xquery if any
+      for (row: Row <- parameterSheet) {
+        for (cell: Cell <- row) {
+
+          val cellRef: CellReference = new CellReference(row.getRowNum(), cell.getColumnIndex())
+          if (cellRef.getRow() > 0 && cellRef.getCol() == 0) {
+            // Get the parameter name specified in the spread sheet
+            val parameterName = cell.getCellType() match {
+              case Cell.CELL_TYPE_STRING => cell.getRichStringCellValue().getString()
+              case _ =>
+                Logger.error(s"Parameter name should be of string type! found: ${cell.getCellType}") // TODO: throw exception
+                s"ERROR - Parameter name should be of string type! found: ${cell.getCellType}"
+            }
+            Logger.debug(s"Found parameter named: ${parameterName}")
+
+            // From the query string try to find the parameter value corresponding to the parameter name specified in the spread sheet
+            val parameterValue = request.queryString.get(parameterName) match {
+              case Some(value) => value(0)
+              case None =>
+                Logger.error(s"No value found in query string for parameter ${parameterName}") // TODO: throw exception
+                s"ERROR - No value found for parameter ${parameterName}"
+            }
+
+            // Check the parameter value cell type and convert the matching 
+            // query parameter value to the given type to preserve parameter 
+            // value cell type while updating its content.
+            val paramValueCell = row.getCell(1)
+            paramValueCell.getCellType() match {
+              case Cell.CELL_TYPE_STRING => paramValueCell.setCellValue(parameterValue)
+              case Cell.CELL_TYPE_NUMERIC =>
+                Logger.warn("Request parameter used to set numeric cell. Untested operation, date and numeric conversion need extended support.")
+                paramValueCell.setCellValue(parameterValue)
+              // TODO: date and numeric values need a defined format while passed as request parameter and a corresponding formatter
+              //                val format = new java.text.SimpleDateFormat("dd-MM-yyyy")
+              //                if (DateUtil.isCellDateFormatted(paramValueCell)) paramValueCell.   paramValueCell.setCellValue(Date.parse(parameterValue)) else paramValueCell.getNumericCellValue()
+              // TODO: date and numeric values need a defined format while passed as request parameter and a corresponding formatter
+              case Cell.CELL_TYPE_BOOLEAN =>
+                Logger.warn("Request parameter used to set boolean cell. Untested operation.")
+                paramValueCell.setCellValue(parameterValue)
+              case Cell.CELL_TYPE_FORMULA =>
+                Logger.error("Request parameter used to set formula cell operation currently not supported.")
+              // TODO: throw exception. Not supported operation ...
+              case _ => "Unknown Cell type"
+            }
+
+          }
+
+          //          val cellContent = cell.getCellType() match {
+          //            case Cell.CELL_TYPE_STRING => cell.getRichStringCellValue().getString()
+          //            case Cell.CELL_TYPE_NUMERIC => if (DateUtil.isCellDateFormatted(cell)) cell.getDateCellValue() else cell.getNumericCellValue()
+          //            case Cell.CELL_TYPE_BOOLEAN => cell.getBooleanCellValue()
+          //            case Cell.CELL_TYPE_FORMULA => cell.getCellFormula()
+          //            case _ => "Unknown Cell type"
+          //          }
+          //
+          //          Logger.debug(s"${cellRef.formatAsString()} content: ${cellContent} ")
+
+        }
+      }
+
+      val out: ByteArrayOutputStream = new ByteArrayOutputStream()
+      wb.write(out)
+      out.close()
+      val modifiedStream = new ByteArrayInputStream(out.toByteArray)
+
+      Logger.debug(s"Modified ${fileName} according to query = ${xqueryFileName} content sent...")
+
+      //Ok.chunked(Enumerator.fromStream(asStream)).as(response.ahcResponse.getContentType)
+      Ok.chunked(Enumerator.fromStream(modifiedStream)).as(response.ahcResponse.getContentType)
+    }.recover {
+      case e: Throwable => {
+        manageException(exception = Option(e), errorMsg = Option(s"Failed to obtain file: ${fileName}: ${e}"))
+      }
     }
   }
-  
-  
+
   /**
    * Returns the list of elfins contained in the specified collection matching the xpath filter expression with defined format
    *
