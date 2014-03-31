@@ -13,8 +13,14 @@ object ApplicationBuild extends Build {
   val appVersion = "5.0.0-SNAPSHOT"
 
   val appDependencies = Seq(
+    "org.apache.poi" % "poi" % "3.10-FINAL",
+    "org.apache.poi" % "poi-ooxml" % "3.10-FINAL",
+    "org.jsoup" % "jsoup" % "1.7.3",
     "net.liftweb" %% "lift-json" % "2.5",
-    "securesocial" %% "securesocial" % "2.1.2")
+    "securesocial" %% "securesocial" % "2.1.2"
+    )
+    
+    
 
   val main = play.Project(
     appName,
