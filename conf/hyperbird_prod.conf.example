@@ -37,13 +37,7 @@ hb {
 	}	
 }
 
-
-# Default Play configurations
-include "application_prod.conf"
-
-# SecureSocial plugin configurations
-include "securesocial_prod.conf"
-
+# SMTP section required for securesocial plugin
 smtp {
 	host=smtp.gmail.com
 	#port=25
@@ -54,4 +48,12 @@ smtp {
 	password=your_password
 	from="your_from_address"
 }
+
+
+# Default Play configurations
+include "application_prod.conf"
+
+# SecureSocial plugin configurations
+include "securesocial_prod.conf"
+
 
