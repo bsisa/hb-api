@@ -119,24 +119,6 @@ object Api extends Controller with securesocial.core.SecureSocial {
       // Test reading and modifying XLS document using Apache POI.
       // TODO: move this logic out of here to a POI specific componenent.
 
-      /*
-    InputStream inp = new FileInputStream("workbook.xls");
-    //InputStream inp = new FileInputStream("workbook.xlsx");
-
-    Workbook wb = WorkbookFactory.create(inp);
-    Sheet sheet = wb.getSheetAt(0);
-    Row row = sheet.getRow(1);
-    Cell cell = row.getCell(1);
-    if (cell == null) cell = row.createCell(3);
-    cell.setCellType(Cell.CELL_TYPE_STRING);
-    cell.setCellValue("Hello Dude!");
-
-    // Write the output to a file
-    FileOutputStream fileOut = new FileOutputStream("workbook.xls");
-    wb.write(fileOut);
-    fileOut.close(); 
-       */
-
       Logger.debug(s"Modifying ${fileName} content using Apache POI !!!")
 
       val Col0 = 0
@@ -152,36 +134,48 @@ object Api extends Controller with securesocial.core.SecureSocial {
       val AbsCol = true
 
       val XQueryFileNameCellRef = new CellReference(ParameterSheetName, Row0, Col1, AbsRow, AbsCol)
+      val ResultInsertStartCellRef = new CellReference(ParameterSheetName,Row1, Col1, AbsRow, AbsCol)
       
       val wb: Workbook = WorkbookFactory.create(asStream)
-      val parameterSheet: Sheet = wb.getSheet(XQueryFileNameCellRef.getSheetName()) //wb.getSheetAt(1) 
+      val parameterSheet: Sheet = wb.getSheet(XQueryFileNameCellRef.getSheetName()) 
       val xqueryFileName =
         wb.getSheet(XQueryFileNameCellRef.getSheetName())
           .getRow(XQueryFileNameCellRef.getRow())
           .getCell(XQueryFileNameCellRef.getCol())
           .getRichStringCellValue().getString()
 
-      // A8 -> can be decoded to 7,0 using POI
-      val resultDataStartCellRef = new CellReference(7, 0, AbsRow, AbsCol)          
+      val resultDataStartCellRefString = 
+        wb.getSheet(ResultInsertStartCellRef.getSheetName())
+          .getRow(ResultInsertStartCellRef.getRow())
+          .getCell(ResultInsertStartCellRef.getCol())
+          .getRichStringCellValue().getString()      
           
-      //xqueryFileName
-      //      val reportDynamicContent = XQueryWSHelper.runXQueryFile(xqueryFileName, queryString).map { response =>
-      //        response.body.mkString
-      //      }
+      val resultDataStartCellRef = new CellReference(resultDataStartCellRefString)      
 
+      Logger.debug(s"resultDataStartCellRefString = ${resultDataStartCellRefString}, resultDataStartCellRef = ${resultDataStartCellRef}")      
+      
+      // By convention the resultDataStartCellRef is considered to be on the first sheet
+      val dataSheet = wb.getSheetAt(0)
+      // Get the first row as example
+      val templateRow = dataSheet.getRow(resultDataStartCellRef.getRow())
+      
+      // Get the result of the query as an HTML table
       val reportDynamicContentFuture = XQueryWSHelper.runXQueryFile(xqueryFileName, queryString).map { response =>
         response.body.mkString
       }
 
       import scala.concurrent.duration._
       
-      val reportDynamicContent = Await.result(reportDynamicContentFuture,10 minutes) // Reporting may take long! TODO: check for non blocking solution later.      
+      // Reporting may take long! 
+      // TODO: check whether a non blocking solution is possible given 
+      // reportDynamicContentFuture is dependent on xqueryFileName
+      val reportDynamicContent = Await.result(reportDynamicContentFuture,10 minutes)       
       
       Logger.debug("reportDynamicContent: " + reportDynamicContent)
           
-      //val dataSheet = wb.getSheetAt(0)
+      //
       //val dataSheet = wb.createSheet("Test");
-      val dataSheet = wb.getSheet("Test");
+      //val dataSheet = wb.getSheet("Test");
 
 //      val header = dataSheet.createRow(0);
 //      header.createCell(0).setCellValue("Pricipal Amount (P)");
@@ -215,89 +209,21 @@ object Api extends Controller with securesocial.core.SecureSocial {
     	  rowIdx = rowIdx + 1
       }
       
+      // Resize columns to fit their content width
       val firstDataRow = dataSheet.getRow(resultDataStartCellRef.getRow())
       val colDataRange = Range(resultDataStartCellRef.getCol(): Int, firstDataRow.getLastCellNum() : Int, step = 1) 
       for (i <- colDataRange) {
         dataSheet.autoSizeColumn(i);
       }
-      
-/*
-
-	/*
-Folllowing code parse html table
-*/
-Document doc = Jsoup.parse(htmlData);
-
-/* Display list of headers for tag here i tried to fetch data with class = tableData in table tag
-you can fetch using id or other attribute
-rowCount variable to create row for excel sheet
-*/
-Cell cell;
-for (Element table : doc.select(“table[class=tableData]“)) {
-rowCount++;
-// loop through all tr of table
-for (Element row : table.select(“tr”)) {
-// create row for each
-tag
-header = sheet.createRow(rowCount);
-// loop through all tag of
-tag
-Elements ths = row.select(“th”);
-int count = 0;
-for (Element element : ths) {
-// set header style
-cell = header.createCell(count);
-cell.setCellValue(element.text());
-cell.setCellStyle(headerStyle);
-count++;
-}
-// now loop through all td tag
-Elements tds = row.select(“td:not([rowspan])”);
-count = 0;
-for (Element element : tds) {
-// create cell for each tag
-cell = header.createCell(count);
-cell.setCellValue(element.text());
-count++;
-}
-rowCount++;
-
-// set auto size column for excel sheet
-sheet = wb.getSheetAt(0);
-for (int j = 0; j < row.select("th").size(); j++) {
-sheet.autoSizeColumn(j);
-}
-}
-
-}
-
-
- */      
-      
-      
-      
-      
-      // Row with request name at column 1
-      //val row0: Row = parameterSheet.getRow(0)
-
-      //val requestNameCell = row0.getCell(1)
-      //val requestName = requestNameCell.getStringCellValue()
-      //      cell01.setCellType(Cell.CELL_TYPE_STRING);
-      //      cell01.setCellValue("Hello Dude 01!");
-
-      // Rows from 1 to n contain parameter name at column 0 and should be filled with parameter values at column 1
-      //val row1: Row = parameterSheet.getRow(1)
-      //val cell : Cell = row.getCell(1)
-
-      //Sheet sheet1 = wb.getSheetAt(0);
-
+     
 
       // Fill parameters values associated to xquery if any
       for (row: Row <- parameterSheet) {
         for (cell: Cell <- row) {
 
           val cellRef: CellReference = new CellReference(row.getRowNum(), cell.getColumnIndex())
-          if (cellRef.getRow() > 0 && cellRef.getCol() == 0) {
+          // Rows 0 and 1 contain XQuery request name and insert result cell position.  
+          if (cellRef.getRow() > 1 && cellRef.getCol() == 0) {
             // Get the parameter name specified in the spread sheet
             val parameterName = cell.getCellType() match {
               case Cell.CELL_TYPE_STRING => cell.getRichStringCellValue().getString()
