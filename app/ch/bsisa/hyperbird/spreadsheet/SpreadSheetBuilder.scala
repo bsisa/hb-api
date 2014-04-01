@@ -29,6 +29,7 @@ object SpreadSheetBuilder {
   val AbsCol = true
 
   val XQueryFileNameCellRef = new CellReference(ParameterSheetName, Row0, Col1, AbsRow, AbsCol)
+  val ResultInsertStartCellRef = new CellReference(ParameterSheetName, Row1, Col1, AbsRow, AbsCol)
 
   /**
    * Creates Workbook from provided input stream.
@@ -51,7 +52,7 @@ object SpreadSheetBuilder {
   def updateParameterWorkBook(wb: Workbook, queryString: Map[String, Seq[String]]): Unit = {
 
     Logger.debug("SpreadSheetBuilder.updateParameterWorkBook called.")
-    
+
     val parameterSheet: Sheet = wb.getSheet(XQueryFileNameCellRef.getSheetName())
 
     // Fill parameters values associated to xquery if any
@@ -113,6 +114,58 @@ object SpreadSheetBuilder {
         //          Logger.debug(s"${cellRef.formatAsString()} content: ${cellContent} ")
 
       }
+    }
+
+  }
+
+  /**
+   * Merge `htmlTable` string expected to contain a simple HTML
+   * document containing a single HTML table within the provided
+   * `wb` Workbook first sheet.
+   */
+  def mergeHtmlTable(wb: Workbook, htmlTable: String): Unit = {
+
+    Logger.debug("SpreadSheetBuilder.mergeHtmlTable called.")
+
+    val resultDataStartCellRefString =
+      wb.getSheet(ResultInsertStartCellRef.getSheetName())
+        .getRow(ResultInsertStartCellRef.getRow())
+        .getCell(ResultInsertStartCellRef.getCol())
+        .getRichStringCellValue().getString()
+
+    val resultDataStartCellRef = new CellReference(resultDataStartCellRefString)
+
+    Logger.debug(s"resultDataStartCellRefString = ${resultDataStartCellRefString}, resultDataStartCellRef = ${resultDataStartCellRef}")
+
+    // By convention the resultDataStartCellRef is considered to be on the first sheet
+    val dataSheet = wb.getSheetAt(0)
+    // Get the first row as example
+    val templateRow = dataSheet.getRow(resultDataStartCellRef.getRow())
+
+    import scala.collection.JavaConversions._
+
+    // Parse report HTML table result as org.jsoup.nodes.Document
+    val htmlReportDoc = Jsoup.parse(htmlTable);
+    // We expect a single table per document
+    val table = htmlReportDoc.select("table").get(0)
+
+    var rowIdx: Integer = resultDataStartCellRef.getRow()
+
+    for (row <- table.select("tr")) {
+      var cellIdx: Integer = resultDataStartCellRef.getCol()
+      val dataRow = dataSheet.createRow(rowIdx);
+      for (cell <- row.select("td")) {
+        dataRow.createCell(cellIdx).setCellValue(cell.text());
+        cellIdx = cellIdx + 1
+      }
+      rowIdx = rowIdx + 1
+    }
+
+    // Resize columns to fit their content width
+    val firstDataRow = dataSheet.getRow(resultDataStartCellRef.getRow())
+    val colDataRange = Range(resultDataStartCellRef.getCol(): Int, firstDataRow.getLastCellNum(): Int, step = 1)
+    for (i <- colDataRange) {
+      dataSheet.autoSizeColumn(i);
     }
 
   }
