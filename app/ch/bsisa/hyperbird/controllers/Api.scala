@@ -35,6 +35,8 @@ import org.apache.poi.ss.util.CellReference
 import scala.concurrent.Await
 import org.jsoup.Jsoup
 
+import ch.bsisa.hyperbird.spreadsheet.SpreadSheetBuilder
+
 //import org.apache.poi.ss.usermodel.{WorkbookFactory,Workbook,Sheet,Row,Cell}
 
 /**
@@ -117,7 +119,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
       Logger.debug(s"getFile ${fileName} content type: ${response.ahcResponse.getContentType} and rawQueryString: ${queryString}")
 
       // Test reading and modifying XLS document using Apache POI.
-      // TODO: move this logic out of here to a POI specific componenent.
+      // TODO: move this logic out of here to a POI specific component.
 
       Logger.debug(s"Modifying ${fileName} content using Apache POI !!!")
 
@@ -133,16 +135,36 @@ object Api extends Controller with securesocial.core.SecureSocial {
       val AbsRow = true
       val AbsCol = true
 
-      val XQueryFileNameCellRef = new CellReference(ParameterSheetName, Row0, Col1, AbsRow, AbsCol)
+      //val XQueryFileNameCellRef = new CellReference(ParameterSheetName, Row0, Col1, AbsRow, AbsCol)
       val ResultInsertStartCellRef = new CellReference(ParameterSheetName,Row1, Col1, AbsRow, AbsCol)
       
-      val wb: Workbook = WorkbookFactory.create(asStream)
-      val parameterSheet: Sheet = wb.getSheet(XQueryFileNameCellRef.getSheetName()) 
-      val xqueryFileName =
-        wb.getSheet(XQueryFileNameCellRef.getSheetName())
-          .getRow(XQueryFileNameCellRef.getRow())
-          .getCell(XQueryFileNameCellRef.getCol())
-          .getRichStringCellValue().getString()
+      val wb: Workbook = SpreadSheetBuilder.getWorkbook(asStream)
+      val xqueryFileName = SpreadSheetBuilder.getXQueryFileName(wb)
+
+      
+      
+      // Get the result of the query as an HTML table
+      val reportDynamicContentFuture = XQueryWSHelper.runXQueryFile(xqueryFileName, queryString).map { response =>
+        response.body.mkString
+      }
+
+      import scala.concurrent.duration._
+      
+      // Reporting may take long! 
+      // TODO: check whether a non blocking solution is possible given 
+      // reportDynamicContentFuture is dependent on xqueryFileName
+      val reportDynamicContent = Await.result(reportDynamicContentFuture,10 minutes)       
+      
+      Logger.debug("reportDynamicContent: " + reportDynamicContent)
+      
+      
+      
+//      val parameterSheet: Sheet = wb.getSheet(XQueryFileNameCellRef.getSheetName()) 
+//      val xqueryFileName =
+//        wb.getSheet(XQueryFileNameCellRef.getSheetName())
+//          .getRow(XQueryFileNameCellRef.getRow())
+//          .getCell(XQueryFileNameCellRef.getCol())
+//          .getRichStringCellValue().getString()
 
       val resultDataStartCellRefString = 
         wb.getSheet(ResultInsertStartCellRef.getSheetName())
@@ -159,36 +181,8 @@ object Api extends Controller with securesocial.core.SecureSocial {
       // Get the first row as example
       val templateRow = dataSheet.getRow(resultDataStartCellRef.getRow())
       
-      // Get the result of the query as an HTML table
-      val reportDynamicContentFuture = XQueryWSHelper.runXQueryFile(xqueryFileName, queryString).map { response =>
-        response.body.mkString
-      }
 
-      import scala.concurrent.duration._
-      
-      // Reporting may take long! 
-      // TODO: check whether a non blocking solution is possible given 
-      // reportDynamicContentFuture is dependent on xqueryFileName
-      val reportDynamicContent = Await.result(reportDynamicContentFuture,10 minutes)       
-      
-      Logger.debug("reportDynamicContent: " + reportDynamicContent)
           
-      //
-      //val dataSheet = wb.createSheet("Test");
-      //val dataSheet = wb.getSheet("Test");
-
-//      val header = dataSheet.createRow(0);
-//      header.createCell(0).setCellValue("Pricipal Amount (P)");
-//      header.createCell(1).setCellValue("Rate of Interest (r)");
-//      header.createCell(2).setCellValue("Tenure (t)");
-//      header.createCell(3).setCellValue("Interest (P r t)");
-//
-//      val dataRow = dataSheet.createRow(1);
-//      dataRow.createCell(0).setCellValue(14500d);
-//      dataRow.createCell(1).setCellValue(9.25);
-//      dataRow.createCell(2).setCellValue(3d);
-//      dataRow.createCell(3).setCellFormula("A2*B2*C2");
-
       import scala.collection.JavaConversions._
       
       // Parse report HTML table result as org.jsoup.nodes.Document
@@ -216,67 +210,72 @@ object Api extends Controller with securesocial.core.SecureSocial {
         dataSheet.autoSizeColumn(i);
       }
      
+      
+      val queryStringMap = request.queryString
 
       // Fill parameters values associated to xquery if any
-      for (row: Row <- parameterSheet) {
-        for (cell: Cell <- row) {
-
-          val cellRef: CellReference = new CellReference(row.getRowNum(), cell.getColumnIndex())
-          // Rows 0 and 1 contain XQuery request name and insert result cell position.  
-          if (cellRef.getRow() > 1 && cellRef.getCol() == 0) {
-            // Get the parameter name specified in the spread sheet
-            val parameterName = cell.getCellType() match {
-              case Cell.CELL_TYPE_STRING => cell.getRichStringCellValue().getString()
-              case _ =>
-                Logger.error(s"Parameter name should be of string type! found: ${cell.getCellType}") // TODO: throw exception
-                s"ERROR - Parameter name should be of string type! found: ${cell.getCellType}"
-            }
-            Logger.debug(s"Found parameter named: ${parameterName}")
-
-            // From the query string try to find the parameter value corresponding to the parameter name specified in the spread sheet
-            val parameterValue = request.queryString.get(parameterName) match {
-              case Some(value) => value(0)
-              case None =>
-                Logger.error(s"No value found in query string for parameter ${parameterName}") // TODO: throw exception
-                s"ERROR - No value found for parameter ${parameterName}"
-            }
-
-            // Check the parameter value cell type and convert the matching 
-            // query parameter value to the given type to preserve parameter 
-            // value cell type while updating its content.
-            val paramValueCell = row.getCell(1)
-            paramValueCell.getCellType() match {
-              case Cell.CELL_TYPE_STRING => paramValueCell.setCellValue(parameterValue)
-              case Cell.CELL_TYPE_NUMERIC =>
-                Logger.warn("Request parameter used to set numeric cell. Untested operation, date and numeric conversion need extended support.")
-                paramValueCell.setCellValue(parameterValue)
-              // TODO: date and numeric values need a defined format while passed as request parameter and a corresponding formatter
-              //                val format = new java.text.SimpleDateFormat("dd-MM-yyyy")
-              //                if (DateUtil.isCellDateFormatted(paramValueCell)) paramValueCell.   paramValueCell.setCellValue(Date.parse(parameterValue)) else paramValueCell.getNumericCellValue()
-              // TODO: date and numeric values need a defined format while passed as request parameter and a corresponding formatter
-              case Cell.CELL_TYPE_BOOLEAN =>
-                Logger.warn("Request parameter used to set boolean cell. Untested operation.")
-                paramValueCell.setCellValue(parameterValue)
-              case Cell.CELL_TYPE_FORMULA =>
-                Logger.error("Request parameter used to set formula cell operation currently not supported.")
-              // TODO: throw exception. Not supported operation ...
-              case _ => "Unknown Cell type"
-            }
-
-          }
-
-          //          val cellContent = cell.getCellType() match {
-          //            case Cell.CELL_TYPE_STRING => cell.getRichStringCellValue().getString()
-          //            case Cell.CELL_TYPE_NUMERIC => if (DateUtil.isCellDateFormatted(cell)) cell.getDateCellValue() else cell.getNumericCellValue()
-          //            case Cell.CELL_TYPE_BOOLEAN => cell.getBooleanCellValue()
-          //            case Cell.CELL_TYPE_FORMULA => cell.getCellFormula()
-          //            case _ => "Unknown Cell type"
-          //          }
-          //
-          //          Logger.debug(s"${cellRef.formatAsString()} content: ${cellContent} ")
-
-        }
-      }
+      SpreadSheetBuilder.updateParameterWorkBook(wb, queryStringMap)
+      
+//      // Fill parameters values associated to xquery if any
+//      for (row: Row <- parameterSheet) {
+//        for (cell: Cell <- row) {
+//
+//          val cellRef: CellReference = new CellReference(row.getRowNum(), cell.getColumnIndex())
+//          // Rows 0 and 1 contain XQuery request name and insert result cell position.  
+//          if (cellRef.getRow() > 1 && cellRef.getCol() == 0) {
+//            // Get the parameter name specified in the spread sheet
+//            val parameterName = cell.getCellType() match {
+//              case Cell.CELL_TYPE_STRING => cell.getRichStringCellValue().getString()
+//              case _ =>
+//                Logger.error(s"Parameter name should be of string type! found: ${cell.getCellType}") // TODO: throw exception
+//                s"ERROR - Parameter name should be of string type! found: ${cell.getCellType}"
+//            }
+//            Logger.debug(s"Found parameter named: ${parameterName}")
+//
+//            // From the query string try to find the parameter value corresponding to the parameter name specified in the spread sheet
+//            val parameterValue = request.queryString.get(parameterName) match {
+//              case Some(value) => value(0)
+//              case None =>
+//                Logger.error(s"No value found in query string for parameter ${parameterName}") // TODO: throw exception
+//                s"ERROR - No value found for parameter ${parameterName}"
+//            }
+//
+//            // Check the parameter value cell type and convert the matching 
+//            // query parameter value to the given type to preserve parameter 
+//            // value cell type while updating its content.
+//            val paramValueCell = row.getCell(1)
+//            paramValueCell.getCellType() match {
+//              case Cell.CELL_TYPE_STRING => paramValueCell.setCellValue(parameterValue)
+//              case Cell.CELL_TYPE_NUMERIC =>
+//                Logger.warn("Request parameter used to set numeric cell. Untested operation, date and numeric conversion need extended support.")
+//                paramValueCell.setCellValue(parameterValue)
+//              // TODO: date and numeric values need a defined format while passed as request parameter and a corresponding formatter
+//              //                val format = new java.text.SimpleDateFormat("dd-MM-yyyy")
+//              //                if (DateUtil.isCellDateFormatted(paramValueCell)) paramValueCell.   paramValueCell.setCellValue(Date.parse(parameterValue)) else paramValueCell.getNumericCellValue()
+//              // TODO: date and numeric values need a defined format while passed as request parameter and a corresponding formatter
+//              case Cell.CELL_TYPE_BOOLEAN =>
+//                Logger.warn("Request parameter used to set boolean cell. Untested operation.")
+//                paramValueCell.setCellValue(parameterValue)
+//              case Cell.CELL_TYPE_FORMULA =>
+//                Logger.error("Request parameter used to set formula cell operation currently not supported.")
+//              // TODO: throw exception. Not supported operation ...
+//              case _ => "Unknown Cell type"
+//            }
+//
+//          }
+//
+//          //          val cellContent = cell.getCellType() match {
+//          //            case Cell.CELL_TYPE_STRING => cell.getRichStringCellValue().getString()
+//          //            case Cell.CELL_TYPE_NUMERIC => if (DateUtil.isCellDateFormatted(cell)) cell.getDateCellValue() else cell.getNumericCellValue()
+//          //            case Cell.CELL_TYPE_BOOLEAN => cell.getBooleanCellValue()
+//          //            case Cell.CELL_TYPE_FORMULA => cell.getCellFormula()
+//          //            case _ => "Unknown Cell type"
+//          //          }
+//          //
+//          //          Logger.debug(s"${cellRef.formatAsString()} content: ${cellContent} ")
+//
+//        }
+//      }
 
       val out: ByteArrayOutputStream = new ByteArrayOutputStream()
       wb.write(out)
