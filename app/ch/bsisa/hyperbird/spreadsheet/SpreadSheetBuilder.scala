@@ -14,6 +14,17 @@ import org.apache.poi.ss.util.CellReference
 
 import org.jsoup.Jsoup
 
+/**
+ * Encapsulate logic and external libraries dependencies required to produce XLS spreadsheet reports.
+ * General supported workflow:
+ * 
+ * - Take a Workbook containing a dataSheet and a parameterSheet
+ * - Extract parameterSheet XQuery name and parameters 
+ * - Obtain XQuery result in HTML format expected to contain a single HTML table
+ * - Convert the HTML table to Spreadsheet rows and cells and merge them to the dataSheet 
+ * 
+ * @author Patrick Refondini
+ */
 object SpreadSheetBuilder {
 
   val Col0 = 0
