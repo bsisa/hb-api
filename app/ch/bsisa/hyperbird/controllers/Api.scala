@@ -107,21 +107,21 @@ object Api extends Controller with securesocial.core.SecureSocial {
   /**
    * Produce XLS spreadsheet report from provided XLS template and associated XQuery.
    */
-  def getFile(fileName: String) = SecuredAction(ajaxCall = true).async { request =>
+  def getSpreadsheetReport(fileName: String) = SecuredAction(ajaxCall = true).async { request =>
 
     val rawQueryString = if (request.rawQueryString != null && request.rawQueryString.nonEmpty) Option(request.rawQueryString) else None
-    
+
     XQueryWSHelper.getFile(fileName).map { response =>
 
       Logger.debug(s"Obtained spreadsheet template with getFile ${fileName} content type: ${response.ahcResponse.getContentType} and rawQueryString: ${rawQueryString}")
-      
+
       // Convert workbook from inputstream to Workbook object =========================================
       val wb: Workbook = SpreadSheetBuilder.getWorkbook(response.ahcResponse.getResponseBodyAsStream)
 
       // Fill workbook parameter sheet with parameters values associated to xquery if any =============
       val queryStringMap = request.queryString
       Logger.debug(s"queryStringMap=${queryStringMap}")
-      SpreadSheetBuilder.updateParameterWorkBook(wb, queryStringMap)      
+      SpreadSheetBuilder.updateParameterWorkBook(wb, queryStringMap)
 
       // Get the result of the query as an HTML table =================================================
       val xqueryFileName = SpreadSheetBuilder.getXQueryFileName(wb)
@@ -135,10 +135,9 @@ object Api extends Controller with securesocial.core.SecureSocial {
       // Non blocking solution seem not possible given 
       // reportDynamicContentFuture depends on xqueryFileName
       import scala.concurrent.duration._
-      val reportDynamicContent = Await.result(reportDynamicContentFuture,10 minutes)       
+      val reportDynamicContent = Await.result(reportDynamicContentFuture, 10 minutes)
       Logger.debug("reportDynamicContent: " + reportDynamicContent)
 
-      
       // Merge HTML table query result with workbook datasheet =========================================
       SpreadSheetBuilder.mergeHtmlTable(wb, reportDynamicContent)
 

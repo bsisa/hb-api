@@ -31,8 +31,8 @@ GET      /api/melfin/catalogue/:className     ch.bsisa.hyperbird.controllers.Api
 # If the xquery result format is MELFIN then specifying ?format=json will convert the original XML format to JSON.
 GET      /api/melfin/xquery/:xqueryFileName     ch.bsisa.hyperbird.controllers.Api.runXQueryFile(xqueryFileName, format ?= "original")
 
-# Returns the file corresponding the file name in binary format or XML if in XML format 
-GET      /api/melfin/rawdoc/:fileName     ch.bsisa.hyperbird.controllers.Api.getFile(fileName)
+# Returns the spreadsheet file corresponding to the file name in binary format. 
+GET      /api/melfin/spreadsheet/:fileName     ch.bsisa.hyperbird.controllers.Api.getSpreadsheetReport(fileName)
 
 # TODO: define expected result format before re-enabling this route
 # GET      /api/melfin/                         ch.bsisa.hyperbird.controllers.Api.collections
