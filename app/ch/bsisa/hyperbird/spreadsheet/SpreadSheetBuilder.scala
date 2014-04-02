@@ -17,22 +17,25 @@ import org.jsoup.Jsoup
 /**
  * Encapsulate logic and external libraries dependencies required to produce XLS spreadsheet reports.
  * General supported workflow:
- * 
+ *
  * - Take a Workbook containing a dataSheet and a parameterSheet
- * - Extract parameterSheet XQuery name and parameters 
+ * - Extract parameterSheet XQuery name and parameters
  * - Obtain XQuery result in HTML format expected to contain a single HTML table
- * - Convert the HTML table to Spreadsheet rows and cells and merge them to the dataSheet 
- * 
+ * - Convert the HTML table to Spreadsheet rows and cells and merge them to the dataSheet
+ *
  * @author Patrick Refondini
  */
 object SpreadSheetBuilder {
 
-  val Col0 = 0
-  val Col1 = 1
-  val Col2 = 2
+  // ==================================================================
+  //                            Constants
+  // ==================================================================
+  
+  val Col0 = 0; val Col1 = 1; val Col2 = 2
+  val Row0 = 0; val Row1 = 1
 
-  val Row0 = 0
-  val Row1 = 1
+  val DateCssClassName = "date"
+  val NumericCssClassName = "num"
 
   val ParameterSheetName = "Parametres"
 
@@ -41,6 +44,10 @@ object SpreadSheetBuilder {
 
   val XQueryFileNameCellRef = new CellReference(ParameterSheetName, Row0, Col1, AbsRow, AbsCol)
   val ResultInsertStartCellRef = new CellReference(ParameterSheetName, Row1, Col1, AbsRow, AbsCol)
+  
+
+  // Hyperbird default date format formatter 
+  val sdf = new java.text.SimpleDateFormat("yyyy-MM-dd")
 
   /**
    * Creates Workbook from provided input stream.
@@ -158,22 +165,46 @@ object SpreadSheetBuilder {
     // Parse report HTML table result as org.jsoup.nodes.Document
     val htmlReportDoc = Jsoup.parse(htmlTable);
     // We expect a single table per document
-    val table = htmlReportDoc.select("table").get(0)
+    val tables = htmlReportDoc.select("table")
+    // Check htmlTable structure
+    if (tables.size() == 0) throw HtmlTableNotFoundException(s"HTML query result is expected to contain a single table but none was found query ${getXQueryFileName(wb)}")
+    else if (tables.size() > 1) throw MoreThanOneHtmlTableFoundException(s"HTML query result is expected to contain a single table but ${tables.size()} were found for query ${getXQueryFileName(wb)}")
+
+    val table = tables.get(0)
 
     var rowIdx: Integer = resultDataStartCellRef.getRow()
 
     for (row <- table.select("tr")) {
+      
       var cellIdx: Integer = resultDataStartCellRef.getCol()
       val dataRow = dataSheet.createRow(rowIdx);
+      
       for (cell <- row.select("td")) {
-        dataRow.createCell(cellIdx).setCellValue(cell.text());
+
+        val currSheetCell = dataRow.createCell(cellIdx)
+
+        // Preserve example row cells style
+        currSheetCell.setCellStyle(templateRow.getCell(cellIdx).getCellStyle())
+
+        if (!cell.text.isEmpty()) {
+          // Cell type is defined after td class names.
+          // Currently supported names for type specific {"date","num"} 
+          cell.className() match {
+            case DateCssClassName => currSheetCell.setCellValue(sdf.parse(cell.text))
+            case NumericCssClassName => currSheetCell.setCellValue(java.lang.Double.parseDouble(cell.text))
+            case _ => currSheetCell.setCellValue(cell.text)
+          }
+        } else {
+          currSheetCell.setCellValue(cell.text)
+        }
+
         cellIdx = cellIdx + 1
       }
       rowIdx = rowIdx + 1
     }
 
-    // Resize columns to fit their content width
-    val firstDataRow = dataSheet.getRow(resultDataStartCellRef.getRow())
+    // Resize columns to fit width to their content 
+    val firstDataRow = dataSheet.getRow(resultDataStartCellRef.getRow() - 1) // -1 to use data header
     val colDataRange = Range(resultDataStartCellRef.getCol(): Int, firstDataRow.getLastCellNum(): Int, step = 1)
     for (i <- colDataRange) {
       dataSheet.autoSizeColumn(i);
@@ -182,3 +213,13 @@ object SpreadSheetBuilder {
   }
 
 }
+
+/**
+ *  Exception thrown when the expected HTML table is not found within the HTML query result. 
+ */
+case class HtmlTableNotFoundException(message: String = null, cause: Throwable = null) extends Exception(message, cause)
+/**
+ *  Exception thrown when the HTML result contains more than a single expected HTML table. 
+ */
+case class MoreThanOneHtmlTableFoundException(message: String = null, cause: Throwable = null) extends Exception(message, cause)
+
