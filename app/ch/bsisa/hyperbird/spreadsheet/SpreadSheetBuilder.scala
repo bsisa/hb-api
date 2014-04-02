@@ -1,18 +1,13 @@
 package ch.bsisa.hyperbird.spreadsheet
 
 import scala.collection.JavaConversions._
-
 import java.io.InputStream
-//import java.io.OutputStream
-//import java.io.ByteArrayOutputStream
-//import java.io.ByteArrayInputStream
-
 import play.api.Logger
-
+import securesocial.core.Identity
 import org.apache.poi.ss.usermodel._
 import org.apache.poi.ss.util.CellReference
-
 import org.jsoup.Jsoup
+import java.util.Date
 
 /**
  * Encapsulate logic and external libraries dependencies required to produce XLS spreadsheet reports.
@@ -30,7 +25,7 @@ object SpreadSheetBuilder {
   // ==================================================================
   //                            Constants
   // ==================================================================
-  
+
   val Col0 = 0; val Col1 = 1; val Col2 = 2
   val Row0 = 0; val Row1 = 1
 
@@ -44,7 +39,6 @@ object SpreadSheetBuilder {
 
   val XQueryFileNameCellRef = new CellReference(ParameterSheetName, Row0, Col1, AbsRow, AbsCol)
   val ResultInsertStartCellRef = new CellReference(ParameterSheetName, Row1, Col1, AbsRow, AbsCol)
-  
 
   // Hyperbird default date format formatter 
   val sdf = new java.text.SimpleDateFormat("yyyy-MM-dd")
@@ -62,6 +56,51 @@ object SpreadSheetBuilder {
       .getRow(XQueryFileNameCellRef.getRow())
       .getCell(XQueryFileNameCellRef.getCol())
       .getRichStringCellValue().getString()
+  }
+
+  /**
+   * Adds user info to Workbook sheets footers.
+   */
+  def insertWorkBookUserDetails(wb: Workbook, userDetails: Identity): Unit = {
+
+    // dateTimeFormat information could be obtained within userDetails or 
+    // obtained thanks to it (user profile, language, locale...)
+    val dateTimeFormat = "dd.MM.yyyy HH:mm"
+    val dtSdf = new java.text.SimpleDateFormat(dateTimeFormat)
+
+    for (i <- 0 until wb.getNumberOfSheets()) {
+      val sheet = wb.getSheetAt(i)
+      val footer = sheet.getFooter
+      val preservedFooterCenterContent = if (footer.getCenter.trim.size > 0) " - " + footer.getCenter else ""
+      footer.setCenter(userDetails.identityId.userId + " - " + dtSdf.format(new Date()) + preservedFooterCenterContent)
+    }
+  }
+
+  /**
+   * Inserts page x / n at footer right position of all Workbook
+   * sheet appending to existing content if any (useful for
+   * templates update). x: current page, n: total number of pages.
+   *
+   * Note: Could not find common org.apache.poi.ss.usermodel way
+   * to set page numbers! Indeed common interface:
+   * <code>org.apache.poi.ss.usermodel.HeaderFooter</code>
+   * does not provide page() and numPages() in POI 3.10-FINAL
+   */
+  def insertWorkBookPageNumbers(wb: Workbook): Unit = {
+
+    for (i <- 0 until wb.getNumberOfSheets()) {
+      val sheet = wb.getSheetAt(i)
+      val footer = sheet.getFooter
+
+      import org.apache.poi.xssf.usermodel.XSSFWorkbook
+      import org.apache.poi.hssf.usermodel.HeaderFooter
+
+      if (wb.isInstanceOf[XSSFWorkbook]) {
+        footer.setRight(footer.getRight + " page &P / &N")
+      } else {
+        footer.setRight(footer.getRight + " page  " + HeaderFooter.page + " / " + HeaderFooter.numPages)
+      }
+    }
   }
 
   /**
@@ -173,12 +212,13 @@ object SpreadSheetBuilder {
     val table = tables.get(0)
 
     var rowIdx: Integer = resultDataStartCellRef.getRow()
-
+    var maxCellIdx: Integer = 0
+    
     for (row <- table.select("tr")) {
-      
+
       var cellIdx: Integer = resultDataStartCellRef.getCol()
       val dataRow = dataSheet.createRow(rowIdx);
-      
+
       for (cell <- row.select("td")) {
 
         val currSheetCell = dataRow.createCell(cellIdx)
@@ -200,9 +240,15 @@ object SpreadSheetBuilder {
 
         cellIdx = cellIdx + 1
       }
+      if ( cellIdx > maxCellIdx) maxCellIdx = cellIdx
       rowIdx = rowIdx + 1
     }
-
+    
+    val maxColIdx = maxCellIdx
+    val maxRowIdx = rowIdx
+    
+    definePrintRange(wb, resultDataStartCellRef, maxColIdx, maxRowIdx)
+    
     // Resize columns to fit width to their content 
     val firstDataRow = dataSheet.getRow(resultDataStartCellRef.getRow() - 1) // -1 to use data header
     val colDataRange = Range(resultDataStartCellRef.getCol(): Int, firstDataRow.getLastCellNum(): Int, step = 1)
@@ -212,14 +258,55 @@ object SpreadSheetBuilder {
 
   }
 
+  /**
+   * Deal with print range for dataSheet adapting from already existing print range.
+   */
+  def definePrintRange(wb: Workbook, resultDataStartCellRef : CellReference, maxColIdx : Int, maxRowIdx : Int) : Unit = {
+    
+    val printArea = wb.getPrintArea(0)
+    val printRange = printArea.split("!")(1)
+    Logger.debug(s"printArea: ${printArea}, printRange: ${printRange}")
+    
+    val printRangeStart = printRange.split(":")(0)
+    val printRangeStartCellRef = new CellReference(printRangeStart)
+
+    // Compute resultDataEndCellAbsRef column position
+    val endCol =  if ( printRangeStartCellRef.getCol() > resultDataStartCellRef.getCol()) {
+      maxColIdx - (printRangeStartCellRef.getCol() - resultDataStartCellRef.getCol())
+    } else {
+      maxColIdx + (resultDataStartCellRef.getCol() - printRangeStartCellRef.getCol())
+    }
+    // Define new print range end position
+    val resultDataEndCellAbsRef = new CellReference(maxRowIdx-1, endCol,AbsRow,AbsCol)
+    val newPrintRange = printRangeStart + ":" + resultDataEndCellAbsRef.formatAsString()
+    wb.setPrintArea(0,newPrintRange)    
+  }
+  
+  /**
+   * HSSF and XSSF compatible formulas evaluation.
+   */
+  def evaluateAllFormulaCells(wb: Workbook): Unit = {
+    val evaluator = wb.getCreationHelper().createFormulaEvaluator()
+    for (i <- 0 until wb.getNumberOfSheets()) {
+      val sheet = wb.getSheetAt(i);
+      for (row <- sheet) {
+        for (cell <- row) {
+          if (cell.getCellType() == Cell.CELL_TYPE_FORMULA) {
+            evaluator.evaluateFormulaCell(cell);
+          }
+        }
+      }
+    }
+  }
+
 }
 
 /**
- *  Exception thrown when the expected HTML table is not found within the HTML query result. 
+ *  Exception thrown when the expected HTML table is not found within the HTML query result.
  */
 case class HtmlTableNotFoundException(message: String = null, cause: Throwable = null) extends Exception(message, cause)
 /**
- *  Exception thrown when the HTML result contains more than a single expected HTML table. 
+ *  Exception thrown when the HTML result contains more than a single expected HTML table.
  */
 case class MoreThanOneHtmlTableFoundException(message: String = null, cause: Throwable = null) extends Exception(message, cause)
 
