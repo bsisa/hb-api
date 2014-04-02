@@ -120,7 +120,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
       // Fill workbook parameter sheet with parameters values associated to xquery if any =============
       val queryStringMap = request.queryString
-      Logger.debug(s"queryStringMap=${queryStringMap}")
+
       SpreadSheetBuilder.updateParameterWorkBook(wb, queryStringMap)
 
       // Get the result of the query as an HTML table =================================================
@@ -136,7 +136,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
       // reportDynamicContentFuture depends on xqueryFileName
       import scala.concurrent.duration._
       val reportDynamicContent = Await.result(reportDynamicContentFuture, 10 minutes)
-      Logger.debug("reportDynamicContent: " + reportDynamicContent)
+      //Logger.debug("reportDynamicContent: " + reportDynamicContent)
 
       // Merge HTML table query result with workbook datasheet =========================================
       SpreadSheetBuilder.mergeHtmlTable(wb, reportDynamicContent)
@@ -146,8 +146,6 @@ object Api extends Controller with securesocial.core.SecureSocial {
       wb.write(out)
       out.close()
       val modifiedStream = new ByteArrayInputStream(out.toByteArray)
-
-      Logger.debug(s"Modified ${fileName} according to query = ${xqueryFileName} content sent...")
 
       // Sent the response stream ======================================================================
       Ok.chunked(Enumerator.fromStream(modifiedStream)).as(response.ahcResponse.getContentType)
