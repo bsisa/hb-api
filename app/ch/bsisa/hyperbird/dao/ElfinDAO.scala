@@ -47,6 +47,18 @@ object ElfinDAO {
   }
 
   /**
+   * Updates XML database ELFIN representation corresponding to the provided ELFIN as scala.xml.Node
+   * <i>The database API do not provide any feedback on that operation.</i>
+   */
+  def update(elfin: scala.xml.Node)(implicit dbConfig: DbConfig) = {
+    Logger.debug(s"ElfinDAO.update elfin.ID_G/Id: ${elfin \ "@ID_G"}/${elfin \ "@Id"}")
+    val elfinXml = elfin
+    val updateStatetement =
+      s"update replace collection('${dbConfig.databaseName}/${elfin \ "@ID_G"}')//ELFIN[@Id='${elfin \ "@Id"}'] with ${elfinXml.mkString}"
+    executeStatement(updateStatetement)
+  }
+
+  /**
    * Deletes XML database ELFIN representation corresponding to the provided ELFIN object.
    * <i>The database API do not provide any feedback on that operation.</i>
    */
@@ -117,8 +129,7 @@ object ElfinDAO {
     }
     futureUpdatedElfin
   }
-  
-  
+
   /**
    * Find XML database ELFIN of CLASSE USER for provided user name.
    */
@@ -126,17 +137,16 @@ object ElfinDAO {
     val userClasseName = "USER"
     //val query = s"""//ELFIN%5B@CLASSE=%27${userClasseName}%27 and IDENTIFIANT/NOM=%27${userName}%27%5D"""
     val query = s"""%2F%2FELFIN%5B%40CLASSE%3D%27${userClasseName}%27+and+IDENTIFIANT%2FNOM%3D%27${userName}%27%5D"""
-    
+
     XQueryWSHelper.find(WSQueries.filteredCollectionQuery(collectionId = collectionsConfig.configurationCollectionId, xpath = query))
-  }  
-  
+  }
 
   /**
    * Find XML database ELFIN of CLASSE USER for provided email.
-   */  
-  def findUserByEmail(email : String)(implicit dbConfig: DbConfig, collectionsConfig: CollectionsConfig): Future[ELFIN] = {
+   */
+  def findUserByEmail(email: String)(implicit dbConfig: DbConfig, collectionsConfig: CollectionsConfig): Future[ELFIN] = {
     XQueryWSHelper.findElfinUserPerEmailQuery(email)
-  } 
+  }
 
   /**
    * Helper function designed to executes XUpdate statements
