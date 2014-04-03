@@ -19,20 +19,20 @@
 # GET           /api/melfin/:collectionId/:elfinId        ch.bsisa.hyperbird.controllers.Api.getElfin(collectionId, elfinId) # format=(json|xml|pdf|xls|...)
 
 # Dynamically provides initialisation configuration information useful to hb-ui geoxml service
-GET      /conf.js                         ch.bsisa.hyperbird.controllers.Application.conf
+GET      /conf.js                             ch.bsisa.hyperbird.controllers.Application.conf
 
 # Dynamically provides initialisation configuration information useful to hb-ui 
-GET      /api/melfin/config                         ch.bsisa.hyperbird.controllers.Api.config
+GET      /api/melfin/config                   ch.bsisa.hyperbird.controllers.Api.config
 
 # Elfin - Obtain new elfin from catalogue. Not stored in the database until Api.createElfin applied to it. 
 GET      /api/melfin/catalogue/:className     ch.bsisa.hyperbird.controllers.Api.getNewElfin(className)
 
 # Returns the result of the named xquery file execution in its original format. 
 # If the xquery result format is MELFIN then specifying ?format=json will convert the original XML format to JSON.
-GET      /api/melfin/xquery/:xqueryFileName     ch.bsisa.hyperbird.controllers.Api.runXQueryFile(xqueryFileName, format ?= "original")
+GET      /api/melfin/xquery/:xqueryFileName   ch.bsisa.hyperbird.controllers.Api.runXQueryFile(xqueryFileName, format ?= "original")
 
 # Returns the spreadsheet file corresponding to the file name in binary format. 
-GET      /api/melfin/spreadsheet/:fileName     ch.bsisa.hyperbird.controllers.Api.getSpreadsheetReport(fileName)
+GET      /api/melfin/spreadsheet/:fileName    ch.bsisa.hyperbird.controllers.Api.getSpreadsheetReport(fileName)
 
 # TODO: define expected result format before re-enabling this route
 # GET      /api/melfin/                         ch.bsisa.hyperbird.controllers.Api.collections
@@ -49,6 +49,8 @@ POST     /api/melfin/:collectionId/:elfinId   ch.bsisa.hyperbird.controllers.Api
 PUT      /api/melfin/:collectionId/:elfinId   ch.bsisa.hyperbird.controllers.Api.updateElfin(collectionId, elfinId)
 DELETE   /api/melfin/:collectionId/:elfinId   ch.bsisa.hyperbird.controllers.Api.deleteElfin(collectionId, elfinId)
 
+# Trigger data migration
+GET      /hb4tohb5                            ch.bsisa.hyperbird.controllers.DbMigration.migrate()
 
 #GET           /api/melfin/:collectionId/:elfinId/:filename        ch.bsisa.hyperbird.controllers.Api.getElfinAttachment(collectionId, elfinId)
 #POST           /api/melfin/:collectionId/:elfinId/:filename        ch.bsisa.hyperbird.controllers.Api.createElfinAttachment(collectionId, elfinId)
