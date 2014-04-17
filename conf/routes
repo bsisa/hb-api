@@ -4,6 +4,7 @@
 
 # Home page
 #GET      /                                      ch.bsisa.hyperbird.controllers.Application.index
+GET      /                                    ch.bsisa.hyperbird.controllers.Application.angularJsIndex(any = "none")
 # Map static resources from the /public folder to the /assets URL path
 #GET      /assets/*file                          controllers.Assets.at(path="/public", file)
 
@@ -41,7 +42,7 @@ GET      /api/melfin/spreadsheet/:fileName    ch.bsisa.hyperbird.controllers.Api
 GET      /api/melfin/:collectionId            ch.bsisa.hyperbird.controllers.Api.filteredCollection(collectionId, xpath ?= "//ELFIN", format ?= "json")
 
 # Elfin - Obtain new elfin from catalogue. Not stored in the database until Api.createElfin applied to it. 
-GET      /api/melfin/catalogue/:className     ch.bsisa.hyperbird.controllers.Api.getNewElfin(className)
+#GET      /api/melfin/catalogue/:className     ch.bsisa.hyperbird.controllers.Api.getNewElfin(className)
 
 # Elfin CRUD operations
 GET      /api/melfin/:collectionId/:elfinId   ch.bsisa.hyperbird.controllers.Api.getElfin(collectionId, elfinId) 
@@ -82,10 +83,10 @@ POST     /authenticate/:provider              securesocial.controllers.ProviderC
 GET      /not-authorized                      securesocial.controllers.ProviderController.notAuthorized
 
 # Static resource from hb-ui project 
-GET      /*file                               controllers.Assets.at(path="/public", file)
-# Home page redirect
-GET      /                                    ch.bsisa.hyperbird.controllers.Application.angularJsIndex
-
+GET      /assets/*file                        controllers.Assets.at(path="/public", file)
+# Deep URL Single page AngularJS application redirect
+# Required for HTML5 mode support for AngularJS
+GET      /*any                                ch.bsisa.hyperbird.controllers.Application.angularJsIndex(any)
 
 
 
