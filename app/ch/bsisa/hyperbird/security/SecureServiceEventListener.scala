@@ -22,6 +22,7 @@ class SecureServiceEventListener(app: Application) extends EventListener {
     }
 
     Logger.info("traced %s event for user %s".format(eventName, event.user.fullName))
+    Logger.debug(s"request.path = ${request.path} , request.rawQueryString = ${request.rawQueryString}")
     // Not changing the session so just return None
     // if you wanted to change the session then you'd do something like
     // Some(session + ("your_key" -> "your_value"))
