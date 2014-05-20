@@ -1,6 +1,7 @@
 conf/application.conf
 conf/hyperbird_dev.conf
-conf/securesocial.conf
+conf/securesocial_dev.conf
+conf/securesocial_prod.conf
 logs
 project/project
 project/target
