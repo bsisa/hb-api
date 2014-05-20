@@ -1,4 +1,5 @@
-conf/hyperbird.conf
+conf/application.conf
+conf/hyperbird_dev.conf
 conf/securesocial.conf
 logs
 project/project
@@ -19,3 +20,4 @@ dist
 /.cache
 /.target
 bin
+public
