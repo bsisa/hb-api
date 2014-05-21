@@ -16,6 +16,7 @@ import controllers.Assets
 object Application extends Controller {
 
   def getApiBaseUrl()(implicit apiConfig: ApiConfig) =  apiConfig.baseUrl  
+  def getClientDebugEnabled()(implicit apiConfig: ApiConfig) = apiConfig.clientDebugEnabled
   
   /**
    * Added for HTML5 history API support, aka AngularJs html5mode.
@@ -28,8 +29,12 @@ object Application extends Controller {
     Ok(views.html.index("HyperBird 5.0", ""))
   }
   
-  def conf = Action {
-    Ok(views.html.conf(getApiBaseUrl)).as("application/javascript; charset=utf-8")
+  /**
+   * Exposes server side configurations as JavaScript variables for server side single 
+   * location configuration.
+   */
+  def conf = Action {    
+    Ok(views.html.conf(getApiBaseUrl, getClientDebugEnabled)).as("application/javascript; charset=utf-8")
   }
   
 }

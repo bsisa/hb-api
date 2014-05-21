@@ -34,6 +34,7 @@ hb {
 	api {
 		# REST base URL. Use for instance by Restangular.   
 		"baseUrl": "http://localhost:9000/api/melfin/"
+		"clientDebugEnabled": false
 	}	
 }
 
