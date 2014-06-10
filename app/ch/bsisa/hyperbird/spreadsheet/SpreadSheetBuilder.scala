@@ -224,7 +224,8 @@ object SpreadSheetBuilder {
         val currSheetCell = dataRow.createCell(cellIdx)
 
         // Preserve example row cells style
-        currSheetCell.setCellStyle(templateRow.getCell(cellIdx).getCellStyle())
+        val cellStyle = templateRow.getCell(cellIdx).getCellStyle()
+        currSheetCell.setCellStyle(cellStyle)
 
         if (!cell.text.isEmpty()) {
           // Cell type is defined after td class names.
@@ -249,12 +250,16 @@ object SpreadSheetBuilder {
     
     definePrintRange(wb, resultDataStartCellRef, maxColIdx, maxRowIdx)
     
-    // Resize columns to fit width to their content 
+    // Disabled autoSizeColumn upon user request. Full fixed layout control on 
+    // template is prefered to unpredictable dynamic resize.
+    // Note: Text wrap can be defined on template example data row and will be preserved for dynamic data.
+    /*
     val firstDataRow = dataSheet.getRow(resultDataStartCellRef.getRow() - 1) // -1 to use data header
     val colDataRange = Range(resultDataStartCellRef.getCol(): Int, firstDataRow.getLastCellNum(): Int, step = 1)
     for (i <- colDataRange) {
       dataSheet.autoSizeColumn(i);
     }
+    */    
 
   }
 
