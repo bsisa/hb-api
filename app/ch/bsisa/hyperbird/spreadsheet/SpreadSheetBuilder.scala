@@ -223,10 +223,6 @@ object SpreadSheetBuilder {
 
         val currSheetCell = dataRow.createCell(cellIdx)
 
-        // Preserve example row cells style
-        val cellStyle = templateRow.getCell(cellIdx).getCellStyle()
-        currSheetCell.setCellStyle(cellStyle)
-
         if (!cell.text.isEmpty()) {
           // Cell type is defined after td class names.
           // Currently supported names for type specific {"date","num"} 
@@ -239,6 +235,10 @@ object SpreadSheetBuilder {
           currSheetCell.setCellValue(cell.text)
         }
 
+        // Preserve example row cells style
+        val cellStyle = templateRow.getCell(cellIdx).getCellStyle()
+        currSheetCell.setCellStyle(cellStyle)        
+        
         cellIdx = cellIdx + 1
       }
       if ( cellIdx > maxCellIdx) maxCellIdx = cellIdx
