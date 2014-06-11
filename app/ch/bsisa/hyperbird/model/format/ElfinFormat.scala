@@ -29,15 +29,26 @@ object ElfinFormat {
 
   def fromXml(elfinXmlElem: scala.xml.Elem): ELFIN = scalaxb.fromXML[ELFIN](elfinXmlElem)
 
-  def fromXml(elfinXmlNode: scala.xml.Node): ELFIN = scalaxb.fromXML[ELFIN](elfinXmlNode)
+  def fromXml(elfinXmlNode: scala.xml.Node): ELFIN = {
+    try {
+    	scalaxb.fromXML[ELFIN](elfinXmlNode)
+    } catch { // Encapsulate all exception within our own adding specific info regarding failing ELFIN conversion.
+      case exception: Throwable =>
+        val elfinId = (elfinXmlNode \ "@Id").text
+        val elfinID_G = (elfinXmlNode \ "@ID_G").text
+        Logger.error(s"${exception} with elfin: ${elfinID_G} / ${elfinId} ")
+        throw ElfinFormatException(s"ELFIN with ID_G: ${elfinID_G} and Id: ${elfinId} failed to serialise to JSON", exception, elfinId, elfinID_G)
+    }
+
+  }
 
   def toJson(elfin: ELFIN): JsValue = {
     try {
       Json.toJson(elfin)
     } catch { // Encapsulate all exception within our own adding specific info regarding failing ELFIN conversion.
       case exception: Throwable =>
-        Logger.debug(s"${exception} with elfin: ${elfin.Id}")
-        throw ElfinFormatException(s"ELFIN with ID_G: ${elfin.ID_G} and Id: ${elfin.Id} failed to serialise to JSON", exception)
+        Logger.error(s"${exception} with elfin: ${elfinID_G} / ${elfinId} ")
+        throw ElfinFormatException(s"ELFIN with ID_G: ${elfin.ID_G} and Id: ${elfin.Id} failed to serialise to JSON", exception, elfin.Id, elfin.ID_G)
     }
   }
 
@@ -96,8 +107,10 @@ object ElfinFormat {
     elfinsJsonToMelfinJson(elfinsJson)
   }
 
+//  case class ElfinException(message: String = null, cause: Throwable = null, elfinId: String = "", elfinID_G : String = "") extends Exception(message, cause) 
+  
   /**
    * ElfinFormat exception class
    */
-  case class ElfinFormatException(message: String = null, cause: Throwable = null) extends Exception(message, cause)
+  case class ElfinFormatException(message: String = null, cause: Throwable = null, elfinId: String = "", elfinID_G : String = "") extends Exception(message, cause)
 }

@@ -12,16 +12,12 @@ import ch.bsisa.hyperbird.model.MELFIN
 import ch.bsisa.hyperbird.model.format.ElfinFormat
 import ch.bsisa.hyperbird.util.ElfinIdGenerator
 import ch.bsisa.hyperbird.util.format.JsonXmlConvertException
-
 import com.ning.http.client.Realm.AuthScheme
-
 import java.util.Calendar
 import java.util.GregorianCalendar
 import java.util.Date
 import java.text.SimpleDateFormat
-
 import net.liftweb.json.DateFormat
-
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
@@ -29,8 +25,8 @@ import play.api.libs.ws.Response
 import play.api.libs.ws.WS
 import play.api.mvc._
 import play.api.mvc.Results._
-
 import scala.concurrent.Future
+import ch.bsisa.hyperbird.controllers.Api
 
 
 
@@ -46,22 +42,17 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
    */
   override def query(query: String): Future[SimpleResult] = {
 
-    val elfinsFuture = queryElfins(query)
-
     // Keep asynchronous calls asynchronous to allow Play free threads
-    val simpleResFuture: Future[SimpleResult] = elfinsFuture.map { elfinsResp =>
-      try {
-        val elfinsJsArray = ElfinFormat.elfinsToJsonArray(elfinsResp)
-        Ok(elfinsJsArray)
-      } catch {
-        case e: Throwable =>
-          val jsonExceptionMsg = Json.obj(
-            "ERROR" -> e.toString(),
-            "DESCRIPTION" -> e.getMessage())
-          // Returns HTTP error code with valid JSON response containing description of exception 
-          // TODO: check this with API users.
-          InternalServerError(jsonExceptionMsg).as(JSON)
-      }
+    val simpleResFuture: Future[SimpleResult] = queryElfins(query).map { elfinsResp =>
+      val elfinsJsArray = ElfinFormat.elfinsToJsonArray(elfinsResp)
+      Ok(elfinsJsArray)
+    }.recover {
+      case e: ElfinFormatException => Api.manageElfinFormatException(e, Some("ELFIN format conversion failed."))
+      case e: Throwable =>
+        val jsonExceptionMsg = Json.obj(
+          "ERROR" -> e.toString(),
+          "DESCRIPTION" -> e.getMessage())
+        InternalServerError(jsonExceptionMsg).as(JSON)
     }
     simpleResFuture
   }
@@ -79,8 +70,10 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
       Logger.debug(s"Result of type ${resp.ahcResponse.getContentType} received")
       // Parse XML (Need to wrap the list of XML elements received to obtain valid XML.)
       val melfinElem = scala.xml.XML.loadString("<MELFIN>" + resp.body.mkString + "</MELFIN>")
+      Logger.debug("About to unwraps ELFINS from the MELFIN element to return a Seq[ELFIN]")
       // elfinsFromXml unwraps ELFINS from the MELFIN element to return a Seq[ELFIN]
       val elfins = ElfinFormat.elfinsFromXml(melfinElem)
+      Logger.debug(s"ELFINS successfully unwrapped from the MELFIN element and returned a Seq[ELFIN] with ${elfins.size} elements.")
       elfins
     }
     resultFuture

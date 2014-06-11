@@ -9,13 +9,11 @@ import ch.bsisa.hyperbird.dao.ElfinDAO
 import ch.bsisa.hyperbird.dao.ResultNotFoundException
 import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.model.format.ElfinFormat
+import ch.bsisa.hyperbird.model.format.ElfinFormat.ElfinFormatException
 import ch.bsisa.hyperbird.spreadsheet.SpreadSheetBuilder
 import ch.bsisa.hyperbird.util.ElfinUtil
-
 import org.apache.poi.ss.usermodel._
-
 import securesocial.core.java.SecureSocial.SecuredAction
-
 import play.api._
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._
@@ -24,16 +22,15 @@ import play.api.libs.json.Json
 import play.api.libs.ws.Response
 import play.api.libs.ws.WS
 import play.api.mvc._
-
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.xml.XML
-
 import java.net.ConnectException
 import java.io.InputStream
 import java.io.OutputStream
 import java.io.ByteArrayOutputStream
 import java.io.ByteArrayInputStream
+
 
 
 /**
@@ -314,11 +311,32 @@ object Api extends Controller with securesocial.core.SecureSocial {
   }
 
   /**
-   * Encapsulate `manageConnectException` in a asynchronous call for use in Action.async context.
+   * Encapsulate `manageConnectException` in an asynchronous call for use in Action.async context.
    * @see manageException
    */
   def manageFutureConnectException(exception: ConnectException, errorMsg: Option[String] = None): Future[SimpleResult] =
     scala.concurrent.Future { manageConnectException(exception, errorMsg) }
+  
+  
+  // 567 - Custom code for ELFIN For exception ElfinFormatException
+  def manageElfinFormatException(exception: ElfinFormatException, errorMsg: Option[String] = None): SimpleResult = {
+    Logger.warn("Api exception: " + exception.toString + " - " + errorMsg.getOrElse(""))
+    val jsonExceptionMsg = Json.obj(
+      "ERROR" -> "elfin.format.failure",
+      "DESCRIPTION" -> errorMsg.getOrElse("").toString,
+      "ELFIN_Id" ->  exception.elfinId,
+      "ELFIN_ID_G" ->  exception.elfinID_G)
+    Status(567)(jsonExceptionMsg)
+  }  
+  
+  /**
+   * Encapsulate `manageElfinFormatException` in an asynchronous call for use in Action.async context.
+   * @see manageException
+   */
+  def manageFutureElfinFormatException(exception: ElfinFormatException, errorMsg: Option[String] = None): Future[SimpleResult] =
+    scala.concurrent.Future { manageElfinFormatException(exception, errorMsg) }
+
+
 
   def manageResutlNotFoundException(exception: ResultNotFoundException, errorMsg: Option[String] = None): SimpleResult = {
     Logger.warn("Api exception: " + exception.toString + " - " + errorMsg.getOrElse(""))
