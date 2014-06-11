@@ -47,7 +47,7 @@ object ElfinFormat {
       Json.toJson(elfin)
     } catch { // Encapsulate all exception within our own adding specific info regarding failing ELFIN conversion.
       case exception: Throwable =>
-        Logger.error(s"${exception} with elfin: ${elfinID_G} / ${elfinId} ")
+        Logger.error(s"${exception} with elfin: ${elfin.ID_G} / ${elfin.Id} ")
         throw ElfinFormatException(s"ELFIN with ID_G: ${elfin.ID_G} and Id: ${elfin.Id} failed to serialise to JSON", exception, elfin.Id, elfin.ID_G)
     }
   }
