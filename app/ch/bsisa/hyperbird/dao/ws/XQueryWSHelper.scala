@@ -48,6 +48,11 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
       Ok(elfinsJsArray)
     }.recover {
       case e: ElfinFormatException => Api.manageElfinFormatException(e, Some("ELFIN format conversion failed."))
+      case e: NumberFormatException => 
+        val jsonExceptionMsg = Json.obj(
+          "ERROR" -> e.toString(),
+          "DESCRIPTION" -> "Could not format number successfully.")
+        InternalServerError(jsonExceptionMsg).as(JSON)
       case e: Throwable =>
         val jsonExceptionMsg = Json.obj(
           "ERROR" -> e.toString(),
