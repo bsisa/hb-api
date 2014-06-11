@@ -5,6 +5,7 @@
 9997:securesocial.controllers.DefaultTemplatesPlugin
 9998:ch.bsisa.hyperbird.security.ExistDbUserService
 9999:securesocial.core.providers.utils.BCryptPasswordHasher
+10100:ch.bsisa.hyperbird.security.SecureServiceEventListener
 #10000:securesocial.core.providers.TwitterProvider
 #10001:securesocial.core.providers.FacebookProvider
 #10002:securesocial.core.providers.GoogleProvider
@@ -15,3 +16,4 @@
 #10007:securesocial.core.providers.XingProvider
 #10008:securesocial.core.providers.VkProvider
 #10009:securesocial.core.providers.InstagramProvider
+
