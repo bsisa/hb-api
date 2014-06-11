@@ -37,7 +37,7 @@ object ElfinFormat {
         val elfinId = (elfinXmlNode \ "@Id").text
         val elfinID_G = (elfinXmlNode \ "@ID_G").text
         Logger.error(s"${exception} with elfin: ${elfinID_G} / ${elfinId} ")
-        throw ElfinFormatException(s"ELFIN with ID_G: ${elfinID_G} and Id: ${elfinId} failed to serialise to JSON", exception, elfinId, elfinID_G)
+        throw ElfinFormatException(s"ELFIN with ID_G: ${elfinID_G} and Id: ${elfinId} failed to deserialise from XML to ELFIN Scala object.", exception, elfinId, elfinID_G)
     }
 
   }
@@ -48,7 +48,7 @@ object ElfinFormat {
     } catch { // Encapsulate all exception within our own adding specific info regarding failing ELFIN conversion.
       case exception: Throwable =>
         Logger.error(s"${exception} with elfin: ${elfin.ID_G} / ${elfin.Id} ")
-        throw ElfinFormatException(s"ELFIN with ID_G: ${elfin.ID_G} and Id: ${elfin.Id} failed to serialise to JSON", exception, elfin.Id, elfin.ID_G)
+        throw ElfinFormatException(s"ELFIN with ID_G: ${elfin.ID_G} and Id: ${elfin.Id} failed to serialise ELFIN Scala object to JSON", exception, elfin.Id, elfin.ID_G)
     }
   }
 
@@ -82,7 +82,9 @@ object ElfinFormat {
    * of JSON elfins.
    */
   def elfinsToJsonArray(elfins: Seq[ELFIN]): JsValue = {
-    val elfinsJsArrayValue = Json.toJson(elfins)
+    val elfinsSeqJsValue = elfinsToJson(elfins)
+    val elfinsJsArrayValue =  new JsArray (elfinsSeqJsValue) 
+    //val elfinsJsArrayValue = Json.toJson(elfins)
     elfinsJsArrayValue
   }
 
