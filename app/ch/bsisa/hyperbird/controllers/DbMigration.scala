@@ -34,8 +34,8 @@ import java.io.ByteArrayInputStream
 import org.apache.poi.ss.util.CellReference
 import scala.concurrent.Await
 import org.jsoup.Jsoup
-
 import ch.bsisa.hyperbird.spreadsheet.SpreadSheetBuilder
+import ch.bsisa.hyperbird.security.WithRole
 
 
 /**
@@ -47,7 +47,7 @@ import ch.bsisa.hyperbird.spreadsheet.SpreadSheetBuilder
  */
 object DbMigration extends Controller with securesocial.core.SecureSocial {
 
-  def migrate() = SecuredAction {
+  def migrate() = SecuredAction(WithRole("admin")) {
     Logger.debug("Running db migration...")
     ch.bsisa.hyperbird.db.evolution.Version4To5.fontainesStructUpdate()
     Ok(views.html.index("HyperBird 5.0", "Check Version4To5.scala for details"))
