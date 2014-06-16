@@ -10,6 +10,8 @@ import ch.bsisa.hyperbird.dao.ResultNotFoundException
 import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.model.format.ElfinFormat
 import ch.bsisa.hyperbird.model.format.ElfinFormat.ElfinFormatException
+import ch.bsisa.hyperbird.security.HbSecureService
+import ch.bsisa.hyperbird.security.HbSecureService.PasswordHashException
 import ch.bsisa.hyperbird.spreadsheet.SpreadSheetBuilder
 import ch.bsisa.hyperbird.util.ElfinUtil
 import org.apache.poi.ss.usermodel._
@@ -79,6 +81,33 @@ object Api extends Controller with securesocial.core.SecureSocial {
     XQueryWSHelper.query(WSQueries.allHbCollectionsQuery)
   }
 
+  
+  
+  /**
+   * Provides password hashing service.
+   */
+  def getPasswordHash(plainTextPassword : String) = SecuredAction(ajaxCall = true) { request => 
+    //
+    try {
+	    val plainTextPasswordHashValue = HbSecureService.getPasswordHash(plainTextPassword) 
+	    val jsonResponse = 
+	      s"""{
+	      "hash" : "${plainTextPasswordHashValue}"
+}"""  
+	    Ok(jsonResponse).as(JSON)
+    } catch {
+      case phe: PasswordHashException => {
+        managePasswordHashException(exception = phe, errorMsg = Option(s"User: ${request.user} failed to obtain password hash."))
+      }
+      case e: Throwable => {
+        manageException(exception = Option(e), errorMsg = Option(s"User: ${request.user} failed to obtain password hash."))
+      }
+    }
+
+    
+  }
+
+  
   /**
    * Returns the result of executing the specified XQuery file by name.
    *
@@ -339,6 +368,15 @@ object Api extends Controller with securesocial.core.SecureSocial {
     scala.concurrent.Future { manageElfinFormatException(exception, errorMsg) }
 
 
+  // 568 - Custom code for PasswordHashException
+  def managePasswordHashException(exception: PasswordHashException, errorMsg: Option[String] = None): SimpleResult = {
+    Logger.error("Api security exception: " + exception.toString + " - " + errorMsg.getOrElse(""))
+    val jsonExceptionMsg = Json.obj(
+      "ERROR" -> "security.passwordHash.failure",
+      "DESCRIPTION" -> errorMsg.getOrElse("").toString)
+    Status(568)(jsonExceptionMsg)
+  }    
+  
 
   def manageResutlNotFoundException(exception: ResultNotFoundException, errorMsg: Option[String] = None): SimpleResult = {
     Logger.warn("Api exception: " + exception.toString + " - " + errorMsg.getOrElse(""))

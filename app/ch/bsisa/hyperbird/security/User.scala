@@ -2,7 +2,7 @@ package ch.bsisa.hyperbird.security
 
 import securesocial.core.{AuthenticationMethod, Identity}
 
-class User(name: String, firstNameParam: String, lastNameParam: String, password: String, emailParam: String) extends Identity {
+class User(name: String, firstNameParam: String, lastNameParam: String, password: String, emailParam: String, rolesParam: Option[Seq[Role]] = None) extends Identity {
 
   /**
    * As seen from class User, the missing signatures are as follows. * For convenience, these
@@ -18,5 +18,8 @@ class User(name: String, firstNameParam: String, lastNameParam: String, password
   def oAuth1Info: Option[securesocial.core.OAuth1Info] = None
   def oAuth2Info: Option[securesocial.core.OAuth2Info] = None
   def passwordInfo: Option[securesocial.core.PasswordInfo] = ??? // password
+  
+  def roles: Option[Seq[Role]] = rolesParam
+  
 
 }
