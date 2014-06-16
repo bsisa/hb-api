@@ -218,6 +218,8 @@ object Api extends Controller with securesocial.core.SecureSocial {
    */
   def createElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true).async(parse.json) { request =>
 
+    Logger.debug(s"createElfin(collectionId=${collectionId}, elfinId=${elfinId}) called by user: ${request.user}")
+    
     try {
       // Convert elfin JsValue to ELFIN object and replace its ID_G with collectionId
       val elfin = ElfinUtil.replaceElfinID_G(elfin = ElfinFormat.fromJson(request.body), newElfinID_G = collectionId)
