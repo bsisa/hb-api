@@ -46,10 +46,13 @@ case object WithClasseEditRight {
       val cSeq = line.C.seq
       Role(ID_G = getMixedContent(cSeq(0).mixed), Id = getMixedContent(cSeq(1).mixed), name = getMixedContent(cSeq(2).mixed))
     }
-    Logger.debug(s"User ${user.identityId.userId} has roles: ${userRoles}");
+    
+    val authorised = userRoles.exists(userRole => userRole.name == elfinClasse)
+    
+    Logger.debug(s"User ${user.identityId.userId} has roles: ${userRoles}. Checking elfinClasse: ${elfinClasse} authorised: ${authorised}");
 
-    if (userRoles.exists(userRole => userRole.name == elfinClasse)){
-      true
+    if (authorised){
+      authorised
     } else {
       throw WithClasseEditRightException("Insufficiant rights, missing mandatory role : " + elfinClasse )
     }
