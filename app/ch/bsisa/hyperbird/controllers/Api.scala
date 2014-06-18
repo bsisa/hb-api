@@ -293,7 +293,12 @@ object Api extends Controller with securesocial.core.SecureSocial {
    * Updates ELFIN within the specified collectionId with Id elfinId.
    * The data used to update this ELFIN will only be accepted if provided in JSON format.
    */
-  def updateElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true, authorize = WithRole(elfinId))(parse.json) { request =>
+  // Kept as reminder but won't be used as for update, delete, create operations.
+  //def updateElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true, authorize = WithRole("admin"))(parse.json) { request =>
+  def updateElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true)(parse.json) { request =>    
+    
+    Logger.debug(s"updateElfin(collectionId=${collectionId}, elfinId=${elfinId}) called by user: ${request.user}")
+    
     try {
       
       // Convert elfin JsValue to ELFIN object
