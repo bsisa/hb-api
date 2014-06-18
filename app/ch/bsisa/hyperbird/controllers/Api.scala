@@ -32,6 +32,9 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.io.ByteArrayOutputStream
 import java.io.ByteArrayInputStream
+import ch.bsisa.hyperbird.security.WithRole
+import ch.bsisa.hyperbird.security.WithClasseEditRight
+import ch.bsisa.hyperbird.security.WithClasseEditRightException
 
 
 
@@ -196,15 +199,23 @@ object Api extends Controller with securesocial.core.SecureSocial {
   /**
    * Gets new ELFIN instance from catalogue for provided CLASSE. This instance does not exist in database yet.
    */
-  def getNewElfin(classeName: String) = SecuredAction(ajaxCall = true).async {
+  def getNewElfin(classeName: String) = SecuredAction(ajaxCall = true).async { request =>
 
     val futureElfinWithId: Future[ELFIN] = ElfinDAO.getNewFromCatalogue(classeName)
 
     // Send cloned catalogue elfin in JSON format 
     futureElfinWithId.map { elfin =>
+      
+      // Application data based access right
+      WithClasseEditRight.isAuthorized(user = request.user, elfinClasse = elfin.CLASSE)      
+      
       val elfinJson = ElfinFormat.toJson(elfin)
       Ok(elfinJson).as(JSON)
     }.recover {
+      case e: WithClasseEditRightException =>
+        val errorMsg = s"Failed to obtain Elfin with CLASSE: ${classeName} from catalogue: ${e}"
+        manageWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))      
+      
       case resNotFound: ResultNotFoundException => {
         manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"Failed to obtain new ELFIN from catalogue for classeName: ${classeName}: ${resNotFound}"))
       }
@@ -253,6 +264,9 @@ object Api extends Controller with securesocial.core.SecureSocial {
       // Convert elfin JsValue to ELFIN object and replace its ID_G with collectionId
       val elfin = ElfinUtil.replaceElfinID_G(elfin = ElfinFormat.fromJson(request.body), newElfinID_G = collectionId)
 
+      // Application data based access right
+      WithClasseEditRight.isAuthorized(user = request.user, elfinClasse = elfin.CLASSE)
+      
       // Test identifiers consistency between URL and JSON body
       if (elfin.Id.equals(elfinId)) {
         // Update database with new elfin
@@ -265,8 +279,12 @@ object Api extends Controller with securesocial.core.SecureSocial {
         manageFutureException(errorMsg = Option(errorMsg))
       }
     } catch {
+      case e: WithClasseEditRightException =>
+        val errorMsg = s"Failed to create Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
+        manageFutureWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))
       case e: Throwable =>
-        manageFutureException(exception = Option(e), errorMsg = Option(s"Failed to perform creation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
+        val errorMsg = s"Failed to create Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
+        manageFutureException(exception = Option(e), errorMsg = Option(errorMsg))
     }
 
   }
@@ -275,11 +293,15 @@ object Api extends Controller with securesocial.core.SecureSocial {
    * Updates ELFIN within the specified collectionId with Id elfinId.
    * The data used to update this ELFIN will only be accepted if provided in JSON format.
    */
-  def updateElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true)(parse.json) { request =>
+  def updateElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true, authorize = WithRole(elfinId))(parse.json) { request =>
     try {
+      
       // Convert elfin JsValue to ELFIN object
       val elfin = ElfinFormat.fromJson(request.body)
 
+      // Application data based access right
+      WithClasseEditRight.isAuthorized(user = request.user, elfinClasse = elfin.CLASSE)      
+      
       // Test identifiers consistency between URL and JSON body
       if (elfin.ID_G.equals(collectionId) && elfin.Id.equals(elfinId)) {
         // Update database with new elfin
@@ -292,6 +314,9 @@ object Api extends Controller with securesocial.core.SecureSocial {
         manageException(errorMsg = Option(errorMsg))
       }
     } catch {
+      case e: WithClasseEditRightException =>
+        val errorMsg = s"Failed to perform update for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
+        manageWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))
       case e: Throwable =>
         val errorMsg = s"Failed to perform update for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
         manageException(exception = Option(e), errorMsg = Option(errorMsg))
@@ -316,12 +341,17 @@ object Api extends Controller with securesocial.core.SecureSocial {
       val futureElfin = XQueryWSHelper.find(WSQueries.elfinQuery(collectionId, elfinId))
       futureElfin.map(elfin =>
         try {
+	      // Application data based access right
+	      WithClasseEditRight.isAuthorized(user = request.user, elfinClasse = elfin.CLASSE)
           // Delete elfin from database
           ElfinDAO.delete(elfin)
           // Send deleted elfin back to give a chance for cancellation (re-creation) 
           // provided the REST client does something with it unlike restangular
           Ok(ElfinFormat.toJson(elfin)).as(JSON)
         } catch {
+          case e: WithClasseEditRightException =>
+        	val errorMsg = s"Failed to delete Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
+        	manageWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))          
           case e: Throwable =>
             manageException(exception = Option(e), errorMsg = Option(s"Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
         })
@@ -386,6 +416,21 @@ object Api extends Controller with securesocial.core.SecureSocial {
     NotFound(jsonExceptionMsg)
   }
 
+  def manageWithClasseEditRightException(exception: WithClasseEditRightException, errorMsg: Option[String] = None): SimpleResult = {
+    Logger.warn("Api exception: " + exception.toString + " - " + errorMsg.getOrElse(""))
+    val jsonExceptionMsg = Json.obj(
+      "ERROR" -> "security.exception.classe.edit.right",
+      "DESCRIPTION" -> errorMsg.getOrElse("").toString)
+    Status(403)(jsonExceptionMsg) // 403 - Forbidden
+  }
+  
+  /**
+   * Encapsulate `manageWithClasseEditRightException` in a asynchronous call for use in Action.async context.
+   * @see manageWithClasseEditRightException
+   */
+  def manageFutureWithClasseEditRightException(exception: WithClasseEditRightException, errorMsg: Option[String] = None): Future[SimpleResult] =
+    scala.concurrent.Future { manageWithClasseEditRightException(exception, errorMsg) }  
+  
   /**
    * Encapsulate `manageException` in a asynchronous call for use in Action.async context.
    * @see manageException

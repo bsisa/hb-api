@@ -5,6 +5,7 @@ import ch.bsisa.hyperbird.CollectionsConfig
 import ch.bsisa.hyperbird.dao.DbConfig
 import ch.bsisa.hyperbird.dao.ElfinDAO
 import ch.bsisa.hyperbird.model.ELFIN
+import ch.bsisa.hyperbird.model.format.Implicits._
 import securesocial.core.Authorization
 import securesocial.core.Identity
 import play.api.Logger
@@ -16,9 +17,13 @@ import scala.concurrent.duration.MILLISECONDS
 import java.util.Date
 import ch.bsisa.hyperbird.model.CARACTERISTIQUE
 import ch.bsisa.hyperbird.model.MATRICEType
+import ch.bsisa.hyperbird.model.format.ElfinFormat
 
 case class WithRole(role: String) extends Authorization {
 
+  /**
+   * securesocial.core.Authorization trait method. Pending till 
+   */
   def isAuthorized(user: Identity) = {
 
     val futureElfinUser = ElfinDAO.findUser(user.identityId.userId)
@@ -26,20 +31,15 @@ case class WithRole(role: String) extends Authorization {
     // Wait for the result of the last future layer
     val elfinUser = Await.result[ELFIN](futureElfinUser, Duration(8000, MILLISECONDS))
 
-//    val elfinUser.CARACTERISTIQUE match {
-//      case Some(CARACTERISTIQUE(_,_,_,_,_,_,_,_,_,fraction)) => fraction match {
-//        case Some(MATRICEType(lines)) => lines.
-//        case None => None
-//      }
-//      case None => None
-//    }
-    
-    Logger.debug(s"WithRole(${role}) called at ${new Date} and actual user.role = ..." )
-    Logger.debug(s"elfinUser.IDENTIFIANT.get.NOM.get = ${elfinUser.IDENTIFIANT.get.NOM.get}" )
-    
-    elfinUser.IDENTIFIANT.get.NOM.get == "refon"
-      
-  }
+    val userRoles = for { 
+      line <- elfinUser.CARACTERISTIQUE.get.FRACTION.get.L      
+      } yield {
+        val cSeq = line.C.seq
+        Role(ID_G = getMixedContent(cSeq(0).mixed) , Id = getMixedContent(cSeq(1).mixed), name = getMixedContent(cSeq(2).mixed))
+      }
+      Logger.debug(s"User ${user.identityId.userId} has roles: ${userRoles}");
+      userRoles.exists(userRole => userRole.name == role)
+  }  
 
 }
 
