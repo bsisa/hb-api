@@ -207,7 +207,8 @@ object Api extends Controller with securesocial.core.SecureSocial {
     futureElfinWithId.map { elfin =>
       
       // Application data based access right
-      WithClasseEditRight.isAuthorized(user = request.user, elfinClasse = elfin.CLASSE)      
+      // TODO: Review: Prevents to obtain default from catalogue entity even for read only mode
+      //WithClasseEditRight.isAuthorized(user = request.user, elfinClasse = elfin.CLASSE)      
       
       val elfinJson = ElfinFormat.toJson(elfin)
       Ok(elfinJson).as(JSON)
