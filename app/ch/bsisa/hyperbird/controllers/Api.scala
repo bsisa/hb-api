@@ -123,6 +123,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
     XQueryWSHelper.runXQueryFile(xqueryFileName, queryString).map { response =>
       format match {
         case JsonFormat =>
+          Logger.debug(s">>>> runXQueryFile: Result of type ${response.ahcResponse.getContentType} received")
           val melfinWrappedBody = "<MELFIN>" + response.body.mkString + "</MELFIN>"
           Ok(ElfinFormat.elfinsToJsonArray(ElfinFormat.elfinsFromXml(scala.xml.XML.loadString(melfinWrappedBody))))
         case OriginalFormat => Ok(response.body).as(response.ahcResponse.getContentType())

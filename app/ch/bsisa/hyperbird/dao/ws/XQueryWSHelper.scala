@@ -72,7 +72,7 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
     // Keep asynchronous calls asynchronous to allow Play free threads
     val resultFuture: Future[Seq[ELFIN]] = responseFuture.map { resp =>
       // We expect to receive XML content
-      Logger.debug(s"Result of type ${resp.ahcResponse.getContentType} received")
+      Logger.debug(s">>>> queryElfins: Result of type ${resp.ahcResponse.getContentType} received")
       // Parse XML (Need to wrap the list of XML elements received to obtain valid XML.)
       val melfinElem = scala.xml.XML.loadString("<MELFIN>" + resp.body.mkString + "</MELFIN>")
       Logger.debug("About to unwraps ELFINS from the MELFIN element to return a Seq[ELFIN]")
@@ -165,7 +165,7 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
     // Keep asynchronous calls asynchronous to allow Play free threads
     val resultFuture: Future[ELFIN] = singleElfinResponseFuture.map { resp =>
       // We expect to receive XML content
-      Logger.debug(s"Result of type ${resp.ahcResponse.getContentType} received")
+      Logger.debug(s">>>> proceedWithSingleElfinResponse: Result of type ${resp.ahcResponse.getContentType} received")
       val bodyString = resp.body.mkString
       if (!(bodyString.length > 0)) {
         throw ResultNotFoundException(s"No ELFIN found for query: ${query}")
