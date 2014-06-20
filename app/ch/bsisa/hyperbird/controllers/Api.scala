@@ -103,7 +103,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
         managePasswordHashException(exception = phe, errorMsg = Option(s"User: ${request.user} failed to obtain password hash."))
       }
       case e: Throwable => {
-        manageException(exception = Option(e), errorMsg = Option(s"User: ${request.user} failed to obtain password hash."))
+        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"User: ${request.user} failed to obtain password hash."))
       }
     }
 
@@ -181,7 +181,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
       Ok.chunked(Enumerator.fromStream(modifiedStream)).as(response.ahcResponse.getContentType)
     }.recover {
       case e: Throwable => {
-        manageException(exception = Option(e), errorMsg = Option(s"Failed to obtain file: ${fileName}: ${e}"))
+        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to obtain file: ${fileName}: ${e}"))
       }
     }
   }
@@ -224,7 +224,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
         manageConnectException(exception = connectException, errorMsg = Option(s"No database connection could be established."))
       }
       case e: Throwable => {
-        manageException(exception = Option(e), errorMsg = Option(s"Failed to obtain new ELFIN from catalogue for classeName: ${classeName}: ${e}"))
+        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to obtain new ELFIN from catalogue for classeName: ${classeName}: ${e}"))
       }
     }
   }
@@ -249,7 +249,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
         manageConnectException(exception = connectException, errorMsg = Option(s"No database connection could be established."))
       }
       case e: Throwable => {
-        manageException(exception = Option(e), errorMsg = Option(s"Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
+        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
       }
     }
   }
@@ -277,7 +277,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
         XQueryWSHelper.query(WSQueries.elfinQuery(collectionId, elfinId))
       } else {
         val errorMsg = s"PUT URL ELFIN ID_G/Id: ${collectionId}/${elfinId} unique identifier does not match PUT body JSON ELFIN provided ID_G/Id: ${elfin.ID_G}/${elfin.Id}. Creation cancelled."
-        manageFutureException(errorMsg = Option(errorMsg))
+        ExceptionsManager.manageFutureException(errorMsg = Option(errorMsg))
       }
     } catch {
       case e: WithClasseEditRightException =>
@@ -285,7 +285,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
         manageFutureWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))
       case e: Throwable =>
         val errorMsg = s"Failed to create Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
-        manageFutureException(exception = Option(e), errorMsg = Option(errorMsg))
+        ExceptionsManager.manageFutureException(exception = Option(e), errorMsg = Option(errorMsg))
     }
 
   }
@@ -317,7 +317,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
         Ok(ElfinFormat.toJson(elfin)).as(JSON)
       } else {
         val errorMsg = s"PUT URL ELFIN ID_G/Id: ${collectionId}/${elfinId} unique identifier does not match PUT body JSON ELFIN provided ID_G/Id: ${elfin.ID_G}/${elfin.Id}. Update cancelled."
-        manageException(errorMsg = Option(errorMsg))
+        ExceptionsManager.manageException(errorMsg = Option(errorMsg))
       }
     } catch {
       case e: WithClasseEditRightException =>
@@ -325,7 +325,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
         manageWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))
       case e: Throwable =>
         val errorMsg = s"Failed to perform update for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
-        manageException(exception = Option(e), errorMsg = Option(errorMsg))
+        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(errorMsg))
     }
   }
 
@@ -359,12 +359,12 @@ object Api extends Controller with securesocial.core.SecureSocial {
         	val errorMsg = s"Failed to delete Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
         	manageWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))          
           case e: Throwable =>
-            manageException(exception = Option(e), errorMsg = Option(s"Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
+            ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
         })
     } catch {
       case e: Throwable =>
         val errorMsg = s"Failed to perform update for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
-        manageFutureException(exception = Option(e), errorMsg = Option(errorMsg))
+        ExceptionsManager.manageFutureException(exception = Option(e), errorMsg = Option(errorMsg))
     }
   }
 
@@ -443,24 +443,5 @@ object Api extends Controller with securesocial.core.SecureSocial {
    */
   def manageFutureResutlNotFoundException(exception: ResultNotFoundException, errorMsg: Option[String] = None): Future[SimpleResult] =
     scala.concurrent.Future { manageResutlNotFoundException(exception, errorMsg) }
-
-  /**
-   * Utility method to return exception, error message in a generic JSON error message.
-   */
-  def manageException(exception: Option[Throwable] = None, errorMsg: Option[String] = None): SimpleResult = {
-    Logger.warn("Api exception: " + exception.getOrElse("").toString + " - " + errorMsg.getOrElse(""))
-    val jsonExceptionMsg = Json.obj(
-      "ERROR" -> exception.getOrElse("application.validation.failure").toString,
-      "DESCRIPTION" -> errorMsg.getOrElse(exception.getOrElse("None").toString).toString // TODO: review
-      )
-    InternalServerError(jsonExceptionMsg)
-  }
-
-  /**
-   * Encapsulate `manageException` in a asynchronous call for use in Action.async context.
-   * @see manageException
-   */
-  def manageFutureException(exception: Option[Throwable] = None, errorMsg: Option[String] = None): Future[SimpleResult] =
-    scala.concurrent.Future { manageException(exception, errorMsg) }
 
 }
