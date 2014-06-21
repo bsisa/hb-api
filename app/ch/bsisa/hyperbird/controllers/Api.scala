@@ -140,7 +140,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
     XQueryWSHelper.getFile(fileName).map { response =>
 
-      Logger.debug(s"Obtained spreadsheet template with getFile ${fileName} content type: ${response.ahcResponse.getContentType} and rawQueryString: ${rawQueryString}")
+      Logger.debug(s">>>> ENCODING >>>> Obtained spreadsheet template with getFile ${fileName} content type: ${response.ahcResponse.getContentType} and rawQueryString: ${rawQueryString}")
 
       // Convert workbook from inputstream to Workbook object =========================================
       val wb: Workbook = SpreadSheetBuilder.getWorkbook(response.ahcResponse.getResponseBodyAsStream)
