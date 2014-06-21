@@ -22,7 +22,8 @@ GET      /                                              ch.bsisa.hyperbird.contr
 # Dynamically provides initialisation configuration information useful to hb-ui geoxml service
 GET      /conf.js                                       ch.bsisa.hyperbird.controllers.Application.conf
 
-GET      /whoami.js                                     ch.bsisa.hyperbird.controllers.Application.whoAmI
+# Provides current logged in user details 
+GET      /api/melfin/whoami                             ch.bsisa.hyperbird.controllers.Application.whoAmI
 
 # Dynamically provides initialisation configuration information useful to hb-ui 
 GET      /api/melfin/config                             ch.bsisa.hyperbird.controllers.Api.config

@@ -52,8 +52,10 @@ object Application extends Controller with securesocial.core.SecureSocial {
   /**
    * Provide logged user detailed information about himself. Requires authentication. 
    */
-  def whoAmI = SecuredAction.async { request =>
+  def whoAmI = SecuredAction(ajaxCall = true).async { request =>
+    
     val futureElfinUser = ElfinDAO.findUser(request.user.identityId.userId)
+    val elfinUser = Await.result[ELFIN](futureElfinUser, Duration(8000, MILLISECONDS))
     futureElfinUser.map { elfinUser =>
 
       val userDetailsId = elfinUser.PARTENAIRE.get.USAGER.get.Id.get
@@ -63,7 +65,7 @@ object Application extends Controller with securesocial.core.SecureSocial {
       val userDetails = Await.result[ELFIN](futureUserDetails, Duration(8000, MILLISECONDS))
       val userFirstName = userDetails.IDENTIFIANT.get.NOM.get
       val userLastName = userDetails.IDENTIFIANT.get.ALIAS.get
-      Ok(views.html.whoami(username = request.user.identityId.userId, name = userLastName, surname = userFirstName)).as("application/javascript; charset=utf-8")
+      Ok(views.html.whoami(username = request.user.identityId.userId, name = userLastName, surname = userFirstName)).as(JSON)
     }.recover {
       case e: Throwable => {
         ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to obtain user information ${e}"))
