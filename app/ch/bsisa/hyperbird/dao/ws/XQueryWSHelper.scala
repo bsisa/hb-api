@@ -152,8 +152,9 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
   
   def getFile(fileName: String) : Future[Response] = {
      val query = WSQueries.getFile(fileName)
+     Logger.warn(">>>> ENCODING >>>>: XQueryWSHelper.getFile(${fileName}): query = " + query);
      // TODO: investigate charset encoding problem
-     val responseFuture: Future[Response] = WS.url(query).withHeaders(("Content-Type", "application/xquery"),("charset","utf-8")).get
+     val responseFuture: Future[Response] = WS.url(query).withHeaders(("Content-Type", "application/xquery"),("charset","UTF-8")).get
      //val responseFuture: Future[Response] = WS.url(query).withHeaders(("Content-Type", "application/xquery")).get
      responseFuture     
   }
