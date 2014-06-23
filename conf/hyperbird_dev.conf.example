@@ -23,7 +23,7 @@ hb {
 		# Contains ELFIN objects catalogue
 		"catalogue": "G20140101000012345"
 		# Contains database stored XQueries
-		"xqueries": "G10000101010101001"
+		"xqueries": "queries"
 	}
 	init {
 		# hb.init Elfin.Id . 
