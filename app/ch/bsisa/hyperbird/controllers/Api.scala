@@ -139,8 +139,8 @@ object Api extends Controller with securesocial.core.SecureSocial {
     val rawQueryString = if (request.rawQueryString != null && request.rawQueryString.nonEmpty) Option(request.rawQueryString) else None
 
     XQueryWSHelper.getFile(fileName).map { response =>
-
-      Logger.warn(s">>>> ENCODING >>>>: Api.getSpreadsheetReport(${fileName}): Obtained spreadsheet template with getFile ${fileName} content type: ${response.ahcResponse.getContentType} and rawQueryString: ${rawQueryString}")
+      
+      if (response.ahcResponse.getStatusCode() == 200) {
 
       // Convert workbook from inputstream to Workbook object =========================================
       val wb: Workbook = SpreadSheetBuilder.getWorkbook(response.ahcResponse.getResponseBodyAsStream)
@@ -180,6 +180,11 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
       // Sent the response stream ======================================================================
       Ok.chunked(Enumerator.fromStream(modifiedStream)).as(response.ahcResponse.getContentType)
+      } else {
+        val endUserMsg = s"Status: ${response.ahcResponse.getStatusCode()} - ${response.ahcResponse.getStatusText()}. Possible misconfiguration, please contact your system administrator."
+        Logger.error(s"${endUserMsg} Failing URI: ${response.ahcResponse.getUri()}")
+        ExceptionsManager.manageException(exception = None, errorMsg = Option(s"Failed to obtain file: ${fileName}: ${endUserMsg}"))
+      }
     }.recover {
       case e: Throwable => {
         ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to obtain file: ${fileName}: ${e}"))
