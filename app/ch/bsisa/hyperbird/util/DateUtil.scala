@@ -14,38 +14,47 @@ import java.text.SimpleDateFormat
 object DateUtil {
 
   /**
-   * Constant simple date format pattern used for Id/ID_G date and time part
-   * as well as for ELFIN.IDENTIFIANT.{DE,A,PAR} dates. This may be splitted
-   * into different patterns in the future thus the private keyword.
+   * Constant simple date format pattern used for Id/ID_G date and time part.
    */
   private val DateFormatPattern = "yyyyMMddHHmmssSSS"
+    
+  /**
+   * Constant simple date format pattern used for ELFIN.IDENTIFIANT.{DE,A,PAR} 
+   * dates.
+   */
+  private val HbDateFormatPattern = "yyyy-MM-dd"    
 
   /**
-   * Private currently unique formatter
+   * Ids formatter
    */
-  private val formatter = {
+  private val idsFormatter = {
     val sdf = new SimpleDateFormat(DateFormatPattern)
     sdf.setLenient(false)
     sdf
   }
+  
+  /**
+   * Hb dates formatter
+   */
+  private val hbDateFormatter = {
+    val sdf = new SimpleDateFormat(HbDateFormatPattern)
+    sdf.setLenient(false)
+    sdf
+  }  
 
   /**
    * Returns a date formatter for elfin.Id/ID_G.
-   *
-   * <i>Note: By default never ever let a java.text.DateFormat be lenient,
-   * this is a terrible default behaviour.</i>
    */
   val elfinUniqueIdDateFormat = {
-    formatter
+    idsFormatter
   }
 
   /**
    * Returns a date formatter for ELFIN.IDENTIFIANT.{DE,A,PAR} dates
-   *
-   *
    */
   val elfinIdentifiantDateFormat = {
-    formatter
+    hbDateFormatter
   }
+  
 
 }
