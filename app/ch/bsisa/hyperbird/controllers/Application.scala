@@ -4,6 +4,7 @@ import ch.bsisa.hyperbird.Implicits._
 import ch.bsisa.hyperbird.ApiConfig
 import ch.bsisa.hyperbird.dao.ElfinDAO
 import ch.bsisa.hyperbird.model.ELFIN
+import ch.bsisa.hyperbird.model.format.Implicits._
 import play.api._
 import play.api.Logger
 import play.api.mvc._
@@ -13,9 +14,9 @@ import ch.bsisa.hyperbird.dao.ws.XQueryWSHelper
 import ch.bsisa.hyperbird.dao.ws.WSQueries
 import securesocial.core.AuthenticationMethod
 import scala.concurrent.Await
-
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.MILLISECONDS
+import ch.bsisa.hyperbird.security.Role
 
 /**
  * Application controller.
@@ -65,7 +66,15 @@ object Application extends Controller with securesocial.core.SecureSocial {
       val userDetails = Await.result[ELFIN](futureUserDetails, Duration(8000, MILLISECONDS))
       val userFirstName = userDetails.IDENTIFIANT.get.NOM.get
       val userLastName = userDetails.IDENTIFIANT.get.ALIAS.get
-      Ok(views.html.whoami(username = request.user.identityId.userId, name = userLastName, surname = userFirstName)).as(JSON)
+      // We can assume a user always has a FRACTION
+      val userRoles = for {
+        line <- elfinUser.CARACTERISTIQUE.get.FRACTION.get.L
+      } yield {
+        val cSeq = line.C.seq
+        Role(ID_G = getMixedContent(cSeq(0).mixed), Id = getMixedContent(cSeq(1).mixed), name = getMixedContent(cSeq(2).mixed))        
+      }
+      
+      Ok(views.txt.whoami(username = request.user.identityId.userId, name = userLastName, surname = userFirstName, roles = userRoles)).as(JSON)
     }.recover {
       case e: Throwable => {
         ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to obtain user information ${e}"))

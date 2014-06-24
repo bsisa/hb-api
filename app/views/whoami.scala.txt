@@ -3,16 +3,17 @@
 	"username" : "@username" ,
 	"name" : "@name",
 	"surname" : "@surname",
-	"roles": { 
-	
+	"roles": [ 
 		@{
 			if (roles.size > 1) {
-				roles.map { role => s""" "${role.name}","""} 
+				val allButLastRole = roles.dropRight(1).map { role => s""" "${role.name}","""}
+				val lastRole = '"' + roles.last.name + '"'
+				allButLastRole ++ lastRole
 			} else {
 				roles.map { role => '"' + role.name + '"' }
 			}
 		}
-	}
+	]
 } 
 
 
