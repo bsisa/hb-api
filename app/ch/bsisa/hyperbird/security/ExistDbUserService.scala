@@ -18,6 +18,9 @@ import ch.bsisa.hyperbird.util.ElfinUtil
 import ch.bsisa.hyperbird.model.format.ElfinFormat
 import ch.bsisa.hyperbird.dao.ElfinDAO
 import ch.bsisa.hyperbird.Implicits._
+import ch.bsisa.hyperbird.util.DateUtil
+import ch.bsisa.hyperbird.model.format.Implicits._
+import ch.bsisa.hyperbird.security.User
 import play.api.libs.concurrent.Execution.Implicits._
 import ch.bsisa.hyperbird.dao.ResultNotFoundException
 import ch.bsisa.hyperbird.model.IDENTIFIANT
@@ -79,7 +82,7 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
    * Searches the ELFIN corresponding to the provided IdentityId.userId
    * and returns an Option encapsulating the and Identity created from
    * the ELFIN user information obtained from the database.
-   * If no corresponding user is found we catch `ResultNotFoundException` 
+   * If no corresponding user is found we catch `ResultNotFoundException`
    * and return Option `None`.
    * Any other exception will be thrown an managed later.
    */
@@ -99,14 +102,14 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
   }
 
   /**
-   * Searches the ELFIN user corresponding to the provided email, providerId pair 
+   * Searches the ELFIN user corresponding to the provided email, providerId pair
    * and returns an Option encapsulating the and Identity created from
    * the ELFIN user information obtained from the database.
-   * 
-   * The providerId information is no relevant in the current context as we do always expect 
+   *
+   * The providerId information is no relevant in the current context as we do always expect
    * `securesocial.core.providers.UsernamePasswordProvider.UsernamePassword`
-   *  
-   * If no corresponding user is found we catch `ResultNotFoundException` 
+   *
+   * If no corresponding user is found we catch `ResultNotFoundException`
    * and return Option `None`.
    * Any other exception will be thrown an managed later.
    */
@@ -196,37 +199,46 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
    */
   private def getIdentity(futureElfinUser: Future[ELFIN]): Option[Identity] = {
 
-    //    try {
-    val futureSocialUserFromFutureElfinUser = futureElfinUser.map { elfinUser =>
-      val userId = elfinUser.IDENTIFIANT.get.NOM.get
-      val providerId = UsernamePasswordProvider.UsernamePassword
-      val identityId = IdentityId(userId, providerId)
-      val passwordInfo = elfinUser.IDENTIFIANT.get.ALIAS.get
-      val pwdInfo: PasswordInfo = new PasswordInfo(PasswordHasher.BCryptHasher, passwordInfo)
-      val userDetailsId = elfinUser.PARTENAIRE.get.USAGER.get.Id.get
-      val userDetailsID_G = elfinUser.PARTENAIRE.get.USAGER.get.ID_G.get
-      val futureUserDetails = XQueryWSHelper.find(WSQueries.elfinQuery(userDetailsID_G, userDetailsId))
-      val futureSocialUser = futureUserDetails.map { userDetails =>
-        val email: String = userDetails.CARACTERISTIQUE.get.CAR5.get.VALEUR.get
-        // TODO: pull this information from userDetails ELFIN 
-        val userFirstName = "Undefined"
-        val userLastName = "Undefined"
-        val userPhoto = None
-        // Only deal with password authentication at the moment
-        val authMethod: AuthenticationMethod = AuthenticationMethod.UserPassword
-        val socialUser = new SocialUser(identityId, userFirstName, userLastName, identityId.userId, Option(email),
-          userPhoto, authMethod, None, None, Some(pwdInfo))
-        Option(socialUser)
-      }
-      futureSocialUser
-    }
-    // Peal one future layer out of two
-    val futureSocialUser = for {
-      futureSocialUser <- futureSocialUserFromFutureElfinUser
-      socialUser <- futureSocialUser
-    } yield socialUser
-    // Wait for the result of the last future layer
-    Await.result[Option[securesocial.core.SocialUser]](futureSocialUser, Duration(8000, MILLISECONDS))
+    val elfinUser = Await.result[ELFIN](futureElfinUser, Duration(8000, MILLISECONDS))
+
+    val elfinUserValidFromStr = elfinUser.IDENTIFIANT.get.DE.get
+    val elfinUserValidToStr = elfinUser.IDENTIFIANT.get.A.get
+    val elfinUserValidFrom = DateUtil.hbDateFormat.parse(elfinUserValidFromStr)
+    val elfinUserValidTo = DateUtil.hbDateFormat.parse(elfinUserValidToStr)
+    val elfinUserId = elfinUser.IDENTIFIANT.get.NOM.get
+    val providerId = UsernamePasswordProvider.UsernamePassword
+    val elfinUserIdentityId = IdentityId(elfinUserId, providerId)
+    val elfinUserPasswordInfo = elfinUser.IDENTIFIANT.get.ALIAS.get
+    val pwdInfo: PasswordInfo = new PasswordInfo(PasswordHasher.BCryptHasher, elfinUserPasswordInfo)
+    val elfinUserDetailsId = elfinUser.PARTENAIRE.get.USAGER.get.Id.get
+    val elfinUserDetailsID_G = elfinUser.PARTENAIRE.get.USAGER.get.ID_G.get
+    val futureElfinUserDetails = XQueryWSHelper.find(WSQueries.elfinQuery(elfinUserDetailsID_G, elfinUserDetailsId))
+    val elfinUserDetails = Await.result[ELFIN](futureElfinUserDetails, Duration(8000, MILLISECONDS))
+
+    val elfinUserEmail: String = elfinUserDetails.CARACTERISTIQUE.get.CAR5.get.VALEUR.get
+    val elfinUserFirstName = elfinUserDetails.IDENTIFIANT.get.NOM.get
+    val elfinUserLastName = elfinUserDetails.IDENTIFIANT.get.ALIAS.get      
+    
+    // We can assume a user always has a FRACTION
+    val userRoles = for {
+      line <- elfinUser.CARACTERISTIQUE.get.FRACTION.get.L
+    } yield {
+      val cSeq = line.C.seq
+      Role(ID_G = getMixedContent(cSeq(0).mixed), Id = getMixedContent(cSeq(1).mixed), name = getMixedContent(cSeq(2).mixed))
+    }    
+    
+    val hbUser = new User(
+        identityId = elfinUserIdentityId, 
+        firstName = elfinUserFirstName, 
+        lastName = elfinUserLastName, 
+        fullName = elfinUserFirstName + " " + elfinUserLastName, 
+        email = Option(elfinUserEmail), 
+        passwordInfo = Some(pwdInfo),
+        validFrom = elfinUserValidFrom,
+        validTo = elfinUserValidTo,
+        rolesParam = Option(userRoles))
+
+    Option(hbUser)
   }
 
   case class SaveUserException(message: String = null, cause: Throwable = null) extends Exception(message, cause)
