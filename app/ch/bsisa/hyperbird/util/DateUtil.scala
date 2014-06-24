@@ -50,11 +50,19 @@ object DateUtil {
   }
 
   /**
-   * Returns a date formatter for ELFIN.IDENTIFIANT.{DE,A,PAR} dates
+   * Returns a date formatter with pattern: "yyyyMMddHHmmssSSS"
    */
   val elfinIdentifiantDateFormat = {
-    hbDateFormatter
+    idsFormatter
   }
+  
+  /**
+   * Returns a date formatter with pattern: "yyyy-MM-dd"
+   */
+  val hbDateFormat = {
+    hbDateFormatter
+  }  
+  
   
 
 }
