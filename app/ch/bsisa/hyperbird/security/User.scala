@@ -1,25 +1,29 @@
 package ch.bsisa.hyperbird.security
 
-import securesocial.core.{AuthenticationMethod, Identity}
+import securesocial.core.{AuthenticationMethod, Identity, SocialUser}
+import java.util.Date
 
-class User(name: String, firstNameParam: String, lastNameParam: String, password: String, emailParam: String, rolesParam: Option[Seq[Role]] = None) extends Identity {
-
-  /**
-   * As seen from class User, the missing signatures are as follows. * For convenience, these
-   * are usable as stub implementations.
-   */
-  def authMethod: AuthenticationMethod = AuthenticationMethod.UserPassword
-  def avatarUrl: Option[String] = None
-  def email: Option[String] = Option(emailParam)
-  def firstName: String = firstNameParam
-  def fullName: String = firstName + " " + lastName
-  def identityId: securesocial.core.IdentityId = ??? //name
-  def lastName: String = lastNameParam
-  def oAuth1Info: Option[securesocial.core.OAuth1Info] = None
-  def oAuth2Info: Option[securesocial.core.OAuth2Info] = None
-  def passwordInfo: Option[securesocial.core.PasswordInfo] = ??? // password
-  
+/**
+ * securesocial.core.Identity custom implementation extending securesocial.core.SocialUser 
+ * adding our additional roles, valid from and to date informations.
+ */
+class User(
+    identityId: securesocial.core.IdentityId, 
+    firstName: String, 
+    lastName: String, 
+    fullName: String , 
+    email: Option[String], 
+    avatarUrl: Option[String] = None, 
+    authMethod: securesocial.core.AuthenticationMethod = AuthenticationMethod.UserPassword, 
+    oAuth1Info: Option[securesocial.core.OAuth1Info] = None, 
+    oAuth2Info: Option[securesocial.core.OAuth2Info] = None, 
+    passwordInfo: Option[securesocial.core.PasswordInfo], 
+    validFrom: Date,
+    validTo: Date,
+    rolesParam: Option[Seq[Role]] = None) extends SocialUser(identityId, firstName, lastName, fullName, email, avatarUrl, authMethod, oAuth1Info, oAuth2Info, passwordInfo) {
+   
   def roles: Option[Seq[Role]] = rolesParam
-  
+  def validFromDate: Date = validFrom
+  def validToDate: Date = validTo
 
 }
