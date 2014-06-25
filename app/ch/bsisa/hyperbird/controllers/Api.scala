@@ -35,6 +35,8 @@ import java.io.ByteArrayInputStream
 import ch.bsisa.hyperbird.security.WithRole
 import ch.bsisa.hyperbird.security.WithClasseEditRight
 import ch.bsisa.hyperbird.security.WithClasseEditRightException
+import securesocial.core.SocialUser
+import ch.bsisa.hyperbird.security.User
 
 
 
@@ -48,8 +50,8 @@ import ch.bsisa.hyperbird.security.WithClasseEditRightException
  */
 object Api extends Controller with securesocial.core.SecureSocial {
 
-  val JsonFormat = "json"
-  val OriginalFormat = "original"
+  val JSON_FORMAT = "json"
+  val ORIGINAL_FORMAT = "original"
 
   /**
    * Helper function obtaining configuration information.
@@ -122,11 +124,11 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
     XQueryWSHelper.runXQueryFile(xqueryFileName, queryString).map { response =>
       format match {
-        case JsonFormat =>
+        case JSON_FORMAT =>
           Logger.debug(s">>>> runXQueryFile: Result of type ${response.ahcResponse.getContentType} received")
           val melfinWrappedBody = "<MELFIN>" + response.body.mkString + "</MELFIN>"
           Ok(ElfinFormat.elfinsToJsonArray(ElfinFormat.elfinsFromXml(scala.xml.XML.loadString(melfinWrappedBody))))
-        case OriginalFormat => Ok(response.body).as(response.ahcResponse.getContentType())
+        case ORIGINAL_FORMAT => Ok(response.body).as(response.ahcResponse.getContentType())
       }
     }
   }
@@ -311,6 +313,14 @@ object Api extends Controller with securesocial.core.SecureSocial {
       // Convert elfin JsValue to ELFIN object
       val elfin = ElfinFormat.fromJson(request.body)
 
+      request.user match { 
+		case user: User => {
+			Logger.debug(s"Roles = ${user.roles.getOrElse("No roles")} ")
+			Logger.debug(s"Valid from ${user.validFromDate} to ${user.validToDate}");
+		}        
+	    case _ => Logger.debug(s"Unexpected Class.")
+      }
+
       // Application data based access right
       WithClasseEditRight.isAuthorized(user = request.user, elfinClasse = elfin.CLASSE)      
       
@@ -318,8 +328,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
       if (elfin.ID_G.equals(collectionId) && elfin.Id.equals(elfinId)) {
         // Update database with new elfin
         ElfinDAO.update(elfin)
-        // Sent success response
-        //Ok(s"""{"message": "elfin.ID_G/Id: ${elfin.ID_G}/${elfin.Id} update successful"}""").as(JSON)
+        // Sent success response with updated elfin
         Ok(ElfinFormat.toJson(elfin)).as(JSON)
       } else {
         val errorMsg = s"PUT URL ELFIN ID_G/Id: ${collectionId}/${elfinId} unique identifier does not match PUT body JSON ELFIN provided ID_G/Id: ${elfin.ID_G}/${elfin.Id}. Update cancelled."
