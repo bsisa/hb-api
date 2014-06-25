@@ -20,7 +20,7 @@ import ch.bsisa.hyperbird.dao.ElfinDAO
 import ch.bsisa.hyperbird.Implicits._
 import ch.bsisa.hyperbird.util.DateUtil
 import ch.bsisa.hyperbird.model.format.Implicits._
-import ch.bsisa.hyperbird.security.User
+import ch.bsisa.hyperbird.util.ElapsedTime
 import play.api.libs.concurrent.Execution.Implicits._
 import ch.bsisa.hyperbird.dao.ResultNotFoundException
 import ch.bsisa.hyperbird.model.IDENTIFIANT
@@ -29,6 +29,8 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.duration.MILLISECONDS
 import ch.bsisa.hyperbird.dao.ExpectedSingleResultException
 import securesocial.core.providers.UsernamePasswordProvider
+import play.api.cache.Cache
+import play.api.Play.current
 
 /**
  * SecureSocial UserService implementation targeted at eXist database.
@@ -75,7 +77,7 @@ import securesocial.core.providers.UsernamePasswordProvider
  * @author Patrick Refondini
  */
 class ExistDbUserService(application: Application) extends UserServicePlugin(application) {
-  //private var users = Map[String, Identity]()
+
   private var tokens = Map[String, Token]()
 
   /**
@@ -87,11 +89,14 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
    * Any other exception will be thrown an managed later.
    */
   override def find(id: IdentityId): Option[Identity] = {
+    
     Logger.debug(s"ExistDbUserService.find: id.userId=${id.userId}...")
 
     try {
-      val futureElfinUser = ElfinDAO.findUser(id.userId)
-      getIdentity(futureElfinUser)
+      Cache.getOrElse[Option[User]](id.userId, ExistDbUserService.USER_CACHE_TTL_SECONDS) {
+        val futureElfinUser = ElfinDAO.findUser(id.userId)
+        getIdentity(futureElfinUser)
+      }
     } catch {
       // This is expected in all new user creation cases.
       case ResultNotFoundException(message, throwable) => {
@@ -114,9 +119,9 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
    * Any other exception will be thrown an managed later.
    */
   override def findByEmailAndProvider(email: String, providerId: String): Option[Identity] = {
+    
     Logger.debug(s"ExistDbUserService.findByEmailAndProvider: email=${email}, providerId=${providerId}")
 
-    //    findUser(ElfinDAO.findUserByEmail, email).map(elfin => getIdentity(elfin))
     try {
       val futureElfinUser = ElfinDAO.findUserByEmail(email)
       getIdentity(futureElfinUser)
@@ -193,14 +198,16 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
     Logger.debug("ExistDbUserService.deleteExpiredTokens()")
     tokens = tokens.filter(!_._2.isExpired)
   }
-
+  
+ 
   /**
    * Builds the Identity corresponding to the provided IdentityId and Future[ELFIN]
    */
-  private def getIdentity(futureElfinUser: Future[ELFIN]): Option[Identity] = {
+  private def getIdentity(futureElfinUser: Future[ELFIN]): Option[User] = {
 
-    val elfinUser = Await.result[ELFIN](futureElfinUser, Duration(8000, MILLISECONDS))
-
+    val elfinUser = Await.result[ELFIN](futureElfinUser, Duration(ExistDbUserService.USER_QUERY_MAY_WAIT_MILLISECONDS, MILLISECONDS))
+    //val elfinUser = ElapsedTime.time ({ Await.result[ELFIN](futureElfinUser, Duration(ExistDbUserService.USER_QUERY_MAY_WAIT_MILLISECONDS, MILLISECONDS))  }, "elfinUser")    
+    
     val elfinUserValidFromStr = elfinUser.IDENTIFIANT.get.DE.get
     val elfinUserValidToStr = elfinUser.IDENTIFIANT.get.A.get
     val elfinUserValidFrom = DateUtil.hbDateFormat.parse(elfinUserValidFromStr)
@@ -213,19 +220,20 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
     val elfinUserDetailsId = elfinUser.PARTENAIRE.get.USAGER.get.Id.get
     val elfinUserDetailsID_G = elfinUser.PARTENAIRE.get.USAGER.get.ID_G.get
     val futureElfinUserDetails = XQueryWSHelper.find(WSQueries.elfinQuery(elfinUserDetailsID_G, elfinUserDetailsId))
-    val elfinUserDetails = Await.result[ELFIN](futureElfinUserDetails, Duration(8000, MILLISECONDS))
+    val elfinUserDetails = Await.result[ELFIN](futureElfinUserDetails, Duration(ExistDbUserService.USER_QUERY_MAY_WAIT_MILLISECONDS, MILLISECONDS))
+    //val elfinUserDetails = ElapsedTime.time({ Await.result[ELFIN](futureElfinUserDetails, Duration(ExistDbUserService.USER_QUERY_MAY_WAIT_MILLISECONDS, MILLISECONDS)) },"elfinUserDetails")
 
     val elfinUserEmail: String = elfinUserDetails.CARACTERISTIQUE.get.CAR5.get.VALEUR.get
     val elfinUserFirstName = elfinUserDetails.IDENTIFIANT.get.NOM.get
     val elfinUserLastName = elfinUserDetails.IDENTIFIANT.get.ALIAS.get      
     
-    // We can assume a user always has a FRACTION
+    // A user always has a FRACTION (can contain 0-n L)
     val userRoles = for {
       line <- elfinUser.CARACTERISTIQUE.get.FRACTION.get.L
     } yield {
       val cSeq = line.C.seq
       Role(ID_G = getMixedContent(cSeq(0).mixed), Id = getMixedContent(cSeq(1).mixed), name = getMixedContent(cSeq(2).mixed))
-    }    
+    }
     
     val hbUser = new User(
         identityId = elfinUserIdentityId, 
@@ -241,5 +249,10 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
     Option(hbUser)
   }
 
+  object ExistDbUserService {
+    val USER_QUERY_MAY_WAIT_MILLISECONDS = 10000
+    val USER_CACHE_TTL_SECONDS = 600
+  }
+  
   case class SaveUserException(message: String = null, cause: Throwable = null) extends Exception(message, cause)
 }

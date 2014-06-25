@@ -3,6 +3,8 @@ package ch.bsisa.hyperbird.security
 import securesocial.core.{Event,EventListener,LoginEvent,LogoutEvent,PasswordChangeEvent,PasswordResetEvent,SignUpEvent}
 import play.api.mvc.{Session, RequestHeader}
 import play.api.{Application, Logger}
+import play.api.cache.Cache
+import play.api.Play.current // Provides implicit access to current application context.
 
 /**
  * SecureSocial service event listener.
@@ -14,13 +16,22 @@ import play.api.{Application, Logger}
  * @author Patrick Refondini
  */
 class SecureServiceEventListener(app: Application) extends EventListener {
+  
   override def id: String = "hbSecureServiceEventListenerId"
-   
+  
+  private val logger = Logger("ch.bsisa.hyperbird.security.SecureServiceEventListener")
+    
   def onEvent(event: Event, request: RequestHeader, session: Session): Option[Session] = {
     val eventName = event match {
-      case e: LoginEvent => {
-        "login"
-        // Checkout securesocial.core.providers.utils.Mailer.sendEmail for example Akka scheduler usage with MailerPlugin
+      case e: LoginEvent => "login"
+      case e: LogoutEvent => {
+        // Clean up cache on logout. Useful for user to notice their roles change before cache TTL has expired.
+        Cache.remove(event.user.identityId.userId)
+      }
+      case e: SignUpEvent => "signup"
+      case e: PasswordResetEvent => {
+        "password reset"
+//      Checkout securesocial.core.providers.utils.Mailer.sendEmail for example Akka scheduler usage with MailerPlugin
 //	    Akka.system.scheduler.scheduleOnce(1 seconds) {
 //	      val mail = use[MailerPlugin].email
 //	      mail.setSubject(subject)
@@ -30,17 +41,12 @@ class SecureServiceEventListener(app: Application) extends EventListener {
 //	      mail.send(body._1.map(_.body).getOrElse(""), body._2.map(_.body).getOrElse(""))
 //	    } 
       }
-      case e: LogoutEvent => "logout"
-      case e: SignUpEvent => "signup"
-      case e: PasswordResetEvent => "password reset"
       case e: PasswordChangeEvent => "password change"
     }
 
-    Logger.info(">>>> SECURITY: traced %s event for user %s".format(eventName, event.user.fullName))
-    Logger.debug(s">>>> SECURITY: request.path = ${request.path} , request.rawQueryString = ${request.rawQueryString}")
-    // Not changing the session so just return None
-    // if you wanted to change the session then you'd do something like
-    // Some(session + ("your_key" -> "your_value"))
+    logger.info(s"Traced ${eventName} event for user ${event.user.fullName}. Request.path = ${request.path} , Request.rawQueryString = ${request.rawQueryString}")
+    // Not to change to the session simply return: None
+    // Otherwise to change the session, return something like: Some(session + ("your_key" -> "your_value"))
     None
   }
 }
