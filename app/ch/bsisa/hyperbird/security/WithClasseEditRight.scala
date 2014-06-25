@@ -23,7 +23,7 @@ import ch.bsisa.hyperbird.model.format.ElfinFormat
  * Contains methods to check user access rights given ELFIN CLASSE 
  * information
  */
-// TODO: evaluate wether to adapt once SecureSocial 2.1.4 is out provided it includes 
+// TODO: evaluate whether to adapt once SecureSocial 2.1.4 is out provided it includes 
 // request access similar to https://github.com/mohiva/play-silhouette/pull/152 
 // Note: elfinClasse could be added as request header field to avoid computation.
 case object WithClasseEditRight {
@@ -32,24 +32,12 @@ case object WithClasseEditRight {
    * Return true if the provided user has edit rights for given ELFIN CLASSE
    * otherwise throws as WithClasseEditRightException
    */
-  def isAuthorized(user: Identity, elfinClasse: String) : Boolean = {
+  def isAuthorized(user: User, elfinClasse: String) : Boolean = {
 
-    val futureElfinUser = ElfinDAO.findUser(user.identityId.userId)
-
-    // Wait for the result of the last future layer
-    val elfinUser = Await.result[ELFIN](futureElfinUser, Duration(8000, MILLISECONDS))
-
-    // We can assume a user always has a FRACTION
-    val userRoles = for {
-      line <- elfinUser.CARACTERISTIQUE.get.FRACTION.get.L
-    } yield {
-      val cSeq = line.C.seq
-      Role(ID_G = getMixedContent(cSeq(0).mixed), Id = getMixedContent(cSeq(1).mixed), name = getMixedContent(cSeq(2).mixed))
+    val authorised = user.roles match {
+      case Some(roles) => roles.exists(role => role.name == elfinClasse)
+      case None => false
     }
-    
-    val authorised = userRoles.exists(userRole => userRole.name == elfinClasse)
-    
-    Logger.debug(s"User ${user.identityId.userId} has roles: ${userRoles}. Checking elfinClasse: ${elfinClasse} authorised: ${authorised}");
 
     if (authorised){
       authorised
