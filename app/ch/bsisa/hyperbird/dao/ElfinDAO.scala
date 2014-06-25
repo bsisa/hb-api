@@ -24,13 +24,15 @@ import java.util.Calendar
  */
 object ElfinDAO {
 
+  val logger = Logger("ch.bsisa.hyperbird.dao.ElfinDAO")  
+  
   /**
    * Creates XML database ELFIN representation corresponding to the provided ELFIN object
    * into the database.
    * <i>The database API do not provide any feedback on that operation.</i>
    */
   def create(elfin: ELFIN)(implicit dbConfig: DbConfig) = {
-    Logger.debug(s"ElfinDAO.create elfin.ID_G/Id: ${elfin.ID_G}/${elfin.Id}")
+    logger.debug(s"ElfinDAO.create elfin.ID_G/Id: ${elfin.ID_G}/${elfin.Id}")
     XQueryWSHelper.create(elfin)
   }
 
@@ -39,7 +41,7 @@ object ElfinDAO {
    * <i>The database API do not provide any feedback on that operation.</i>
    */
   def update(elfin: ELFIN)(implicit dbConfig: DbConfig) = {
-    Logger.debug(s"ElfinDAO.update elfin.ID_G/Id: ${elfin.ID_G}/${elfin.Id}")
+    logger.debug(s"ElfinDAO.update elfin.ID_G/Id: ${elfin.ID_G}/${elfin.Id}")
     val elfinXml = ElfinFormat.toXml(elfin)
     val updateStatetement =
       s"update replace collection('${dbConfig.databaseName}/${elfin.ID_G}')//ELFIN[@Id='${elfin.Id}'] with ${elfinXml.mkString}"
@@ -51,7 +53,7 @@ object ElfinDAO {
    * <i>The database API do not provide any feedback on that operation.</i>
    */
   def update(elfin: scala.xml.Node)(implicit dbConfig: DbConfig) = {
-    Logger.debug(s"ElfinDAO.update elfin.ID_G/Id: ${elfin \ "@ID_G"}/${elfin \ "@Id"}")
+    logger.debug(s"ElfinDAO.update elfin.ID_G/Id: ${elfin \ "@ID_G"}/${elfin \ "@Id"}")
     val elfinXml = elfin
     val updateStatetement =
       s"update replace collection('${dbConfig.databaseName}/${elfin \ "@ID_G"}')//ELFIN[@Id='${elfin \ "@Id"}'] with ${elfinXml.mkString}"
@@ -63,7 +65,7 @@ object ElfinDAO {
    * <i>The database API do not provide any feedback on that operation.</i>
    */
   def delete(elfin: ELFIN)(implicit dbConfig: DbConfig) = {
-    Logger.debug(s"ElfinDAO.delete elfin.ID_G/Id: ${elfin.ID_G}/${elfin.Id}")
+    logger.debug(s"ElfinDAO.delete elfin.ID_G/Id: ${elfin.ID_G}/${elfin.Id}")
     XQueryWSHelper.delete(elfin)
   }
 
@@ -124,7 +126,7 @@ object ElfinDAO {
       // Update database with new elfin
       ElfinDAO.create(updatedElfinUser)
       // TODO: define a validation to provide feedback whether or not the user has effectively been created.
-      Logger.debug(s"ExistDbUserService.save: NEW USER with elfinId: ${updatedElfinUser.Id} and elfinID_G: ${updatedElfinUser.ID_G} SHALL HAVE BEEN CREATED TO DATABASE... ")
+      logger.debug(s"ExistDbUserService.save: NEW USER with elfinId: ${updatedElfinUser.Id} and elfinID_G: ${updatedElfinUser.ID_G} SHALL HAVE BEEN CREATED TO DATABASE... ")
       updatedElfinUser
     }
     futureUpdatedElfin
@@ -158,7 +160,7 @@ object ElfinDAO {
   private def executeStatement(statement: String)(implicit conf: DbConfig) = {
     val conn = XQConnectionHelper.getConnection()(conf)
     try {
-      Logger.debug("executeStatement(statement) : " + statement)
+      logger.debug("executeStatement(statement) : " + statement)
       var xqe = conn.createExpression()
       xqe.executeCommand(statement)
     } finally {
