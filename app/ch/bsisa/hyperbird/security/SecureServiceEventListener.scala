@@ -4,7 +4,9 @@ import securesocial.core.{Event,EventListener,LoginEvent,LogoutEvent,PasswordCha
 import play.api.mvc.{Session, RequestHeader}
 import play.api.{Application, Logger}
 import play.api.cache.Cache
-import play.api.Play.current // Provides implicit access to current application context.
+import play.api.Play.current
+import java.util.Date
+import ch.bsisa.hyperbird.util.DateUtil
 
 /**
  * SecureSocial service event listener.
@@ -23,7 +25,13 @@ class SecureServiceEventListener(app: Application) extends EventListener {
     
   def onEvent(event: Event, request: RequestHeader, session: Session): Option[Session] = {
     val eventName = event match {
-      case e: LoginEvent => "login"
+      case e: LoginEvent => {
+        val currentDate = new Date();
+        val user = event.user match {case user: User => user}
+        if (!(user.validFromDate.before(currentDate) && user.validToDate.after(currentDate))) { 
+          throw new Exception(s"User ${user.identityId.userId} - ${user.fullName} access is currently disactivated (${DateUtil.hbDateFormat.format(new Date)}), please contact your system administrator.") 
+        }
+      }
       case e: LogoutEvent => {
         // Clean up cache on logout. Useful for user to notice their roles change before cache TTL has expired.
         Cache.remove(event.user.identityId.userId)
