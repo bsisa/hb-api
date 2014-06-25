@@ -18,7 +18,18 @@ class SecureServiceEventListener(app: Application) extends EventListener {
    
   def onEvent(event: Event, request: RequestHeader, session: Session): Option[Session] = {
     val eventName = event match {
-      case e: LoginEvent => "login"
+      case e: LoginEvent => {
+        "login"
+        // Checkout securesocial.core.providers.utils.Mailer.sendEmail for example Akka scheduler usage with MailerPlugin
+//	    Akka.system.scheduler.scheduleOnce(1 seconds) {
+//	      val mail = use[MailerPlugin].email
+//	      mail.setSubject(subject)
+//	      mail.setRecipient(recipient)
+//	      mail.setFrom(fromAddress)
+//	      // the mailer plugin handles null / empty string gracefully
+//	      mail.send(body._1.map(_.body).getOrElse(""), body._2.map(_.body).getOrElse(""))
+//	    } 
+      }
       case e: LogoutEvent => "logout"
       case e: SignUpEvent => "signup"
       case e: PasswordResetEvent => "password reset"
