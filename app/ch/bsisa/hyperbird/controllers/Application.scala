@@ -17,6 +17,8 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.MILLISECONDS
 import ch.bsisa.hyperbird.security.Role
+import ch.bsisa.hyperbird.util.DateUtil
+import java.util.Date
 
 /**
  * Application controller.
@@ -64,8 +66,10 @@ object Application extends Controller with securesocial.core.SecureSocial {
       val futureUserDetails = XQueryWSHelper.find(WSQueries.elfinQuery(userDetailsID_G, userDetailsId))
 
       val userDetails = Await.result[ELFIN](futureUserDetails, Duration(8000, MILLISECONDS))
+
       val userFirstName = userDetails.IDENTIFIANT.get.NOM.get
-      val userLastName = userDetails.IDENTIFIANT.get.ALIAS.get
+      val userLastName = userDetails.IDENTIFIANT.get.ALIAS.get      
+
       // We can assume a user always has a FRACTION
       val userRoles = for {
         line <- elfinUser.CARACTERISTIQUE.get.FRACTION.get.L
