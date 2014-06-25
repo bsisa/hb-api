@@ -270,11 +270,14 @@ object Api extends Controller with securesocial.core.SecureSocial {
     Logger.debug(s"createElfin(collectionId=${collectionId}, elfinId=${elfinId}) called by user: ${request.user}")
     
     try {
+      // Match our custom User type Identity implementation  
+      val user = request.user match { case user: User => user }
+      
       // Convert elfin JsValue to ELFIN object and replace its ID_G with collectionId
       val elfin = ElfinUtil.replaceElfinID_G(elfin = ElfinFormat.fromJson(request.body), newElfinID_G = collectionId)
 
       // Application data based access right
-      WithClasseEditRight.isAuthorized(user = request.user, elfinClasse = elfin.CLASSE)
+      WithClasseEditRight.isAuthorized(user = user, elfinClasse = elfin.CLASSE)
       
       // Test identifiers consistency between URL and JSON body
       if (elfin.Id.equals(elfinId)) {
@@ -309,20 +312,14 @@ object Api extends Controller with securesocial.core.SecureSocial {
     Logger.debug(s"updateElfin(collectionId=${collectionId}, elfinId=${elfinId}) called by user: ${request.user}")
     
     try {
+      // Match our custom User type Identity implementation  
+      val user = request.user match { case user: User => user }
       
       // Convert elfin JsValue to ELFIN object
       val elfin = ElfinFormat.fromJson(request.body)
 
-      request.user match { 
-		case user: User => {
-			Logger.debug(s"Roles = ${user.roles.getOrElse("No roles")} ")
-			Logger.debug(s"Valid from ${user.validFromDate} to ${user.validToDate}");
-		}        
-	    case _ => Logger.debug(s"Unexpected Class.")
-      }
-
       // Application data based access right
-      WithClasseEditRight.isAuthorized(user = request.user, elfinClasse = elfin.CLASSE)      
+      WithClasseEditRight.isAuthorized(user = user, elfinClasse = elfin.CLASSE)      
       
       // Test identifiers consistency between URL and JSON body
       if (elfin.ID_G.equals(collectionId) && elfin.Id.equals(elfinId)) {
@@ -356,14 +353,18 @@ object Api extends Controller with securesocial.core.SecureSocial {
    */
   def deleteElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true).async { request =>
     try {
+      // Match our custom User type Identity implementation  
+      val user = request.user match { case user: User => user }
+      
       // Info level is fine for DELETE operation. They should not be frequent and should be easily traceable.
-      Logger.info(s"deleteElfin(collectionId=${collectionId}, elfinId=${elfinId}) called by user: ${request.user}")
+      Logger.info(s"deleteElfin(collectionId=${collectionId}, elfinId=${elfinId}) called by user: ${user.fullName} - ${user.identityId.userId}")
+      
       // Make sure the resource we want to delete still exists.
       val futureElfin = XQueryWSHelper.find(WSQueries.elfinQuery(collectionId, elfinId))
       futureElfin.map(elfin =>
         try {
 	      // Application data based access right
-	      WithClasseEditRight.isAuthorized(user = request.user, elfinClasse = elfin.CLASSE)
+	      WithClasseEditRight.isAuthorized(user = user, elfinClasse = elfin.CLASSE)
           // Delete elfin from database
           ElfinDAO.delete(elfin)
           // Send deleted elfin back to give a chance for cancellation (re-creation) 
