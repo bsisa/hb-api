@@ -37,7 +37,7 @@ import ch.bsisa.hyperbird.security.WithClasseEditRight
 import ch.bsisa.hyperbird.security.WithClasseEditRightException
 import securesocial.core.SocialUser
 import ch.bsisa.hyperbird.security.User
-
+import ch.bsisa.hyperbird.cache.CacheHelper
 
 
 /**
@@ -201,7 +201,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
    */
   def filteredCollection(collectionId: String, xpath: String, format: String) = SecuredAction(ajaxCall = true).async {
     Logger.warn(s"TODO: make use of format parameter value ${format}")
-    XQueryWSHelper.query(WSQueries.filteredCollectionQuery(collectionId, xpath))
+   	XQueryWSHelper.query(WSQueries.filteredCollectionQuery(collectionId, xpath))
   }
 
   /**
@@ -213,11 +213,9 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
     // Send cloned catalogue elfin in JSON format 
     futureElfinWithId.map { elfin =>
-      
-      // Application data based access right
-      // TODO: Review: Prevents to obtain default from catalogue entity even for read only mode
-      //WithClasseEditRight.isAuthorized(user = request.user, elfinClasse = elfin.CLASSE)      
-      
+      // Intended no access right checks for reading entities from catalogue 
+      // These entities are read not only for creating new entities but also to 
+      // obtain sensible defaults       
       val elfinJson = ElfinFormat.toJson(elfin)
       Ok(elfinJson).as(JSON)
     }.recover {
@@ -238,12 +236,10 @@ object Api extends Controller with securesocial.core.SecureSocial {
   }
 
   /**
-   * Gets ELFIN corresponding to this collectionId and elfinId
+   * Finds 0 or 1 ELFIN and returns it within a SimpleResult
    */
-  def getElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true).async { implicit request =>
-
-    Logger.debug(s"getElfin(collectionId=${collectionId}, elfinId=${elfinId}) called by user: ${request.user}")
-
+  private def getElfinSimpleResult(collectionId: String, elfinId: String)  = {
+    
     val futureElfin = XQueryWSHelper.find(WSQueries.elfinQuery(collectionId, elfinId))
 
     futureElfin.map { elfin =>
@@ -260,7 +256,16 @@ object Api extends Controller with securesocial.core.SecureSocial {
         ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
       }
     }
+  }  
+  
+  /**
+   * Gets ELFIN corresponding to this collectionId and elfinId
+   */
+  def getElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true).async { implicit request =>
+    Logger.debug(s"getElfin(collectionId=${collectionId}, elfinId=${elfinId}) called by user: ${request.user}")
+    getElfinSimpleResult(collectionId,elfinId)
   }
+  
 
   /**
    * Creates an ELFIN within the specified collectionId of CLASS className.
@@ -283,9 +288,16 @@ object Api extends Controller with securesocial.core.SecureSocial {
       if (elfin.Id.equals(elfinId)) {
         // Update database with new elfin
         ElfinDAO.create(elfin)
+        // Invalidate all cache entries related to this collectionId
+        CacheHelper.removeEntriesContaining(collectionId)
+        
         // Re-query the new ELFIN from the database as the only way we currently 
         // have to detect creation failure due to failing access rights or other issues.
-        XQueryWSHelper.query(WSQueries.elfinQuery(collectionId, elfinId))
+        
+        // Do not use query but find instead (encapsulated within private getElfinSimpleResult): 
+        // 1) can return 0 - n instead of 0 -1 ELFIN.
+        // 2) make easier to cache all query calls and no find calls.
+        getElfinSimpleResult(collectionId,elfinId)
       } else {
         val errorMsg = s"PUT URL ELFIN ID_G/Id: ${collectionId}/${elfinId} unique identifier does not match PUT body JSON ELFIN provided ID_G/Id: ${elfin.ID_G}/${elfin.Id}. Creation cancelled."
         ExceptionsManager.manageFutureException(errorMsg = Option(errorMsg))
@@ -325,6 +337,10 @@ object Api extends Controller with securesocial.core.SecureSocial {
       if (elfin.ID_G.equals(collectionId) && elfin.Id.equals(elfinId)) {
         // Update database with new elfin
         ElfinDAO.update(elfin)
+        
+        // Invalidate all cache entries related to this collectionId
+        CacheHelper.removeEntriesContaining(collectionId)        
+        
         // Sent success response with updated elfin
         Ok(ElfinFormat.toJson(elfin)).as(JSON)
       } else {
@@ -367,6 +383,10 @@ object Api extends Controller with securesocial.core.SecureSocial {
 	      WithClasseEditRight.isAuthorized(user = user, elfinClasse = elfin.CLASSE)
           // Delete elfin from database
           ElfinDAO.delete(elfin)
+          
+		  // Invalidate all cache entries related to this collectionId
+       	  CacheHelper.removeEntriesContaining(collectionId)
+        
           // Send deleted elfin back to give a chance for cancellation (re-creation) 
           // provided the REST client does something with it unlike restangular
           Ok(ElfinFormat.toJson(elfin)).as(JSON)

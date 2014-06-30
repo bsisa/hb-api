@@ -25,7 +25,17 @@ class ApiConfig {
   val clientDebugEnabled: Boolean = Play.current.configuration.getBoolean(ApiConfig.ClientDebugEnabledUrlKey) match {
     case Some(clientDebugEnabledValue) => clientDebugEnabledValue
     case None => throw ApiConfigException(s"ApiConfig client debug enabled information ${ApiConfig.ClientDebugEnabledUrlKey} missing")
-  }  
+  }
+  
+  /**
+   * Used by Api service to enable or disable queries cache feature.
+   * 
+   * '''WARNING''': This feature is still in alpha state and should not be activated in production yet. Before production use it requires design review, extended testing and tuning (TTL,...) to make sure no unintended side effects exist.
+   */
+  val queryCacheEnabled: Boolean = Play.current.configuration.getBoolean(ApiConfig.QueryCacheEnabledUrlKey) match {
+    case Some(queryCacheEnabledValue) => queryCacheEnabledValue
+    case None => false // This property is optional, fallback to false without requiring configuration.
+  }    
 
 
 }
@@ -42,5 +52,6 @@ object ApiConfig {
 
   private val BaseUrlKey = "hb.api.baseUrl"
   private val ClientDebugEnabledUrlKey = "hb.api.clientDebugEnabled"
+  private val QueryCacheEnabledUrlKey = "hb.api.queryCacheEnabled"
 
 }
