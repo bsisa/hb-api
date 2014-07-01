@@ -13,10 +13,12 @@ import play.api.cache.EhCachePlugin
 import scala.collection.JavaConversions._
 
 /**
- * Object centralising cache related operations.
+ * Centralises cache related operations.
  *
- * Helps refactoring code which is specific to EhCache and play default configurations (i.e. cache name).
- * Central point to enable / disable cache functionality (currently through implicit use).
+ * <ul>
+ * <li>Helps refactoring code which is specific to EhCache and play default configurations (i.e. cache name).</li>
+ * <li>Central point to enable / disable cache functionality (currently through implicit use).</li>
+ * </ul>
  *
  * @author Patrick Refondini
  */
