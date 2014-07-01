@@ -18,6 +18,14 @@ class ApiConfig {
     case Some(baseUrlValue) => baseUrlValue
     case None => throw ApiConfigException(s"ApiConfig base URL information ${ApiConfig.BaseUrlKey} missing")
   }
+  
+  /**
+   *  Used for ELFIN Annexes flat file storage
+   */
+  val annexesRootFolder: String = Play.current.configuration.getString(ApiConfig.AnnexesRootFolderKey) match {
+    case Some(annexesRootFolderValue) => annexesRootFolderValue
+    case None => throw ApiConfigException(s"ApiConfig annexes root folder information ${ApiConfig.AnnexesRootFolderKey} missing")
+  }  
 
   /**
    * Used by Angular $logProvider service to enable or disable debug log.
@@ -50,6 +58,7 @@ case class ApiConfigException(message: String = null, cause: Throwable = null) e
  */
 object ApiConfig {
 
+  private val AnnexesRootFolderKey = "hb.api.annexesRootFolder"
   private val BaseUrlKey = "hb.api.baseUrl"
   private val ClientDebugEnabledUrlKey = "hb.api.clientDebugEnabled"
   private val QueryCacheEnabledUrlKey = "hb.api.queryCacheEnabled"

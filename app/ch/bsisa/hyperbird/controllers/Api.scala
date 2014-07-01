@@ -38,6 +38,9 @@ import ch.bsisa.hyperbird.security.WithClasseEditRightException
 import securesocial.core.SocialUser
 import ch.bsisa.hyperbird.security.User
 import ch.bsisa.hyperbird.cache.CacheHelper
+import ch.bsisa.hyperbird.io.AnnexesManager
+import ch.bsisa.hyperbird.io.AnnexesManagerFileNotFoundException
+import ch.bsisa.hyperbird.io.AnnexesManagerCannotReadFileException
 
 
 /**
@@ -133,6 +136,19 @@ object Api extends Controller with securesocial.core.SecureSocial {
     }
   }
 
+
+  /**
+   * Returns the annex file pointed at by `ELFIN/ANNEXE/RENVOI/@LIEN` data structure
+   */
+  def getElfinAnnexFile(elfinID_G: String, elfinId: String, fileName: String) = SecuredAction(ajaxCall = true) { request =>
+    try {
+      Ok.sendFile(AnnexesManager.getElfinAnnexFile(elfinID_G, elfinId, fileName))
+    } catch {
+      case e: Exception => manageAnnexesManagerException(e)
+    }
+  }
+  
+ 
   /**
    * Produce XLS spreadsheet report from provided XLS template and associated XQuery.
    */
@@ -448,6 +464,31 @@ object Api extends Controller with securesocial.core.SecureSocial {
       "DESCRIPTION" -> errorMsg.getOrElse("").toString)
     Status(568)(jsonExceptionMsg)
   }    
+  
+  def manageAnnexesManagerException(exception: Exception, errorMsg: Option[String] = None): SimpleResult = {
+    Logger.warn("Api exception: " + exception.toString + " - " + errorMsg.getOrElse(""))
+    exception match {
+      case e : AnnexesManagerFileNotFoundException => {
+	    val jsonExceptionMsg = Json.obj(
+	      "ERROR" -> "annex.file.not.found",
+	      "DESCRIPTION" -> errorMsg.getOrElse("").toString)
+	    NotFound(jsonExceptionMsg)
+      }
+      case e : AnnexesManagerCannotReadFileException => {
+	   val jsonExceptionMsg = Json.obj(
+	      "ERROR" -> "annex.file.cannot.read",
+	      "DESCRIPTION" -> errorMsg.getOrElse("").toString)
+	    Status(403)(jsonExceptionMsg) // 403 - Forbidden   
+      }
+      case e : Exception => {
+	    val jsonExceptionMsg = Json.obj(
+	      "ERROR" -> "annex.file.unexpected.exception",
+	      "DESCRIPTION" -> errorMsg.getOrElse("").toString)
+	    NotFound(jsonExceptionMsg)
+      }
+    }
+
+  }  
   
 
   def manageResutlNotFoundException(exception: ResultNotFoundException, errorMsg: Option[String] = None): SimpleResult = {
