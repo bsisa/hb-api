@@ -32,6 +32,8 @@ hb {
 		"id": "G20050101000012345"
 	}
 	api {
+		# Root folder where ELFIN annexes are stored.
+	    "annexesRootFolder" : "/home/patrick/Documents/hb/data/ne-20140619",	
 		# REST base URL. Use for instance by Restangular.   
 		"baseUrl": "http://localhost:9000/api/melfin/"
 		"clientDebugEnabled": false

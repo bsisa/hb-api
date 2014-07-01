@@ -27,8 +27,10 @@ import play.api.mvc._
 import play.api.mvc.Results._
 import scala.concurrent.Future
 import ch.bsisa.hyperbird.controllers.Api
-
-
+import play.api.cache.Cache
+import play.api.Play.current
+import play.api.cache.EhCachePlugin
+import ch.bsisa.hyperbird.cache.CacheHelper
 
 /**
  * Implements QueriesProcessor for REST service.
@@ -42,30 +44,79 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
    */
   override def query(query: String): Future[SimpleResult] = {
 
-    // Keep asynchronous calls asynchronous to allow Play free threads
-    val simpleResFuture: Future[SimpleResult] = queryElfins(query).map { elfinsResp =>
-      val elfinsJsArray = ElfinFormat.elfinsToJsonArray(elfinsResp)
-      Ok(elfinsJsArray)
-    }.recover {
-      case e: ElfinFormatException => Api.manageElfinFormatException(e, Some("ELFIN format conversion failed."))
-      case e: NumberFormatException => 
-        val jsonExceptionMsg = Json.obj(
-          "ERROR" -> e.toString(),
-          "DESCRIPTION" -> "Could not format number successfully.")
-        InternalServerError(jsonExceptionMsg).as(JSON)
-      case e: Throwable =>
-        val jsonExceptionMsg = Json.obj(
-          "ERROR" -> e.toString(),
-          "DESCRIPTION" -> e.getMessage())
-        InternalServerError(jsonExceptionMsg).as(JSON)
+    // Check cache 
+    val cachedQueryResultOption = CacheHelper.getCachedJsonValue(query)
+    cachedQueryResultOption match {
+      case Some(cachedQueryResult) => {
+        Logger.debug(s">>>> CACHE <<<< : Using cache for query ${query}")
+        // Return result from cache as a Future to satisfy function signature
+        scala.concurrent.Future { Ok(cachedQueryResult) }
+      }
+      case None => {
+        queryDb(query)
+        //	    // Keep asynchronous calls asynchronous to allow Play free threads
+        //	    val simpleResFuture: Future[SimpleResult] = queryElfins(query).map { elfinsResp =>
+        //	      val elfinsJsArray = ElfinFormat.elfinsToJsonArray(elfinsResp)
+        //	      Logger.debug(s">>>> CACHE <<<< : Caching query ${query}")
+        //	      // Add to cache
+        //	      Cache.set(query, elfinsJsArray, 30)
+        //	      Ok(elfinsJsArray)
+        //	    }.recover {
+        //	      case e: ElfinFormatException => Api.manageElfinFormatException(e, Some("ELFIN format conversion failed."))
+        //	      case e: NumberFormatException => 
+        //	        val jsonExceptionMsg = Json.obj(
+        //	          "ERROR" -> e.toString(),
+        //	          "DESCRIPTION" -> "Could not format number successfully.")
+        //	        InternalServerError(jsonExceptionMsg).as(JSON)
+        //	      case e: Throwable =>
+        //	        val jsonExceptionMsg = Json.obj(
+        //	          "ERROR" -> e.toString(),
+        //	          "DESCRIPTION" -> e.getMessage())
+        //	        InternalServerError(jsonExceptionMsg).as(JSON)
+        //	    }
+        //	    simpleResFuture        
+
+      }
+
     }
-    simpleResFuture
+
   }
+  
+  /**
+   * Perform query to database managing cache
+   */
+  private def queryDb(query : String) = {
+	    // Keep asynchronous calls asynchronous to allow Play free threads
+	    val simpleResFuture: Future[SimpleResult] = queryElfins(query).map { elfinsResp =>
+	      
+	      val elfinsJsArray = ElfinFormat.elfinsToJsonArray(elfinsResp)
+
+	      // Manage query cache
+	      CacheHelper.setCache(key = query, value = elfinsJsArray)
+
+	      Ok(elfinsJsArray)
+	    }.recover {
+	      case e: ElfinFormatException => Api.manageElfinFormatException(e, Some("ELFIN format conversion failed."))
+	      case e: NumberFormatException => 
+	        val jsonExceptionMsg = Json.obj(
+	          "ERROR" -> e.toString(),
+	          "DESCRIPTION" -> "Could not format number successfully.")
+	        InternalServerError(jsonExceptionMsg).as(JSON)
+	      case e: Throwable =>
+	        val jsonExceptionMsg = Json.obj(
+	          "ERROR" -> e.toString(),
+	          "DESCRIPTION" -> e.getMessage())
+	        InternalServerError(jsonExceptionMsg).as(JSON)
+	    }
+	    simpleResFuture    
+  }
+  
 
   /**
    * WS specific implementation to query 0 to n ELFIN
    */
   def queryElfins(query: String): Future[Seq[ELFIN]] = {
+
     // Perform call to eXist REST service to get collections list
     val responseFuture: Future[Response] = WS.url(query).get()
 
