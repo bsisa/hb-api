@@ -69,6 +69,7 @@ object Application extends Controller with securesocial.core.SecureSocial {
 
       val userFirstName = userDetails.IDENTIFIANT.get.NOM.get
       val userLastName = userDetails.IDENTIFIANT.get.ALIAS.get      
+      val userAbbreviation = userDetails.GROUPE.get
 
       // We can assume a user always has a FRACTION
       val userRoles = for {
@@ -78,7 +79,7 @@ object Application extends Controller with securesocial.core.SecureSocial {
         Role(ID_G = getMixedContent(cSeq(0).mixed), Id = getMixedContent(cSeq(1).mixed), name = getMixedContent(cSeq(2).mixed))        
       }
       
-      Ok(views.txt.whoami(username = request.user.identityId.userId, name = userLastName, surname = userFirstName, roles = userRoles)).as(JSON)
+      Ok(views.txt.whoami(username = request.user.identityId.userId, name = userLastName, surname = userFirstName, abbreviation = userAbbreviation,  roles = userRoles)).as(JSON)
     }.recover {
       case e: Throwable => {
         ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to obtain user information ${e}"))

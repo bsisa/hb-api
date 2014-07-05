@@ -1,8 +1,9 @@
-@(username: String, name: String, surname: String, roles: Seq[ch.bsisa.hyperbird.security.Role])
+@(username: String, name: String, surname: String, abbreviation : String, roles: Seq[ch.bsisa.hyperbird.security.Role])
 { 
 	"username" : "@username" ,
 	"name" : "@name",
 	"surname" : "@surname",
+	"abbreviation" : "@abbreviation",
 	"roles": [ 
 		@{
 			if (roles.size > 1) {
