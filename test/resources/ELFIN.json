@@ -25,6 +25,8 @@
     "DE" : "1980",
     "A" : "",
     "PAR" : "",
+    "VALEUR_A_NEUF" : 8600.0,
+    "VALEUR" : 0.0,
     "MOTCLE" : [ {"VALUE":"ECOLE LE CORBUSIER"},{"VALUE":"ARCHITECTURE"},{"VALUE":"HES"} ]
   },
   "CARACTERISTIQUE" : {

@@ -26,6 +26,8 @@ class ELFINSerialisation extends BaseSerialisationSpec {
 
   val expectedELFIN_Id = "G20040931234567890"
   val expectedELFIN_ID_G = "G20040930101030005"
+  val expectedELFIN_IDENTIFIANT_VALEUR = 0.0
+  val expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF =  8600.0
 
   val elfinJsonInput = JsonXmlConverter.loadJsonFromFile(ELFINJsonFilePath)
   val elfinFromFile = elfinJsonInput.as[ELFIN]
@@ -37,6 +39,12 @@ class ELFINSerialisation extends BaseSerialisationSpec {
     s"have ELFIN.ID_G equal to ${expectedELFIN_ID_G}" in {
       elfinFromFile.ID_G must be equalTo (expectedELFIN_ID_G)
     }
+    s"have ELFIN.IDENTIFIANT.VALEUR equal to ${expectedELFIN_IDENTIFIANT_VALEUR}" in {
+      elfinFromFile.IDENTIFIANT.get.VALEUR.get must be equalTo (expectedELFIN_IDENTIFIANT_VALEUR)
+    }
+    s"have ELFIN.IDENTIFIANT.VALEUR_A_NEUF equal to ${expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF}" in {
+      elfinFromFile.IDENTIFIANT.get.VALEUR_A_NEUF.get must be equalTo (expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF)
+    }        
   }
 
 }
