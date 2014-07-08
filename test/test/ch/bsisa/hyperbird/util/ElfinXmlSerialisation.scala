@@ -31,6 +31,8 @@ class ElfinXmlSerialisation extends BaseSerialisationSpec {
 
   val expectedElfinTest001_Id = "G20040931234567890"
   val expectedElfinTest001_ID_G = "G20040930101030005"
+  val expectedELFIN_IDENTIFIANT_VALEUR = 0.0
+  val expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF =  8600.0
 
   // ================================================================== 
   // XML file => scala.xml.Elem
@@ -60,6 +62,12 @@ class ElfinXmlSerialisation extends BaseSerialisationSpec {
     s"have ID_G equal to ${expectedElfinTest001_ID_G}" in {
       elfin.ID_G must equalTo(expectedElfinTest001_ID_G)
     }
+    s"have ELFIN.IDENTIFIANT.VALEUR equal to ${expectedELFIN_IDENTIFIANT_VALEUR}" in {
+      elfinFromFile.IDENTIFIANT.get.VALEUR.get must be equalTo (expectedELFIN_IDENTIFIANT_VALEUR)
+    }
+    s"have ELFIN.IDENTIFIANT.VALEUR_A_NEUF equal to ${expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF}" in {
+      elfinFromFile.IDENTIFIANT.get.VALEUR_A_NEUF.get must be equalTo (expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF)
+    }    
   }
 
   val etat1MixedContent = elfin.CARACTERISTIQUE.get.ETAT.get.ETAT1.get.mixed
