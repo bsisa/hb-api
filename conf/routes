@@ -57,6 +57,7 @@ DELETE   /api/melfin/:collectionId/:elfinId                   ch.bsisa.hyperbird
 
 # Serve Elfin ANNEX files.
 GET      /api/melfin/annex/:collectionId/:elfinId/:fileName   ch.bsisa.hyperbird.controllers.Api.getElfinAnnexFile(collectionId,elfinId,fileName)
+POST     /api/melfin/annex/:collectionId/:elfinId/:fileName   ch.bsisa.hyperbird.controllers.Api.createElfinAnnexFile(collectionId,elfinId,fileName)
 
 # Trigger data migration
 GET      /hb4tohb5                                            ch.bsisa.hyperbird.controllers.DbMigration.migrate()

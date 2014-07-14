@@ -41,6 +41,7 @@ import ch.bsisa.hyperbird.cache.CacheHelper
 import ch.bsisa.hyperbird.io.AnnexesManager
 import ch.bsisa.hyperbird.io.AnnexesManagerFileNotFoundException
 import ch.bsisa.hyperbird.io.AnnexesManagerCannotReadFileException
+import java.io.File
 
 
 /**
@@ -149,6 +150,24 @@ object Api extends Controller with securesocial.core.SecureSocial {
   }
   
  
+  /**
+   * @TODO: implement
+   * Creates the annex file pointed at by `ELFIN/ANNEXE/RENVOI/@LIEN` data structure
+   */
+  def createElfinAnnexFile(elfinID_G: String, elfinId: String, fileName: String) = SecuredAction(parse.temporaryFile) { request =>
+    // parse.multipartFormData
+    // parse.temporaryFile
+    try {
+  		request.body.moveTo(new File(s"""/tmp/upload/${fileName}"""))
+  		AnnexesManager.createElfinAnnexFile(elfinID_G, elfinId, fileName)
+    	Ok("""{ "message": "File uploaded"}""").as(JSON)      
+
+    } catch {
+      case e: Exception => manageAnnexesManagerException(e)
+    }
+  }
+
+  
   /**
    * Produce XLS spreadsheet report from provided XLS template and associated XQuery.
    */

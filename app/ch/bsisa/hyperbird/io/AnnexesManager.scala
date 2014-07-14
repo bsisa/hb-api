@@ -34,6 +34,15 @@ object AnnexesManager {
     file
   }  
   
+  /**
+   * TODO: implement
+   */
+  def createElfinAnnexFile(elfinID_G : String, elfinId : String, fileName: String) : Unit = {
+    Logger.warn(s"Received createElfinAnnexFile(elfinID_G : ${elfinID_G}, elfinId : ${elfinId}, fileName: ${fileName}) request BUT NO IMPLEMENTATION IS AVAILABLE YET.")
+  }  
+  
+  
+  
 }
 
 case class AnnexesManagerFileNotFoundException(message: String = null, cause: Throwable = null) extends Exception(message, cause)
