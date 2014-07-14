@@ -33,6 +33,7 @@ class ElfinXmlSerialisation extends BaseSerialisationSpec {
   val expectedElfinTest001_ID_G = "G20040930101030005"
   val expectedELFIN_IDENTIFIANT_VALEUR = 0.0
   val expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF =  8600.0
+  val expectedELFIN_IDENTIFIANT_OBJECTIF = "733"
 
   // ================================================================== 
   // XML file => scala.xml.Elem
@@ -53,6 +54,9 @@ class ElfinXmlSerialisation extends BaseSerialisationSpec {
     }        
     s"have IDENTIFIANT/VALEUR_A_NEUF equal to ${expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF}" in {
       (elfinTest001Xml \ "IDENTIFIANT" \ "VALEUR_A_NEUF").text must equalTo(expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF.toString)
+    }
+    s"have IDENTIFIANT/OBJECTIF equal to ${expectedELFIN_IDENTIFIANT_OBJECTIF}" in {
+      (elfinTest001Xml \ "IDENTIFIANT" \ "OBJECTIF").text must equalTo(expectedELFIN_IDENTIFIANT_OBJECTIF.toString)
     }    
   }
 
@@ -73,7 +77,10 @@ class ElfinXmlSerialisation extends BaseSerialisationSpec {
     }
     s"have ELFIN.IDENTIFIANT.VALEUR_A_NEUF equal to ${expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF}" in {
       elfin.IDENTIFIANT.get.VALEUR_A_NEUF.get must be equalTo (expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF)
-    }    
+    }
+    s"have ELFIN.IDENTIFIANT.OBJECTIF equal to ${expectedELFIN_IDENTIFIANT_OBJECTIF}" in {
+      elfin.IDENTIFIANT.get.OBJECTIF.get must be equalTo (expectedELFIN_IDENTIFIANT_OBJECTIF)
+    }        
   }
 
   val etat1MixedContent = elfin.CARACTERISTIQUE.get.ETAT.get.ETAT1.get.mixed
@@ -180,6 +187,17 @@ class ElfinXmlSerialisation extends BaseSerialisationSpec {
     s"have ID_G equal to ${expectedElfinTest001_ID_G}" in {
       (elfinBackToXml \ "@ID_G").text must equalTo(expectedElfinTest001_ID_G)
     }
+    s"have IDENTIFIANT/VALEUR equal to ${expectedELFIN_IDENTIFIANT_VALEUR}" in {
+      (elfinBackToXml \ "IDENTIFIANT" \ "VALEUR").text must equalTo(expectedELFIN_IDENTIFIANT_VALEUR.toString)
+    }        
+    s"have IDENTIFIANT/VALEUR_A_NEUF equal to ${expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF}" in {
+      (elfinBackToXml \ "IDENTIFIANT" \ "VALEUR_A_NEUF").text must equalTo(expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF.toString)
+    }
+    s"have IDENTIFIANT/OBJECTIF equal to ${expectedELFIN_IDENTIFIANT_OBJECTIF}" in {
+      (elfinBackToXml \ "IDENTIFIANT" \ "OBJECTIF").text must equalTo(expectedELFIN_IDENTIFIANT_OBJECTIF.toString)
+    }    
+    
+    
   }
 
   // ==================================================================
