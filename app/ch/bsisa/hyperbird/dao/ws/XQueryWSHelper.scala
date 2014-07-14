@@ -31,6 +31,7 @@ import play.api.cache.Cache
 import play.api.Play.current
 import play.api.cache.EhCachePlugin
 import ch.bsisa.hyperbird.cache.CacheHelper
+import ch.bsisa.hyperbird.CollectionsConfig
 
 /**
  * Implements QueriesProcessor for REST service.
@@ -195,9 +196,9 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
   /**
    * Build query given `xqueryFileName` and executes it returning a future response.
    */
-  def runXQueryFile(xqueryFileName: String, queryString: Option[String]): Future[Response] = {
-     val query = WSQueries.runXQueryFile(xqueryFileName, queryString)
-     val responseFuture: Future[Response] = WS.url(query).withHeaders(("Content-Type", "application/xquery")).get
+  def runXQueryFile(xqueryFileName: String, queryString: Option[String])(implicit dbConf: DbConfig, collectionsConf: CollectionsConfig): Future[Response] = {
+     val query = WSQueries.runXQueryFile(xqueryFileName, queryString)(dbConf, collectionsConf)
+     val responseFuture: Future[Response] = WS.url(query).withAuth(dbConf.userName, dbConf.password, AuthScheme.BASIC).withHeaders(("Content-Type", "application/xquery")).get
      responseFuture     
   }
   
