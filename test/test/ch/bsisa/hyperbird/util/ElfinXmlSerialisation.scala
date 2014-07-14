@@ -48,6 +48,12 @@ class ElfinXmlSerialisation extends BaseSerialisationSpec {
     s"have ID_G equal to ${expectedElfinTest001_ID_G}" in {
       (elfinTest001Xml \ "@ID_G").text must equalTo(expectedElfinTest001_ID_G)
     }
+    s"have IDENTIFIANT/VALEUR equal to ${expectedELFIN_IDENTIFIANT_VALEUR}" in {
+      (elfinTest001Xml \ "IDENTIFIANT" \ "VALEUR").text must equalTo(expectedELFIN_IDENTIFIANT_VALEUR.toString)
+    }        
+    s"have IDENTIFIANT/VALEUR_A_NEUF equal to ${expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF}" in {
+      (elfinTest001Xml \ "IDENTIFIANT" \ "VALEUR_A_NEUF").text must equalTo(expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF.toString)
+    }    
   }
 
   // ================================================================== 
@@ -63,10 +69,10 @@ class ElfinXmlSerialisation extends BaseSerialisationSpec {
       elfin.ID_G must equalTo(expectedElfinTest001_ID_G)
     }
     s"have ELFIN.IDENTIFIANT.VALEUR equal to ${expectedELFIN_IDENTIFIANT_VALEUR}" in {
-      elfinFromFile.IDENTIFIANT.get.VALEUR.get must be equalTo (expectedELFIN_IDENTIFIANT_VALEUR)
+      elfin.IDENTIFIANT.get.VALEUR.get must be equalTo (expectedELFIN_IDENTIFIANT_VALEUR)
     }
     s"have ELFIN.IDENTIFIANT.VALEUR_A_NEUF equal to ${expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF}" in {
-      elfinFromFile.IDENTIFIANT.get.VALEUR_A_NEUF.get must be equalTo (expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF)
+      elfin.IDENTIFIANT.get.VALEUR_A_NEUF.get must be equalTo (expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF)
     }    
   }
 
