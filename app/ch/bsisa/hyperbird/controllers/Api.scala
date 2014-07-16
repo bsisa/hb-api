@@ -164,6 +164,13 @@ object Api extends Controller with securesocial.core.SecureSocial {
       val flowTotalSize = params.get("flowTotalSize").get.seq(0).toInt
       val flowChunkSize = params.get("flowChunkSize").get.seq(0).toInt
 
+      params.get("query") match {
+        case Some(seq) => Logger.debug("FOUND query parameter = " + seq) 
+        case None =>  
+          Logger.debug("No query parameter found list parameters: ")
+          for (paramName <- params) { Logger.debug(s"createElfinAnnexFile : param: ${paramName} ") }
+      }
+      
       // Show param name we could access... like: 
       // flowFilename, flowIdentifier, flowChunkNumber, flowChunkSize, flowTotalSize
       //for (paramName <- params) { Logger.debug(s"createElfinAnnexFile : param: ${paramName} ") }
