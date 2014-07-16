@@ -28,6 +28,12 @@ GET      /api/melfin/whoami                                   ch.bsisa.hyperbird
 # Dynamically provides initialisation configuration information useful to hb-ui 
 GET      /api/melfin/config                                   ch.bsisa.hyperbird.controllers.Api.config
 
+# Serve Elfin ANNEX files.
+GET      /api/melfin/annex/:collectionId/:elfinId/:fileName   ch.bsisa.hyperbird.controllers.Api.getElfinAnnexFile(collectionId,elfinId,fileName)
+POST     /api/melfin/annex/upload                             ch.bsisa.hyperbird.controllers.Api.createElfinAnnexFile()
+# REST upload is not practical given current upload library constraints. CollectionId, elfinId, fileName informations are provided as POST parameters.
+# POST     /api/melfin/annex/:collectionId/:elfinId/:fileName   ch.bsisa.hyperbird.controllers.Api.createElfinAnnexFile(collectionId,elfinId,fileName)
+
 GET      /api/melfin/security/hash/:plainTextPassword         ch.bsisa.hyperbird.controllers.Api.getPasswordHash(plainTextPassword) 
 
 # Elfin - Obtain new elfin from catalogue. Not stored in the database until Api.createElfin applied to it. 
@@ -54,10 +60,6 @@ GET      /api/melfin/:collectionId/:elfinId                   ch.bsisa.hyperbird
 POST     /api/melfin/:collectionId/:elfinId                   ch.bsisa.hyperbird.controllers.Api.createElfin(collectionId, elfinId)
 PUT      /api/melfin/:collectionId/:elfinId                   ch.bsisa.hyperbird.controllers.Api.updateElfin(collectionId, elfinId)
 DELETE   /api/melfin/:collectionId/:elfinId                   ch.bsisa.hyperbird.controllers.Api.deleteElfin(collectionId, elfinId)
-
-# Serve Elfin ANNEX files.
-GET      /api/melfin/annex/:collectionId/:elfinId/:fileName   ch.bsisa.hyperbird.controllers.Api.getElfinAnnexFile(collectionId,elfinId,fileName)
-POST     /api/melfin/annex/:collectionId/:elfinId/:fileName   ch.bsisa.hyperbird.controllers.Api.createElfinAnnexFile(collectionId,elfinId,fileName)
 
 # Trigger data migration
 GET      /hb4tohb5                                            ch.bsisa.hyperbird.controllers.DbMigration.migrate()

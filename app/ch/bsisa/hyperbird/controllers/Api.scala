@@ -42,7 +42,7 @@ import ch.bsisa.hyperbird.io.AnnexesManager
 import ch.bsisa.hyperbird.io.AnnexesManagerFileNotFoundException
 import ch.bsisa.hyperbird.io.AnnexesManagerCannotReadFileException
 import java.io.File
-
+import java.io.FileOutputStream
 
 /**
  * REST API controller.
@@ -90,20 +90,18 @@ object Api extends Controller with securesocial.core.SecureSocial {
     XQueryWSHelper.query(WSQueries.allHbCollectionsQuery)
   }
 
-  
-  
   /**
    * Provides password hashing service.
    */
-  def getPasswordHash(plainTextPassword : String) = SecuredAction(ajaxCall = true) { request => 
+  def getPasswordHash(plainTextPassword: String) = SecuredAction(ajaxCall = true) { request =>
     //
     try {
-	    val plainTextPasswordHashValue = HbSecureService.getPasswordHash(plainTextPassword) 
-	    val jsonResponse = 
-	      s"""{
+      val plainTextPasswordHashValue = HbSecureService.getPasswordHash(plainTextPassword)
+      val jsonResponse =
+        s"""{
 	      "hash" : "${plainTextPasswordHashValue}"
-}"""  
-	    Ok(jsonResponse).as(JSON)
+}"""
+      Ok(jsonResponse).as(JSON)
     } catch {
       case phe: PasswordHashException => {
         managePasswordHashException(exception = phe, errorMsg = Option(s"User: ${request.user} failed to obtain password hash."))
@@ -113,10 +111,8 @@ object Api extends Controller with securesocial.core.SecureSocial {
       }
     }
 
-    
   }
 
-  
   /**
    * Returns the result of executing the specified XQuery file by name.
    *
@@ -137,37 +133,94 @@ object Api extends Controller with securesocial.core.SecureSocial {
     }
   }
 
-
   /**
    * Returns the annex file pointed at by `ELFIN/ANNEXE/RENVOI/@LIEN` data structure
    */
   def getElfinAnnexFile(elfinID_G: String, elfinId: String, fileName: String) = SecuredAction(ajaxCall = true) { request =>
+    Logger.debug(s"getElfinAnnexFile(elfinID_G = ${elfinID_G}, elfinId = ${elfinId}, fileName = ${fileName}) called.")
     try {
       Ok.sendFile(AnnexesManager.getElfinAnnexFile(elfinID_G, elfinId, fileName))
     } catch {
       case e: Exception => manageAnnexesManagerException(e)
     }
   }
-  
- 
+
   /**
    * @TODO: implement
+   * Note: REST upload is not practical given current upload library constraints. 
+   * CollectionId, elfinId, fileName informations are provided as POST parameters.
    * Creates the annex file pointed at by `ELFIN/ANNEXE/RENVOI/@LIEN` data structure
    */
-  def createElfinAnnexFile(elfinID_G: String, elfinId: String, fileName: String) = SecuredAction(parse.temporaryFile) { request =>
-    // parse.multipartFormData
-    // parse.temporaryFile
+  //  def createElfinAnnexFile(elfinID_G: String, elfinId: String, fileName: String) = Action(parse.multipartFormData) { request =>
+  def createElfinAnnexFile() = Action(parse.multipartFormData) { request =>
+
     try {
-  		request.body.moveTo(new File(s"""/tmp/upload/${fileName}"""))
-  		AnnexesManager.createElfinAnnexFile(elfinID_G, elfinId, fileName)
-    	Ok("""{ "message": "File uploaded"}""").as(JSON)      
+
+      val params = request.body.asFormUrlEncoded
+      val flowIdentifier = params.get("flowIdentifier").get.seq(0)
+      val flowChunkNumber = params.get("flowChunkNumber").get.seq(0).toInt
+      val flowTotalChunks = params.get("flowTotalChunks").get.seq(0).toInt
+      val flowFilename = params.get("flowFilename").get.seq(0)
+      val flowTotalSize = params.get("flowTotalSize").get.seq(0).toInt
+      val flowChunkSize = params.get("flowChunkSize").get.seq(0).toInt
+
+      // Show param name we could access... like: 
+      // flowFilename, flowIdentifier, flowChunkNumber, flowChunkSize, flowTotalSize
+      //for (paramName <- params) { Logger.debug(s"createElfinAnnexFile : param: ${paramName} ") }
+
+//      Logger.debug(s"""Api.createElfinAnnexFile: request.contentType = ${request.contentType}""")
+//      for (key <- request.headers.keys) {
+//        val header = request.headers.get(key)
+//        Logger.debug(s"""REQUEST HEADER FOR KEY = ${key} ; HEADER = ${header.getOrElse("EMPTY...")}""")
+//      }
+
+      val file = request.body.file("file").get
+      file.ref.moveTo(new File(s"/tmp/upload/${flowIdentifier}-${flowChunkNumber}"))
+      
+//      for (file <- request.body.files) {
+//        Logger.debug(s"""BODY FILE: file.filename = ${file.filename}; file.contentType = ${file.contentType}; file.key = ${file.key}""")
+//        file.ref.moveTo(new File(s"/tmp/upload/${file.filename}"))
+//      }
+      //request.body.moveTo(new File(s"""/tmp/upload/${fileName}"""))
+      //AnnexesManager.createElfinAnnexFile(elfinID_G, elfinId, fileName)
+      Ok("""{ "message": "File uploaded"}""").as(JSON)
 
     } catch {
       case e: Exception => manageAnnexesManagerException(e)
     }
   }
 
-  
+  import ch.bsisa.hyperbird.io.StreamingBodyParser.streamingBodyParser
+
+  //  def createElfinAnnexFile(elfinID_G: String, elfinId: String, fileName: String) = Action(streamingBodyParser(streamConstructor)) { request =>
+  //    val params = request.body.asFormUrlEncoded // you can extract request parameters for whatever your app needs
+  //    // Show param name we could access... like: 
+  //    // flowFilename, flowIdentifier, flowChunkNumber, flowChunkSize, flowTotalSize
+  //    for (paramName <- params ) { Logger.debug(s"createElfinAnnexFile : param: ${paramName} " ) }
+  //
+  //    for (file <- request.body.files) {
+  //      Logger.debug(s"""BODY FILE: file.filename = ${file.filename}; file.contentType = ${file.contentType}; file.key = ${file.key}""")
+  //    }
+  //    
+  //    val result = request.body.files(0).ref
+  //    if (result.isRight) { // streaming succeeded
+  //      val filename = result.right.get.filename
+  //      Ok(s"File $filename successfully streamed.")
+  //    } else { // file streaming failed
+  //      Ok(s"Streaming error occurred: ${result.left.get.errorMessage}")
+  //    }
+  //  }
+
+  /**
+   * Higher-order function that accepts the unqualified name of the file to stream to and returns the output stream
+   * for the new file. This example streams to a file, but streaming to AWS S3 is also possible
+   */
+  def streamConstructor(filename: String) = {
+    //    val dir = new File(sys.env("HOME"), "uploadedFiles")
+    //    dir.mkdirs()
+    Option(new FileOutputStream(new File(s"/tmp/upload/${filename}")))
+  }
+
   /**
    * Produce XLS spreadsheet report from provided XLS template and associated XQuery.
    */
@@ -176,47 +229,47 @@ object Api extends Controller with securesocial.core.SecureSocial {
     val rawQueryString = if (request.rawQueryString != null && request.rawQueryString.nonEmpty) Option(request.rawQueryString) else None
 
     XQueryWSHelper.getFile(fileName).map { response =>
-      
+
       if (response.ahcResponse.getStatusCode() == 200) {
 
-      // Convert workbook from inputstream to Workbook object =========================================
-      val wb: Workbook = SpreadSheetBuilder.getWorkbook(response.ahcResponse.getResponseBodyAsStream)
+        // Convert workbook from inputstream to Workbook object =========================================
+        val wb: Workbook = SpreadSheetBuilder.getWorkbook(response.ahcResponse.getResponseBodyAsStream)
 
-      // Fill workbook parameter sheet with parameters values associated to xquery if any =============
-      val queryStringMap = request.queryString
+        // Fill workbook parameter sheet with parameters values associated to xquery if any =============
+        val queryStringMap = request.queryString
 
-      SpreadSheetBuilder.updateParameterWorkBook(wb, queryStringMap)
+        SpreadSheetBuilder.updateParameterWorkBook(wb, queryStringMap)
 
-      // Get the result of the query as an HTML table =================================================
-      val xqueryFileName = SpreadSheetBuilder.getXQueryFileName(wb)
-      val reportDynamicContentFuture = XQueryWSHelper.runXQueryFile(xqueryFileName, rawQueryString).map { response =>
-        response.body.mkString
-      }
-      // 10 minutes timeout is not expected to be reached but 
-      // is set to this very long value to avoid failing with 
-      // possibly very heavy xqueries.
-      // 
-      // Non blocking solution seem not possible given 
-      // reportDynamicContentFuture depends on xqueryFileName
-      import scala.concurrent.duration._
-      val reportDynamicContent = Await.result(reportDynamicContentFuture, 10 minutes)
-      //Logger.debug("reportDynamicContent: " + reportDynamicContent)
+        // Get the result of the query as an HTML table =================================================
+        val xqueryFileName = SpreadSheetBuilder.getXQueryFileName(wb)
+        val reportDynamicContentFuture = XQueryWSHelper.runXQueryFile(xqueryFileName, rawQueryString).map { response =>
+          response.body.mkString
+        }
+        // 10 minutes timeout is not expected to be reached but 
+        // is set to this very long value to avoid failing with 
+        // possibly very heavy xqueries.
+        // 
+        // Non blocking solution seem not possible given 
+        // reportDynamicContentFuture depends on xqueryFileName
+        import scala.concurrent.duration._
+        val reportDynamicContent = Await.result(reportDynamicContentFuture, 10 minutes)
+        //Logger.debug("reportDynamicContent: " + reportDynamicContent)
 
-      // Merge HTML table query result with workbook datasheet =========================================
-      SpreadSheetBuilder.mergeHtmlTable(wb, reportDynamicContent)
+        // Merge HTML table query result with workbook datasheet =========================================
+        SpreadSheetBuilder.mergeHtmlTable(wb, reportDynamicContent)
 
-      SpreadSheetBuilder.insertWorkBookUserDetails(wb, request.user)
-      SpreadSheetBuilder.insertWorkBookPageNumbers(wb)
-      SpreadSheetBuilder.evaluateAllFormulaCells(wb)
-      
-      // Write workbook object back to an outputstream =================================================
-      val out: ByteArrayOutputStream = new ByteArrayOutputStream()
-      wb.write(out)
-      out.close()
-      val modifiedStream = new ByteArrayInputStream(out.toByteArray)
+        SpreadSheetBuilder.insertWorkBookUserDetails(wb, request.user)
+        SpreadSheetBuilder.insertWorkBookPageNumbers(wb)
+        SpreadSheetBuilder.evaluateAllFormulaCells(wb)
 
-      // Sent the response stream ======================================================================
-      Ok.chunked(Enumerator.fromStream(modifiedStream)).as(response.ahcResponse.getContentType)
+        // Write workbook object back to an outputstream =================================================
+        val out: ByteArrayOutputStream = new ByteArrayOutputStream()
+        wb.write(out)
+        out.close()
+        val modifiedStream = new ByteArrayInputStream(out.toByteArray)
+
+        // Sent the response stream ======================================================================
+        Ok.chunked(Enumerator.fromStream(modifiedStream)).as(response.ahcResponse.getContentType)
       } else {
         val endUserMsg = s"Status: ${response.ahcResponse.getStatusCode()} - ${response.ahcResponse.getStatusText()}. Possible misconfiguration, please contact your system administrator."
         Logger.error(s"${endUserMsg} Failing URI: ${response.ahcResponse.getUri()}")
@@ -236,7 +289,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
    */
   def filteredCollection(collectionId: String, xpath: String, format: String) = SecuredAction(ajaxCall = true).async {
     Logger.warn(s"TODO: make use of format parameter value ${format}")
-   	XQueryWSHelper.query(WSQueries.filteredCollectionQuery(collectionId, xpath))
+    XQueryWSHelper.query(WSQueries.filteredCollectionQuery(collectionId, xpath))
   }
 
   /**
@@ -256,8 +309,8 @@ object Api extends Controller with securesocial.core.SecureSocial {
     }.recover {
       case e: WithClasseEditRightException =>
         val errorMsg = s"Failed to obtain Elfin with CLASSE: ${classeName} from catalogue: ${e}"
-        manageWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))      
-      
+        manageWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))
+
       case resNotFound: ResultNotFoundException => {
         manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"Failed to obtain new ELFIN from catalogue for classeName: ${classeName}: ${resNotFound}"))
       }
@@ -273,8 +326,8 @@ object Api extends Controller with securesocial.core.SecureSocial {
   /**
    * Finds 0 or 1 ELFIN and returns it within a SimpleResult
    */
-  private def getElfinSimpleResult(collectionId: String, elfinId: String)  = {
-    
+  private def getElfinSimpleResult(collectionId: String, elfinId: String) = {
+
     val futureElfin = XQueryWSHelper.find(WSQueries.elfinQuery(collectionId, elfinId))
 
     futureElfin.map { elfin =>
@@ -291,16 +344,15 @@ object Api extends Controller with securesocial.core.SecureSocial {
         ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
       }
     }
-  }  
-  
+  }
+
   /**
    * Gets ELFIN corresponding to this collectionId and elfinId
    */
   def getElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true).async { implicit request =>
     Logger.debug(s"getElfin(collectionId=${collectionId}, elfinId=${elfinId}) called by user: ${request.user}")
-    getElfinSimpleResult(collectionId,elfinId)
+    getElfinSimpleResult(collectionId, elfinId)
   }
-  
 
   /**
    * Creates an ELFIN within the specified collectionId of CLASS className.
@@ -308,31 +360,31 @@ object Api extends Controller with securesocial.core.SecureSocial {
   def createElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true).async(parse.json) { request =>
 
     Logger.debug(s"createElfin(collectionId=${collectionId}, elfinId=${elfinId}) called by user: ${request.user}")
-    
+
     try {
       // Match our custom User type Identity implementation  
       val user = request.user match { case user: User => user }
-      
+
       // Convert elfin JsValue to ELFIN object and replace its ID_G with collectionId
       val elfin = ElfinUtil.replaceElfinID_G(elfin = ElfinFormat.fromJson(request.body), newElfinID_G = collectionId)
 
       // Application data based access right
       WithClasseEditRight.isAuthorized(user = user, elfinClasse = elfin.CLASSE)
-      
+
       // Test identifiers consistency between URL and JSON body
       if (elfin.Id.equals(elfinId)) {
         // Update database with new elfin
         ElfinDAO.create(elfin)
         // Invalidate all cache entries related to this collectionId
         CacheHelper.removeEntriesContaining(collectionId)
-        
+
         // Re-query the new ELFIN from the database as the only way we currently 
         // have to detect creation failure due to failing access rights or other issues.
-        
+
         // Do not use query but find instead (encapsulated within private getElfinSimpleResult): 
         // 1) can return 0 - n instead of 0 -1 ELFIN.
         // 2) make easier to cache all query calls and no find calls.
-        getElfinSimpleResult(collectionId,elfinId)
+        getElfinSimpleResult(collectionId, elfinId)
       } else {
         val errorMsg = s"PUT URL ELFIN ID_G/Id: ${collectionId}/${elfinId} unique identifier does not match PUT body JSON ELFIN provided ID_G/Id: ${elfin.ID_G}/${elfin.Id}. Creation cancelled."
         ExceptionsManager.manageFutureException(errorMsg = Option(errorMsg))
@@ -354,28 +406,28 @@ object Api extends Controller with securesocial.core.SecureSocial {
    */
   // Kept as reminder but won't be used as for update, delete, create operations.
   //def updateElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true, authorize = WithRole("admin"))(parse.json) { request =>
-  def updateElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true)(parse.json) { request =>    
-    
+  def updateElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true)(parse.json) { request =>
+
     Logger.debug(s"updateElfin(collectionId=${collectionId}, elfinId=${elfinId}) called by user: ${request.user}")
-    
+
     try {
       // Match our custom User type Identity implementation  
       val user = request.user match { case user: User => user }
-      
+
       // Convert elfin JsValue to ELFIN object
       val elfin = ElfinFormat.fromJson(request.body)
 
       // Application data based access right
-      WithClasseEditRight.isAuthorized(user = user, elfinClasse = elfin.CLASSE)      
-      
+      WithClasseEditRight.isAuthorized(user = user, elfinClasse = elfin.CLASSE)
+
       // Test identifiers consistency between URL and JSON body
       if (elfin.ID_G.equals(collectionId) && elfin.Id.equals(elfinId)) {
         // Update database with new elfin
         ElfinDAO.update(elfin)
-        
+
         // Invalidate all cache entries related to this collectionId
-        CacheHelper.removeEntriesContaining(collectionId)        
-        
+        CacheHelper.removeEntriesContaining(collectionId)
+
         // Sent success response with updated elfin
         Ok(ElfinFormat.toJson(elfin)).as(JSON)
       } else {
@@ -406,29 +458,29 @@ object Api extends Controller with securesocial.core.SecureSocial {
     try {
       // Match our custom User type Identity implementation  
       val user = request.user match { case user: User => user }
-      
+
       // Info level is fine for DELETE operation. They should not be frequent and should be easily traceable.
       Logger.info(s"deleteElfin(collectionId=${collectionId}, elfinId=${elfinId}) called by user: ${user.fullName} - ${user.identityId.userId}")
-      
+
       // Make sure the resource we want to delete still exists.
       val futureElfin = XQueryWSHelper.find(WSQueries.elfinQuery(collectionId, elfinId))
       futureElfin.map(elfin =>
         try {
-	      // Application data based access right
-	      WithClasseEditRight.isAuthorized(user = user, elfinClasse = elfin.CLASSE)
+          // Application data based access right
+          WithClasseEditRight.isAuthorized(user = user, elfinClasse = elfin.CLASSE)
           // Delete elfin from database
           ElfinDAO.delete(elfin)
-          
-		  // Invalidate all cache entries related to this collectionId
-       	  CacheHelper.removeEntriesContaining(collectionId)
-        
+
+          // Invalidate all cache entries related to this collectionId
+          CacheHelper.removeEntriesContaining(collectionId)
+
           // Send deleted elfin back to give a chance for cancellation (re-creation) 
           // provided the REST client does something with it unlike restangular
           Ok(ElfinFormat.toJson(elfin)).as(JSON)
         } catch {
           case e: WithClasseEditRightException =>
-        	val errorMsg = s"Failed to delete Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
-        	manageWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))          
+            val errorMsg = s"Failed to delete Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
+            manageWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))
           case e: Throwable =>
             ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
         })
@@ -454,26 +506,24 @@ object Api extends Controller with securesocial.core.SecureSocial {
    */
   def manageFutureConnectException(exception: ConnectException, errorMsg: Option[String] = None): Future[SimpleResult] =
     scala.concurrent.Future { manageConnectException(exception, errorMsg) }
-  
-  
+
   // 567 - Custom code for ELFIN For exception ElfinFormatException
   def manageElfinFormatException(exception: ElfinFormatException, errorMsg: Option[String] = None): SimpleResult = {
     Logger.warn("Api exception: " + exception.toString + " - " + errorMsg.getOrElse(""))
     val jsonExceptionMsg = Json.obj(
       "ERROR" -> "elfin.format.failure",
       "DESCRIPTION" -> errorMsg.getOrElse("").toString,
-      "ELFIN_Id" ->  exception.elfinId,
-      "ELFIN_ID_G" ->  exception.elfinID_G)
+      "ELFIN_Id" -> exception.elfinId,
+      "ELFIN_ID_G" -> exception.elfinID_G)
     Status(567)(jsonExceptionMsg)
-  }  
-  
+  }
+
   /**
    * Encapsulate `manageElfinFormatException` in an asynchronous call for use in Action.async context.
    * @see manageException
    */
   def manageFutureElfinFormatException(exception: ElfinFormatException, errorMsg: Option[String] = None): Future[SimpleResult] =
     scala.concurrent.Future { manageElfinFormatException(exception, errorMsg) }
-
 
   // 568 - Custom code for PasswordHashException
   def managePasswordHashException(exception: PasswordHashException, errorMsg: Option[String] = None): SimpleResult = {
@@ -482,33 +532,32 @@ object Api extends Controller with securesocial.core.SecureSocial {
       "ERROR" -> "security.passwordHash.failure",
       "DESCRIPTION" -> errorMsg.getOrElse("").toString)
     Status(568)(jsonExceptionMsg)
-  }    
-  
+  }
+
   def manageAnnexesManagerException(exception: Exception, errorMsg: Option[String] = None): SimpleResult = {
     Logger.warn("Api exception: " + exception.toString + " - " + errorMsg.getOrElse(""))
     exception match {
-      case e : AnnexesManagerFileNotFoundException => {
-	    val jsonExceptionMsg = Json.obj(
-	      "ERROR" -> "annex.file.not.found",
-	      "DESCRIPTION" -> errorMsg.getOrElse("").toString)
-	    NotFound(jsonExceptionMsg)
+      case e: AnnexesManagerFileNotFoundException => {
+        val jsonExceptionMsg = Json.obj(
+          "ERROR" -> "annex.file.not.found",
+          "DESCRIPTION" -> errorMsg.getOrElse("").toString)
+        NotFound(jsonExceptionMsg)
       }
-      case e : AnnexesManagerCannotReadFileException => {
-	   val jsonExceptionMsg = Json.obj(
-	      "ERROR" -> "annex.file.cannot.read",
-	      "DESCRIPTION" -> errorMsg.getOrElse("").toString)
-	    Status(403)(jsonExceptionMsg) // 403 - Forbidden   
+      case e: AnnexesManagerCannotReadFileException => {
+        val jsonExceptionMsg = Json.obj(
+          "ERROR" -> "annex.file.cannot.read",
+          "DESCRIPTION" -> errorMsg.getOrElse("").toString)
+        Status(403)(jsonExceptionMsg) // 403 - Forbidden   
       }
-      case e : Exception => {
-	    val jsonExceptionMsg = Json.obj(
-	      "ERROR" -> "annex.file.unexpected.exception",
-	      "DESCRIPTION" -> errorMsg.getOrElse("").toString)
-	    NotFound(jsonExceptionMsg)
+      case e: Exception => {
+        val jsonExceptionMsg = Json.obj(
+          "ERROR" -> "annex.file.unexpected.exception",
+          "DESCRIPTION" -> errorMsg.getOrElse("").toString)
+        NotFound(jsonExceptionMsg)
       }
     }
 
-  }  
-  
+  }
 
   def manageResutlNotFoundException(exception: ResultNotFoundException, errorMsg: Option[String] = None): SimpleResult = {
     Logger.warn("Api exception: " + exception.toString + " - " + errorMsg.getOrElse(""))
@@ -525,14 +574,14 @@ object Api extends Controller with securesocial.core.SecureSocial {
       "DESCRIPTION" -> errorMsg.getOrElse("").toString)
     Status(403)(jsonExceptionMsg) // 403 - Forbidden
   }
-  
+
   /**
    * Encapsulate `manageWithClasseEditRightException` in a asynchronous call for use in Action.async context.
    * @see manageWithClasseEditRightException
    */
   def manageFutureWithClasseEditRightException(exception: WithClasseEditRightException, errorMsg: Option[String] = None): Future[SimpleResult] =
-    scala.concurrent.Future { manageWithClasseEditRightException(exception, errorMsg) }  
-  
+    scala.concurrent.Future { manageWithClasseEditRightException(exception, errorMsg) }
+
   /**
    * Encapsulate `manageException` in a asynchronous call for use in Action.async context.
    * @see manageException
