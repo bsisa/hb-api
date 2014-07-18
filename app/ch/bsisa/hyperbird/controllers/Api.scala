@@ -43,6 +43,9 @@ import ch.bsisa.hyperbird.io.AnnexesManagerFileNotFoundException
 import ch.bsisa.hyperbird.io.AnnexesManagerCannotReadFileException
 import java.io.File
 import java.io.FileOutputStream
+import ch.bsisa.hyperbird.io.FileUploadHelper
+import ch.bsisa.hyperbird.util.FunctionsUtil
+import ch.bsisa.hyperbird.io.FileUploadHelperUploadIncompleteException
 
 /**
  * REST API controller.
@@ -146,7 +149,8 @@ object Api extends Controller with securesocial.core.SecureSocial {
   }
 
   /**
-   * @TODO: implement
+   * Creates annex file at correct location following file chunks uploads. 
+   * 
    * Note: REST upload is not practical given current upload library constraints. 
    * CollectionId, elfinId, fileName informations are provided as POST parameters.
    * Creates the annex file pointed at by `ELFIN/ANNEXE/RENVOI/@LIEN` data structure
@@ -157,6 +161,10 @@ object Api extends Controller with securesocial.core.SecureSocial {
     try {
 
       val params = request.body.asFormUrlEncoded
+      
+      //for ( key <- params.keys) { Logger.debug(s"key = ${key}")}
+      
+      // flow.js upload information
       val flowIdentifier = params.get("flowIdentifier").get.seq(0)
       val flowChunkNumber = params.get("flowChunkNumber").get.seq(0).toInt
       val flowTotalChunks = params.get("flowTotalChunks").get.seq(0).toInt
@@ -164,69 +172,73 @@ object Api extends Controller with securesocial.core.SecureSocial {
       val flowTotalSize = params.get("flowTotalSize").get.seq(0).toInt
       val flowChunkSize = params.get("flowChunkSize").get.seq(0).toInt
 
-      params.get("query") match {
-        case Some(seq) => Logger.debug("FOUND query parameter = " + seq) 
-        case None =>  
-          Logger.debug("No query parameter found list parameters: ")
-          for (paramName <- params) { Logger.debug(s"createElfinAnnexFile : param: ${paramName} ") }
+      // HyperBird upload information
+      val elfinID_G = params.get("elfinID_G") match {
+        case Some(seq) => seq(0) 
+        case None => throw new Exception ("elfinID_G mandatory information missing.")
+      }
+      val elfinId = params.get("elfinId") match {
+        case Some(seq) => seq(0)
+        case None => throw new Exception ("elfinId mandatory information missing.")
       }
       
-      // Show param name we could access... like: 
-      // flowFilename, flowIdentifier, flowChunkNumber, flowChunkSize, flowTotalSize
-      //for (paramName <- params) { Logger.debug(s"createElfinAnnexFile : param: ${paramName} ") }
-
-//      Logger.debug(s"""Api.createElfinAnnexFile: request.contentType = ${request.contentType}""")
-//      for (key <- request.headers.keys) {
-//        val header = request.headers.get(key)
-//        Logger.debug(s"""REQUEST HEADER FOR KEY = ${key} ; HEADER = ${header.getOrElse("EMPTY...")}""")
-//      }
-
-      val file = request.body.file("file").get
-      file.ref.moveTo(new File(s"/tmp/upload/${flowIdentifier}-${flowChunkNumber}"))
+//      Logger.debug(s"""
+//      elfinID_G = ${elfinID_G}
+//      elfinId = ${elfinId}
+//      flowIdentifier = ${flowIdentifier}
+//      flowChunkNumber = ${flowChunkNumber}
+//      flowTotalChunks = ${flowTotalChunks}
+//      flowFilename = ${flowFilename}
+//      flowTotalSize = ${flowTotalSize}
+//      flowChunkSize = ${flowChunkSize}
+//    		""")
       
-//      for (file <- request.body.files) {
-//        Logger.debug(s"""BODY FILE: file.filename = ${file.filename}; file.contentType = ${file.contentType}; file.key = ${file.key}""")
-//        file.ref.moveTo(new File(s"/tmp/upload/${file.filename}"))
-//      }
-      //request.body.moveTo(new File(s"""/tmp/upload/${fileName}"""))
-      //AnnexesManager.createElfinAnnexFile(elfinID_G, elfinId, fileName)
-      Ok("""{ "message": "File uploaded"}""").as(JSON)
+	  // TODO: make it a config	  
+	  val chunksFolderPath = "/tmp/upload/"
+      val file = request.body.file("file").get
+      file.ref.moveTo(new File(s"${chunksFolderPath}${flowIdentifier}-${flowChunkNumber}"), true)
 
+      // Check if we reached the end of the upload
+      // Note: With flow.js prioritizeFirstAndLastChunk set to true the last chunk is received 
+      // together with the first one thus before last is a good criteria to trigger upload end check
+      if (flowTotalChunks == 1 || flowChunkNumber == (flowTotalChunks - 1)) {
+
+        val retryNb = 3 ; val delayMillis = 3000L        
+        val uploadCompleted = FunctionsUtil.retry(retryNb, delayMillis){
+          Logger.debug(s"createElfinAnnexFile() - retry checkUploadComplete till ${retryNb} times with ${delayMillis} delay.")
+          FileUploadHelper.checkUploadComplete(chunksFolderSourcePath = chunksFolderPath, fileIdentifier = flowIdentifier, totalChunks = flowTotalChunks, totalSize = flowTotalSize)
+        }
+        
+        Logger.debug(s"createElfinAnnexFile() - uploadCompleted = ${uploadCompleted}")
+        
+        if (uploadCompleted) {
+
+          // Creates file to write to 
+          val finalUploadedFile = AnnexesManager.createElfinAnnexFile(elfinID_G = elfinID_G, elfinId = elfinId, fileName = flowFilename)
+        
+          // Writes chunks to final file
+          FileUploadHelper.putChunksTogether(
+            chunksFolderSourcePath = chunksFolderPath,
+            resultFile = finalUploadedFile,
+            fileIdentifier = flowIdentifier,
+            totalChunks = flowTotalChunks,
+            chunkSize = flowChunkSize,
+            totalSize = flowTotalSize)
+
+          // Perform cleanup task
+          FileUploadHelper.deleteChunks(chunksFolderSourcePath = chunksFolderPath, fileIdentifier = flowIdentifier, totalChunks = flowTotalChunks)
+        } else {
+          // Try cleaning up failed upload
+          FileUploadHelper.deleteChunks(chunksFolderSourcePath = chunksFolderPath, fileIdentifier = flowIdentifier, totalChunks = flowTotalChunks)
+          throw FileUploadHelperUploadIncompleteException("Upload of file ${flowFilename} did not complete even after checking ${retryNb} times each delayed of ${delayMillis/1000} seconds.")
+        }
+      }
+      Ok("""{ "message": "File uploaded"}""").as(JSON)
     } catch {
       case e: Exception => manageAnnexesManagerException(e)
     }
   }
 
-  import ch.bsisa.hyperbird.io.StreamingBodyParser.streamingBodyParser
-
-  //  def createElfinAnnexFile(elfinID_G: String, elfinId: String, fileName: String) = Action(streamingBodyParser(streamConstructor)) { request =>
-  //    val params = request.body.asFormUrlEncoded // you can extract request parameters for whatever your app needs
-  //    // Show param name we could access... like: 
-  //    // flowFilename, flowIdentifier, flowChunkNumber, flowChunkSize, flowTotalSize
-  //    for (paramName <- params ) { Logger.debug(s"createElfinAnnexFile : param: ${paramName} " ) }
-  //
-  //    for (file <- request.body.files) {
-  //      Logger.debug(s"""BODY FILE: file.filename = ${file.filename}; file.contentType = ${file.contentType}; file.key = ${file.key}""")
-  //    }
-  //    
-  //    val result = request.body.files(0).ref
-  //    if (result.isRight) { // streaming succeeded
-  //      val filename = result.right.get.filename
-  //      Ok(s"File $filename successfully streamed.")
-  //    } else { // file streaming failed
-  //      Ok(s"Streaming error occurred: ${result.left.get.errorMessage}")
-  //    }
-  //  }
-
-  /**
-   * Higher-order function that accepts the unqualified name of the file to stream to and returns the output stream
-   * for the new file. This example streams to a file, but streaming to AWS S3 is also possible
-   */
-  def streamConstructor(filename: String) = {
-    //    val dir = new File(sys.env("HOME"), "uploadedFiles")
-    //    dir.mkdirs()
-    Option(new FileOutputStream(new File(s"/tmp/upload/${filename}")))
-  }
 
   /**
    * Produce XLS spreadsheet report from provided XLS template and associated XQuery.
