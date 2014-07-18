@@ -60,6 +60,22 @@ object FileUploadHelper {
     }
   }
   
+
+  /**
+   * Checks all chunks are available and account for the expected `totalSize`
+   * return true if correct false otherwise and also throw any file not found or any other File exception.
+   */
+  def checkUploadComplete(chunksFolderSourcePath: String, fileIdentifier: String, totalChunks: Int, totalSize: Int) : Boolean = {
+    val chunksSourceFolder = new File(chunksFolderSourcePath)
+    val files = for { i <- 1 to totalChunks } yield { getChunkFile(chunksSourceFolder, fileIdentifier, chunkNb = i) } 
+    val sizes = for { file <- files} yield { file.length()}
+    val totalFilesSize = sizes.sum
+    if (totalSize == totalFilesSize) {
+      true
+    } else {
+      false
+    }
+  }
   
   /**
    * Recursively perform chunk assembly to file

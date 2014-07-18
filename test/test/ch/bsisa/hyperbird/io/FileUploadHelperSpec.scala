@@ -31,13 +31,23 @@ class FileUploadHelperSpec extends BaseSerialisationSpec {
   if (mergedFile1.exists()) mergedFile1.delete()
 
   FileUploadHelper.putChunksTogether(
-    chunksFolderSourcePath = chunksFilePath, 
-    mergedChunksFolderDestinationPath = fileDestinationPath, 
-    fileName = mergedFile1Name, 
-    fileIdentifier = "10558-MergedFile1pdf", 
-    totalChunks = 10, 
-    chunkSize = 1024, 
+    chunksFolderSourcePath = chunksFilePath,
+    mergedChunksFolderDestinationPath = fileDestinationPath,
+    fileName = mergedFile1Name,
+    fileIdentifier = "10558-MergedFile1pdf",
+    totalChunks = 10,
+    chunkSize = 1024,
     totalSize = mergedFile2Size)
+
+  s"The file chunks in ${chunksFilePath} " should {
+    s"correspond to checkUploadComplete" in {
+      FileUploadHelper.checkUploadComplete(
+        chunksFolderSourcePath = chunksFilePath,
+        fileIdentifier = "10558-MergedFile1pdf",
+        totalChunks = 10,
+        totalSize = mergedFile2Size)
+    }
+  }
 
   s"The mergedFile1 at ${mergedFile1.getCanonicalPath()} " should {
     s"exist" in {
