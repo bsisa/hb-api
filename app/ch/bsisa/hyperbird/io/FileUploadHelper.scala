@@ -22,18 +22,20 @@ object FileUploadHelper {
   /**
    * Performs the assembly of several binary file chunks back to the original single binary file.
    */
-  def putChunksTogether(chunksFolderSourcePath: String, mergedChunksFolderDestinationPath: String, fileName: String, fileIdentifier: String, totalChunks: Int, chunkSize: Int, totalSize: Int): Unit = {
+  def putChunksTogether(chunksFolderSourcePath: String, resultFile: File, fileIdentifier: String, totalChunks: Int, chunkSize: Int, totalSize: Int): Unit = {
 
+    Logger.debug(s"FileUploadHelper.putChunksTogether()")
+    
     val chunksSourceFolder = new File(chunksFolderSourcePath)
-    val fileDestinationFolder = new File(mergedChunksFolderDestinationPath)
-    val resultFile = new File(fileDestinationFolder, fileName)
+    //val fileDestinationFolder = new File(mergedChunksFolderDestinationPath)
+    //val resultFile = new File(fileDestinationFolder, fileName)
     val appendable = true
     val resultFileBOS = new BufferedOutputStream(new FileOutputStream(resultFile, appendable))
 
     // Check we can read from source folder
     if (!chunksSourceFolder.canRead()) throw FileUploadHelperCannotReadFileException(s"Cannot read from ${chunksSourceFolder.getCanonicalPath()}")
     // Check we can write to destination folder
-    if (!fileDestinationFolder.canWrite()) throw FileUploadHelperCannotWriteFileException(s"Cannot write to ${fileDestinationFolder.getCanonicalPath()}")
+    if (!resultFile.canWrite()) throw FileUploadHelperCannotWriteFileException(s"Cannot write to ${resultFile.getCanonicalPath()}")
 
     try {
       // Chunks are one based
@@ -53,6 +55,9 @@ object FileUploadHelper {
    * Delete chunk files
    */
   def deleteChunks(chunksFolderSourcePath: String, fileIdentifier: String, totalChunks: Int) : Unit = {
+    
+    Logger.debug(s"FileUploadHelper.deleteChunks()")
+    
     val chunksSourceFolder = new File(chunksFolderSourcePath)
     for (i <- 1 to totalChunks) {
       val chunk = getChunkFile(chunksSourceFolder, fileIdentifier, chunkNb = i)
@@ -66,6 +71,9 @@ object FileUploadHelper {
    * return true if correct false otherwise and also throw any file not found or any other File exception.
    */
   def checkUploadComplete(chunksFolderSourcePath: String, fileIdentifier: String, totalChunks: Int, totalSize: Int) : Boolean = {
+    
+    Logger.debug(s"FileUploadHelper.checkUploadComplete()")
+    
     val chunksSourceFolder = new File(chunksFolderSourcePath)
     val files = for { i <- 1 to totalChunks } yield { getChunkFile(chunksSourceFolder, fileIdentifier, chunkNb = i) } 
     val sizes = for { file <- files} yield { file.length()}
@@ -73,7 +81,7 @@ object FileUploadHelper {
     if (totalSize == totalFilesSize) {
       true
     } else {
-      false
+      throw FileUploadHelperUploadIncompleteException(s"Upload incomplete for fileIdentifier = ${fileIdentifier}")
     }
   }
   
@@ -125,6 +133,9 @@ object FileUploadHelper {
   }
 
 }
+
+
+case class FileUploadHelperUploadIncompleteException(message: String = null, cause: Throwable = null) extends Exception(message, cause)
 
 case class FileUploadHelperWrongFileSizeException(message: String = null, cause: Throwable = null) extends Exception(message, cause)
 case class FileUploadHelperWrongFileChunkSizeException(message: String = null, cause: Throwable = null) extends Exception(message, cause)
