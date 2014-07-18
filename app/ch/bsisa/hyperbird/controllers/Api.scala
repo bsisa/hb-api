@@ -194,9 +194,14 @@ object Api extends Controller with securesocial.core.SecureSocial {
 //    		""")
       
 	  // TODO: make it a config	  
-	  val chunksDirectory = FileUploadHelper.getTemporaryFileUploadDirectory
+	  val chunksDirectory = FileUploadHelper.getTemporaryFileUploadDirectory()
+	  val chunkDestinationFile = new File(chunksDirectory, s"${flowIdentifier}-${flowChunkNumber}")
+	  Logger.debug(s"""
+  chunksDirectory = ${chunksDirectory.getCanonicalPath()}
+  chunkDestinationFile = ${chunkDestinationFile.getCanonicalPath()}
+	  """)
       val file = request.body.file("file").get
-      file.ref.moveTo(new File(chunksDirectory, s"${flowIdentifier}-${flowChunkNumber}"), true)
+      file.ref.moveTo(chunkDestinationFile, true)
 
       // Check if we reached the end of the upload
       // Note: With flow.js prioritizeFirstAndLastChunk set to true the last chunk is received 
