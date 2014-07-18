@@ -48,6 +48,19 @@ object FileUploadHelper {
     }
   }
 
+  
+  /**
+   * Delete chunk files
+   */
+  def deleteChunks(chunksFolderSourcePath: String, fileIdentifier: String, totalChunks: Int) : Unit = {
+    val chunksSourceFolder = new File(chunksFolderSourcePath)
+    for (i <- 1 to totalChunks) {
+      val chunk = getChunkFile(chunksSourceFolder, fileIdentifier, chunkNb = i)
+      if ( chunk.exists() ) chunk.delete() 
+    }
+  }
+  
+  
   /**
    * Recursively perform chunk assembly to file
    */
@@ -55,7 +68,7 @@ object FileUploadHelper {
   private def appendChunks(chunkNb: Int, chunkSize: Int, totalChunks: Int, chunksSourceFolder: File, fileIdentifier: String, resultFileOS: OutputStream): Unit = {
 
     // Create chunk reference
-    val chunkFile = new File(chunksSourceFolder, fileIdentifier + "-" + chunkNb)
+    val chunkFile = getChunkFile(chunksSourceFolder, fileIdentifier, chunkNb)
 
     // Check chunk exists
     if (!chunkFile.exists()) {
@@ -89,6 +102,10 @@ object FileUploadHelper {
     } finally {
       IOUtils.closeQuietly(currentChunkBIS)
     }
+  }
+  
+  private def getChunkFile(chunksSourceFolder : File, fileIdentifier : String, chunkNb : Int) : File = {
+    new File(chunksSourceFolder, fileIdentifier + "-" + chunkNb)
   }
 
 }
