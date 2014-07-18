@@ -86,36 +86,10 @@ object FileUploadHelper {
    * If this directory does not exist it will be created.
    */
   def getTemporaryFileUploadDirectory()(implicit apiConfig: ApiConfig): File = {
-    
     val temporaryUploadDirectory: java.io.File = new java.io.File(apiConfig.temporaryUploadFolder)
-
-    if (temporaryUploadDirectory.exists()) {
-      temporaryUploadDirectory
-    } else {
-      if (!temporaryUploadDirectory.getParentFile().exists()) {
-        // Create missing parent directories
-        if (temporaryUploadDirectory.getParentFile().mkdirs()) {
-          // Create directory
-          if (temporaryUploadDirectory.createNewFile()) {
-            temporaryUploadDirectory
-          } else {
-            // Could not create directory
-            throw new Exception(s"Could not create temporary upload directory at path ${temporaryUploadDirectory.getCanonicalPath()}")
-          }
-        } else {
-          // Failed to create parent directories
-          throw new Exception(s"Could not create temporary upload parent directories at path ${temporaryUploadDirectory.getParentFile().getCanonicalPath()}")
-        }
-      } else {
-        // Create directory
-        if (temporaryUploadDirectory.createNewFile()) {
-          temporaryUploadDirectory
-        } else {
-          // Could not create directory
-          throw new Exception(s"Could not create temporary upload directory at path ${temporaryUploadDirectory.getCanonicalPath()}")
-        }
-      }
-    }
+  	// Make sure it exists
+    temporaryUploadDirectory.mkdir();
+  	temporaryUploadDirectory
   }
 
   /**
