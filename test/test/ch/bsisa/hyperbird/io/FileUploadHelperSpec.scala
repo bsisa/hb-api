@@ -32,8 +32,7 @@ class FileUploadHelperSpec extends BaseSerialisationSpec {
 
   FileUploadHelper.putChunksTogether(
     chunksFolderSourcePath = chunksFilePath,
-    mergedChunksFolderDestinationPath = fileDestinationPath,
-    fileName = mergedFile1Name,
+    resultFile = mergedFile1,
     fileIdentifier = "10558-MergedFile1pdf",
     totalChunks = 10,
     chunkSize = 1024,
