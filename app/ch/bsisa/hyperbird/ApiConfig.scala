@@ -27,6 +27,13 @@ class ApiConfig {
     case None => throw ApiConfigException(s"ApiConfig annexes root folder information ${ApiConfig.AnnexesRootFolderKey} missing")
   }  
 
+  
+    val temporaryUploadFolder: String = Play.current.configuration.getString(ApiConfig.TemporaryUploadFolderKey) match {
+    case Some(temporaryUploadFolderValue) => temporaryUploadFolderValue
+    case None => throw ApiConfigException(s"ApiConfig temporary upload folder information ${ApiConfig.TemporaryUploadFolderKey} missing")
+  }  
+  
+  
   /**
    * Used by Angular $logProvider service to enable or disable debug log.
    */
@@ -58,6 +65,7 @@ case class ApiConfigException(message: String = null, cause: Throwable = null) e
  */
 object ApiConfig {
 
+  private val TemporaryUploadFolderKey = "hb.api.temporaryUploadFolder"
   private val AnnexesRootFolderKey = "hb.api.annexesRootFolder"
   private val BaseUrlKey = "hb.api.baseUrl"
   private val ClientDebugEnabledUrlKey = "hb.api.clientDebugEnabled"

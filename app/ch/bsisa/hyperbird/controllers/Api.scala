@@ -194,9 +194,9 @@ object Api extends Controller with securesocial.core.SecureSocial {
 //    		""")
       
 	  // TODO: make it a config	  
-	  val chunksFolderPath = "/tmp/upload/"
+	  val chunksDirectory = FileUploadHelper.getTemporaryFileUploadDirectory
       val file = request.body.file("file").get
-      file.ref.moveTo(new File(s"${chunksFolderPath}${flowIdentifier}-${flowChunkNumber}"), true)
+      file.ref.moveTo(new File(chunksDirectory, s"${flowIdentifier}-${flowChunkNumber}"), true)
 
       // Check if we reached the end of the upload
       // Note: With flow.js prioritizeFirstAndLastChunk set to true the last chunk is received 
@@ -206,7 +206,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
         val retryNb = 3 ; val delayMillis = 3000L        
         val uploadCompleted = FunctionsUtil.retry(retryNb, delayMillis){
           Logger.debug(s"createElfinAnnexFile() - retry checkUploadComplete till ${retryNb} times with ${delayMillis} delay.")
-          FileUploadHelper.checkUploadComplete(chunksFolderSourcePath = chunksFolderPath, fileIdentifier = flowIdentifier, totalChunks = flowTotalChunks, totalSize = flowTotalSize)
+          FileUploadHelper.checkUploadComplete(chunksSourceDirectory = chunksDirectory, fileIdentifier = flowIdentifier, totalChunks = flowTotalChunks, totalSize = flowTotalSize)
         }
         
         Logger.debug(s"createElfinAnnexFile() - uploadCompleted = ${uploadCompleted}")
@@ -218,7 +218,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
         
           // Writes chunks to final file
           FileUploadHelper.putChunksTogether(
-            chunksFolderSourcePath = chunksFolderPath,
+            chunksSourceDirectory = chunksDirectory,
             resultFile = finalUploadedFile,
             fileIdentifier = flowIdentifier,
             totalChunks = flowTotalChunks,
@@ -226,10 +226,10 @@ object Api extends Controller with securesocial.core.SecureSocial {
             totalSize = flowTotalSize)
 
           // Perform cleanup task
-          FileUploadHelper.deleteChunks(chunksFolderSourcePath = chunksFolderPath, fileIdentifier = flowIdentifier, totalChunks = flowTotalChunks)
+          FileUploadHelper.deleteChunks(chunksSourceDirectory = chunksDirectory, fileIdentifier = flowIdentifier, totalChunks = flowTotalChunks)
         } else {
           // Try cleaning up failed upload
-          FileUploadHelper.deleteChunks(chunksFolderSourcePath = chunksFolderPath, fileIdentifier = flowIdentifier, totalChunks = flowTotalChunks)
+          FileUploadHelper.deleteChunks(chunksSourceDirectory = chunksDirectory, fileIdentifier = flowIdentifier, totalChunks = flowTotalChunks)
           throw FileUploadHelperUploadIncompleteException("Upload of file ${flowFilename} did not complete even after checking ${retryNb} times each delayed of ${delayMillis/1000} seconds.")
         }
       }

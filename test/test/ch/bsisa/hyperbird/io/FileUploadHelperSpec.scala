@@ -22,7 +22,7 @@ class FileUploadHelperSpec extends BaseSerialisationSpec {
 
   val mergedFile1Name = "MergedFile1.pdf"
 
-  val chunksFilePath = TestResourcesDir
+  val chunksDirectory = new File(TestResourcesDir)
   val fileDestinationPath = TestResultsDir
   val mergedFile1 = new File(new File(TestResultsDir), mergedFile1Name)
   val mergedFile2Size = 10558
@@ -31,17 +31,17 @@ class FileUploadHelperSpec extends BaseSerialisationSpec {
   if (mergedFile1.exists()) mergedFile1.delete()
 
   FileUploadHelper.putChunksTogether(
-    chunksFolderSourcePath = chunksFilePath,
+    chunksSourceDirectory = chunksDirectory,
     resultFile = mergedFile1,
     fileIdentifier = "10558-MergedFile1pdf",
     totalChunks = 10,
     chunkSize = 1024,
     totalSize = mergedFile2Size)
 
-  s"The file chunks in ${chunksFilePath} " should {
+  s"The file chunks in ${chunksDirectory.getCanonicalPath()} " should {
     s"correspond to checkUploadComplete" in {
       FileUploadHelper.checkUploadComplete(
-        chunksFolderSourcePath = chunksFilePath,
+        chunksSourceDirectory = chunksDirectory,
         fileIdentifier = "10558-MergedFile1pdf",
         totalChunks = 10,
         totalSize = mergedFile2Size)

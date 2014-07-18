@@ -33,6 +33,8 @@ hb {
 	api {
 		# Root folder where ELFIN annexes are stored.
 	    "annexesRootFolder" : "/PATH/TO/HYPERBIRD/ANNEXES/ROOT",
+		# Folder to upload temporary file chunks to.
+	    "temporaryUploadFolder" : "/tmp/hb-uploads",	    
 		# REST base URL. Use for instance by Restangular.   
 		"baseUrl": "http://localhost:9000/api/melfin/"
 		"clientDebugEnabled": true,

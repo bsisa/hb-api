@@ -1,5 +1,8 @@
 package ch.bsisa.hyperbird.io
 
+import ch.bsisa.hyperbird.Implicits._
+import ch.bsisa.hyperbird.ApiConfig
+
 import java.io.File
 import java.io.FileOutputStream
 import java.io.BufferedOutputStream
@@ -22,24 +25,21 @@ object FileUploadHelper {
   /**
    * Performs the assembly of several binary file chunks back to the original single binary file.
    */
-  def putChunksTogether(chunksFolderSourcePath: String, resultFile: File, fileIdentifier: String, totalChunks: Int, chunkSize: Int, totalSize: Int): Unit = {
+  def putChunksTogether(chunksSourceDirectory: File, resultFile: File, fileIdentifier: String, totalChunks: Int, chunkSize: Int, totalSize: Int): Unit = {
 
     Logger.debug(s"FileUploadHelper.putChunksTogether()")
-    
-    val chunksSourceFolder = new File(chunksFolderSourcePath)
-    //val fileDestinationFolder = new File(mergedChunksFolderDestinationPath)
-    //val resultFile = new File(fileDestinationFolder, fileName)
+
     val appendable = true
     val resultFileBOS = new BufferedOutputStream(new FileOutputStream(resultFile, appendable))
 
     // Check we can read from source folder
-    if (!chunksSourceFolder.canRead()) throw FileUploadHelperCannotReadFileException(s"Cannot read from ${chunksSourceFolder.getCanonicalPath()}")
+    if (!chunksSourceDirectory.canRead()) throw FileUploadHelperCannotReadFileException(s"Cannot read from ${chunksSourceDirectory.getCanonicalPath()}")
     // Check we can write to destination folder
     if (!resultFile.canWrite()) throw FileUploadHelperCannotWriteFileException(s"Cannot write to ${resultFile.getCanonicalPath()}")
 
     try {
       // Chunks are one based
-      appendChunks(chunkNb = 1, chunkSize = chunkSize, totalChunks = totalChunks, chunksSourceFolder = chunksSourceFolder, fileIdentifier = fileIdentifier, resultFileOS = resultFileBOS)
+      appendChunks(chunkNb = 1, chunkSize = chunkSize, totalChunks = totalChunks, chunksSourceFolder = chunksSourceDirectory, fileIdentifier = fileIdentifier, resultFileOS = resultFileBOS)
     } finally {
       IOUtils.closeQuietly(resultFileBOS)
     }
@@ -50,33 +50,29 @@ object FileUploadHelper {
     }
   }
 
-  
   /**
    * Delete chunk files
    */
-  def deleteChunks(chunksFolderSourcePath: String, fileIdentifier: String, totalChunks: Int) : Unit = {
-    
+  def deleteChunks(chunksSourceDirectory: File, fileIdentifier: String, totalChunks: Int): Unit = {
+
     Logger.debug(s"FileUploadHelper.deleteChunks()")
-    
-    val chunksSourceFolder = new File(chunksFolderSourcePath)
+
     for (i <- 1 to totalChunks) {
-      val chunk = getChunkFile(chunksSourceFolder, fileIdentifier, chunkNb = i)
-      if ( chunk.exists() ) chunk.delete() 
+      val chunk = getChunkFile(chunksSourceDirectory, fileIdentifier, chunkNb = i)
+      if (chunk.exists()) chunk.delete()
     }
   }
-  
 
   /**
    * Checks all chunks are available and account for the expected `totalSize`
    * return true if correct false otherwise and also throw any file not found or any other File exception.
    */
-  def checkUploadComplete(chunksFolderSourcePath: String, fileIdentifier: String, totalChunks: Int, totalSize: Int) : Boolean = {
-    
+  def checkUploadComplete(chunksSourceDirectory: File, fileIdentifier: String, totalChunks: Int, totalSize: Int): Boolean = {
+
     Logger.debug(s"FileUploadHelper.checkUploadComplete()")
-    
-    val chunksSourceFolder = new File(chunksFolderSourcePath)
-    val files = for { i <- 1 to totalChunks } yield { getChunkFile(chunksSourceFolder, fileIdentifier, chunkNb = i) } 
-    val sizes = for { file <- files} yield { file.length()}
+
+    val files = for { i <- 1 to totalChunks } yield { getChunkFile(chunksSourceDirectory, fileIdentifier, chunkNb = i) }
+    val sizes = for { file <- files } yield { file.length() }
     val totalFilesSize = sizes.sum
     if (totalSize == totalFilesSize) {
       true
@@ -84,7 +80,44 @@ object FileUploadHelper {
       throw FileUploadHelperUploadIncompleteException(s"Upload incomplete for fileIdentifier = ${fileIdentifier}")
     }
   }
-  
+
+  /**
+   * Returns a reference to the temporary file upload directory.
+   * If this directory does not exist it will be created.
+   */
+  def getTemporaryFileUploadDirectory()(implicit apiConfig: ApiConfig): File = {
+    
+    val temporaryUploadDirectory: java.io.File = new java.io.File(apiConfig.temporaryUploadFolder)
+
+    if (temporaryUploadDirectory.exists()) {
+      temporaryUploadDirectory
+    } else {
+      if (!temporaryUploadDirectory.getParentFile().exists()) {
+        // Create missing parent directories
+        if (temporaryUploadDirectory.getParentFile().mkdirs()) {
+          // Create directory
+          if (temporaryUploadDirectory.createNewFile()) {
+            temporaryUploadDirectory
+          } else {
+            // Could not create directory
+            throw new Exception(s"Could not create temporary upload directory at path ${temporaryUploadDirectory.getCanonicalPath()}")
+          }
+        } else {
+          // Failed to create parent directories
+          throw new Exception(s"Could not create temporary upload parent directories at path ${temporaryUploadDirectory.getParentFile().getCanonicalPath()}")
+        }
+      } else {
+        // Create directory
+        if (temporaryUploadDirectory.createNewFile()) {
+          temporaryUploadDirectory
+        } else {
+          // Could not create directory
+          throw new Exception(s"Could not create temporary upload directory at path ${temporaryUploadDirectory.getCanonicalPath()}")
+        }
+      }
+    }
+  }
+
   /**
    * Recursively perform chunk assembly to file
    */
@@ -127,13 +160,12 @@ object FileUploadHelper {
       IOUtils.closeQuietly(currentChunkBIS)
     }
   }
-  
-  private def getChunkFile(chunksSourceFolder : File, fileIdentifier : String, chunkNb : Int) : File = {
+
+  private def getChunkFile(chunksSourceFolder: File, fileIdentifier: String, chunkNb: Int): File = {
     new File(chunksSourceFolder, fileIdentifier + "-" + chunkNb)
   }
 
 }
-
 
 case class FileUploadHelperUploadIncompleteException(message: String = null, cause: Throwable = null) extends Exception(message, cause)
 

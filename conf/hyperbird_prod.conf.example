@@ -16,7 +16,7 @@ hb {
 		"restPrefix": "/exist/rest" ,
 		"name": "/db/hb4",
 		"user": "admin",
-		"password": "existbob" 
+		"password": "THE_ADMIN_PWD" 
 	}
 	collection {
 	    # Contains initialisaton configurations and users, roles
@@ -33,7 +33,9 @@ hb {
 	}
 	api {
 		# Root folder where ELFIN annexes are stored.
-	    "annexesRootFolder" : "/home/patrick/Documents/hb/data/ne-20140619",	
+	    "annexesRootFolder" : "/PATH/TO/HYPERBIRD/ANNEXES/ROOT",	
+		# Folder to upload temporary file chunks to.
+	    "temporaryUploadFolder" : "/tmp/hb-uploads",	    
 		# REST base URL. Use for instance by Restangular.   
 		"baseUrl": "http://localhost:9000/api/melfin/"
 		"clientDebugEnabled": false
