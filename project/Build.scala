@@ -15,18 +15,20 @@ object ApplicationBuild extends Build {
   val appDependencies = Seq(
     "org.apache.poi" % "poi" % "3.10-FINAL",
     "org.apache.poi" % "poi-ooxml" % "3.10-FINAL",
+    "commons-io" % "commons-io" % "2.4",
     "org.jsoup" % "jsoup" % "1.7.3",
     "net.liftweb" %% "lift-json" % "2.5",
     "securesocial" %% "securesocial" % "2.1.2"
     )
     
-    
-
   val main = play.Project(
     appName,
     appVersion,
     appDependencies,
     settings = Defaults.defaultSettings ++ scalaxbSettings).settings(
+      
+      // Making test output logs
+      javaOptions in Test += "-Dlogger.file=conf/test-logger.xml",
       // ========================================================================        
       // Sbt-plugin settings
       // ========================================================================        
