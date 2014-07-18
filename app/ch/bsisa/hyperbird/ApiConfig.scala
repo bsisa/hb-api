@@ -27,6 +27,9 @@ class ApiConfig {
     case None => throw ApiConfigException(s"ApiConfig annexes root folder information ${ApiConfig.AnnexesRootFolderKey} missing")
   }
 
+  /**
+   *  Used for ELFIN Annexes flat file temporary upload
+   */
   val temporaryUploadFolder: String = Play.current.configuration.getString(ApiConfig.TemporaryUploadFolderKey) match {
     case Some(temporaryUploadFolderValue) => temporaryUploadFolderValue
     case None => throw ApiConfigException(s"ApiConfig temporary upload folder information ${ApiConfig.TemporaryUploadFolderKey} missing")
