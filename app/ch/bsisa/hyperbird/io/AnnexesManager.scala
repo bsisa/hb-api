@@ -42,32 +42,25 @@ object AnnexesManager {
     val hbAnnexRootFolder: java.io.File = new java.io.File(apiConfig.annexesRootFolder)
     val filePath = s"/${elfinID_G}/annexes/${elfinId}/${fileName}"
     val file = new java.io.File(hbAnnexRootFolder, filePath)
-    if (file.exists() && !overrideFile) {
-      throw AnnexesManagerFileAlreadyExistException(s"File at ${file.getCanonicalPath()} does already exists.")
-    } else {
-      // Missing parent directories
-      if (!file.getParentFile().exists()) {
-        // Create missing parent directories
-        if (file.getParentFile().mkdirs()) {
-          // Create file
-          if (file.createNewFile()) {
-            file
-          } else {
-            // Could not create file
-            throw AnnexesManagerCannotCreateFileException(s"Could not create file at path ${file.getCanonicalPath()}")
-          }
-        } else {
-          // Failed to create parent directories
-          throw AnnexesManagerCannotCreateFileException(s"Could not create parent dirs for file at path ${file.getCanonicalPath()}")
-        }
+
+    if (file.exists()) {
+      if (overrideFile) {
+        Logger.warn(s"Overriding file at ${file.getCanonicalPath()} as instructed to do by configurations.")
+        file.delete()
+        file.createNewFile()
+        file
       } else {
-        // Create file
-        if (file.createNewFile()) {
-          file
-        } else {
-          // Could not create file
-          throw AnnexesManagerCannotCreateFileException(s"Could not create file at path ${file.getCanonicalPath()}")
-        }
+    	  throw AnnexesManagerFileAlreadyExistException(s"File at ${file.getCanonicalPath()} does already exists.")  
+      }
+    } else {
+      // Make sure parent directories exist.
+      file.getParentFile().mkdirs()
+      // Create file
+      if (file.createNewFile()) {
+        file
+      } else {
+        // Could not create file
+        throw AnnexesManagerCannotCreateFileException(s"Could not create file at path ${file.getCanonicalPath()}")
       }
     }
   }
