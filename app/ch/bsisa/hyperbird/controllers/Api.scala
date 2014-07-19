@@ -137,13 +137,36 @@ object Api extends Controller with securesocial.core.SecureSocial {
   }
 
   /**
-   * Returns the annex file pointed at by `ELFIN/ANNEXE/RENVOI/@LIEN` data structure
+   * Returns the annex file if found HTTP error codes otherwise.
+   * <i>Intended to HTTP GET requests</i>
    */
   def getElfinAnnexFile(elfinID_G: String, elfinId: String, fileName: String) = SecuredAction(ajaxCall = true) { request =>
     Logger.debug(s"getElfinAnnexFile(elfinID_G = ${elfinID_G}, elfinId = ${elfinId}, fileName = ${fileName}) called.")
     try {
       Ok.sendFile(AnnexesManager.getElfinAnnexFile(elfinID_G, elfinId, fileName))
     } catch {
+      case e: Exception => manageAnnexesManagerException(e)
+    }
+  }
+
+  /**
+   * <i>Intended to HTTP HEAD requests</i>, in which case it should return:
+   * <ul>
+   *   <li>regular HTTP 200 if `annex file resource exists`</li> 
+   *   <li>custom HTTP 701 as successful `annex file resource does not exist` response.</li>
+   *  <ul>
+   */
+  def cĥeckForElfinAnnexFile(elfinID_G: String, elfinId: String, fileName: String) = SecuredAction(ajaxCall = true) { request =>
+    Logger.debug(s"cĥeckForElfinAnnexFile(elfinID_G = ${elfinID_G}, elfinId = ${elfinId}, fileName = ${fileName}) called.")
+    try {
+      Ok.sendFile(AnnexesManager.getElfinAnnexFile(elfinID_G, elfinId, fileName))
+    } catch {
+      case e: AnnexesManagerFileNotFoundException => {
+        val jsonMsg = Json.obj(
+          "ERROR" -> "annex.file.not.found",
+          "DESCRIPTION" -> "HEAD call.")
+        Status(701)(jsonMsg) // 701 - Custom application special Ok for HEAD not found
+      }
       case e: Exception => manageAnnexesManagerException(e)
     }
   }

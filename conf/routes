@@ -32,7 +32,7 @@ GET      /api/melfin/config                                   ch.bsisa.hyperbird
 GET      /api/melfin/annex/:collectionId/:elfinId/:fileName   ch.bsisa.hyperbird.controllers.Api.getElfinAnnexFile(collectionId,elfinId,fileName)
 # Tells whether Elfin ANNEX file exist without including body.
 # TODO: Check HEAD support for existing GET when upgrading. Play 2.3.1 should be fine: CSRF check supports HEAD method #3064   
-HEAD     /api/melfin/annex/:collectionId/:elfinId/:fileName   ch.bsisa.hyperbird.controllers.Api.getElfinAnnexFile(collectionId,elfinId,fileName)
+HEAD     /api/melfin/annex/:collectionId/:elfinId/:fileName   ch.bsisa.hyperbird.controllers.Api.cĥeckForElfinAnnexFile(collectionId,elfinId,fileName)
 POST     /api/melfin/annex/upload                             ch.bsisa.hyperbird.controllers.Api.createElfinAnnexFile()
 # REST upload is not practical given current upload library constraints. CollectionId, elfinId, fileName informations are provided as POST parameters.
 # POST     /api/melfin/annex/:collectionId/:elfinId/:fileName   ch.bsisa.hyperbird.controllers.Api.createElfinAnnexFile(collectionId,elfinId,fileName)
