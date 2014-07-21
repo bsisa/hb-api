@@ -55,28 +55,6 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
       }
       case None => {
         queryDb(query)
-        //	    // Keep asynchronous calls asynchronous to allow Play free threads
-        //	    val simpleResFuture: Future[SimpleResult] = queryElfins(query).map { elfinsResp =>
-        //	      val elfinsJsArray = ElfinFormat.elfinsToJsonArray(elfinsResp)
-        //	      Logger.debug(s">>>> CACHE <<<< : Caching query ${query}")
-        //	      // Add to cache
-        //	      Cache.set(query, elfinsJsArray, 30)
-        //	      Ok(elfinsJsArray)
-        //	    }.recover {
-        //	      case e: ElfinFormatException => Api.manageElfinFormatException(e, Some("ELFIN format conversion failed."))
-        //	      case e: NumberFormatException => 
-        //	        val jsonExceptionMsg = Json.obj(
-        //	          "ERROR" -> e.toString(),
-        //	          "DESCRIPTION" -> "Could not format number successfully.")
-        //	        InternalServerError(jsonExceptionMsg).as(JSON)
-        //	      case e: Throwable =>
-        //	        val jsonExceptionMsg = Json.obj(
-        //	          "ERROR" -> e.toString(),
-        //	          "DESCRIPTION" -> e.getMessage())
-        //	        InternalServerError(jsonExceptionMsg).as(JSON)
-        //	    }
-        //	    simpleResFuture        
-
       }
 
     }
@@ -99,6 +77,7 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
 	    }.recover {
 	      case e: ElfinFormatException => Api.manageElfinFormatException(e, Some("ELFIN format conversion failed."))
 	      case e: NumberFormatException => 
+	        Logger.error(s">>>> NumberFormatException while proceeding with queryDb: query ${query} ")
 	        val jsonExceptionMsg = Json.obj(
 	          "ERROR" -> e.toString(),
 	          "DESCRIPTION" -> "Could not format number successfully.")
