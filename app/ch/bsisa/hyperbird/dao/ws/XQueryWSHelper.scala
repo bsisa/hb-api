@@ -180,6 +180,16 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
      val responseFuture: Future[Response] = WS.url(query).withAuth(dbConf.userName, dbConf.password, AuthScheme.BASIC).withHeaders(("Content-Type", "application/xquery")).get
      responseFuture     
   }
+
+
+  /**
+   * Build query given `xqueryFileName` and executes it returning a future response.
+   */
+  def runWrappedXQueryFile(xqueryFileName: String, queryString: Option[String]): Future[Response] = {
+    val query = WSQueries.runWrappedXQueryFile(xqueryFileName, queryString)
+    val responseFuture: Future[Response] = WS.url(query).withHeaders(("Content-Type", "application/xquery")).get
+    responseFuture
+  }
   
   /**
    * Build query given `fileName` and executes it returning a future response.

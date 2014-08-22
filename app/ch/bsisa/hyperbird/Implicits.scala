@@ -1,8 +1,9 @@
 package ch.bsisa.hyperbird
 
 import ch.bsisa.hyperbird.dao.DbConfig
+import ch.bsisa.hyperbird.report.ReportConfig
 
-  /**
+/**
    * Configuration objects exposed as implicit values.
    *
    *
@@ -35,7 +36,12 @@ object Implicits {
   /**
    * Api configurations
    */
-  implicit val apiConfig = new ApiConfig  
-    
+  implicit val apiConfig = new ApiConfig
+
+
+    /**
+     * Report Configuration
+     */
+    implicit val reportConfig = new ReportConfig
   
 }

@@ -1,0 +1,48 @@
+@(data: scala.xml.Elem)
+@import ch.bsisa.hyperbird.report.ReportBuilder
+
+
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Rapport Prestation Investissement</title>
+
+    @reports.css.rapportPrestationInvestissementCSS()
+
+</head>
+<body>
+
+    <div id="budget" class="component font_normal">
+        <table>
+            <tr><td>Budget (CHF)</td><td class="value">0.00</td><td>Payé (CHF)</td><td class="value">427'271.00</td> <td>Solde (CHF)</td><td class="value">-427'271.00</td></tr>
+            <tr><td>Remarque</td><td colspan="5" class="value"></td></tr>
+        </table>
+    </div>
+
+    <div id="list-title" class="component font_medium font_bold">Investissements pluriannuels</div>
+
+    <div id="content">
+        <table>
+            <thead>
+                <td class="value font_small font_bold">Date</td>
+                <td class="value font_small font_bold">Fournisseur</td>
+                <td class="value font_small font_bold">Facturé</td>
+                <td class="value font_small font_bold">Payé</td>
+                <td class="value font_small font_bold">Remarque</td>
+            </thead>
+        @for(n:scala.xml.Node <- data.child.filter(n => n.isInstanceOf[scala.xml.Elem])) {
+            <tr>
+                <td class="value font_small">@((n\"IDENTIFIANT"\"DE").text)</td>
+                <td class="value font_small">@((n\"PARTENAIRE"\"PROPRIETAIRE").text)</td>
+                <td class="value font_small">@(ReportBuilder.toFormattedNumber((n\"IDENTIFIANT"\"VALEUR_A_NEUF").text))</td>
+                <td class="value font_small">@(ReportBuilder.toFormattedNumber((n\"IDENTIFIANT"\"VALEUR").text))</td>
+                <td class="value font_small">@((n\"DIVERS"\"REMARQUE").text)</td>
+            </tr>
+        }
+        </table>
+
+    </div>
+
+</body>
+</html>

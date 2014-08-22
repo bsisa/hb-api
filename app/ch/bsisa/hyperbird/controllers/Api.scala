@@ -10,10 +10,11 @@ import ch.bsisa.hyperbird.dao.ResultNotFoundException
 import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.model.format.ElfinFormat
 import ch.bsisa.hyperbird.model.format.ElfinFormat.ElfinFormatException
+import ch.bsisa.hyperbird.report.ReportBuilder
 import ch.bsisa.hyperbird.security.HbSecureService
 import ch.bsisa.hyperbird.security.HbSecureService.PasswordHashException
 import ch.bsisa.hyperbird.spreadsheet.SpreadSheetBuilder
-import ch.bsisa.hyperbird.util.ElfinUtil
+import ch.bsisa.hyperbird.util.{FunctionsUtil, ElfinUtil}
 import org.apache.poi.ss.usermodel._
 import securesocial.core.java.SecureSocial.SecuredAction
 import play.api._
@@ -38,14 +39,9 @@ import ch.bsisa.hyperbird.security.WithClasseEditRightException
 import securesocial.core.SocialUser
 import ch.bsisa.hyperbird.security.User
 import ch.bsisa.hyperbird.cache.CacheHelper
-import ch.bsisa.hyperbird.io.AnnexesManager
-import ch.bsisa.hyperbird.io.AnnexesManagerFileNotFoundException
-import ch.bsisa.hyperbird.io.AnnexesManagerCannotReadFileException
+import ch.bsisa.hyperbird.io._
 import java.io.File
-import java.io.FileOutputStream
-import ch.bsisa.hyperbird.io.FileUploadHelper
-import ch.bsisa.hyperbird.util.FunctionsUtil
-import ch.bsisa.hyperbird.io.FileUploadHelperUploadIncompleteException
+
 
 /**
  * REST API controller.
@@ -93,18 +89,20 @@ object Api extends Controller with securesocial.core.SecureSocial {
     XQueryWSHelper.query(WSQueries.allHbCollectionsQuery)
   }
 
+  
+  
   /**
    * Provides password hashing service.
    */
-  def getPasswordHash(plainTextPassword: String) = SecuredAction(ajaxCall = true) { request =>
+  def getPasswordHash(plainTextPassword : String) = SecuredAction(ajaxCall = true) { request => 
     //
     try {
-      val plainTextPasswordHashValue = HbSecureService.getPasswordHash(plainTextPassword)
-      val jsonResponse =
-        s"""{
+	    val plainTextPasswordHashValue = HbSecureService.getPasswordHash(plainTextPassword) 
+	    val jsonResponse = 
+	      s"""{
 	      "hash" : "${plainTextPasswordHashValue}"
-}"""
-      Ok(jsonResponse).as(JSON)
+}"""  
+	    Ok(jsonResponse).as(JSON)
     } catch {
       case phe: PasswordHashException => {
         managePasswordHashException(exception = phe, errorMsg = Option(s"User: ${request.user} failed to obtain password hash."))
@@ -114,8 +112,10 @@ object Api extends Controller with securesocial.core.SecureSocial {
       }
     }
 
+    
   }
 
+  
   /**
    * Returns the result of executing the specified XQuery file by name.
    *
@@ -635,5 +635,34 @@ object Api extends Controller with securesocial.core.SecureSocial {
    */
   def manageFutureResutlNotFoundException(exception: ResultNotFoundException, errorMsg: Option[String] = None): Future[SimpleResult] =
     scala.concurrent.Future { manageResutlNotFoundException(exception, errorMsg) }
+  def manageFutureException(exception: Option[Throwable] = None, errorMsg: Option[String] = None): Future[SimpleResult] =
+    scala.concurrent.Future { ExceptionsManager.manageException(exception, errorMsg) }
+
+
+
+  /**
+   * Gets ELFIN corresponding to this collectionId and elfinId
+   */
+  def getReport(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true).async { request =>
+
+    Logger.debug(s"getReport(collectionId=${collectionId}, elfinId=${elfinId}) called ")
+
+    XQueryWSHelper.find(WSQueries.elfinQuery(collectionId, elfinId)).flatMap { elfin =>
+      ReportBuilder.writeReport(elfin)
+    }.map { tempFile =>
+      Ok.sendFile(tempFile.file)
+    }.recover {
+      case resNotFound: ResultNotFoundException => {
+        manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"No elfin found for ID_G: ${collectionId}, Id: ${elfinId}"))
+      }
+      case connectException: ConnectException => {
+        manageConnectException(exception = connectException, errorMsg = Option(s"No database connection could be established."))
+      }
+      case e: Throwable => {
+        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
+      }
+    }
+  }
 
 }
+

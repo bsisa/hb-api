@@ -4,7 +4,9 @@ version := "5.0.0-SNAPSHOT"
 
 libraryDependencies ++= Seq(
   jdbc,
-  cache
+  cache,
+  "io.github.cloudify" %% "spdf" % "1.0.0",
+  "commons-codec" % "commons-codec" % "1.6"
 )     
 
 // Prevents File too long exception. 

@@ -49,6 +49,11 @@ GET      /api/melfin/xquery/:xqueryFileName                   ch.bsisa.hyperbird
 # Returns the spreadsheet file corresponding to the file name in binary format. 
 GET      /api/melfin/spreadsheet/:fileName                    ch.bsisa.hyperbird.controllers.Api.getSpreadsheetReport(fileName)
 
+
+# Generates and return reports based on the definition
+GET     /api/melfin/report/:collectionId/:elfinId  ch.bsisa.hyperbird.controllers.Api.getReport(collectionId, elfinId)
+
+
 # TODO: define expected result format before re-enabling this route
 # GET      /api/melfin/                         ch.bsisa.hyperbird.controllers.Api.collections
 

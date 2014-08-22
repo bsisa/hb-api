@@ -40,6 +40,12 @@ hb {
 		"clientDebugEnabled": true,
 		"queryCacheEnabled" : true
 	}
+
+	report {
+        wkhtmltopdf {
+          "path": "/Users/guy/Documents/personal/bsi/hb5/source/hb-api/wkhtmltopdf/macosx/wkhtmltopdf-macosx-32bit-0.12.1-79f3688"
+        }
+      }
 }
 
 

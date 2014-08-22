@@ -36,7 +36,10 @@ Note that XQS.scala depends on lib/xqjapi.jar at compile time.
 Prerequisites are:
 * Java
 * SBT
-Other dependencies should follow automatically (Play, Scala,...).  
+* wkhtmltopdf (see http://wkhtmltopdf.org/downloads.html) to get the latest version
+Other dependencies should follow automatically (Play, Scala,...).
+
+
 
 Tested environment: Open JDK java version "1.7.0_25" et SBT
 version 0.13.0

@@ -45,6 +45,16 @@ object WSQueries extends Queries {
   /**
    * Implements Queries
    */
+  def filteredGlobalQuery(xpath: String = "//ELFIN")(implicit conf: DbConfig): String = {
+    val encodedXpath = UrlEncode.encodeURLQueryParameter(queryParameter = xpath)
+    val query = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}?_query=${encodedXpath}&_howmany=${highPagingLimit}&_wrap=${wrap}"""
+    Logger.debug(s"filteredCollectionQuery: ${query} built with provided xpath filter: ${xpath}")
+    query
+  }
+
+  /**
+   * Implements Queries
+   */
   def elfinQuery(collectionId: String, elfinId: String)(implicit conf: DbConfig): String = {
     val query = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}/${collectionId}?_query=//ELFIN%5B@Id=%27${elfinId}%27%5D&_howmany=${highPagingLimit}&_wrap=${wrap}"""
     Logger.debug("elfin: " + query)
@@ -92,6 +102,19 @@ object WSQueries extends Queries {
       case Some(queryString) => baseQuery + s"&${queryString}"
       case None => baseQuery
     } 
+    query
+  }
+
+  /**
+   * Returns a query to execute a given xquery file by name
+   */
+  def runWrappedXQueryFile(xqueryFileName: String, queryString: Option[String])(implicit dbConf: DbConfig, collectionsConf: CollectionsConfig): String = {
+    val baseQuery = s"""${dbConf.protocol}${dbConf.hostName}:${dbConf.port}${dbConf.restPrefix}${dbConf.databaseName}/${collectionsConf.xqueriesCollectionId}/${xqueryFileName}?_howmany=${highPagingLimit}&_wrap=yes"""
+
+    val query = queryString match {
+      case Some(queryString) => baseQuery + s"&${queryString}"
+      case None => baseQuery
+    }
     query
   }
   
