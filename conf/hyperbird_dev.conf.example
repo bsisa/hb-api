@@ -16,7 +16,7 @@ hb {
 		"name": "/db/hb",
 		"user": "YOUR_USER",
 		"password": "YOUR_USER_PWD" 
-	}
+	},
 	collection {
 	    # Contains initialisaton configurations and users, roles
 		"configuration": "G10000101010101000"
@@ -24,12 +24,12 @@ hb {
 		"catalogue": "G20140101000012345"
 		# Contains database stored XQueries
 		"xqueries": "queries"
-	}
+	},
 	init {
 		# hb.init Elfin.Id . 
 		# Note: This Elfin.ID_G must match the hb.collection.configuration collection id.
 		"id": "G20050101000012345"
-	}
+	},
 	api {
 		# Root folder where ELFIN annexes are stored.
 	    "annexesRootFolder" : "/PATH/TO/HYPERBIRD/ANNEXES/ROOT",
@@ -39,13 +39,12 @@ hb {
 		"baseUrl": "http://localhost:9000/api/melfin/"
 		"clientDebugEnabled": true,
 		"queryCacheEnabled" : true
-	}
-
+	},
 	report {
         wkhtmltopdf {
-          "path": "/Users/guy/Documents/personal/bsi/hb5/source/hb-api/wkhtmltopdf/macosx/wkhtmltopdf-macosx-32bit-0.12.1-79f3688"
+          "path": "/usr/local/bin/wkhtmltopdf"
         }
-      }
+    }
 }
 
 

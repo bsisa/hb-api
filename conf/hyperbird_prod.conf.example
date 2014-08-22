@@ -17,7 +17,7 @@ hb {
 		"name": "/db/hb4",
 		"user": "admin",
 		"password": "THE_ADMIN_PWD" 
-	}
+	},
 	collection {
 	    # Contains initialisaton configurations and users, roles
 		"configuration": "G10000101010101000"
@@ -25,12 +25,12 @@ hb {
 		"catalogue": "G20140101000012345"
 		# Contains database stored XQueries
 		"xqueries": "queries"
-	}
+	},
 	init {
 		# hb.init Elfin.Id . 
 		# Note: This Elfin.ID_G must match the hb.collection.configuration collection id.
 		"id": "G20050101000012345"
-	}
+	},
 	api {
 		# Root folder where ELFIN annexes are stored.
 	    "annexesRootFolder" : "/PATH/TO/HYPERBIRD/ANNEXES/ROOT",	
@@ -39,7 +39,12 @@ hb {
 		# REST base URL. Use for instance by Restangular.   
 		"baseUrl": "http://localhost:9000/api/melfin/"
 		"clientDebugEnabled": false
-	}	
+	},
+	report {
+        wkhtmltopdf {
+          "path": "/usr/local/bin/wkhtmltopdf"
+        }
+    }	
 }
 
 # SMTP section required for securesocial plugin
