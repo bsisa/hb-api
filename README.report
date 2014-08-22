@@ -1,3 +1,12 @@
+== Install binary dependency ==  
+
+Download correct binary package at http://wkhtmltopdf.org/downloads.html
+
+For instance for Ubuntu 12.04 : 
+ sudo dpkg -i wkhtmltox-0.12.1_linux-precise-amd64.deb
+
+== Report data structure == 
+
 For this ELFIN sample :
 
 <ELFIN Id="G20140627064700000" ID_G="G20140627063700000" CLASSE="RAPPORT" GROUPE="" TYPE="ACTIVITE" NATURE="Flux">
