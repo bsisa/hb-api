@@ -5,6 +5,12 @@ Download correct binary package at http://wkhtmltopdf.org/downloads.html
 For instance for Ubuntu 12.04 : 
  sudo dpkg -i wkhtmltox-0.12.1_linux-precise-amd64.deb
 
+This will make it available in the PATH at: 
+ /usr/local/bin/wkhtmltopdf
+as well as
+ /usr/local/bin/wkhtmltoimage
+
+
 == Report data structure == 
 
 For this ELFIN sample :
