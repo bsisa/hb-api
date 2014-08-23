@@ -36,10 +36,12 @@ object ReportBuilder {
 
     val headerTemplateName = reportElfin.CARACTERISTIQUE.get.CAR1.get.VALEUR.get
     val contentTemplateName = reportElfin.CARACTERISTIQUE.get.CAR2.get.VALEUR.get
-    val query = URLEncoder.encode(reportElfin.DIVERS.get.METHODE.get, "UTF-8")
-
+    // URL encoding is necessary for query content but not for file name
+    //val queryFileName = URLEncoder.encode(reportElfin.DIVERS.get.METHODE.get, "UTF-8")
+    val queryFileName = reportElfin.DIVERS.get.METHODE.get
     
-    val responseFuture = XQueryWSHelper.runWrappedXQueryFile(query.trim, None)
+    // TODO: review if wrapped is what we want.
+    val responseFuture = XQueryWSHelper.runWrappedXQueryFile(queryFileName.trim, None)
 
     responseFuture.map { response =>
       val resultData = XML.loadString(response.body)
