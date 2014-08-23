@@ -15,7 +15,7 @@ as well as
 
 For this ELFIN sample :
 
-<ELFIN Id="G20140627064700000" ID_G="G20140627063700000" CLASSE="RAPPORT" GROUPE="" TYPE="ACTIVITE" NATURE="Flux">
+<ELFIN Id="G20140822163500000" ID_G="G20050101000012345" CLASSE="RAPPORT" GROUPE="" TYPE="ACTIVITE" NATURE="Flux">
     <MUTATIONS>
     </MUTATIONS>
     <IDENTIFIANT>
@@ -31,7 +31,9 @@ For this ELFIN sample :
     <CARACTERISTIQUE>
         <CAR1 NOM="header" UNITE="reference" VALEUR="views.html.reports.rapportPrestationInvestissementHeader"/>
         <CAR2 NOM="content" UNITE="reference" VALEUR="views.html.reports.rapportPrestationInvestissement"/>
-        <CAR3 NOM="footer" UNITE="reference" VALEUR="//ELFIN[CLASSE='PRESTATION']"/>
+		<!-- TODO: No footer usage is currently implemented --> 
+        <CAR3 NOM="footer" UNITE="reference" VALEUR="0"/>
+        <!-- Query is encapsulated in an XQuery file which name is found in DIVERS/METHOD --> 
         <CAR4 NOM="query" UNITE="UNITE" VALEUR="0"/>
         <CAR5 NOM="NOM CAR5" UNITE="UNITE" VALEUR="0"/>
         <CAR6 NOM="NOM CAR6" UNITE="UNITE" VALEUR="0"/>
@@ -48,6 +50,6 @@ For this ELFIN sample :
 </ELFIN>
 
 
-you call the URL http://localhost:9000/api/melfin/report/G10000101010101000/G20140207193832484
+you call the URL http://localhost:9000/api/melfin/report/G20050101000012345/G20140822163500000
 
 and receive a PDF report based on views/reports/rapportPrestationInvestissement.scala.html template
