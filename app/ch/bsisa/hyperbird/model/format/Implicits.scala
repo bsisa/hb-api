@@ -360,15 +360,15 @@ object Implicits {
   implicit object STATETypeFormat extends Format[STATEType] {
 
     def reads(json: JsValue): JsResult[STATEType] = {
-      val bAndCAndContent: JsResult[(String, String, String)] = for {
-        b <- (json \ "B").validate[String]
-        c <- (json \ "C").validate[String]
+      val bAndCAndContent: JsResult[(Option[String], Option[String], String)] = for {
+        b <- (json \ "B").validate[Option[String]]
+        c <- (json \ "C").validate[Option[String]]
         content <- (json \ MixedContentJsonPropName).validate[String]
       } yield (b, c, content)
 
       bAndCAndContent match {
         case JsSuccess((b, c, content), path) =>
-          val stateType = STATEType(setMixedContent(content), Option(b), Option(c))
+          val stateType = STATEType(setMixedContent(content), b, c)
           JsSuccess(stateType)
         case JsError(errors) => JsError("Error reading STATEType") ++ JsError(errors)
       }
