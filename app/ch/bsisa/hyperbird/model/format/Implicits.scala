@@ -319,14 +319,14 @@ object Implicits {
   implicit object CARTypableFormat extends Format[CARTypable] {
 
     def reads(json: JsValue): JsResult[CARType] = {
-      val nomUniteValeur: JsResult[(String, String, String)] = for {
-        nom <- (json \ "NOM").validate[String]
-        unite <- (json \ "UNITE").validate[String]
-        valeur <- (json \ "VALEUR").validate[String]
+      val nomUniteValeur: JsResult[(Option[String], Option[String], Option[String])] = for {
+        nom <- (json \ "NOM").validate[Option[String]]
+        unite <- (json \ "UNITE").validate[Option[String]]
+        valeur <- (json \ "VALEUR").validate[Option[String]]
       } yield (nom, unite, valeur)
 
       nomUniteValeur match {
-        case JsSuccess((nom, unite, valeur), path) => JsSuccess(CARType(Option(nom), Option(unite), Option(valeur)))
+        case JsSuccess((nom, unite, valeur), path) => JsSuccess(CARType(nom, unite, valeur))
         case JsError(errors) => JsError("Error reading CARTypable") ++ JsError(errors)
       }
     }
