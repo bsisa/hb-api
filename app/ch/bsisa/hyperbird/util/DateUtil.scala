@@ -32,15 +32,15 @@ object DateUtil {
     sdf.setLenient(false)
     sdf
   }
-  
+    
   /**
    * Hb dates formatter
    */
-  private val hbDateFormatter = {
+  private val hbDateFormatter = { 
     val sdf = new SimpleDateFormat(HbDateFormatPattern)
     sdf.setLenient(false)
     sdf
-  }  
+  }
 
   /**
    * Returns a date formatter for elfin.Id/ID_G.
