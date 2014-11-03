@@ -46,7 +46,7 @@ object ReportBuilder {
     responseFuture.map { response =>
       val resultData = XML.loadString(response.body)
       val tempFile = new TemporaryFile(java.io.File.createTempFile("hb5ReportHeader", ".html"))
-      play.api.libs.Files.writeFile(tempFile file, renderTemplate(headerTemplateName, resultData))
+      play.api.libs.Files.writeFile(tempFile.file, renderTemplate(headerTemplateName, resultData))
 
       val page = renderTemplate(contentTemplateName, resultData)
 
