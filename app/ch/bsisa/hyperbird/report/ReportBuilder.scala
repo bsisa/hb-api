@@ -29,7 +29,7 @@ object ReportBuilder {
     template.render(xml).toString
   }
 
-  def writeReport(reportElfin: ELFIN)(implicit reportConfig: ReportConfig): Future[TemporaryFile] = {
+  def writeReport(reportElfin: ELFIN, queryString: Option[String])(implicit reportConfig: ReportConfig): Future[TemporaryFile] = {
 
     // ==============================================================
     // Extract parameters from reportElfin
@@ -43,7 +43,7 @@ object ReportBuilder {
     // ==============================================================
     // Run XQuery by file name (TODO: review if wrapped is what we want.)
     // ==============================================================
-    val responseFuture = XQueryWSHelper.runWrappedXQueryFile(queryFileName.trim, None)
+    val responseFuture = XQueryWSHelper.runWrappedXQueryFile(queryFileName.trim, queryString)
 
     responseFuture.map { response =>
       val resultData = XML.loadString(response.body)

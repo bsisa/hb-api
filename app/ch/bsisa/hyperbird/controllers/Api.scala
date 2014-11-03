@@ -645,10 +645,11 @@ object Api extends Controller with securesocial.core.SecureSocial {
    */
   def getReport(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true).async { request =>
 
-    Logger.debug(s"getReport(collectionId=${collectionId}, elfinId=${elfinId}) called ")
+    val queryString = if (request.rawQueryString != null && request.rawQueryString.nonEmpty) Option(request.rawQueryString) else None
+    Logger.debug(s"getReport(collectionId=${collectionId}, elfinId=${elfinId}) called, queryString = ${queryString.getOrElse("")}")
 
     XQueryWSHelper.find(WSQueries.elfinQuery(collectionId, elfinId)).flatMap { elfin =>
-      ReportBuilder.writeReport(elfin)
+      ReportBuilder.writeReport(elfin,queryString)
     }.map { tempFile =>
       Ok.sendFile(tempFile.file)
     }.recover {
