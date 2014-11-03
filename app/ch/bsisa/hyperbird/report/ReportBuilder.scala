@@ -36,6 +36,7 @@ object ReportBuilder {
     // ==============================================================    
     val headerTemplateName = reportElfin.CARACTERISTIQUE.get.CAR1.get.VALEUR.get
     val contentTemplateName = reportElfin.CARACTERISTIQUE.get.CAR2.get.VALEUR.get
+    val footerTemplateName = reportElfin.CARACTERISTIQUE.get.CAR3.get.VALEUR.get
     // URL encoding is necessary for query content but not for file name
     //val queryFileName = URLEncoder.encode(reportElfin.DIVERS.get.METHODE.get, "UTF-8")
     val queryFileName = reportElfin.DIVERS.get.METHODE.get
@@ -51,6 +52,10 @@ object ReportBuilder {
       // Render report header to HTML and save it to disk
       val reportHeaderHtmlTempFile = new TemporaryFile(java.io.File.createTempFile("hb5ReportHeader", ".html"))
       play.api.libs.Files.writeFile(reportHeaderHtmlTempFile.file, renderTemplate(headerTemplateName, resultData))
+      
+      // Render report footer to HTML and save it to disk
+      val reportFooterHtmlTempFile = new TemporaryFile(java.io.File.createTempFile("hb5ReportFooter", ".html"))
+      play.api.libs.Files.writeFile(reportFooterHtmlTempFile.file, renderTemplate(footerTemplateName, resultData))      
 
       // Render report body to HTML and save it to disk
       val reportContentHtmlString = renderTemplate(contentTemplateName, resultData)
@@ -62,7 +67,7 @@ object ReportBuilder {
           orientation := Portrait
           pageSize := "A4"
           headerHtml := reportHeaderHtmlTempFile.file.getAbsolutePath
-
+          footerHtml := reportFooterHtmlTempFile.file.getAbsolutePath
         })
       // Create empty temporary file for final PDF report outcome.
       val tempResult = new TemporaryFile(java.io.File.createTempFile("hb5Report", ".pdf"))
