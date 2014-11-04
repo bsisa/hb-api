@@ -4,6 +4,16 @@
     font-family: Helvetica, Arial, sans-serif;
 }
 
+@@media print
+{
+	#manualContent h2 {page-break-before:always;}
+}
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
 #header {
     position: relative;
     height: 140px;
@@ -27,27 +37,25 @@
     bottom: 0;
 }
 
-#footer {
-    position: relative;
+table.footer {
+	border: none;
     height: 40px;
+    width: 100%;
+    
 }
 
-#footer .left {
-    position: absolute;
-    left: 0px;
-    width: 15%;
+td.footer.left {
+    text-align: left;
+    width: 20mm;
 }
 
-#footer .center {
-    margin-left: auto;
-    margin-right: auto;
-    width: 70%;
+td.footer.center {
+    text-align: center;
 }
 
-#footer .right {
-    position: absolute;
-    right: 0px;
-    width: 15%;
+td.footer.right {
+	text-align: right;
+    width: 20mm;
 }
 
 

@@ -5,21 +5,33 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title>Default footer</title>
+	<!-- See: http://wkhtmltopdf.org/usage/wkhtmltopdf.txt -->
+	<script>
+		function subst() {
+		  var vars={};
+		  var x=document.location.search.substring(1).split('&');
+		  for (var i in x) {var z=x[i].split('=',2);vars[z[0]] = unescape(z[1]);}
+		  var x=['frompage','topage','page','webpage','section','subsection','subsubsection'];
+		  for (var i in x) {
+		    var y = document.getElementsByClassName(x[i]);
+		    for (var j=0; j<y.length; ++j) y[j].textContent = vars[x[i]];
+		  }
+		}
+	</script>
+
 
     @reports.css.rapportPrestationInvestissementCSS()
 
 </head>
-<body>
-    <div id="footer" class="font_small">
-        <div class="left">
-            <div></div>
-        </div>
-        <div class="center">
-            <div>GESPATRI - Patrimoine immobilier</div>
-        </div>        
-        <div class="right">
-            <div>p.x/n</div>
-        </div>
-    </div>
+<body onload="subst()">
+	<table class="footer font_small">
+		<tbody>
+			<tr>
+				<td class="footer left"></td>
+				<td class="footer center">HB5 - GESPATRI - Patrimoine immobilier</td>
+				<td class="footer right">page <span class="page"></span>/<span class="topage"></span></td>
+			</tr>
+		</tbody>
+	</table>
 </body>
 </html>
