@@ -51,6 +51,14 @@ object Application extends Controller with securesocial.core.SecureSocial {
   def conf = Action {
     Ok(views.html.conf(getApiBaseUrl, getClientDebugEnabled)).as("application/javascript; charset=utf-8")
   }
+  
+  /**
+   * WARN: for developement only. Comment out otherwise.
+   * Exposed defaultFooter with no data for quick layout prototyping, by passing login, database querying... 
+   *   */
+//  def footer = Action {
+//    Ok(views.html.reports.defaultFooter(<ELFIN></ELFIN>))
+//  }  
 
   /**
    * Provide logged user detailed information about himself. Requires authentication. 
