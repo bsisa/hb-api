@@ -1,24 +1,29 @@
 package ch.bsisa.hyperbird.report
 
-import java.io.{ InputStream }
-import java.net.URLEncoder
-import java.text.DecimalFormat
-import scala.concurrent.Future
-
+import ch.bsisa.hyperbird.Implicits._
 import ch.bsisa.hyperbird.dao.ws.{ WSQueries, XQueryWSHelper }
 import ch.bsisa.hyperbird.model.ELFIN
-import io.github.cloudify.scala.spdf.{ Portrait, PdfConfig, Pdf }
 
+import io.github.cloudify.scala.spdf.{ Portrait, PdfConfig, Pdf }
 import org.apache.commons.codec.binary.Base64
+
 import play.api.Play
 import play.api.libs.Files.TemporaryFile
 import play.api.mvc.Result
 import play.api.templates.Template1
 
+import java.io.{ InputStream }
+import java.net.URLEncoder
+import java.text.DecimalFormat
+
+import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-
 import scala.xml.{ Elem, XML }
+import scala.xml.PrettyPrinter
 
+/**
+ * PDF report builder based on wkhtmltopdf 
+ */
 object ReportBuilder {
 
   def renderTemplate(templateName: String, xml: Elem): String = {
@@ -46,11 +51,18 @@ object ReportBuilder {
     // ==============================================================
     // Run XQuery by file name (TODO: review if wrapped is what we want.)
     // ==============================================================
-    val responseFuture = XQueryWSHelper.runWrappedXQueryFile(queryFileName.trim, queryString)
+    //val responseFuture = XQueryWSHelper.runWrappedXQueryFile(queryFileName.trim, queryString)
+    val responseFuture = XQueryWSHelper.runXQueryFile(queryFileName.trim, queryString)
 
     responseFuture.map { response =>
-      val resultData = XML.loadString(response.body)
-
+      val respBody = response.body
+      val resultData = XML.loadString(respBody)
+//      println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+//      println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+//      println(respBody)
+//      println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+//      println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+      
       // Render report header to HTML and save it to disk
       val reportHeaderHtmlTempFile = new TemporaryFile(java.io.File.createTempFile("hb5ReportHeader", ".html"))
       play.api.libs.Files.writeFile(reportHeaderHtmlTempFile.file, renderTemplate(headerTemplateName, resultData))
