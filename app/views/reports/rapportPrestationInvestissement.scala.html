@@ -1,6 +1,6 @@
 @(data: scala.xml.Elem)
 @import ch.bsisa.hyperbird.report.ReportBuilder
-
+@import ch.bsisa.hyperbird.report.OnVariableChangeUtil; val onVariableChangeUtil = new OnVariableChangeUtil();
 
 <!DOCTYPE html>
 <html>
@@ -13,33 +13,83 @@
 </head>
 <body>
 
+<!-- 
     <div id="budget" class="component font_normal">
         <table>
             <tr><td>Budget (CHF)</td><td class="value">0.00</td><td>Payé (CHF)</td><td class="value">427'271.00</td> <td>Solde (CHF)</td><td class="value">-427'271.00</td></tr>
             <tr><td>Remarque</td><td colspan="5" class="value"></td></tr>
         </table>
     </div>
-
+-->
+<!-- 
     <div id="list-title" class="component font_medium font_bold">Investissements pluriannuels</div>
-
+ -->
     <div id="content">
         <table>
-            <thead>
-                <td class="value font_small font_bold">Date</td>
-                <td class="value font_small font_bold">Fournisseur</td>
-                <td class="value font_small font_bold">Facturé</td>
-                <td class="value font_small font_bold">Payé</td>
-                <td class="value font_small font_bold">Remarque</td>
-            </thead>
-        @for(n:scala.xml.Node <- data.child.filter(n => n.isInstanceOf[scala.xml.Elem])) {
-            <tr>
-                <td class="value font_small">@((n\"IDENTIFIANT"\"DE").text)</td>
-                <td class="value font_small">@((n\"PARTENAIRE"\"PROPRIETAIRE").text)</td>
-                <td class="value font_small">@(ReportBuilder.toFormattedNumber((n\"IDENTIFIANT"\"VALEUR_A_NEUF").text))</td>
-                <td class="value font_small">@(ReportBuilder.toFormattedNumber((n\"IDENTIFIANT"\"VALEUR").text))</td>
-                <td class="value font_small">@((n\"DIVERS"\"REMARQUE").text)</td>
-            </tr>
-        }
+            
+		        @for(n:scala.xml.Node <- data.child.filter(n => n.isInstanceOf[scala.xml.Elem])) {
+		        	@if(onVariableChangeUtil.isDifferent((n\"IDENTIFIANT"\"OBJECTIF").text.split('.')(0))) {
+		        		
+					    <thead class="title" >
+					    	<tr>
+						    	<td colspan="5">
+						    	<table width="100%">
+							        <td class="big-title component font_big">PRESTATION</td>
+							        <td class="small-title component font_normal">URBANISME<br/>???Immeubles d&apos;utilité mixte</td>
+							        <td class="identifier component font_normal">Id todo: link to PRESTATION</td>
+						        </table>
+						        </td>
+					        </tr>
+							<tr>
+								<td colspan="5">
+							        <table width="100%">
+								        <td class="address component font_normal">
+								            <table>
+								                <tr><td>Adresse</td><td>todo: link to IMMEUBLE</td></tr>
+								                <tr><td>Lieu-dit</td><td>todo: link to IMMEUBLE</td></tr>
+								            </table>
+								        </td>
+								
+								        <td class="information component font_normal">
+								            <table>
+								                <tr><td>Genre</td><td>@(n\"IDENTIFIANT"\"ORIGINE")</td></tr>
+								                <tr><td>Compte</td><td>@(n\"IDENTIFIANT"\"COMPTE")</td></tr>
+								                <tr><td>Année</td><td>@(n\"IDENTIFIANT"\"DE")</td></tr>
+								                <tr><td>No SAI</td><td>@{(n\"IDENTIFIANT"\"OBJECTIF").text.split('.')(0)}</td></tr>
+								            </table>
+								        </td>
+							        </table>
+							     </td>
+							 </tr>
+							<tr id="budget" class="component font_normal">
+						    	<td colspan="5">
+							       <table width="100%">
+							           <tr><td>Budget (CHF)</td><td class="value">0.00</td><td>Payé (CHF)</td><td class="value">427'271.00</td> <td>Solde (CHF)</td><td class="value">-427'271.00</td></tr>
+							           <tr><td>Remarque</td><td colspan="5" class="value"></td></tr>
+							       </table>
+						       </td>
+						    </tr>
+							<tr>
+								<td colspan="5" id="list-title" class="component font_medium font_bold">Investissements pluriannuels</td>
+						    </tr>
+							<tr>
+				                <td class="value font_small font_bold">Date</td>
+				                <td class="value font_small font_bold">Fournisseur</td>
+				                <td class="value font_small font_bold">Facturé</td>
+				                <td class="value font_small font_bold">Payé</td>
+				                <td class="value font_small font_bold">Remarque</td>
+				            </tr>
+			            </thead>		        		
+		        	}
+		            <tr>
+		                <td class="value font_small">@((n\"IDENTIFIANT"\"DE").text)</td>
+		                <td class="value font_small">@((n\"PARTENAIRE"\"PROPRIETAIRE").text)</td>
+		                <td class="value font_small">@(ReportBuilder.toFormattedNumber((n\"IDENTIFIANT"\"VALEUR_A_NEUF").text))</td>
+		                <td class="value font_small">@(ReportBuilder.toFormattedNumber((n\"IDENTIFIANT"\"VALEUR").text))</td>
+		                <td class="value font_small">@((n\"DIVERS"\"REMARQUE").text)</td>
+		            </tr>
+		        }
+        	
         </table>
 
     </div>
