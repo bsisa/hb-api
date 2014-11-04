@@ -37,9 +37,11 @@ object ReportBuilder {
     val headerTemplateName = reportElfin.CARACTERISTIQUE.get.CAR1.get.VALEUR.get
     val contentTemplateName = reportElfin.CARACTERISTIQUE.get.CAR2.get.VALEUR.get
     val footerTemplateName = reportElfin.CARACTERISTIQUE.get.CAR3.get.VALEUR.get
+    val queryFileName = reportElfin.CARACTERISTIQUE.get.CAR4.get.VALEUR.get
+    val reportFileNamePrefix = reportElfin.CARACTERISTIQUE.get.CAR5.get.VALEUR.get
     // URL encoding is necessary for query content but not for file name
     //val queryFileName = URLEncoder.encode(reportElfin.DIVERS.get.METHODE.get, "UTF-8")
-    val queryFileName = reportElfin.DIVERS.get.METHODE.get
+    //val queryFileName = reportElfin.DIVERS.get.METHODE.get
 
     // ==============================================================
     // Run XQuery by file name (TODO: review if wrapped is what we want.)
@@ -70,7 +72,7 @@ object ReportBuilder {
           footerHtml := reportFooterHtmlTempFile.file.getAbsolutePath
         })
       // Create empty temporary file for final PDF report outcome.
-      val tempResult = new TemporaryFile(java.io.File.createTempFile("hb5Report", ".pdf"))
+      val tempResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))
       // Process HTML temporary files to PDF using wkhtmltopdf
       pdf.run(reportContentHtmlString, tempResult.file)
 
