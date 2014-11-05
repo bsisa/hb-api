@@ -1,4 +1,4 @@
-@(data: scala.xml.Elem)
+@(data: scala.xml.Elem, reportTitle: String)
 @import ch.bsisa.hyperbird.report.ReportBuilder
 @import ch.bsisa.hyperbird.report.OnVariableChangeUtil; val onVariableChangeUtil = new OnVariableChangeUtil();
 
@@ -6,7 +6,7 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title>Rapport Prestation Investissement</title>
+    <title>HyperBird&reg; - GESPATRI - @(reportTitle)</title>
 
     @reports.css.rapportPrestationInvestissementCSS()
 

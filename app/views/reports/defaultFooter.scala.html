@@ -1,10 +1,10 @@
-@(data: scala.xml.Elem)
+@(data: String, reportTitle: String)
 
 <!DOCTYPE html>
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title>Default footer</title>
+    <title>HyperBird&reg; - GESPATRI - @(reportTitle)</title>
 	<!-- See: http://wkhtmltopdf.org/usage/wkhtmltopdf.txt -->
 	<script>
 		function subst() {
@@ -28,7 +28,7 @@
 		<tbody>
 			<tr>
 				<td class="footer left"></td>
-				<td class="footer center">HyperBird&reg; - GESPATRI</td>
+				<td class="footer center">HyperBird&reg; - GESPATRI - @(reportTitle)</td>
 				<td class="footer right">page <span class="page"></span>/<span class="topage"></span></td>
 			</tr>
 		</tbody>
