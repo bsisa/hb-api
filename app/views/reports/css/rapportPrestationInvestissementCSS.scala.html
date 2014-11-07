@@ -1,6 +1,6 @@
 <style media="all" type="text/css">
 
-    * {
+* {
     font-family: Helvetica, Arial, sans-serif;
 }
 
@@ -98,7 +98,66 @@ td {
               Content title section styles                 
 *****************************************************/
 table.content {
-	border-collapse: separate;
+	border-collapse: collapse;
+	border:1px solid silver;
+    border-spacing: 0;
+	margin:0px;
+	padding:0px;
+	width: 100%;	
+/* 	box-shadow: 10px 10px 5px #888888; */
+/* 	width: 90%;		 */
+}
+
+table.layout {
+/* 	border: solid green 1px; */
+	border: none;
+    border-spacing: 1mm;
+	margin:0px;
+	padding:0px;	
+	width: 100%;
+}
+
+tr.data-header td {
+	vertical-align:middle;
+	border:1px solid silver;
+	border-width:1px 1px 1px 1px;
+	font-weight: bold;
+	background-color:black;
+	color: white;
+}
+
+tr:nth-child(odd).data { 
+	background-color:#eeeeee; 
+}
+tr:nth-child(even).data { 
+	background-color:#ffffff; 
+}
+
+tr:first-child.data td:first-child {
+	border-width:0px 0px 1px 0px;
+}
+tr:first-child.data td {
+	border:0px solid silver;
+	border-width:0px 0px 1px 1px;
+}
+tr:first-child.data td:last-child {
+	border-width:0px 0px 1px 1px;
+}
+
+tr.data td {
+	vertical-align:middle;
+	border:1px solid silver;
+	border-width:0px 1px 1px 0px;
+}
+
+tr:last-child.data td {
+	border-width:0px 1px 0px 0px;
+}
+tr.data td:last-child {
+	border-width:0px 0px 1px 0px;
+}
+tr:last-child.data td:last-child{
+	border-width:0px 0px 0px 0px;
 }
 
 tr.title {
@@ -107,55 +166,62 @@ tr.title {
     background: #c0c0c0;
 }
 
-#title {
-    margin-top: 10px;
-    padding: 10px;
-    background: #c0c0c0;
-    position: relative;
-    height: 150px;
-}
+/* #title { */
+/*     margin-top: 10px; */
+/*     padding: 10px; */
+/*     background: #c0c0c0; */
+/*     position: relative; */
+/*     height: 150px; */
+/* } */
 
-#title .component {
-    position: absolute;
-}
+/* #title .component { */
+/*     position: absolute; */
+/* } */
 
-#title .big-title {
+tr.title td.big-title {
     left: 10px;
     top: 10px;
 }
 
-#title .small-title {
+/* #title .big-title { */
+/*     left: 10px; */
+/*     top: 10px; */
+/* } */
+
+tr.title td.small-title {
     left: 200px;
     top: 10px;
 }
 
-#title .identifier {
+tr.title td.identifier {
     right: 10px;
     top: 10px;
+    width: 65mm;
 }
 
 
-#title .address {
+tr.title td.address {
     left: 10px;
     bottom: 10px;
 }
 
-#title .information {
+tr.title td.information {
     right: 10px;
     bottom: 10px;
+    width: 65mm;
 }
 
-#budget {
-    /*margin-top: 10px; */
-}
+/* #budget { */
+/*     /*margin-top: 10px; */ */
+/* } */
 
-#budget table {
-    width:100%;
-}
+/* #budget table { */
+/*     width:100%; */
+/* } */
 
-#budget td {
-    padding : 4px 4px
-}
+/* #budget td { */
+/*     padding : 4px 4px */
+/* } */
 
 .value {
     border: #c0c0c0 1px solid ;
@@ -170,10 +236,9 @@ tr.title {
     position: relative;
 }
 
-#content table {
-    width:100%;
-}
+/* #content table { */
+/*     width:80%; */
+/* } */
 
 
 </style>
-
