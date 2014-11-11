@@ -5,6 +5,10 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title>HyperBird&reg; - GESPATRI - @(reportTitle)</title>
+    <!-- MomentJS : Parse, validate, manipulate, and display dates in javascript. -->
+    <script>
+    	@Html(ch.bsisa.hyperbird.report.ReportBuilder.readFileToString("/resources/reports/js/moment.min.js"))
+	</script>
 	<!-- See: http://wkhtmltopdf.org/usage/wkhtmltopdf.txt -->
 	<script>
 		function subst() {
@@ -18,7 +22,8 @@
 		  }
           // Add datetime field 
 		  var d = new Date();
-		  var textDate = d.getDate() +"."+(d.getMonth()+1)+"."+d.getFullYear()+" "+d.getHours()+":"+d.getMinutes();
+		  var textDate = moment().format('DD.MM.YYYY HH:mm');
+		  //var textDate = d.getDate() +"."+(d.getMonth()+1)+"."+d.getFullYear()+" "+d.getHours()+":"+d.getMinutes();
 		  var dates = document.getElementsByClassName("datetime");
 		  for (var i=0; i<dates.length;++i) dates[i].textContent = textDate;
 		}
