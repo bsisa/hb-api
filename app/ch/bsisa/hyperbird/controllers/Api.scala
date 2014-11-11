@@ -660,7 +660,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
         manageConnectException(exception = connectException, errorMsg = Option(s"No database connection could be established."))
       }
       case e: Throwable => {
-        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.getReport() - Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e} in getReport()"))
+        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.getReport() - Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
       }
     }
   }
