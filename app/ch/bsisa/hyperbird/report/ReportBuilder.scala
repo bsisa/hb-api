@@ -3,24 +3,21 @@ package ch.bsisa.hyperbird.report
 import ch.bsisa.hyperbird.Implicits._
 import ch.bsisa.hyperbird.dao.ws.{ WSQueries, XQueryWSHelper }
 import ch.bsisa.hyperbird.model.ELFIN
-
 import io.github.cloudify.scala.spdf.{ Portrait, PdfConfig, Pdf }
 import org.apache.commons.codec.binary.Base64
-
 import play.api.Play
 import play.api.libs.Files.TemporaryFile
 import play.api.mvc.Result
 import play.api.templates.Template1
 import play.api.templates.Template2
-
 import java.io.{ InputStream }
 import java.net.URLEncoder
 import java.text.DecimalFormat
-
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.xml.{ Elem, XML }
 import scala.xml.PrettyPrinter
+import java.io.File
 
 /**
  * PDF report builder based on wkhtmltopdf 
@@ -140,6 +137,23 @@ object ReportBuilder {
 
       case None =>
         ""
+    }
+  }
+  
+  /**
+   * Reads a file reachable at `path` in `Play.current.resource` context and returns it content as String. 
+   */
+  def readFileToString(path: String): String = {
+    
+    val urlToFile = Play.current.resource(path)
+    urlToFile match {
+      case Some(url) =>
+        val file = new File(url.toURI())
+        val source = scala.io.Source.fromFile(file.getAbsolutePath())
+        val jsString = source.getLines mkString "\n"
+        source.close()
+        jsString
+      case None => ""
     }
   }
 
