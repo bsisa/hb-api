@@ -16,20 +16,37 @@
 		    var y = document.getElementsByClassName(x[i]);
 		    for (var j=0; j<y.length; ++j) y[j].textContent = vars[x[i]];
 		  }
+          // Add datetime field 
+		  var d = new Date();
+		  var textDate = d.getDate() +"."+(d.getMonth()+1)+"."+d.getFullYear()+" "+d.getHours()+":"+d.getMinutes();
+		  var dates = document.getElementsByClassName("datetime");
+		  for (var i=0; i<dates.length;++i) dates[i].textContent = textDate;
 		}
 	</script>
 
-
-    @reports.css.rapportPrestationInvestissementCSS()
+	@reports.css.commonCSS()
+    @reports.css.footerCSS()
 
 </head>
 <body onload="subst()">
 	<table class="footer font_small">
 		<tbody>
 			<tr>
-				<td class="footer left"></td>
-				<td class="footer center">HyperBird&reg; - GESPATRI - @(reportTitle)</td>
-				<td class="footer right">page <span class="page"></span>/<span class="topage"></span></td>
+				<td class="footer left">
+					<table class="layout">
+					<tr><td>Tél: </td><td>032 717 76 70</td></tr>				
+					<tr><td>Fax:</td><td>032 717 76 69</td></tr>
+					<tr><td colspan="2">urbanisme.neuchatel@@ne.ch</td></tr>
+					</table>				
+				</td>
+				<td class="footer center">Faubourg du Lac 3 CH-2000 Neuchâtel<br/>http://www.neuchatelville.ch</td>
+				<td class="footer right">
+					<table class="layout">
+					<tr><td>Page <span class="page"></span>/<span class="topage"></span></td></tr>				
+					<tr><td>Imprimé le <span class="datetime"></span></td></tr>
+					<tr><td>HyperBird&reg;</td></tr>
+					</table>
+				</td>
 			</tr>
 		</tbody>
 	</table>
