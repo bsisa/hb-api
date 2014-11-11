@@ -388,7 +388,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
         manageConnectException(exception = connectException, errorMsg = Option(s"No database connection could be established."))
       }
       case e: Throwable => {
-        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
+        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.getElfinSimpleResult() - Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
       }
     }
   }
@@ -529,7 +529,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
             val errorMsg = s"Failed to delete Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
             manageWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))
           case e: Throwable =>
-            ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
+            ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.deleteElfin() - Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
         })
     } catch {
       case e: Throwable =>
@@ -660,7 +660,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
         manageConnectException(exception = connectException, errorMsg = Option(s"No database connection could be established."))
       }
       case e: Throwable => {
-        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
+        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.getReport() - Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e} in getReport()"))
       }
     }
   }
