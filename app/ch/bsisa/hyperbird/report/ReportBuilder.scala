@@ -18,14 +18,15 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.xml.{ Elem, XML }
 import scala.xml.PrettyPrinter
 import java.io.File
+import play.api.Logger
 
 /**
- * PDF report builder based on wkhtmltopdf 
+ * PDF report builder based on wkhtmltopdf
  */
 object ReportBuilder {
 
   /**
-   * Renders template by name to String for wkhtmltopdf to process  
+   * Renders template by name to String for wkhtmltopdf to process
    */
   def renderTemplate[A](templateName: String, data: A, reportTitle: String): String = {
     val ru = scala.reflect.runtime.universe
@@ -33,29 +34,28 @@ object ReportBuilder {
     val template = m.reflectModule(m.staticModule(templateName + "$")).instance.asInstanceOf[Template2[A, String, Result]]
 
     template.render(data, reportTitle).toString
-  }  
-  
+  }
 
   /**
-   * Produces a PDF report given a report description `reportElfin`in geoXml ELFIN format 
-   * and optional raw HTTP GET query string to provide additional dynamic parameters to 
+   * Produces a PDF report given a report description `reportElfin`in geoXml ELFIN format
+   * and optional raw HTTP GET query string to provide additional dynamic parameters to
    * XQuery referred to in ELFIN report description.
    *
-   * Example report description in ELFIN format:  
-		<ELFIN Id="xxx" ID_G="xxx" CLASSE="RAPPORT" GROUPE="" TYPE="ACTIVITE" NATURE="Flux">
-			(...)
-		    <CARACTERISTIQUE>
-		        <CAR1 NOM="header" UNITE="reference" VALEUR="views.html.reports.defaultHeader"/>
-		        <CAR2 NOM="content" UNITE="reference" VALEUR="views.html.reports.defaultBody"/>
-		        <CAR3 NOM="footer" UNITE="reference" VALEUR="views.html.reports.defaultFooter"/>
-		        <CAR4 NOM="query" UNITE="reference" VALEUR="myReportXQuery.xq"/>
-		        <CAR5 NOM="filename" UNITE="name" VALEUR="FriendlyFileNamePrefix"/>
-		        <CAR6 NOM="reportTitle" UNITE="name" VALEUR="The Report Title"/>
-		        <CALCUL/>
-		    </CARACTERISTIQUE>
-			(...)
-		</ELFIN>  
-   *    
+   * Example report description in ELFIN format:
+   * <ELFIN Id="xxx" ID_G="xxx" CLASSE="RAPPORT" GROUPE="" TYPE="ACTIVITE" NATURE="Flux">
+   * (...)
+   * <CARACTERISTIQUE>
+   * <CAR1 NOM="header" UNITE="reference" VALEUR="views.html.reports.defaultHeader"/>
+   * <CAR2 NOM="content" UNITE="reference" VALEUR="views.html.reports.defaultBody"/>
+   * <CAR3 NOM="footer" UNITE="reference" VALEUR="views.html.reports.defaultFooter"/>
+   * <CAR4 NOM="query" UNITE="reference" VALEUR="myReportXQuery.xq"/>
+   * <CAR5 NOM="filename" UNITE="name" VALEUR="FriendlyFileNamePrefix"/>
+   * <CAR6 NOM="reportTitle" UNITE="name" VALEUR="The Report Title"/>
+   * <CALCUL/>
+   * </CARACTERISTIQUE>
+   * (...)
+   * </ELFIN>
+   *
    */
   def writeReport(reportElfin: ELFIN, queryString: Option[String])(implicit reportConfig: ReportConfig): Future[TemporaryFile] = {
 
@@ -81,14 +81,14 @@ object ReportBuilder {
       val resultData = response.body
       // XML data unused at the moment.
       //val resultData = XML.loadString(respBody)
-      
+
       // Render report header to HTML and save it to disk
       val reportHeaderHtmlTempFile = new TemporaryFile(java.io.File.createTempFile("hb5ReportHeader", ".html"))
       play.api.libs.Files.writeFile(reportHeaderHtmlTempFile.file, renderTemplate(headerTemplateName, resultData, reportTitle))
-      
+
       // Render report footer to HTML and save it to disk
       val reportFooterHtmlTempFile = new TemporaryFile(java.io.File.createTempFile("hb5ReportFooter", ".html"))
-      play.api.libs.Files.writeFile(reportFooterHtmlTempFile.file, renderTemplate(footerTemplateName, resultData, reportTitle))      
+      play.api.libs.Files.writeFile(reportFooterHtmlTempFile.file, renderTemplate(footerTemplateName, resultData, reportTitle))
 
       // Render report body to HTML and save it to disk
       val reportContentHtmlString = renderTemplate(contentTemplateName, resultData, reportTitle)
@@ -111,22 +111,11 @@ object ReportBuilder {
     }
   }
 
-  def toFormattedNumber(text: String): String = {
-
-    try {
-      val formatter = new DecimalFormat("###,###.##")
-      val value = java.lang.Double.valueOf(text)
-      formatter.format(value)
-    } catch {
-      case _: Throwable => ""
-
-    }
-
-  }
-
+  /**
+   * Reads a binary file reachable at `path` in `Play.current.resourceAsStream` context as base64 String with specified `mimeType`
+   */
   def encodeImage(path: String, mimeType: String): String = {
     val isOption: Option[InputStream] = Play.current.resourceAsStream(path)
-
     isOption match {
       case Some(is) =>
         val bytes = new Array[Byte](is.available())
@@ -139,19 +128,16 @@ object ReportBuilder {
         ""
     }
   }
-  
+
   /**
-   * Reads a file reachable at `path` in `Play.current.resource` context and returns it content as String. 
+   * Reads a file reachable at `path` in `Play.current.resourceAsStream` context as String.
    */
   def readFileToString(path: String): String = {
-    
-    val urlToFile = Play.current.resource(path)
-    urlToFile match {
-      case Some(url) =>
-        val file = new File(url.toURI())
-        val source = scala.io.Source.fromFile(file.getAbsolutePath())
-        val jsString = source.getLines mkString "\n"
-        source.close()
+    val isOption: Option[InputStream] = Play.current.resourceAsStream(path)
+    isOption match {
+      case Some(is) =>
+        val jsString = scala.io.Source.fromInputStream(is).getLines mkString "\n"
+        is.close()
         jsString
       case None => ""
     }
