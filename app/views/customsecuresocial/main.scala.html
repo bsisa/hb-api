@@ -1,4 +1,4 @@
-@(title: String)(content: Html)
+@(title: String)(content: Html)(implicit lang: Lang)
 
 @import securesocial.core.providers.utils.RoutesHelper
 <!DOCTYPE html>
@@ -15,7 +15,10 @@
         <div class="navbar navbar-fixed-top">
             <div class="navbar-inner">
                 <div class="container">
-                    <span class="brand" >@Messages("securesocial.appName")</span>
+                    <span class="brand" >@Messages("hb.appName")</span>
+					@* Display negociated language *************
+					<span>Language is: @lang</span> 
+					******************************************** *@
                 </div>
             </div>
         </div>
