@@ -19,8 +19,9 @@ object ApplicationBuild extends Build {
     "commons-io" % "commons-io" % "2.4",
     "org.jsoup" % "jsoup" % "1.7.3",
     "net.liftweb" %% "lift-json" % "2.5",
-    "securesocial" %% "securesocial" % "2.1.2"
+    "ws.securesocial" % "securesocial_2.10" % "2.1.3"
     )
+    
     
   val main = play.Project(
     appName,
@@ -31,11 +32,17 @@ object ApplicationBuild extends Build {
       // Making test output logs
       javaOptions in Test += "-Dlogger.file=conf/test-logger.xml",
       // ========================================================================        
-      // Sbt-plugin settings
+      // Repositories settings for: 
+      //  * sbt-plugins
+      //  * ws.securesocial now available at Maven repository (OSS Sonatype)
       // ========================================================================        
-      resolvers += Resolver.url(
-        "sbt-plugin-releases",
-        new URL("http://repo.scala-sbt.org/scalasbt/sbt-plugin-releases/"))(Resolver.ivyStylePatterns),
+      
+      resolvers ++= Seq(
+    		  Resolver.sonatypeRepo("releases"),
+    		  Resolver.url(
+    				  "sbt-plugin-releases",
+    				  new URL("http://repo.scala-sbt.org/scalasbt/sbt-plugin-releases/"))(Resolver.ivyStylePatterns)
+    				  ), 				  
       // ========================================================================
       // Scalaxb settings
       // ======================================================================== 
