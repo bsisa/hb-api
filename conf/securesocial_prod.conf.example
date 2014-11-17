@@ -5,6 +5,10 @@
 #####################################################################################
 
 securesocial {
+
+	# Disable online registration
+    registrationEnabled=false
+    
 	#
 	# If enabled, sets the path to your copy of Bootstrap.css to be used instead of the default one provided by SecureSocial
 	#
