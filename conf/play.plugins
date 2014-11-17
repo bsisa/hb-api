@@ -2,7 +2,8 @@
 9994:securesocial.core.DefaultAuthenticatorStore
 9995:securesocial.core.DefaultIdGenerator
 9996:securesocial.core.providers.utils.DefaultPasswordValidator
-9997:securesocial.controllers.DefaultTemplatesPlugin
+#9997:securesocial.controllers.DefaultTemplatesPlugin
+9997:ch.bsisa.hyperbird.security.securesocial.CustomTemplatesPlugin
 9998:ch.bsisa.hyperbird.security.ExistDbUserService
 9999:securesocial.core.providers.utils.BCryptPasswordHasher
 10100:ch.bsisa.hyperbird.security.SecureServiceEventListener
