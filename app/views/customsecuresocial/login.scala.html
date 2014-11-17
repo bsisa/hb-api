@@ -7,9 +7,9 @@
 
 
 
-@main(Messages("securesocial.login.title")) {
+@main(Messages("hb.login.title")) {
     <div class="page-header">
-        <h1>@Messages("securesocial.login.title")</h1>
+        <h1>@Messages("hb.login.title")</h1>
     </div>
 
     @errorMsg.map { msg =>
@@ -47,9 +47,9 @@
         @Registry.providers.get(UsernamePassword).map { up =>
             <div class="clearfix">
                 @if( externalProviders.size > 0 ) {
-                    <p>@Messages("securesocial.login.useEmailAndPassword")</p>
+                    <p>@Messages("hb.login.useEmailAndPassword")</p>
                 } else {
-                    <p>@Messages("securesocial.login.useEmailAndPasswordOnly")</p>
+                    <p>@Messages("hb.login.useEmailAndPasswordOnly")</p>
                 }
 
                @provider("userpass", Some(loginForm))
