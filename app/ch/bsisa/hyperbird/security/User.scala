@@ -1,6 +1,6 @@
 package ch.bsisa.hyperbird.security
 
-import securesocial.core.{AuthenticationMethod, Identity, SocialUser}
+import securesocial.core.{AuthenticationMethod, Identity, IdentityId, SocialUser, OAuth1Info, OAuth2Info, PasswordInfo}
 import java.util.Date
 
 /**
@@ -8,16 +8,16 @@ import java.util.Date
  * adding our additional roles, valid from and to date informations.
  */
 class User(
-    identityId: securesocial.core.IdentityId, 
+    identityId: IdentityId, 
     firstName: String, 
     lastName: String, 
     fullName: String , 
     email: Option[String], 
     avatarUrl: Option[String] = None, 
-    authMethod: securesocial.core.AuthenticationMethod = AuthenticationMethod.UserPassword, 
-    oAuth1Info: Option[securesocial.core.OAuth1Info] = None, 
-    oAuth2Info: Option[securesocial.core.OAuth2Info] = None, 
-    passwordInfo: Option[securesocial.core.PasswordInfo], 
+    authMethod: AuthenticationMethod = AuthenticationMethod.UserPassword, 
+    oAuth1Info: Option[OAuth1Info] = None, 
+    oAuth2Info: Option[OAuth2Info] = None, 
+    passwordInfo: Option[PasswordInfo], 
     validFrom: Date,
     validTo: Date,
     rolesParam: Option[Seq[Role]] = None) extends SocialUser(identityId, firstName, lastName, fullName, email, avatarUrl, authMethod, oAuth1Info, oAuth2Info, passwordInfo) {
