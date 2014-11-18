@@ -6,4 +6,4 @@
  * @author Patrick Refondini
  *
  */
-package ch.bsisa.hyperbird.security.securesocial;
+package ch.bsisa.hyperbird.security.social;

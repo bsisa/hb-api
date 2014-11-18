@@ -1,4 +1,4 @@
-package ch.bsisa.hyperbird.security.securesocial
+package ch.bsisa.hyperbird.security.social
 
 import play.api.data.Form
 import play.api.mvc.Request
