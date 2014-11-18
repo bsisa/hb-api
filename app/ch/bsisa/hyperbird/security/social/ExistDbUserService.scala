@@ -1,33 +1,24 @@
-package ch.bsisa.hyperbird.security
-
-import java.util.Calendar
-import java.util.Date
-import java.util.GregorianCalendar
+package ch.bsisa.hyperbird.security.social
 import play.api.{ Logger, Application }
 import securesocial.core._
 import securesocial.core.providers.Token
 import securesocial.core.IdentityId
 import securesocial.core.providers.utils.PasswordHasher
-import ch.bsisa.hyperbird.dao.xqs.XQConnectionHelper
-import org.mindrot.jbcrypt.BCrypt
 import ch.bsisa.hyperbird.dao.ws.XQueryWSHelper
 import ch.bsisa.hyperbird.dao.ws.WSQueries
 import scala.concurrent.Future
 import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.util.ElfinUtil
-import ch.bsisa.hyperbird.model.format.ElfinFormat
-import ch.bsisa.hyperbird.dao.ElfinDAO
 import ch.bsisa.hyperbird.Implicits._
 import ch.bsisa.hyperbird.util.DateUtil
 import ch.bsisa.hyperbird.model.format.Implicits._
-import ch.bsisa.hyperbird.util.ElapsedTime
+import ch.bsisa.hyperbird.dao.ElfinDAO
+import ch.bsisa.hyperbird.security.Role
 import play.api.libs.concurrent.Execution.Implicits._
 import ch.bsisa.hyperbird.dao.ResultNotFoundException
-import ch.bsisa.hyperbird.model.IDENTIFIANT
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.MILLISECONDS
-import ch.bsisa.hyperbird.dao.ExpectedSingleResultException
 import securesocial.core.providers.UsernamePasswordProvider
 import play.api.cache.Cache
 import play.api.Play.current

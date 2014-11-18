@@ -1,4 +1,4 @@
-package ch.bsisa.hyperbird.security
+package ch.bsisa.hyperbird.security.social
 
 import securesocial.core.{Event,EventListener,LoginEvent,LogoutEvent,PasswordChangeEvent,PasswordResetEvent,SignUpEvent}
 import play.api.mvc.{Session, RequestHeader}

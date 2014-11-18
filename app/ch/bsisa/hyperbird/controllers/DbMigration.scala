@@ -35,7 +35,7 @@ import org.apache.poi.ss.util.CellReference
 import scala.concurrent.Await
 import org.jsoup.Jsoup
 import ch.bsisa.hyperbird.spreadsheet.SpreadSheetBuilder
-import ch.bsisa.hyperbird.security.WithRole
+import ch.bsisa.hyperbird.security.social.WithRole
 
 
 /**

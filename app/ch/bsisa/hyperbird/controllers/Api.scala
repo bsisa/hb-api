@@ -11,8 +11,8 @@ import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.model.format.ElfinFormat
 import ch.bsisa.hyperbird.model.format.ElfinFormat.ElfinFormatException
 import ch.bsisa.hyperbird.report.ReportBuilder
-import ch.bsisa.hyperbird.security.HbSecureService
-import ch.bsisa.hyperbird.security.HbSecureService.PasswordHashException
+import ch.bsisa.hyperbird.security.social.HbSecureService
+import ch.bsisa.hyperbird.security.social.HbSecureService.PasswordHashException
 import ch.bsisa.hyperbird.spreadsheet.SpreadSheetBuilder
 import ch.bsisa.hyperbird.util.{FunctionsUtil, ElfinUtil}
 import org.apache.poi.ss.usermodel._
@@ -33,11 +33,11 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.io.ByteArrayOutputStream
 import java.io.ByteArrayInputStream
-import ch.bsisa.hyperbird.security.WithRole
-import ch.bsisa.hyperbird.security.WithClasseEditRight
-import ch.bsisa.hyperbird.security.WithClasseEditRightException
+import ch.bsisa.hyperbird.security.social.WithRole
+import ch.bsisa.hyperbird.security.social.WithClasseEditRight
+import ch.bsisa.hyperbird.security.social.WithClasseEditRightException
 import securesocial.core.SocialUser
-import ch.bsisa.hyperbird.security.User
+import ch.bsisa.hyperbird.security.social.User
 import ch.bsisa.hyperbird.cache.CacheHelper
 import ch.bsisa.hyperbird.io._
 import java.io.File

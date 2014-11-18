@@ -1,4 +1,4 @@
-package ch.bsisa.hyperbird.security
+package ch.bsisa.hyperbird.security.social
 
 import securesocial.core.Registry
 import securesocial.core.providers.utils.PasswordHasher

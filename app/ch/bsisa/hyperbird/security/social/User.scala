@@ -1,7 +1,7 @@
-package ch.bsisa.hyperbird.security
-
-import securesocial.core.{AuthenticationMethod, Identity, IdentityId, SocialUser, OAuth1Info, OAuth2Info, PasswordInfo}
+package ch.bsisa.hyperbird.security.social
+import securesocial.core.{AuthenticationMethod, IdentityId, SocialUser, OAuth1Info, OAuth2Info, PasswordInfo}
 import java.util.Date
+import ch.bsisa.hyperbird.security.Role
 
 /**
  * securesocial.core.Identity custom implementation extending securesocial.core.SocialUser 

@@ -1,23 +1,9 @@
-package ch.bsisa.hyperbird.security
+package ch.bsisa.hyperbird.security.social
 
 import ch.bsisa.hyperbird.Implicits._
-import ch.bsisa.hyperbird.CollectionsConfig
-import ch.bsisa.hyperbird.dao.DbConfig
-import ch.bsisa.hyperbird.dao.ElfinDAO
-import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.model.format.Implicits._
-import securesocial.core.Authorization
-import securesocial.core.Identity
-import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._
-import scala.concurrent.Future
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
-import scala.concurrent.duration.MILLISECONDS
-import java.util.Date
-import ch.bsisa.hyperbird.model.CARACTERISTIQUE
-import ch.bsisa.hyperbird.model.MATRICEType
-import ch.bsisa.hyperbird.model.format.ElfinFormat
+
 
 /**
  * Contains methods to check user access rights given ELFIN CLASSE 
