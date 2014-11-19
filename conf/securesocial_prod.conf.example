@@ -106,7 +106,9 @@ securesocial {
 		#
 		# The amount of time the session id will remain valid since the last request
 		#
-		idleTimeoutInMinutes=30
+		# idleTimeoutInMinutes=30
+		# Extended to a day work upon customer request
+		idleTimeoutInMinutes=480		
 
 		#
 		# The amount of time the session id will be valid since the user authenticated. 
