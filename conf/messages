@@ -7,7 +7,7 @@ hb.login.title=Login
 hb.login.useEmailAndPassword=Problème de configuration veuillez contacter votre administrateur
 hb.login.useEmailAndPasswordOnly=Veuillez saisir votre nom d''utilisateur et votre mot de passe
 hb.signup.username=Nom utilisateur
-hb.signup.email1=Email
+hb.signup.email1=Nom utilisateur
 hb.signup.password1=Mot de passe
 hb.login.forgotPassword=Avez-vous oublié votre mot de passe?
 
