@@ -201,7 +201,7 @@ securesocial {
 		#
 		#withUserNameSupport=false
 		withUserNameSupport=true
-		sendWelcomeEmail=true
+		sendWelcomeEmail=false
 		#enableGravatarSupport=true
 		enableGravatarSupport=false
 		tokenDuration=60
