@@ -51,12 +51,8 @@
                         <div class="clearfix">
                             <a href="@securesocial.core.providers.utils.RoutesHelper.startResetPassword()"><p>@Messages("hb.login.forgotPassword") </a></p>
                         </div>
-*@                      
-                        @if(Play.current.configuration.getBoolean("securesocial.registrationEnabled").getOrElse(true) ){
-                             <div class="clearfix">
-                                 <p>@Messages("securesocial.login.signUp") <a href="@securesocial.core.providers.utils.RoutesHelper.startSignUp()">@Messages("securesocial.login.here")</a></p>
-                              </div>
-                            }
+*@
+
                     </fieldset>
                 </form>
             }
