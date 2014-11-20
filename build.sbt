@@ -1,6 +1,6 @@
 name := "hb-api"
 
-version := "5.0.0-SNAPSHOT"
+version := "5.0.0"
 
 libraryDependencies ++= Seq(
   jdbc,
