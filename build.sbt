@@ -9,6 +9,14 @@ libraryDependencies ++= Seq(
   "commons-codec" % "commons-codec" % "1.6"
 )     
 
+// Control which files are packaged with dist task.
+// We exclude rsync backup files ending in ~, as well 
+// as all dev and example configuration files found in conf folder.
+mappings in (Compile, packageBin) ~= { _.filterNot { case (_, name) =>
+      //if (name.endsWith("~") || name.endsWith(".conf.example") || name.endsWith("_dev.conf") || name.endsWith("application.conf")) { println(" EXCLUDE: name = " + name ) }
+      name.endsWith("~") || name.endsWith(".conf.example") || name.endsWith("_dev.conf") || name.endsWith("application.conf")
+}}
+
 // Prevents File too long exception. 
 // Noticed after last formatter addition to:
 // ch.bsisa.hyperbird.model.format.Implicits
