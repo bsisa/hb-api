@@ -126,7 +126,6 @@ object SpreadSheetBuilder {
               Logger.error(s"Parameter name should be of string type! found: ${cell.getCellType}") // TODO: throw exception
               s"ERROR - Parameter name should be of string type! found: ${cell.getCellType}"
           }
-          Logger.debug(s"Found parameter named: ${parameterName}")
 
           // From the query string try to find the parameter value corresponding to the parameter name specified in the spread sheet
           val parameterValue = queryString.get(parameterName) match {
@@ -136,26 +135,39 @@ object SpreadSheetBuilder {
               s"ERROR - No value found for parameter ${parameterName}"
           }
 
+          Logger.debug(s"Found parameter named: ${parameterName} with value >${parameterValue}<")          
+          
           // Check the parameter value cell type and convert the matching 
           // query parameter value to the given type to preserve parameter 
           // value cell type while updating its content.
           val paramValueCell = row.getCell(1)
           paramValueCell.getCellType() match {
-            case Cell.CELL_TYPE_STRING => paramValueCell.setCellValue(parameterValue)
-            case Cell.CELL_TYPE_NUMERIC =>
-              Logger.warn("Request parameter used to set numeric cell. Untested operation, date and numeric conversion need extended support.")
+            case Cell.CELL_TYPE_BLANK =>
+              Logger.debug(s"Updated BLANK parameter value cell with string = ${parameterValue}")
+              paramValueCell.setCellValue(parameterValue)              
+            case Cell.CELL_TYPE_STRING => 
+              Logger.debug(s"Updated STRING parameter value cell with string = ${parameterValue}")
               paramValueCell.setCellValue(parameterValue)
+            case Cell.CELL_TYPE_NUMERIC => 
+              Logger.debug(s"Updated parameter value cell with double = ${parameterValue}")
+              Logger.warn("Request parameter used to set numeric cell. Untested operation, date and numeric conversion need extended support.")
+              //paramValueCell.setCellValue(parameterValue)
+              paramValueCell.setCellValue(parameterValue.toDouble)
             // TODO: date and numeric values need a defined format while passed as request parameter and a corresponding formatter
             //                val format = new java.text.SimpleDateFormat("dd-MM-yyyy")
             //                if (DateUtil.isCellDateFormatted(paramValueCell)) paramValueCell.   paramValueCell.setCellValue(Date.parse(parameterValue)) else paramValueCell.getNumericCellValue()
             // TODO: date and numeric values need a defined format while passed as request parameter and a corresponding formatter
             case Cell.CELL_TYPE_BOOLEAN =>
+              Logger.debug(s"Updated parameter value cell with string = ${parameterValue}")
               Logger.warn("Request parameter used to set boolean cell. Untested operation.")
               paramValueCell.setCellValue(parameterValue)
             case Cell.CELL_TYPE_FORMULA =>
+              Logger.debug(s"Parameter value cell NOT updated")
               Logger.error("Request parameter used to set formula cell operation currently not supported.")
-            // TODO: throw exception. Not supported operation ...
-            case _ => "Unknown Cell type"
+            case Cell.CELL_TYPE_ERROR =>
+              Logger.warn(s"Parameter value cell of type ERROR NOT updated...")
+            case _ => 
+              Logger.warn("Unknown Cell type!")
           }
 
         }
