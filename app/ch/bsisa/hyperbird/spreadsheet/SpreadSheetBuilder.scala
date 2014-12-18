@@ -151,7 +151,6 @@ object SpreadSheetBuilder {
             case Cell.CELL_TYPE_NUMERIC => 
               Logger.debug(s"Updated parameter value cell with double = ${parameterValue}")
               Logger.warn("Request parameter used to set numeric cell. Untested operation, date and numeric conversion need extended support.")
-              //paramValueCell.setCellValue(parameterValue)
               paramValueCell.setCellValue(parameterValue.toDouble)
             // TODO: date and numeric values need a defined format while passed as request parameter and a corresponding formatter
             //                val format = new java.text.SimpleDateFormat("dd-MM-yyyy")
@@ -171,16 +170,7 @@ object SpreadSheetBuilder {
           }
 
         }
-
-        //          val cellContent = cell.getCellType() match {
-        //            case Cell.CELL_TYPE_STRING => cell.getRichStringCellValue().getString()
-        //            case Cell.CELL_TYPE_NUMERIC => if (DateUtil.isCellDateFormatted(cell)) cell.getDateCellValue() else cell.getNumericCellValue()
-        //            case Cell.CELL_TYPE_BOOLEAN => cell.getBooleanCellValue()
-        //            case Cell.CELL_TYPE_FORMULA => cell.getCellFormula()
-        //            case _ => "Unknown Cell type"
-        //          }
-        //
-        //          Logger.debug(s"${cellRef.formatAsString()} content: ${cellContent} ")
+        //    Logger.debug(s"${cellRef.formatAsString()} content: ${cellContent} ")
 
       }
     }
