@@ -199,6 +199,10 @@ object SpreadSheetBuilder {
 
     // By convention the resultDataStartCellRef is considered to be on the first sheet
     val dataSheet = wb.getSheetAt(0)
+    
+    // TODO check whether using fake sheet may solve static formula affected by row shifting on dataSheet.
+    val fakeSheet = wb.cloneSheet(0)
+    
     // Get the first row as example
     val templateRow = dataSheet.getRow(resultDataStartCellRef.getRow())
     Logger.debug(s"templateRow last cell num = ${templateRow.getLastCellNum()}");
@@ -242,7 +246,7 @@ object SpreadSheetBuilder {
       var nbColWithoutFormula = 0
       
       // Always create row at start position before shifting
-      val dataRow = dataSheet.createRow(resultDataStartCellRef.getRow())
+      val dataRow = fakeSheet.createRow(resultDataStartCellRef.getRow())
       for (cell <- row.select("td")) {
     	  val currSheetCell = dataRow.createCell(cellIdxFormulaPass)
     	  currSheetCell.setCellValue("TEMP :: TO BE OVERRIDEN :: " + cell.text)
@@ -295,7 +299,8 @@ object SpreadSheetBuilder {
       
       // TRY DEALING WITH FORMULA REFERENCES...
       if (currFormulaPassIdx < dataTableTrCollection.length) {
-	      dataSheet.shiftRows(resultDataStartCellRef.getRow(), rowIdxFormulaPass, 1)
+    	  // Perform shifting on fakeSheet to avoid side effect on "static" formulas
+    	  fakeSheet.shiftRows(resultDataStartCellRef.getRow(), rowIdxFormulaPass, 1)
 	      Logger.debug(s"FormulaPass >>>> dataSheet.shiftRows(${resultDataStartCellRef.getRow()}, ${rowIdxFormulaPass}, 1)")
       } else {
     	  Logger.debug(s"FormulaPass >>>> NO shiftRows FOR rowIdxFormulaPass = ${rowIdxFormulaPass}")
@@ -330,8 +335,9 @@ object SpreadSheetBuilder {
       
       var cellIdx: Integer = resultDataStartCellRef.getCol()
       var nbColWithoutFormula = 0
-      //val dataRow = dataSheet.createRow(rowIdx)
-      val dataRow = dataSheet.getRow(rowIdx)
+      // While using fakeSheet we now need creating rows again
+      val dataRow = dataSheet.createRow(rowIdx)
+      //val dataRow = dataSheet.getRow(rowIdx)
       
       for (cell <- row.select("td")) {
        
@@ -367,46 +373,49 @@ object SpreadSheetBuilder {
       // TODO: All data columns processed, proceed with formulas columns if any...
 
       // keep doing while MAX_NO_FORMULA_FOUND reached
-//      while (nbColWithoutFormula < maxColWithoutFormula && cellIdx < templateRow.getLastCellNum()) {
-//        Logger.debug(s"BEFORE: nbColWithoutFormula/maxColWithoutFormula = ${nbColWithoutFormula}/${maxColWithoutFormula}")
-//        val exampleCell = templateRow.getCell(cellIdx)
-//
-//        // Check if next template column contains a formula
-//        exampleCell.getCellType() match {
-//          case Cell.CELL_TYPE_FORMULA =>
-//            //val fRange = exampleCell.getArrayFormulaRange()            
-//            val cachedResult = exampleCell.getCachedFormulaResultType()
-//            val formula = exampleCell.getCellFormula()
-//            //val style = exampleCell.getCellStyle()
-//            Logger.debug(s"Formula found: >${formula}<, cachedResult: >${cachedResult}<")
-//            //Logger.debug(s"Formula range: \nfirst col: ${fRange.getFirstColumn()}\nlast col : ${fRange.getLastColumn()}\nfirst row: ${fRange.getFirstRow()} \nlast row : ${fRange.getLastRow()} \nnb of cells: ${fRange.getNumberOfCells()}")
-//
-//            if (formula.trim().length() > 0) {
-//              Logger.debug(s"formula.trim().length() = ${formula.trim().length()}")
-//              val currSheetCell = dataRow.createCell(cellIdx)
-//              currSheetCell.setCellType(exampleCell.getCellType())
-//              currSheetCell.setCellFormula(exampleCell.getCellFormula())
-//              currSheetCell.setCellStyle(exampleCell.getCellStyle())
-//
-//              //              FormulaShifter(0,dataSheet.getSheetName(),)
-//              //               int firstMovedRowIndex, int lastMovedRowIndex, int numberOfRowsToMove) 
-//
-//              nbColWithoutFormula = nbColWithoutFormula
-//            } else {
-//              Logger.debug(s"formula.trim().length() !> 0}")
-//              nbColWithoutFormula = nbColWithoutFormula + 1
-//            }
-//          case _ =>
-//            Logger.debug(s"NO formula")
-//            nbColWithoutFormula = nbColWithoutFormula + 1
-//        }
-//        Logger.debug(s"nbColWithoutFormula = ${nbColWithoutFormula}")
-//
-//        cellIdx = cellIdx + 1
-//
-//        Logger.debug(s"AFTER : nbColWithoutFormula/maxColWithoutFormula = ${nbColWithoutFormula}/${maxColWithoutFormula}, cellIdx = ${cellIdx}")
-//
-//      }
+      while (nbColWithoutFormula < maxColWithoutFormula && cellIdx < templateRow.getLastCellNum()) {
+        Logger.debug(s"BEFORE: nbColWithoutFormula/maxColWithoutFormula = ${nbColWithoutFormula}/${maxColWithoutFormula}")
+        val exampleCell = templateRow.getCell(cellIdx)
+
+        // Check if next template column contains a formula
+        exampleCell.getCellType() match {
+          case Cell.CELL_TYPE_FORMULA =>
+            //val fRange = exampleCell.getArrayFormulaRange()            
+            val cachedResult = exampleCell.getCachedFormulaResultType()
+            val formula = exampleCell.getCellFormula()
+            //val style = exampleCell.getCellStyle()
+            Logger.debug(s"Formula found: >${formula}<, cachedResult: >${cachedResult}<")
+            //Logger.debug(s"Formula range: \nfirst col: ${fRange.getFirstColumn()}\nlast col : ${fRange.getLastColumn()}\nfirst row: ${fRange.getFirstRow()} \nlast row : ${fRange.getLastRow()} \nnb of cells: ${fRange.getNumberOfCells()}")
+
+            if (formula.trim().length() > 0) {
+              Logger.debug(s"formula.trim().length() = ${formula.trim().length()}")
+              val currSheetCell = dataRow.createCell(cellIdx)
+              currSheetCell.setCellType(exampleCell.getCellType())
+              //currSheetCell.setCellFormula(exampleCell.getCellFormula())
+              val shiftedFormulaFromFakeSheet = fakeSheet.getRow(currSheetCell.getRowIndex()).getCell(currSheetCell.getColumnIndex()).getCellFormula()
+              Logger.debug(s"shiftedFormulaFromFakeSheet = ${shiftedFormulaFromFakeSheet}")
+              currSheetCell.setCellFormula(shiftedFormulaFromFakeSheet)
+              currSheetCell.setCellStyle(exampleCell.getCellStyle())
+
+              //              FormulaShifter(0,dataSheet.getSheetName(),)
+              //               int firstMovedRowIndex, int lastMovedRowIndex, int numberOfRowsToMove) 
+
+              nbColWithoutFormula = nbColWithoutFormula
+            } else {
+              Logger.debug(s"formula.trim().length() !> 0}")
+              nbColWithoutFormula = nbColWithoutFormula + 1
+            }
+          case _ =>
+            Logger.debug(s"NO formula")
+            nbColWithoutFormula = nbColWithoutFormula + 1
+        }
+        Logger.debug(s"nbColWithoutFormula = ${nbColWithoutFormula}")
+
+        cellIdx = cellIdx + 1
+
+        Logger.debug(s"AFTER : nbColWithoutFormula/maxColWithoutFormula = ${nbColWithoutFormula}/${maxColWithoutFormula}, cellIdx = ${cellIdx}")
+
+      }
 
       // If no  => copy template content until MAX_NO_FORMULA_FOUND
       // If yes => copy template formula and adapt it to current row index
@@ -416,6 +425,9 @@ object SpreadSheetBuilder {
       if (cellIdx > maxCellIdx) maxCellIdx = cellIdx
       rowIdx = rowIdx + 1
     }
+    
+    // Get rid of the temporary fake sheet.
+    wb.removeSheetAt(wb.getSheetIndex(fakeSheet))
     
     // ================================================================
     // ==== Deal with data - END
