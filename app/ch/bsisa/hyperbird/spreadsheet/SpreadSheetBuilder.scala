@@ -6,6 +6,7 @@ import play.api.Logger
 import securesocial.core.Identity
 import org.apache.poi.ss.usermodel._
 import org.apache.poi.ss.util.CellReference
+import org.apache.poi.ss.formula.FormulaShifter
 import org.jsoup.Jsoup
 import java.util.Date
 
@@ -135,8 +136,8 @@ object SpreadSheetBuilder {
               s"ERROR - No value found for parameter ${parameterName}"
           }
 
-          Logger.debug(s"Found parameter named: ${parameterName} with value >${parameterValue}<")          
-          
+          Logger.debug(s"Found parameter named: ${parameterName} with value >${parameterValue}<")
+
           // Check the parameter value cell type and convert the matching 
           // query parameter value to the given type to preserve parameter 
           // value cell type while updating its content.
@@ -144,11 +145,11 @@ object SpreadSheetBuilder {
           paramValueCell.getCellType() match {
             case Cell.CELL_TYPE_BLANK =>
               Logger.debug(s"Updated BLANK parameter value cell with string = ${parameterValue}")
-              paramValueCell.setCellValue(parameterValue)              
-            case Cell.CELL_TYPE_STRING => 
+              paramValueCell.setCellValue(parameterValue)
+            case Cell.CELL_TYPE_STRING =>
               Logger.debug(s"Updated STRING parameter value cell with string = ${parameterValue}")
               paramValueCell.setCellValue(parameterValue)
-            case Cell.CELL_TYPE_NUMERIC => 
+            case Cell.CELL_TYPE_NUMERIC =>
               Logger.debug(s"Updated parameter value cell with double = ${parameterValue}")
               Logger.warn("Request parameter used to set numeric cell. Untested operation, date and numeric conversion need extended support.")
               paramValueCell.setCellValue(parameterValue.toDouble)
@@ -165,7 +166,7 @@ object SpreadSheetBuilder {
               Logger.error("Request parameter used to set formula cell operation currently not supported.")
             case Cell.CELL_TYPE_ERROR =>
               Logger.warn(s"Parameter value cell of type ERROR NOT updated...")
-            case _ => 
+            case _ =>
               Logger.warn("Unknown Cell type!")
           }
 
@@ -200,7 +201,8 @@ object SpreadSheetBuilder {
     val dataSheet = wb.getSheetAt(0)
     // Get the first row as example
     val templateRow = dataSheet.getRow(resultDataStartCellRef.getRow())
-
+    Logger.debug(s"templateRow last cell num = ${templateRow.getLastCellNum()}");
+    
     import scala.collection.JavaConversions._
 
     // Parse report HTML table result as org.jsoup.nodes.Document
@@ -211,46 +213,228 @@ object SpreadSheetBuilder {
     if (tables.size() == 0) throw HtmlTableNotFoundException(s"HTML query result is expected to contain a single table but none was found query ${getXQueryFileName(wb)}")
     else if (tables.size() > 1) throw MoreThanOneHtmlTableFoundException(s"HTML query result is expected to contain a single table but ${tables.size()} were found for query ${getXQueryFileName(wb)}")
 
-    val table = tables.get(0)
-
-    var rowIdx: Integer = resultDataStartCellRef.getRow()
-    var maxCellIdx: Integer = 0
+    val dataTable = tables.get(0)
+    val dataTableTrCollection = dataTable.select("tr").toIndexedSeq
     
-    for (row <- table.select("tr")) {
+    val maxColWithoutFormula = 4
 
-      var cellIdx: Integer = resultDataStartCellRef.getCol()
-      val dataRow = dataSheet.createRow(rowIdx);
+    // ================================================================
+    // ==== Deal with formula - START
+    // ================================================================
+    
+    var rowIdxFormulaPass: Integer = resultDataStartCellRef.getRow()
+    var maxCellIdxFormulaPass: Integer = 0
+    
+    // First results pass to create formulas an shift them 
+    // Shift rows 6 - 11 on the spreadsheet to the top (rows 0 - 5)
+    //sheet.shiftRows(5, 10, -5);
+    
+    //val tableFormulaPassIt = tables.get(0)
+    
+    var currFormulaPassIdx = 0
+    for (row <- dataTableTrCollection) {
 
+      Logger.debug("FormulaPass >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+      Logger.debug(s"FormulaPass >>>> rowIdxFormulaPass = ${rowIdxFormulaPass} :: templateRow.getRowNum() = ${templateRow.getRowNum()}" );
+      Logger.debug("FormulaPass >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+      
+      var cellIdxFormulaPass: Integer = resultDataStartCellRef.getCol()
+      var nbColWithoutFormula = 0
+      
+      // Always create row at start position before shifting
+      val dataRow = dataSheet.createRow(resultDataStartCellRef.getRow())
       for (cell <- row.select("td")) {
+    	  val currSheetCell = dataRow.createCell(cellIdxFormulaPass)
+    	  currSheetCell.setCellValue("TEMP :: TO BE OVERRIDEN :: " + cell.text)
+    	  cellIdxFormulaPass = cellIdxFormulaPass + 1
+      }
+      
+      // keep doing while MAX_NO_FORMULA_FOUND reached
+      while (nbColWithoutFormula < maxColWithoutFormula && cellIdxFormulaPass < templateRow.getLastCellNum()) {
+        Logger.debug(s"FormulaPass >>>> BEFORE: nbColWithoutFormula/maxColWithoutFormula = ${nbColWithoutFormula}/${maxColWithoutFormula}")
+        val exampleCell = templateRow.getCell(cellIdxFormulaPass)
 
-        val currSheetCell = dataRow.createCell(cellIdx)
+        // Check if next template column contains a formula
+        exampleCell.getCellType() match {
+          case Cell.CELL_TYPE_FORMULA =>
+            //val fRange = exampleCell.getArrayFormulaRange()            
+            val cachedResult = exampleCell.getCachedFormulaResultType()
+            val formula = exampleCell.getCellFormula()
+            //val style = exampleCell.getCellStyle()
+            Logger.debug(s"FormulaPass >>>> Formula found: >${formula}<, cachedResult: >${cachedResult}<")
+            //Logger.debug(s"Formula range: \nfirst col: ${fRange.getFirstColumn()}\nlast col : ${fRange.getLastColumn()}\nfirst row: ${fRange.getFirstRow()} \nlast row : ${fRange.getLastRow()} \nnb of cells: ${fRange.getNumberOfCells()}")
 
+            if (formula.trim().length() > 0) {
+              Logger.debug(s"FormulaPass >>>> formula.trim().length() = ${formula.trim().length()}")
+              val currSheetCell = dataRow.createCell(cellIdxFormulaPass)
+              currSheetCell.setCellType(exampleCell.getCellType())
+              currSheetCell.setCellFormula(exampleCell.getCellFormula())
+              currSheetCell.setCellStyle(exampleCell.getCellStyle())
+
+              //              FormulaShifter(0,dataSheet.getSheetName(),)
+              //               int firstMovedRowIndex, int lastMovedRowIndex, int numberOfRowsToMove) 
+
+              nbColWithoutFormula = nbColWithoutFormula
+            } else {
+              Logger.debug(s"FormulaPass >>>> formula.trim().length() !> 0}")
+              nbColWithoutFormula = nbColWithoutFormula + 1
+            }
+          case _ =>
+            Logger.debug(s"FormulaPass >>>> NO formula")
+            nbColWithoutFormula = nbColWithoutFormula + 1
+        }
+        Logger.debug(s"FormulaPass >>>> nbColWithoutFormula = ${nbColWithoutFormula}")
+
+        cellIdxFormulaPass = cellIdxFormulaPass + 1
+
+        Logger.debug(s"FormulaPass >>>> AFTER : nbColWithoutFormula/maxColWithoutFormula = ${nbColWithoutFormula}/${maxColWithoutFormula}, cellIdxFormulaPass = ${cellIdxFormulaPass}")
+
+      }      
+
+      currFormulaPassIdx = currFormulaPassIdx + 1
+      
+      // TRY DEALING WITH FORMULA REFERENCES...
+      if (currFormulaPassIdx < dataTableTrCollection.length) {
+	      dataSheet.shiftRows(resultDataStartCellRef.getRow(), rowIdxFormulaPass, 1)
+	      Logger.debug(s"FormulaPass >>>> dataSheet.shiftRows(${resultDataStartCellRef.getRow()}, ${rowIdxFormulaPass}, 1)")
+      } else {
+    	  Logger.debug(s"FormulaPass >>>> NO shiftRows FOR rowIdxFormulaPass = ${rowIdxFormulaPass}")
+      }
+      
+      if (cellIdxFormulaPass > maxCellIdxFormulaPass) maxCellIdxFormulaPass = cellIdxFormulaPass
+      rowIdxFormulaPass = rowIdxFormulaPass + 1 
+      
+    }
+    
+    //dataSheet.shiftRows(resultDataStartCellRef.getRow(), rowIdxFormulaPass, -1)
+    //Logger.debug(s"FormulaPass BACK >>>> dataSheet.shiftRows(${resultDataStartCellRef.getRow()}, ${rowIdxFormulaPass}, 1)")
+          
+    // ================================================================
+    // ==== Deal with formula - END
+    // ================================================================    
+
+    // ================================================================
+    // ==== Deal with data - START
+    // ================================================================
+    
+    var rowIdx: Integer = resultDataStartCellRef.getRow()
+    var maxCellIdx: Integer = 0    
+    
+    //val tableDataPassIt = tables.get(0)
+    
+    for (row <- dataTableTrCollection) {
+
+      Logger.debug("DataPass >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+      Logger.debug("DataPass >>>> rowIdx = " + rowIdx);
+      Logger.debug("DataPass >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");      
+      
+      var cellIdx: Integer = resultDataStartCellRef.getCol()
+      var nbColWithoutFormula = 0
+      //val dataRow = dataSheet.createRow(rowIdx)
+      val dataRow = dataSheet.getRow(rowIdx)
+      
+      for (cell <- row.select("td")) {
+       
+        //val currSheetCell = dataRow.createCell(cellIdx)
+        val currSheetCell =  if (dataRow.getCell(cellIdx) != null) {
+          dataRow.getCell(cellIdx)
+        } else {
+          dataRow.createCell(cellIdx)
+        }
+        
         if (!cell.text.isEmpty()) {
           // Cell type is defined after td class names.
           // Currently supported names for type specific {"date","num"} 
           cell.className() match {
-            case DateCssClassName => currSheetCell.setCellValue(sdf.parse(cell.text))
-            case NumericCssClassName => currSheetCell.setCellValue(java.lang.Double.parseDouble(cell.text))
-            case _ => currSheetCell.setCellValue(cell.text)
+            case DateCssClassName => 
+              currSheetCell.setCellValue(sdf.parse(cell.text))
+            case NumericCssClassName => 
+              currSheetCell.setCellValue(java.lang.Double.parseDouble(cell.text))
+            case _ => 
+              currSheetCell.setCellValue(cell.text)
           }
         } else {
           currSheetCell.setCellValue(cell.text)
         }
-
+        
         // Preserve example row cells style
         val cellStyle = templateRow.getCell(cellIdx).getCellStyle()
-        currSheetCell.setCellStyle(cellStyle)        
-        
+       
+        currSheetCell.setCellStyle(cellStyle)
         cellIdx = cellIdx + 1
+        
       }
-      if ( cellIdx > maxCellIdx) maxCellIdx = cellIdx
+      // TODO: All data columns processed, proceed with formulas columns if any...
+
+      // keep doing while MAX_NO_FORMULA_FOUND reached
+//      while (nbColWithoutFormula < maxColWithoutFormula && cellIdx < templateRow.getLastCellNum()) {
+//        Logger.debug(s"BEFORE: nbColWithoutFormula/maxColWithoutFormula = ${nbColWithoutFormula}/${maxColWithoutFormula}")
+//        val exampleCell = templateRow.getCell(cellIdx)
+//
+//        // Check if next template column contains a formula
+//        exampleCell.getCellType() match {
+//          case Cell.CELL_TYPE_FORMULA =>
+//            //val fRange = exampleCell.getArrayFormulaRange()            
+//            val cachedResult = exampleCell.getCachedFormulaResultType()
+//            val formula = exampleCell.getCellFormula()
+//            //val style = exampleCell.getCellStyle()
+//            Logger.debug(s"Formula found: >${formula}<, cachedResult: >${cachedResult}<")
+//            //Logger.debug(s"Formula range: \nfirst col: ${fRange.getFirstColumn()}\nlast col : ${fRange.getLastColumn()}\nfirst row: ${fRange.getFirstRow()} \nlast row : ${fRange.getLastRow()} \nnb of cells: ${fRange.getNumberOfCells()}")
+//
+//            if (formula.trim().length() > 0) {
+//              Logger.debug(s"formula.trim().length() = ${formula.trim().length()}")
+//              val currSheetCell = dataRow.createCell(cellIdx)
+//              currSheetCell.setCellType(exampleCell.getCellType())
+//              currSheetCell.setCellFormula(exampleCell.getCellFormula())
+//              currSheetCell.setCellStyle(exampleCell.getCellStyle())
+//
+//              //              FormulaShifter(0,dataSheet.getSheetName(),)
+//              //               int firstMovedRowIndex, int lastMovedRowIndex, int numberOfRowsToMove) 
+//
+//              nbColWithoutFormula = nbColWithoutFormula
+//            } else {
+//              Logger.debug(s"formula.trim().length() !> 0}")
+//              nbColWithoutFormula = nbColWithoutFormula + 1
+//            }
+//          case _ =>
+//            Logger.debug(s"NO formula")
+//            nbColWithoutFormula = nbColWithoutFormula + 1
+//        }
+//        Logger.debug(s"nbColWithoutFormula = ${nbColWithoutFormula}")
+//
+//        cellIdx = cellIdx + 1
+//
+//        Logger.debug(s"AFTER : nbColWithoutFormula/maxColWithoutFormula = ${nbColWithoutFormula}/${maxColWithoutFormula}, cellIdx = ${cellIdx}")
+//
+//      }
+
+      // If no  => copy template content until MAX_NO_FORMULA_FOUND
+      // If yes => copy template formula and adapt it to current row index
+
+      //dataRow.createCell(cellIdx)
+
+      if (cellIdx > maxCellIdx) maxCellIdx = cellIdx
       rowIdx = rowIdx + 1
     }
     
+    // ================================================================
+    // ==== Deal with data - END
+    // ================================================================
+
+    
+    // ================================================================
+    // ==== Deal with Print - START
+    // ================================================================
+    
     val maxColIdx = maxCellIdx
     val maxRowIdx = rowIdx
-    
+
     definePrintRange(wb, resultDataStartCellRef, maxColIdx, maxRowIdx)
+    Logger.debug(s"maxColIdx = ${maxColIdx}, maxRowIdx = ${maxRowIdx}")
+
+    // ================================================================
+    // ==== Deal with Print - END
+    // ================================================================    
     
     // Disabled autoSizeColumn upon user request. Full fixed layout control on 
     // template is prefered to unpredictable dynamic resize.
@@ -261,34 +445,34 @@ object SpreadSheetBuilder {
     for (i <- colDataRange) {
       dataSheet.autoSizeColumn(i);
     }
-    */    
+    */
 
   }
 
   /**
    * Deal with print range for dataSheet adapting from already existing print range.
    */
-  def definePrintRange(wb: Workbook, resultDataStartCellRef : CellReference, maxColIdx : Int, maxRowIdx : Int) : Unit = {
-    
+  def definePrintRange(wb: Workbook, resultDataStartCellRef: CellReference, maxColIdx: Int, maxRowIdx: Int): Unit = {
+
     val printArea = wb.getPrintArea(0)
     val printRange = printArea.split("!")(1)
     Logger.debug(s"printArea: ${printArea}, printRange: ${printRange}")
-    
+
     val printRangeStart = printRange.split(":")(0)
     val printRangeStartCellRef = new CellReference(printRangeStart)
 
     // Compute resultDataEndCellAbsRef column position
-    val endCol =  if ( printRangeStartCellRef.getCol() > resultDataStartCellRef.getCol()) {
+    val endCol = if (printRangeStartCellRef.getCol() > resultDataStartCellRef.getCol()) {
       maxColIdx - (printRangeStartCellRef.getCol() - resultDataStartCellRef.getCol())
     } else {
       maxColIdx + (resultDataStartCellRef.getCol() - printRangeStartCellRef.getCol())
     }
     // Define new print range end position
-    val resultDataEndCellAbsRef = new CellReference(maxRowIdx-1, endCol,AbsRow,AbsCol)
+    val resultDataEndCellAbsRef = new CellReference(maxRowIdx - 1, endCol, AbsRow, AbsCol)
     val newPrintRange = printRangeStart + ":" + resultDataEndCellAbsRef.formatAsString()
-    wb.setPrintArea(0,newPrintRange)    
+    wb.setPrintArea(0, newPrintRange)
   }
-  
+
   /**
    * HSSF and XSSF compatible formulas evaluation.
    */
