@@ -195,17 +195,19 @@ object SpreadSheetBuilder {
 
     val resultDataStartCellRef = new CellReference(resultDataStartCellRefString)
 
-    Logger.debug(s"resultDataStartCellRefString = ${resultDataStartCellRefString}, resultDataStartCellRef = ${resultDataStartCellRef}")
+    //Logger.debug(s"resultDataStartCellRefString = ${resultDataStartCellRefString}, resultDataStartCellRef = ${resultDataStartCellRef}")
 
     // By convention the resultDataStartCellRef is considered to be on the first sheet
     val dataSheet = wb.getSheetAt(0)
     
-    // TODO check whether using fake sheet may solve static formula affected by row shifting on dataSheet.
-    val fakeSheet = wb.cloneSheet(0)
+    // Make use of a temporarySheet to perform formulas references adjustments 
+    // using row shifting without affecting dataSheet formulas we want to keep
+    // references untouched (Header totals for instance).
+    val temporarySheet = wb.cloneSheet(0)
     
     // Get the first row as example
     val templateRow = dataSheet.getRow(resultDataStartCellRef.getRow())
-    Logger.debug(s"templateRow last cell num = ${templateRow.getLastCellNum()}");
+    //Logger.debug(s"templateRow last cell num = ${templateRow.getLastCellNum()}");
     
     import scala.collection.JavaConversions._
 
@@ -217,10 +219,12 @@ object SpreadSheetBuilder {
     if (tables.size() == 0) throw HtmlTableNotFoundException(s"HTML query result is expected to contain a single table but none was found query ${getXQueryFileName(wb)}")
     else if (tables.size() > 1) throw MoreThanOneHtmlTableFoundException(s"HTML query result is expected to contain a single table but ${tables.size()} were found for query ${getXQueryFileName(wb)}")
 
+    // By convention we expect results to be contained in a single HTML table 
     val dataTable = tables.get(0)
+    // Make the iterator a collection to allow repeated traversals
     val dataTableTrCollection = dataTable.select("tr").toIndexedSeq
-    
-    val maxColWithoutFormula = 4
+    // Safe guard limit after which we stop looping in search of formula cell 
+    val MAX_COL_WITHOUT_FORMULA = 4
 
     // ================================================================
     // ==== Deal with formula - START
@@ -229,81 +233,56 @@ object SpreadSheetBuilder {
     var rowIdxFormulaPass: Integer = resultDataStartCellRef.getRow()
     var maxCellIdxFormulaPass: Integer = 0
     
-    // First results pass to create formulas an shift them 
-    // Shift rows 6 - 11 on the spreadsheet to the top (rows 0 - 5)
-    //sheet.shiftRows(5, 10, -5);
-    
-    //val tableFormulaPassIt = tables.get(0)
-    
+    // Index used to check for last loop
     var currFormulaPassIdx = 0
+
+    // Loop on HTML table result rows
     for (row <- dataTableTrCollection) {
 
-      Logger.debug("FormulaPass >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-      Logger.debug(s"FormulaPass >>>> rowIdxFormulaPass = ${rowIdxFormulaPass} :: templateRow.getRowNum() = ${templateRow.getRowNum()}" );
-      Logger.debug("FormulaPass >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-      
       var cellIdxFormulaPass: Integer = resultDataStartCellRef.getCol()
       var nbColWithoutFormula = 0
       
-      // Always create row at start position before shifting
-      val dataRow = fakeSheet.createRow(resultDataStartCellRef.getRow())
+      // Always create row at start position, it will be shifted down a position afterward
+      val dataRow = temporarySheet.createRow(resultDataStartCellRef.getRow())
+
+      // Loop on HTML table result row columns
       for (cell <- row.select("td")) {
     	  val currSheetCell = dataRow.createCell(cellIdxFormulaPass)
-    	  currSheetCell.setCellValue("TEMP :: TO BE OVERRIDEN :: " + cell.text)
+    	  currSheetCell.setCellValue("SHOULD NEVER BE VISIBLE :: TO BE DELETED WITH temporarySheet :: " + cell.text)
     	  cellIdxFormulaPass = cellIdxFormulaPass + 1
       }
       
-      // keep doing while MAX_NO_FORMULA_FOUND reached
-      while (nbColWithoutFormula < maxColWithoutFormula && cellIdxFormulaPass < templateRow.getLastCellNum()) {
-        Logger.debug(s"FormulaPass >>>> BEFORE: nbColWithoutFormula/maxColWithoutFormula = ${nbColWithoutFormula}/${maxColWithoutFormula}")
+      // keep looping while MAX_COL_WITHOUT_FORMULA not reached or last template columns reached
+      while (nbColWithoutFormula < MAX_COL_WITHOUT_FORMULA && cellIdxFormulaPass < templateRow.getLastCellNum()) {
+
         val exampleCell = templateRow.getCell(cellIdxFormulaPass)
 
         // Check if next template column contains a formula
         exampleCell.getCellType() match {
           case Cell.CELL_TYPE_FORMULA =>
-            //val fRange = exampleCell.getArrayFormulaRange()            
-            val cachedResult = exampleCell.getCachedFormulaResultType()
             val formula = exampleCell.getCellFormula()
-            //val style = exampleCell.getCellStyle()
-            Logger.debug(s"FormulaPass >>>> Formula found: >${formula}<, cachedResult: >${cachedResult}<")
-            //Logger.debug(s"Formula range: \nfirst col: ${fRange.getFirstColumn()}\nlast col : ${fRange.getLastColumn()}\nfirst row: ${fRange.getFirstRow()} \nlast row : ${fRange.getLastRow()} \nnb of cells: ${fRange.getNumberOfCells()}")
-
             if (formula.trim().length() > 0) {
-              Logger.debug(s"FormulaPass >>>> formula.trim().length() = ${formula.trim().length()}")
               val currSheetCell = dataRow.createCell(cellIdxFormulaPass)
               currSheetCell.setCellType(exampleCell.getCellType())
               currSheetCell.setCellFormula(exampleCell.getCellFormula())
               currSheetCell.setCellStyle(exampleCell.getCellStyle())
-
-              //              FormulaShifter(0,dataSheet.getSheetName(),)
-              //               int firstMovedRowIndex, int lastMovedRowIndex, int numberOfRowsToMove) 
-
-              nbColWithoutFormula = nbColWithoutFormula
+              // Leave nbColWithoutFormula untouched
             } else {
-              Logger.debug(s"FormulaPass >>>> formula.trim().length() !> 0}")
               nbColWithoutFormula = nbColWithoutFormula + 1
             }
           case _ =>
-            Logger.debug(s"FormulaPass >>>> NO formula")
             nbColWithoutFormula = nbColWithoutFormula + 1
         }
-        Logger.debug(s"FormulaPass >>>> nbColWithoutFormula = ${nbColWithoutFormula}")
-
+        // Go a column forward
         cellIdxFormulaPass = cellIdxFormulaPass + 1
-
-        Logger.debug(s"FormulaPass >>>> AFTER : nbColWithoutFormula/maxColWithoutFormula = ${nbColWithoutFormula}/${maxColWithoutFormula}, cellIdxFormulaPass = ${cellIdxFormulaPass}")
-
       }      
 
       currFormulaPassIdx = currFormulaPassIdx + 1
       
-      // TRY DEALING WITH FORMULA REFERENCES...
+      // Do not shift row on last loop
       if (currFormulaPassIdx < dataTableTrCollection.length) {
-    	  // Perform shifting on fakeSheet to avoid side effect on "static" formulas
-    	  fakeSheet.shiftRows(resultDataStartCellRef.getRow(), rowIdxFormulaPass, 1)
-	      Logger.debug(s"FormulaPass >>>> dataSheet.shiftRows(${resultDataStartCellRef.getRow()}, ${rowIdxFormulaPass}, 1)")
-      } else {
-    	  Logger.debug(s"FormulaPass >>>> NO shiftRows FOR rowIdxFormulaPass = ${rowIdxFormulaPass}")
+    	  // Perform shifting on temporarySheet to preserve dataSheet from side effect on "static" formulas
+    	  temporarySheet.shiftRows(resultDataStartCellRef.getRow(), rowIdxFormulaPass, 1)
       }
       
       if (cellIdxFormulaPass > maxCellIdxFormulaPass) maxCellIdxFormulaPass = cellIdxFormulaPass
@@ -311,9 +290,6 @@ object SpreadSheetBuilder {
       
     }
     
-    //dataSheet.shiftRows(resultDataStartCellRef.getRow(), rowIdxFormulaPass, -1)
-    //Logger.debug(s"FormulaPass BACK >>>> dataSheet.shiftRows(${resultDataStartCellRef.getRow()}, ${rowIdxFormulaPass}, 1)")
-          
     // ================================================================
     // ==== Deal with formula - END
     // ================================================================    
@@ -325,28 +301,19 @@ object SpreadSheetBuilder {
     var rowIdx: Integer = resultDataStartCellRef.getRow()
     var maxCellIdx: Integer = 0    
     
-    //val tableDataPassIt = tables.get(0)
-    
+    // Loop on HTML table result rows
     for (row <- dataTableTrCollection) {
 
-      Logger.debug("DataPass >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-      Logger.debug("DataPass >>>> rowIdx = " + rowIdx);
-      Logger.debug("DataPass >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");      
-      
       var cellIdx: Integer = resultDataStartCellRef.getCol()
       var nbColWithoutFormula = 0
-      // While using fakeSheet we now need creating rows again
+
+      // Create row on dataSheet for each HTML table result row
       val dataRow = dataSheet.createRow(rowIdx)
-      //val dataRow = dataSheet.getRow(rowIdx)
       
+      // Loop on HTML table result row columns
       for (cell <- row.select("td")) {
        
-        //val currSheetCell = dataRow.createCell(cellIdx)
-        val currSheetCell =  if (dataRow.getCell(cellIdx) != null) {
-          dataRow.getCell(cellIdx)
-        } else {
-          dataRow.createCell(cellIdx)
-        }
+        val currSheetCell = dataRow.createCell(cellIdx)
         
         if (!cell.text.isEmpty()) {
           // Cell type is defined after td class names.
@@ -363,71 +330,58 @@ object SpreadSheetBuilder {
           currSheetCell.setCellValue(cell.text)
         }
         
-        // Preserve example row cells style
+        // Copy example row cells style
         val cellStyle = templateRow.getCell(cellIdx).getCellStyle()
        
         currSheetCell.setCellStyle(cellStyle)
         cellIdx = cellIdx + 1
         
       }
-      // TODO: All data columns processed, proceed with formulas columns if any...
 
+      
+      // ==============================================================
+      // Proceed with formulas columns if any
+      // ==============================================================
+      
       // keep doing while MAX_NO_FORMULA_FOUND reached
-      while (nbColWithoutFormula < maxColWithoutFormula && cellIdx < templateRow.getLastCellNum()) {
-        Logger.debug(s"BEFORE: nbColWithoutFormula/maxColWithoutFormula = ${nbColWithoutFormula}/${maxColWithoutFormula}")
+      while (nbColWithoutFormula < MAX_COL_WITHOUT_FORMULA && cellIdx < templateRow.getLastCellNum()) {
+
         val exampleCell = templateRow.getCell(cellIdx)
 
         // Check if next template column contains a formula
         exampleCell.getCellType() match {
           case Cell.CELL_TYPE_FORMULA =>
             //val fRange = exampleCell.getArrayFormulaRange()            
-            val cachedResult = exampleCell.getCachedFormulaResultType()
+            //val cachedResult = exampleCell.getCachedFormulaResultType()
             val formula = exampleCell.getCellFormula()
             //val style = exampleCell.getCellStyle()
-            Logger.debug(s"Formula found: >${formula}<, cachedResult: >${cachedResult}<")
+            //Logger.debug(s"Formula found: >${formula}<, cachedResult: >${cachedResult}<")
             //Logger.debug(s"Formula range: \nfirst col: ${fRange.getFirstColumn()}\nlast col : ${fRange.getLastColumn()}\nfirst row: ${fRange.getFirstRow()} \nlast row : ${fRange.getLastRow()} \nnb of cells: ${fRange.getNumberOfCells()}")
 
             if (formula.trim().length() > 0) {
-              Logger.debug(s"formula.trim().length() = ${formula.trim().length()}")
+              //Logger.debug(s"formula.trim().length() = ${formula.trim().length()}")
               val currSheetCell = dataRow.createCell(cellIdx)
               currSheetCell.setCellType(exampleCell.getCellType())
-              //currSheetCell.setCellFormula(exampleCell.getCellFormula())
-              val shiftedFormulaFromFakeSheet = fakeSheet.getRow(currSheetCell.getRowIndex()).getCell(currSheetCell.getColumnIndex()).getCellFormula()
-              Logger.debug(s"shiftedFormulaFromFakeSheet = ${shiftedFormulaFromFakeSheet}")
-              currSheetCell.setCellFormula(shiftedFormulaFromFakeSheet)
+              // Get the formula with correct references from temporarySheet
+              val shiftedFormulaFromTemporarySheet = temporarySheet.getRow(currSheetCell.getRowIndex()).getCell(currSheetCell.getColumnIndex()).getCellFormula()
+              //Logger.debug(s"shiftedFormulaFromTemporarySheet = ${shiftedFormulaFromTemporarySheet}")
+              currSheetCell.setCellFormula(shiftedFormulaFromTemporarySheet)
               currSheetCell.setCellStyle(exampleCell.getCellStyle())
-
-              //              FormulaShifter(0,dataSheet.getSheetName(),)
-              //               int firstMovedRowIndex, int lastMovedRowIndex, int numberOfRowsToMove) 
-
-              nbColWithoutFormula = nbColWithoutFormula
+              // Leave nbColWithoutFormula untouched
             } else {
-              Logger.debug(s"formula.trim().length() !> 0}")
               nbColWithoutFormula = nbColWithoutFormula + 1
             }
-          case _ =>
-            Logger.debug(s"NO formula")
-            nbColWithoutFormula = nbColWithoutFormula + 1
+          case _ => nbColWithoutFormula = nbColWithoutFormula + 1
         }
-        Logger.debug(s"nbColWithoutFormula = ${nbColWithoutFormula}")
-
         cellIdx = cellIdx + 1
-
-        Logger.debug(s"AFTER : nbColWithoutFormula/maxColWithoutFormula = ${nbColWithoutFormula}/${maxColWithoutFormula}, cellIdx = ${cellIdx}")
-
       }
-
-      // If no  => copy template content until MAX_NO_FORMULA_FOUND
-      // If yes => copy template formula and adapt it to current row index
-
-      //dataRow.createCell(cellIdx)
 
       if (cellIdx > maxCellIdx) maxCellIdx = cellIdx
       rowIdx = rowIdx + 1
     }
     
     // Get rid of the temporary fake sheet.
-    wb.removeSheetAt(wb.getSheetIndex(fakeSheet))
+    wb.removeSheetAt(wb.getSheetIndex(temporarySheet))
     
     // ================================================================
     // ==== Deal with data - END
@@ -442,7 +396,7 @@ object SpreadSheetBuilder {
     val maxRowIdx = rowIdx
 
     definePrintRange(wb, resultDataStartCellRef, maxColIdx, maxRowIdx)
-    Logger.debug(s"maxColIdx = ${maxColIdx}, maxRowIdx = ${maxRowIdx}")
+    //Logger.debug(s"maxColIdx = ${maxColIdx}, maxRowIdx = ${maxRowIdx}")
 
     // ================================================================
     // ==== Deal with Print - END
@@ -468,7 +422,7 @@ object SpreadSheetBuilder {
 
     val printArea = wb.getPrintArea(0)
     val printRange = printArea.split("!")(1)
-    Logger.debug(s"printArea: ${printArea}, printRange: ${printRange}")
+    //Logger.debug(s"printArea: ${printArea}, printRange: ${printRange}")
 
     val printRangeStart = printRange.split(":")(0)
     val printRangeStartCellRef = new CellReference(printRangeStart)
