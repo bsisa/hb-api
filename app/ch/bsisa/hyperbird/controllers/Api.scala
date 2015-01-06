@@ -91,7 +91,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
     } else {
       val backupDateString = ch.bsisa.hyperbird.util.DateUtil.elfinIdentifiantDateFormat.format(new java.util.Date())
       val messageString = s"Security policy only allows backup maintenance operation from ${LOCALHOST}"
-      scala.concurrent.Future(Ok(<backup date={backupDateString} message={messageString} />))
+      scala.concurrent.Future(Ok(<backup date={backupDateString} status="forbidden" message={messageString} />))
     }
   }
 
