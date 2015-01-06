@@ -31,6 +31,9 @@ GET      /api/melfin/whoami                                   ch.bsisa.hyperbird
 # Dynamically provides initialisation configuration information useful to hb-ui 
 GET      /api/melfin/config                                   ch.bsisa.hyperbird.controllers.Api.config
 
+# Triggers database backup 
+GET      /api/melfin/backup                                   ch.bsisa.hyperbird.controllers.Api.runBackup
+
 # Serve Elfin ANNEX files.
 GET      /api/melfin/annex/:collectionId/:elfinId/:fileName   ch.bsisa.hyperbird.controllers.Api.getElfinAnnexFile(collectionId,elfinId,fileName)
 # Tells whether Elfin ANNEX file exist without including body.
