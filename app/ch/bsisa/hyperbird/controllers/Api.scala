@@ -71,6 +71,31 @@ object Api extends Controller with securesocial.core.SecureSocial {
   }
 
   /**
+   * Triggers backup dedicated XQuery script only if called from local host.
+   *
+   * This allows local server scripts to trigger backup without requiring
+   * authentication information. This assumes restricted server "localhost"
+   * access.
+   */
+  def runBackup() = Action.async { request =>
+    val LOCALHOST = "localhost"
+    val hostTokens = request.host.split(":")
+    val isLocalHost = (hostTokens.length > 0 && hostTokens(0) == LOCALHOST)
+    if (isLocalHost) {
+      val xqueryFileName = "admin_backup.xq"
+      Logger.debug(s"""Run XQuery ${xqueryFileName} from host ${LOCALHOST} with XML returned format such as <backup date="2015-01-06T14:12:59.249+01:00" />""")
+
+      XQueryWSHelper.runXQueryFile(xqueryFileName, None).map { response =>
+        Ok(response.body).as(response.ahcResponse.getContentType())
+      }
+    } else {
+      val backupDateString = ch.bsisa.hyperbird.util.DateUtil.elfinIdentifiantDateFormat.format(new java.util.Date())
+      val messageString = s"Security policy only allows backup maintenance operation from ${LOCALHOST}"
+      scala.concurrent.Future(Ok(<backup date={backupDateString} message={messageString} />))
+    }
+  }
+
+  /**
    * Dynamically provides initialisation configuration information useful to hb-ui
    */
   def config() = SecuredAction(ajaxCall = true) {
