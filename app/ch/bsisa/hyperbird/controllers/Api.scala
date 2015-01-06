@@ -14,7 +14,7 @@ import ch.bsisa.hyperbird.report.ReportBuilder
 import ch.bsisa.hyperbird.security.social.HbSecureService
 import ch.bsisa.hyperbird.security.social.HbSecureService.PasswordHashException
 import ch.bsisa.hyperbird.spreadsheet.SpreadSheetBuilder
-import ch.bsisa.hyperbird.util.{FunctionsUtil, ElfinUtil}
+import ch.bsisa.hyperbird.util.{ FunctionsUtil, ElfinUtil }
 import org.apache.poi.ss.usermodel._
 import securesocial.core.java.SecureSocial.SecuredAction
 import play.api._
@@ -41,7 +41,6 @@ import ch.bsisa.hyperbird.security.social.User
 import ch.bsisa.hyperbird.cache.CacheHelper
 import ch.bsisa.hyperbird.io._
 import java.io.File
-
 
 /**
  * REST API controller.
@@ -89,20 +88,18 @@ object Api extends Controller with securesocial.core.SecureSocial {
     XQueryWSHelper.query(WSQueries.allHbCollectionsQuery)
   }
 
-  
-  
   /**
    * Provides password hashing service.
    */
-  def getPasswordHash(plainTextPassword : String) = SecuredAction(ajaxCall = true) { request => 
+  def getPasswordHash(plainTextPassword: String) = SecuredAction(ajaxCall = true) { request =>
     //
     try {
-	    val plainTextPasswordHashValue = HbSecureService.getPasswordHash(plainTextPassword) 
-	    val jsonResponse = 
-	      s"""{
+      val plainTextPasswordHashValue = HbSecureService.getPasswordHash(plainTextPassword)
+      val jsonResponse =
+        s"""{
 	      "hash" : "${plainTextPasswordHashValue}"
-}"""  
-	    Ok(jsonResponse).as(JSON)
+}"""
+      Ok(jsonResponse).as(JSON)
     } catch {
       case phe: PasswordHashException => {
         managePasswordHashException(exception = phe, errorMsg = Option(s"User: ${request.user} failed to obtain password hash."))
@@ -112,10 +109,8 @@ object Api extends Controller with securesocial.core.SecureSocial {
       }
     }
 
-    
   }
 
-  
   /**
    * Returns the result of executing the specified XQuery file by name.
    *
@@ -152,7 +147,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
   /**
    * <i>Intended to HTTP HEAD requests</i>, in which case it should return:
    * <ul>
-   *   <li>regular HTTP 200 if `annex file resource exists`</li> 
+   *   <li>regular HTTP 200 if `annex file resource exists`</li>
    *   <li>custom HTTP 701 as successful `annex file resource does not exist` response.</li>
    *  <ul>
    */
@@ -172,9 +167,9 @@ object Api extends Controller with securesocial.core.SecureSocial {
   }
 
   /**
-   * Creates annex file at correct location following file chunks uploads. 
-   * 
-   * Note: REST upload is not practical given current upload library constraints. 
+   * Creates annex file at correct location following file chunks uploads.
+   *
+   * Note: REST upload is not practical given current upload library constraints.
    * CollectionId, elfinId, fileName informations are provided as POST parameters.
    * Creates the annex file pointed at by `ELFIN/ANNEXE/RENVOI/@LIEN` data structure
    */
@@ -184,9 +179,9 @@ object Api extends Controller with securesocial.core.SecureSocial {
     try {
 
       val params = request.body.asFormUrlEncoded
-      
+
       //for ( key <- params.keys) { Logger.debug(s"key = ${key}")}
-      
+
       // flow.js upload information
       val flowIdentifier = params.get("flowIdentifier").get.seq(0)
       val flowChunkNumber = params.get("flowChunkNumber").get.seq(0).toInt
@@ -197,29 +192,29 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
       // HyperBird upload information
       val elfinID_G = params.get("elfinID_G") match {
-        case Some(seq) => seq(0) 
-        case None => throw new Exception ("elfinID_G mandatory information missing.")
+        case Some(seq) => seq(0)
+        case None => throw new Exception("elfinID_G mandatory information missing.")
       }
       val elfinId = params.get("elfinId") match {
         case Some(seq) => seq(0)
-        case None => throw new Exception ("elfinId mandatory information missing.")
+        case None => throw new Exception("elfinId mandatory information missing.")
       }
-      
-//      Logger.debug(s"""
-//      elfinID_G = ${elfinID_G}
-//      elfinId = ${elfinId}
-//      flowIdentifier = ${flowIdentifier}
-//      flowChunkNumber = ${flowChunkNumber}
-//      flowTotalChunks = ${flowTotalChunks}
-//      flowFilename = ${flowFilename}
-//      flowTotalSize = ${flowTotalSize}
-//      flowChunkSize = ${flowChunkSize}
-//    		""")
-      
-	  // TODO: make it a config	  
-	  val chunksDirectory = FileUploadHelper.getTemporaryFileUploadDirectory()
-	  val chunkDestinationFile = new File(chunksDirectory, s"${flowIdentifier}-${flowChunkNumber}")
-	  Logger.debug(s"""
+
+      //      Logger.debug(s"""
+      //      elfinID_G = ${elfinID_G}
+      //      elfinId = ${elfinId}
+      //      flowIdentifier = ${flowIdentifier}
+      //      flowChunkNumber = ${flowChunkNumber}
+      //      flowTotalChunks = ${flowTotalChunks}
+      //      flowFilename = ${flowFilename}
+      //      flowTotalSize = ${flowTotalSize}
+      //      flowChunkSize = ${flowChunkSize}
+      //    		""")
+
+      // TODO: make it a config	  
+      val chunksDirectory = FileUploadHelper.getTemporaryFileUploadDirectory()
+      val chunkDestinationFile = new File(chunksDirectory, s"${flowIdentifier}-${flowChunkNumber}")
+      Logger.debug(s"""
   chunksDirectory = ${chunksDirectory.getCanonicalPath()}
   chunkDestinationFile = ${chunkDestinationFile.getCanonicalPath()}
 	  """)
@@ -231,19 +226,19 @@ object Api extends Controller with securesocial.core.SecureSocial {
       // together with the first one thus before last is a good criteria to trigger upload end check
       if (flowTotalChunks == 1 || flowChunkNumber == (flowTotalChunks - 1)) {
 
-        val retryNb = 3 ; val delayMillis = 3000L        
-        val uploadCompleted = FunctionsUtil.retry(retryNb, delayMillis){
+        val retryNb = 3; val delayMillis = 3000L
+        val uploadCompleted = FunctionsUtil.retry(retryNb, delayMillis) {
           Logger.debug(s"createElfinAnnexFile() - retry checkUploadComplete till ${retryNb} times with ${delayMillis} delay.")
           FileUploadHelper.checkUploadComplete(chunksSourceDirectory = chunksDirectory, fileIdentifier = flowIdentifier, totalChunks = flowTotalChunks, totalSize = flowTotalSize)
         }
-        
+
         Logger.debug(s"createElfinAnnexFile() - uploadCompleted = ${uploadCompleted}")
-        
+
         if (uploadCompleted) {
 
           // Creates file to write to 
           val finalUploadedFile = AnnexesManager.createElfinAnnexFile(elfinID_G = elfinID_G, elfinId = elfinId, fileName = flowFilename)
-        
+
           // Writes chunks to final file
           FileUploadHelper.putChunksTogether(
             chunksSourceDirectory = chunksDirectory,
@@ -266,7 +261,6 @@ object Api extends Controller with securesocial.core.SecureSocial {
       case e: Exception => manageAnnexesManagerException(e)
     }
   }
-
 
   /**
    * Produce XLS spreadsheet report from provided XLS template and associated XQuery.
@@ -638,8 +632,6 @@ object Api extends Controller with securesocial.core.SecureSocial {
   def manageFutureException(exception: Option[Throwable] = None, errorMsg: Option[String] = None): Future[SimpleResult] =
     scala.concurrent.Future { ExceptionsManager.manageException(exception, errorMsg) }
 
-
-
   /**
    * Gets ELFIN corresponding to this collectionId and elfinId
    */
@@ -649,7 +641,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
     Logger.debug(s"getReport(collectionId=${collectionId}, elfinId=${elfinId}) called, queryString = ${queryString.getOrElse("")}")
 
     XQueryWSHelper.find(WSQueries.elfinQuery(collectionId, elfinId)).flatMap { elfin =>
-      ReportBuilder.writeReport(elfin,queryString)
+      ReportBuilder.writeReport(elfin, queryString)
     }.map { tempFile =>
       Ok.sendFile(tempFile.file)
     }.recover {
