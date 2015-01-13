@@ -212,9 +212,7 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
     val elfinUserDetailsID_G = elfinUser.PARTENAIRE.get.USAGER.get.ID_G.get
     
     // Use recover to provide more details on the reason why obtaining the given elfinUserId failed.
-    val futureElfinUserDetails = XQueryWSHelper.find(WSQueries.elfinQuery(elfinUserDetailsID_G, elfinUserDetailsId)).map { eud => 
-      eud
-    }.recover {
+    val futureElfinUserDetails = XQueryWSHelper.find(WSQueries.elfinQuery(elfinUserDetailsID_G, elfinUserDetailsId)) recover {
       case ResultNotFoundException(message, throwable) => 
         val augmentedMessage = s"User ${elfinUserId} details could not be obtained. Elfin of CLASSE ACTOR ${elfinUserDetailsID_G}/${elfinUserDetailsId} could not be found."
         throw ResultNotFoundException(augmentedMessage, throwable)
