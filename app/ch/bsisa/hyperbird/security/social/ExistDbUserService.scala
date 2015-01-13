@@ -91,7 +91,7 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
     } catch {
       // This is expected in all new user creation cases.
       case ResultNotFoundException(message, throwable) => {
-        Logger.info(s"Requested user with id.userId = ${id.userId} was not found: ${message}")
+        Logger.info(s"Requested user with id.userId = ${id.userId} could not be obtained: ${message}")
         None
       }
     }
@@ -210,7 +210,16 @@ class ExistDbUserService(application: Application) extends UserServicePlugin(app
     val pwdInfo: PasswordInfo = new PasswordInfo(PasswordHasher.BCryptHasher, elfinUserPasswordInfo)
     val elfinUserDetailsId = elfinUser.PARTENAIRE.get.USAGER.get.Id.get
     val elfinUserDetailsID_G = elfinUser.PARTENAIRE.get.USAGER.get.ID_G.get
-    val futureElfinUserDetails = XQueryWSHelper.find(WSQueries.elfinQuery(elfinUserDetailsID_G, elfinUserDetailsId))
+    
+    // Use recover to provide more details on the reason why obtaining the given elfinUserId failed.
+    val futureElfinUserDetails = XQueryWSHelper.find(WSQueries.elfinQuery(elfinUserDetailsID_G, elfinUserDetailsId)).map { eud => 
+      eud
+    }.recover {
+      case ResultNotFoundException(message, throwable) => 
+        val augmentedMessage = s"User ${elfinUserId} details could not be obtained. Elfin of CLASSE ACTOR ${elfinUserDetailsID_G}/${elfinUserDetailsId} could not be found."
+        throw ResultNotFoundException(augmentedMessage, throwable)
+    }
+    
     val elfinUserDetails = Await.result[ELFIN](futureElfinUserDetails, Duration(ExistDbUserService.USER_QUERY_MAY_WAIT_MILLISECONDS, MILLISECONDS))
     //val elfinUserDetails = ElapsedTime.time({ Await.result[ELFIN](futureElfinUserDetails, Duration(ExistDbUserService.USER_QUERY_MAY_WAIT_MILLISECONDS, MILLISECONDS)) },"elfinUserDetails")
 
