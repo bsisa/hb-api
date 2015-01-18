@@ -660,24 +660,24 @@ object Api extends Controller with securesocial.core.SecureSocial {
   /**
    * Gets ELFIN corresponding to this collectionId and elfinId
    */
-  def getReport(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true).async { request =>
+  def getReport(reportCollectionId : String, reportElfinId : String) = SecuredAction(ajaxCall = true).async { request =>
 
     val queryString = if (request.rawQueryString != null && request.rawQueryString.nonEmpty) Option(request.rawQueryString) else None
-    Logger.debug(s"getReport(collectionId=${collectionId}, elfinId=${elfinId}) called, queryString = ${queryString.getOrElse("")}")
+    Logger.debug(s"getReport(reportCollectionId=${reportCollectionId}, reportElfinId=${reportElfinId}) called, queryString = ${queryString.getOrElse("")}")
 
-    XQueryWSHelper.find(WSQueries.elfinQuery(collectionId, elfinId)).flatMap { elfin =>
-      ReportBuilder.writeReport(elfin, queryString)
+    XQueryWSHelper.find(WSQueries.elfinQuery(reportCollectionId, reportElfinId)).flatMap { reportElfin =>
+      ReportBuilder.writeReport(reportElfin, queryString)
     }.map { tempFile =>
       Ok.sendFile(tempFile.file)
     }.recover {
       case resNotFound: ResultNotFoundException => {
-        manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"No elfin found for ID_G: ${collectionId}, Id: ${elfinId}"))
+        manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"No elfin found for ID_G: ${reportCollectionId}, Id: ${reportElfinId}"))
       }
       case connectException: ConnectException => {
         manageConnectException(exception = connectException, errorMsg = Option(s"No database connection could be established."))
       }
       case e: Throwable => {
-        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.getReport() - Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
+        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.getReport() - Failed to perform find operation for Elfin with ID_G: ${reportCollectionId}, Id: ${reportElfinId}: ${e}"))
       }
     }
   }

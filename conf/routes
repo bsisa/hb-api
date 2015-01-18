@@ -57,7 +57,7 @@ GET      /api/melfin/spreadsheet/:fileName                    ch.bsisa.hyperbird
 
 
 # Generates and return reports based on the definition
-GET     /api/melfin/report/:collectionId/:elfinId  ch.bsisa.hyperbird.controllers.Api.getReport(collectionId, elfinId)
+GET     /api/melfin/report/:reportCollectionId/:reportElfinId  ch.bsisa.hyperbird.controllers.Api.getReport(reportCollectionId, reportElfinId)
 
 
 # TODO: define expected result format before re-enabling this route
