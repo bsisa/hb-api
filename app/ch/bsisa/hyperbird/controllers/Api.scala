@@ -109,9 +109,10 @@ object Api extends Controller with securesocial.core.SecureSocial {
    * <li>What type of data to return in geoXml.xsd world ?</li>
    * </ul>
    */
-  def collections = SecuredAction(ajaxCall = true).async {
-    XQueryWSHelper.query(WSQueries.allHbCollectionsQuery)
-  }
+  // Unused
+//  def collections = SecuredAction(ajaxCall = true).async {
+//    XQueryWSHelper.query(WSQueries.allHbCollectionsQuery)
+//  }
 
   /**
    * Provides password hashing service.
