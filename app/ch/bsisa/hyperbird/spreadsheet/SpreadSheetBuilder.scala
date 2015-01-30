@@ -449,7 +449,13 @@ object SpreadSheetBuilder {
       for (row <- sheet) {
         for (cell <- row) {
           if (cell.getCellType() == Cell.CELL_TYPE_FORMULA) {
-            evaluator.evaluateFormulaCell(cell);
+            try {
+            	evaluator.evaluateFormulaCell(cell);
+            } catch {
+            	case e: Throwable => {
+            		Logger.warn(s"Problem evaluating formulae for cell row ${cell.getRowIndex()}, column ${cell.getColumnIndex()} : ${e.getMessage()}")
+            	}
+            }
           }
         }
       }
