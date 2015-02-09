@@ -91,5 +91,42 @@ object CacheHelper {
     }
 
   }
+  
+  
+   /**
+   * Remove all cache entries starting with `http`, thus avoiding killing all user sessions for instance.
+   *
+   */
+  def removeAllEntries()(implicit apiConfig: ApiConfig) = {
+
+    if (apiConfig.queryCacheEnabled) {
+      Logger.debug(s"CacheHelper.removeAllEntries :: Cache enabled - action performed.")
+
+      // Get a reference to the EhCachePlugin manager
+      val cacheManager = Play.application.plugin[EhCachePlugin]
+        .getOrElse(throw new RuntimeException("EhCachePlugin not loaded")).manager
+
+      val ehCache = cacheManager.getCache(CACHE_NAME)
+      val ehCacheKeys = ehCache.getKeys() // ehCache.getKeysWithExpiryCheck()
+
+      for (key <- ehCacheKeys) {
+        key match {
+          case stringKey: String =>
+            {
+              Logger.debug(s">>>> ehCacheKey TYPE String : stringKey = ${stringKey}")
+             if (stringKey.startsWith("http")) {
+                ehCache.remove(stringKey)
+                Logger.debug("Removed entry with key ${stringKey}")
+              }
+            }
+        }
+      }
+    } else {
+      Logger.debug(s"CacheHelper.removeAllEntries :: Cache disabled - action NOT performed.")
+    }
+
+  }
+  
+  
 
 }

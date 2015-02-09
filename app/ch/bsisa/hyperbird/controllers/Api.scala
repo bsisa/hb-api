@@ -41,6 +41,7 @@ import ch.bsisa.hyperbird.security.social.User
 import ch.bsisa.hyperbird.cache.CacheHelper
 import ch.bsisa.hyperbird.io._
 import java.io.File
+import java.util.Date
 
 /**
  * REST API controller.
@@ -95,6 +96,25 @@ object Api extends Controller with securesocial.core.SecureSocial {
     }
   }
 
+  
+  /**
+   * Allow clearing all cached entries with keys starting with `http`
+   */
+  def clearCache() = SecuredAction(ajaxCall = true) {
+	CacheHelper.removeAllEntries
+	val currentDate = new Date()
+	val jsonMsg = s"""
+		{
+			"cache": {
+		        "status": "cleared",
+		        "time": "${currentDate}"
+		    }
+		}
+	  """
+    Ok(jsonMsg).as(JSON)
+  }
+
+  
   /**
    * Dynamically provides initialisation configuration information useful to hb-ui
    */
