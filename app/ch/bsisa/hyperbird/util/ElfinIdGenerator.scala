@@ -1,5 +1,8 @@
 package ch.bsisa.hyperbird.util
 
+import play.libs.Akka
+import akka.actor.Props
+
 import java.text.SimpleDateFormat
 import java.util.Date
 import ch.bsisa.hyperbird.model.ELFIN
@@ -13,6 +16,9 @@ import play.api.Logger
  */
 object ElfinIdGenerator {
 
+  val idActor = Akka.system.actorOf(Props[IdActor], name = "idactor")
+  
+  
   /**
    * Constant RegEx match group name used for Id/ID_G first letter match
    */
@@ -26,7 +32,11 @@ object ElfinIdGenerator {
    * Creates a new unique ELFIN.Id upon each call.
    * // TODO: Move to actor to deal with counter.
    */
-  def getNewElfinId(): String = "G" + DateUtil.elfinUniqueIdDateFormat.format(new Date())
+  def getNewElfinId(): String = {
+    val newId = "G" + DateUtil.elfinUniqueIdDateFormat.format(new Date())
+    idActor ! s"new id ${newId} requested "
+    newId
+  }
 
   def getElfinFileName(elfin: ELFIN): String = {
 
