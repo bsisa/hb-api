@@ -411,7 +411,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
   }
 
   /**
-   * Finds 0 or 1 ELFIN and returns it within a SimpleResult
+   * Finds 0 or 1 ELFIN by `collectionId`, `elfinId` and returns it within a SimpleResult
    */
   private def getElfinSimpleResult(collectionId: String, elfinId: String) = {
 
@@ -432,14 +432,45 @@ object Api extends Controller with securesocial.core.SecureSocial {
       }
     }
   }
+  
+  /**
+   * Finds 0 or 1 ELFIN by `elfinId` and returns it within a SimpleResult
+   */
+  private def getElfinSimpleResult(elfinId: String) = {
+
+    val futureElfin = XQueryWSHelper.find(WSQueries.elfinQuery(elfinId))
+
+    futureElfin.map { elfin =>
+      val elfinJson = ElfinFormat.toJson(elfin)
+      Ok(elfinJson).as(JSON)
+    }.recover {
+      case resNotFound: ResultNotFoundException => {
+        manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"No elfin found for Id: ${elfinId}"))
+      }
+      case connectException: ConnectException => {
+        manageConnectException(exception = connectException, errorMsg = Option(s"No database connection could be established."))
+      }
+      case e: Throwable => {
+        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.getElfinSimpleResult() - Failed to perform find operation for Elfin with Id: ${elfinId}: ${e}"))
+      }
+    }
+  }  
 
   /**
-   * Gets ELFIN corresponding to this collectionId and elfinId
+   * Gets ELFIN corresponding to this `collectionId` and `elfinId`
    */
   def getElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true).async { implicit request =>
     Logger.debug(s"getElfin(collectionId=${collectionId}, elfinId=${elfinId}) called by user: ${request.user}")
     getElfinSimpleResult(collectionId, elfinId)
   }
+  
+  /**
+   * Gets ELFIN corresponding to this `elfinId`
+   */
+  def getElfinById(elfinId: String) = SecuredAction(ajaxCall = true).async { implicit request =>
+    Logger.debug(s"getElfin(elfinId=${elfinId}) called by user: ${request.user}")
+    getElfinSimpleResult(elfinId)
+  }  
 
   /**
    * Creates an ELFIN within the specified collectionId of CLASS className.
