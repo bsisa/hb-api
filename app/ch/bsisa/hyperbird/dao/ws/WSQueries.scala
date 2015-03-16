@@ -102,6 +102,7 @@ object WSQueries extends Queries {
       case Some(queryString) => baseQuery + s"&${queryString}"
       case None => baseQuery
     } 
+    Logger.debug(s"runXQueryFile query = ${query}")
     query
   }
 
