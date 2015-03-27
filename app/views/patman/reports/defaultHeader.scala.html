@@ -1,0 +1,24 @@
+@(data: String, reportTitle: String)
+
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>HyperBird&reg; - FluxPatients - @(reportTitle)</title>
+    @reports.css.commonCSS()
+    @patman.reports.css.headerCSS()
+</head>
+<body>
+    <div id="header">
+        <div class="left">
+            <div class="logo">
+                <img src='@ch.bsisa.hyperbird.report.ReportBuilder.encodeImage("/resources/patman/reports/images/hne_logo.gif", "image/gif")' />
+            </div>
+        </div>
+        <div class="right">
+            <div style="font-weight: bold; font-style: italic;">FluxPatients</div>
+            <div style="font-weight: bold;font-size: 1.5em;">@(reportTitle)</div>
+        </div>
+    </div>
+</body>
+</html>

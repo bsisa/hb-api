@@ -1,0 +1,58 @@
+@(data: String, reportTitle: String)
+
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>HyperBird&reg; - FluxPatients - @(reportTitle)</title>
+    <!-- MomentJS : Parse, validate, manipulate, and display dates in javascript. -->
+    <script>
+    	@Html(ch.bsisa.hyperbird.report.ReportBuilder.readFileToString("/resources/reports/js/moment.min.js"))
+	</script>
+	<!-- See: http://wkhtmltopdf.org/usage/wkhtmltopdf.txt -->
+	<script>
+		function subst() {
+		  var vars={};
+		  var x=document.location.search.substring(1).split('&');
+		  for (var i in x) {var z=x[i].split('=',2);vars[z[0]] = unescape(z[1]);}
+		  var x=['frompage','topage','page','webpage','section','subsection','subsubsection'];
+		  for (var i in x) {
+		    var y = document.getElementsByClassName(x[i]);
+		    for (var j=0; j<y.length; ++j) y[j].textContent = vars[x[i]];
+		  }
+          // Add datetime field 
+		  var d = new Date();
+		  var textDate = moment().format('DD.MM.YYYY HH:mm');
+		  var dates = document.getElementsByClassName("datetime");
+		  for (var i=0; i<dates.length;++i) dates[i].textContent = textDate;
+		}
+	</script>
+
+	@reports.css.commonCSS()
+    @reports.css.footerCSS()
+
+</head>
+<body onload="subst()">
+	<table class="footer font_small">
+		<tbody>
+			<tr>
+				<td class="footer left">
+					<table class="layout">
+					<tr><td></td><td></td></tr>				
+					<tr><td></td><td></td></tr>
+					<tr><td colspan="2">info@@hne.ch</td></tr>
+					</table>				
+				</td>
+				<td class="footer center">Hôpital neuchâtelois<br/>http://www.h-ne.ch/</td>
+				<td class="footer right">
+					<table class="layout">
+					<tr><td>Page <span class="page"></span>/<span class="topage"></span></td></tr>				
+					<tr><td>Imprimé le <span class="datetime"></span></td></tr>
+					<tr><td>HyperBird&reg;</td></tr>
+					</table>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</body>
+</html>
