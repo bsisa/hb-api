@@ -67,6 +67,10 @@ GET      /api/melfin/collections/:elfinId                      ch.bsisa.hyperbir
 # TODO: define expected result format before re-enabling this route
 # GET      /api/melfin/                         ch.bsisa.hyperbird.controllers.Api.collections
 
+# ========== Patient Management module ================================
+# Trigger patient flux simulation
+GET		/api/melfin/simulate									ch.bsisa.hyperbird.patman.simulations.controllers.SimulationApi.simulate(dateFrom ?= "2015-01-01", dateTo ?= "2099-01-01")
+
 # Returns the list of elfins contained in the specified collection matching the xpath filter expression with defined format 
 GET      /api/melfin/:collectionId                               ch.bsisa.hyperbird.controllers.Api.filteredCollection(collectionId, xpath ?= "//ELFIN", format ?= "json")
 
