@@ -39,20 +39,14 @@ object SimulationApi extends Controller with securesocial.core.SecureSocial {
    */
   def simulate(dateFrom : String, dateTo : String) = SecuredAction(ajaxCall = true).async { request =>
     
-    // Make use of ELFIN Id generator to obtain a `unique` identifier
+    // Make use of ELFIN Id generator to obtain a `unique` identifier for the current simulation
     val simulatorActorName = s"simulatorActor${ElfinIdGenerator.getNewElfinId}"
-    
     Logger.debug(s"SimulationApi.simulate: Test with parameters: ${dateFrom}, ${dateTo} called by user: ${request.user}")
-    
+    // Create the simulation
     val simulatorActor = Akka.system.actorOf(Props(new SimulatorActor( DateUtil.hbDateFormat.parse(dateFrom), DateUtil.hbDateFormat.parse(dateTo) )), name = simulatorActorName)
-    
-    //simulatorActor ! s"Hello simulator ${simulatorActorName}"
-    
-    // Stop must be triggered by the end of the simulation process.
-    //simulatorActor ! "Stop"
-    
+    // Provide feedback with simulation identifier. 
+    // TODO: possibly deal with exceptions.
   	scala.concurrent.Future(Ok(s"Simulator ${simulatorActorName} with parameters: ${dateFrom}, ${dateTo}"))
-
   }  
   
   
