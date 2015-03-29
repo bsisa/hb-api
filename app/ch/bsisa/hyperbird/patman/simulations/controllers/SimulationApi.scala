@@ -22,6 +22,7 @@ import java.util.Date
 import play.libs.Akka
 import akka.actor.Props
 import ch.bsisa.hyperbird.patman.simulations.actors.SimulatorActor
+import ch.bsisa.hyperbird.util.ElfinIdGenerator
 
 /**
  * Patient management module simulation API controller.
@@ -34,21 +35,23 @@ object SimulationApi extends Controller with securesocial.core.SecureSocial {
 
   
   /**
-   * 
+   * Starts a new simulation with the provided parameters
    */
   def simulate(dateFrom : String, dateTo : String) = SecuredAction(ajaxCall = true).async { request =>
     
+    // Make use of ELFIN Id generator to obtain a `unique` identifier
+    val simulatorActorName = s"simulatorActor${ElfinIdGenerator.getNewElfinId}"
+    
     Logger.debug(s"SimulationApi.simulate: Test with parameters: ${dateFrom}, ${dateTo} called by user: ${request.user}")
     
+    val simulatorActor = Akka.system.actorOf(Props(new SimulatorActor( DateUtil.hbDateFormat.parse(dateFrom), DateUtil.hbDateFormat.parse(dateTo) )), name = simulatorActorName)
     
+    //simulatorActor ! s"Hello simulator ${simulatorActorName}"
     
-    val simulatorActor = Akka.system.actorOf(Props(new SimulatorActor( DateUtil.hbDateFormat.parse(dateFrom), DateUtil.hbDateFormat.parse(dateTo) )), name = "simulatorActor")
+    // Stop must be triggered by the end of the simulation process.
+    //simulatorActor ! "Stop"
     
-    simulatorActor ! "Hello simulator..."
-    
-    simulatorActor ! "Stop"
-    
-  	scala.concurrent.Future(Ok(s"Test with parameters: ${dateFrom}, ${dateTo}"))
+  	scala.concurrent.Future(Ok(s"Simulator ${simulatorActorName} with parameters: ${dateFrom}, ${dateTo}"))
 
   }  
   
