@@ -75,10 +75,10 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
     case NextHospitalStatesRequest(fromHospital) => {
       fromHospital match {
         case HOSPITAL_CODE_CDF => 
-          log.info("Received NextHospitalStatesRequest fromHospital = ${fromHospital}")
+          log.info(s"Received NextHospitalStatesRequest fromHospital = ${fromHospital}")
           pendingCdfNextHospitalStatesRequest = true
         case HOSPITAL_CODE_PRT => 
-          log.info("Received NextHospitalStatesRequest fromHospital = ${fromHospital}")
+          log.info(s"Received NextHospitalStatesRequest fromHospital = ${fromHospital}")
           pendingPrtNextHospitalStatesRequest = true
       }
       if (pendingCdfNextHospitalStatesRequest && pendingPrtNextHospitalStatesRequest) {
