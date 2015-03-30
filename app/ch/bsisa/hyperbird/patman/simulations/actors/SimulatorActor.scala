@@ -85,12 +85,12 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
         datasetActor ! HospitalStatesRequest
       }
     }
-    
+
     // When all data has been delivered by DataSetActor
     case DataSetEmpty =>
       log.info(s"DataSetEmpty: stoping simulation ${self.path.name}")
       stop(self)
-      
+
     case StopSimulationRequest(reason) => 
       log.error(s"Simulation ${self.path.name} has been requested to stop for reason: $reason")
       stop(self)
