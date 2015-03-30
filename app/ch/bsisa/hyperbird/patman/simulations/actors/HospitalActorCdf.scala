@@ -33,14 +33,16 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
       val bedsWithOutgoingPatientTypeSi = outgoing._1
       val bedsWithOutgoingPatientTypeSc = outgoing._2
 
-      // Send SI movements as Transfer requests to PRT
-      transferActor ! TransferRequest(
-          id = elfin.Id, 
-          incomingBeds = bedsWithIncomingPatientTypeSi, 
-          outgoingBeds = bedsWithOutgoingPatientTypeSi, 
-          fromHospitalCode = HOSPITAL_CODE_CDF, 
-          toHospitalCode = HOSPITAL_CODE_PRT, 
+      // Send SI movements as Transfer requests to PRT only if there some
+      if (bedsWithIncomingPatientTypeSi != Nil || bedsWithOutgoingPatientTypeSi != Nil) {
+        transferActor ! TransferRequest(
+          id = elfin.Id,
+          incomingBeds = bedsWithIncomingPatientTypeSi,
+          outgoingBeds = bedsWithOutgoingPatientTypeSi,
+          fromHospitalCode = HOSPITAL_CODE_CDF,
+          toHospitalCode = HOSPITAL_CODE_PRT,
           message = "Requesting incoming SI transfer")
+      }
 
       //	    log.info(s"$name> previousHospitalState: " + previousHospitalState)
       //	    log.info(s"$name> currentHospitalState: " + currentHospitalState)
@@ -54,11 +56,11 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
 
     case TransferResponse(id, status, acceptedIncomingBeds, fromHospital, toHospital, message) => {
       // TODO: implement...
-      
+
       status match {
-        case TRANSFER_REQUEST_ACCEPTED => log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_ACCEPTED") 
-        case TRANSFER_REQUEST_REFUSED =>  log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_REFUSED")
-        case TRANSFER_REQUEST_PARTIAL =>  log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_PARTIAL")
+        case TRANSFER_REQUEST_ACCEPTED => log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_ACCEPTED")
+        case TRANSFER_REQUEST_REFUSED => log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_REFUSED")
+        case TRANSFER_REQUEST_PARTIAL => log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_PARTIAL")
       }
 
     }
