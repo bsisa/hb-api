@@ -14,5 +14,9 @@ object Constants {
   val TRANSFER_TYPE_SPEC = "spécialisé"
   val TRANSFER_TYPE_MED = "médicalisé"
   val TRANSFER_TYPE_NON_MED = "non-médicalisé"
-
+    
+  val TRANSFER_REQUEST_ACCEPTED = "accepted" 
+  val TRANSFER_REQUEST_REFUSED = "refused"
+  val TRANSFER_REQUEST_PARTIAL = "partial"
+    
 }
