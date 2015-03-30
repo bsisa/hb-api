@@ -1,7 +1,7 @@
 package ch.bsisa.hyperbird.patman.simulations.actors
 
 import play.libs.Akka
-import akka.actor.{ Actor, ActorLogging }
+import akka.actor.{ Actor, ActorRef, ActorLogging }
 import akka.actor.Props
 import java.util.Date
 import java.util.Calendar
@@ -21,9 +21,12 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
 
   // Create children actors
   val datasetActor = actorOf(Props(new DataSetActor), name = "dataSetActor")
-  val cdfHospitalActor = actorOf(Props(new HospitalActor(name = "cdf", bedsNb = cdfBedsNb)), name = "cdfHospitalActor")
-  val prtHospitalActor = actorOf(Props(new HospitalActor(name = "prt", bedsNb = prtBedsNb)), name = "prtHospitalActor")
-  val transferActor = actorOf(Props[TransferActor], name = "transferActor")
+  val cdfHospitalActor = actorOf(Props(new HospitalActorCdf(name = "cdf", bedsNb = cdfBedsNb)), name = "cdfHospitalActor")
+  val prtHospitalActor = actorOf(Props(new HospitalActorPrt(name = "prt", bedsNb = prtBedsNb)), name = "prtHospitalActor")
+
+  val hospitalsActorRefMap : Map[String, ActorRef] = Map(HOSPITAL_CODE_CDF -> cdfHospitalActor, HOSPITAL_CODE_PRT -> prtHospitalActor)
+  
+  val transferActor = actorOf(Props(new TransferActor(hospitalsActorRefMap)), name = "transferActor")
 
   // Process parameters
   val dateFromStr = DateUtil.hbDateFormat.format(dateFrom)
@@ -65,8 +68,8 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
     // Data delivered by DataSetActor
     case HospitalStatesResponse(cdfHospitalState, prtHospitalState, message) =>
       log.info(s"HospitalStatesResponse: ${message}")
-      cdfHospitalActor ! HospitalState(cdfHospitalState)
-      prtHospitalActor ! HospitalState(prtHospitalState)
+      cdfHospitalActor ! HospitalState(cdfHospitalState, transferActor)
+      prtHospitalActor ! HospitalState(prtHospitalState, transferActor)
       
     // Request for next data from DataSetActor, waits to join both cdf and prt identical requests.
     case NextHospitalStatesRequest(fromHospital) => {

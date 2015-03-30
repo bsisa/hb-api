@@ -6,7 +6,7 @@ import ch.bsisa.hyperbird.patman.simulations.model.HospitalHelper
 import ch.bsisa.hyperbird.patman.simulations.messages._
 import ch.bsisa.hyperbird.patman.simulations.model.Hospital
 
-class HospitalActor(name : String, bedsNb : Int) extends Actor with ActorLogging {
+class HospitalActorPrt(name : String, bedsNb : Int) extends Actor with ActorLogging {
   
 	var previousHospitalState : Option[Hospital] = None 
 	var currentHospitalState : Option[Hospital] = None
@@ -32,17 +32,7 @@ class HospitalActor(name : String, bedsNb : Int) extends Actor with ActorLogging
 	    val outgoing = HospitalHelper.getBedsWithOutgoingPatient(previousHospitalState, currentHospitalState)
 	    val bedsWithOutgoingPatientTypeSi = outgoing._1
 	    val bedsWithOutgoingPatientTypeSc = outgoing._2
-	    
-        name match {
-          case HOSPITAL_CODE_CDF => {
-            // Send SI movements as Transfer requests to PRT
-            transferActor ! TransferRequest(id = elfin.Id , incomingBeds = bedsWithIncomingPatientTypeSi, outgoingBeds = bedsWithIncomingPatientTypeSi , fromHospitalCode = HOSPITAL_CODE_CDF, toHospitalCode = HOSPITAL_CODE_PRT, message = "Requesting incoming SI transfer")
-          } 
-            
-          case HOSPITAL_CODE_PRT => {
-            
-          } 
-        }
+
 	    
 //	    log.info(s"$name> previousHospitalState: " + previousHospitalState)
 //	    log.info(s"$name> currentHospitalState: " + currentHospitalState)
@@ -51,23 +41,18 @@ class HospitalActor(name : String, bedsNb : Int) extends Actor with ActorLogging
 //	    log.info(s"$name> BedsWithOutgoingPatient: " + HospitalHelper.getBedsWithOutgoingPatient(previousHospitalState, currentHospitalState) )
 //	    log.info(s"============================== $name - end   ==============================")
 	    
+	            // Send SI movements as Transfer requests to PRT
+//        transferActor ! TransferRequest(id = elfin.Id , incomingBeds = bedsWithIncomingPatientTypeSi, outgoingBeds = bedsWithIncomingPatientTypeSi , fromHospitalCode = HOSPITAL_CODE_CDF, toHospitalCode = HOSPITAL_CODE_PRT, message = "Requesting incoming SI transfer")
 	    
 	    // Check state received hospital id matches our name otherwise cancel simulation!
 	    sender ! NextHospitalStatesRequest(name)
 
+	  case TransferRequest(id, incomingBeds, outgoingBeds, fromHospitalCode, toHospitalCode, message) => 
+	    log.info(s"Request for transfer from ${fromHospitalCode} to ${toHospitalCode} with in = $incomingBeds.size, out = $outgoingBeds.size, delta = ${incomingBeds.size-outgoingBeds.size}")	    
+	    
 	  case TransferResponse(id, status, acceptedIncomingBeds, fromHospital, toHospital, message) => {
 	    // TODO: implement...
-	    log.info(s"TransferResponse: $message")
-	            name match {
-          case HOSPITAL_CODE_CDF => {
-            // Send SI movements as Transfer requests to PRT
-        	// TODO: TO MUCH CONDITION TO KNOW WHO WE ARE => Moving to distinct actors as their behaviour are distinct.
-          } 
-            
-          case HOSPITAL_CODE_PRT => {
-            
-          } 
-        }
+	    log.info(s"TransferResponse: id = $id, $message")
 	    
 	  }
 	}
