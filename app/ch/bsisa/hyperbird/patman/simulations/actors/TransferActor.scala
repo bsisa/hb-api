@@ -17,8 +17,10 @@ class TransferActor(hospitalsActorRefs: Map[String, ActorRef]) extends Actor wit
       log.info(s"Request for transfer from ${fromHospitalCode} to ${toHospitalCode}")
       hospitalsActorRefs(toHospitalCode) ! TransferRequest(id, incomingSiBeds, outgoingSiBeds, typeScToSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, message)
 
-    case TransferResponse(id, status, acceptedIncomingBeds, fromHospitalCode, toHospitalCode, fromSchedule, messagemessage) =>
+    case TransferResponse(id, status, acceptedIncomingBeds, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
       log.info(s"TransferResponse from ${fromHospitalCode} to ${toHospitalCode}")
+      // Forward response to original requester (fromHospitalCode)
+      hospitalsActorRefs(fromHospitalCode) ! TransferResponse(id, status, acceptedIncomingBeds, fromHospitalCode, toHospitalCode, fromSchedule, message)
   }
 
 }
