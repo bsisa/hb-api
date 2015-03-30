@@ -5,9 +5,11 @@ import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.util.DateUtil
 import ch.bsisa.hyperbird.model.format.Implicits._
 import ch.bsisa.hyperbird.patman.simulations.Constants._
+import ch.bsisa.hyperbird.model.format.ElfinFormat
 import ch.bsisa.hyperbird.patman.simulations.messages.DataSetUpdateRequest
 import ch.bsisa.hyperbird.patman.simulations.messages.DataSetUpdateResponse
 import ch.bsisa.hyperbird.patman.simulations.model.Bed
+import ch.bsisa.hyperbird.util.ElfinUtil
 
 class DataSetActor extends Actor with ActorLogging {
 
@@ -72,13 +74,43 @@ class DataSetActor extends Actor with ActorLogging {
 
   /**
    * Note: No need for fromSchedule. We deal with an iterator thus only fromSchedules are available.
-   * Current test implementation does only a copy of the existing data without modifying them.
+   * Current implementation modifies CARACTERISTIQUE.FRACTION.L Seq 
+   * To review: case of several stay for a given patientNb
    */
   def updateDataset(transferredSiBeds: List[Bed], fromHospitalCode: String, toHospitalCode: String): Unit = {
 
     def doIt(updatedList: List[ELFIN]): List[ELFIN] = {
       getNextHospitalStates(dataSetIterator) match {
-        case Some((cdfHospitalState, prtHospitalState)) => doIt(prtHospitalState :: cdfHospitalState :: updatedList)
+        case Some((cdfHospitalState, prtHospitalState)) => {
+          /*
+                <L POS="5">
+                    <C POS="1">503B</C>
+                    <C POS="2">4195904</C>
+                    <C POS="3">soins continus</C>
+                    <C POS="4">médicalisé</C>
+                    <C POS="5">terminé</C>
+                    <C POS="6">occupé</C>
+                    <C POS="7"/>
+                </L>
+           */
+          val bedsToTransfer = cdfHospitalState.CARACTERISTIQUE.get.FRACTION.get.L.seq.filter{ L =>  
+            val patientNb = getMixedContent(L.C(1).mixed) 
+            val bedForPatientNbOption = transferredSiBeds.find( bed => bed.patientNb == patientNb)
+            (bedForPatientNbOption != None)
+          }
+          
+          val existingPlusTransferMerge = bedsToTransfer ++ prtHospitalState.CARACTERISTIQUE.get.FRACTION.get.L
+          val updatedPrtHospitalState = ElfinUtil.replaceElfinCaracteristiqueFractionL(prtHospitalState, existingPlusTransferMerge)
+          
+          val bedsToKeep = cdfHospitalState.CARACTERISTIQUE.get.FRACTION.get.L.filter { L => 
+            val patientNb = getMixedContent(L.C(1).mixed) 
+            val bedForPatientNbOption = transferredSiBeds.find( bed => bed.patientNb == patientNb)
+            (bedForPatientNbOption == None)
+          }
+          val updatedCdfHospitalState = ElfinUtil.replaceElfinCaracteristiqueFractionL(cdfHospitalState, bedsToKeep)
+          
+          doIt(updatedPrtHospitalState :: updatedCdfHospitalState :: updatedList)
+        }
         case None => updatedList
       }
     }
