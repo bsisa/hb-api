@@ -37,42 +37,49 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
       // bedsWithOutgoingPatientTypeSc are expected at CDF, we do nothing with it at the moment
       val bedsWithOutgoingPatientTypeSc = outgoing._2
 
-      // TODO: make use of it
+      // SC to SI type change need to be transferred.
       val patientTypeChange = HospitalHelper.getBedsWithPatientTypeChange(previousHospitalState, currentHospitalState)
       // patientTypeChangeFromScToSi should be transferred to PRT
       val patientTypeChangeFromScToSi = patientTypeChange._1
       // patientTypeChangeFromSiToSc should never be present here as SI patients move to PRT
       val patientTypeChangeFromSiToSc = patientTypeChange._2
-      
+
       // Send SI movements as Transfer requests to PRT only if there some
       if (bedsWithIncomingPatientTypeSi != Nil || bedsWithOutgoingPatientTypeSi != Nil || patientTypeChangeFromScToSi != Nil) {
         transferActor ! TransferRequest(
           id = elfin.Id,
           incomingSiBeds = bedsWithIncomingPatientTypeSi,
           outgoingSiBeds = bedsWithOutgoingPatientTypeSi,
-          typeScToSiBeds = patientTypeChangeFromScToSi, 
+          typeScToSiBeds = patientTypeChangeFromScToSi,
           fromHospitalCode = HOSPITAL_CODE_CDF,
           toHospitalCode = HOSPITAL_CODE_PRT,
           message = "Requesting incoming SI transfer")
+      } else {
+        // No transfer response to wait for, request next data.
+        sender ! NextHospitalStatesRequest(name)
       }
 
-      //	    log.info(s"$name> previousHospitalState: " + previousHospitalState)
-      //	    log.info(s"$name> currentHospitalState: " + currentHospitalState)
-      //	    log.info(s"------------------------------ $name --------------------------------------")
-      //	    log.info(s"$name> BedsWithIncomingPatient: " + HospitalHelper.getBedsWithIncomingPatient(previousHospitalState, currentHospitalState) )
-      //	    log.info(s"$name> BedsWithOutgoingPatient: " + HospitalHelper.getBedsWithOutgoingPatient(previousHospitalState, currentHospitalState) )
-      //	    log.info(s"============================== $name - end   ==============================")
-
-      // Check state received hospital id matches our name otherwise cancel simulation!
-      sender ! NextHospitalStatesRequest(name)
+    //	    log.info(s"$name> previousHospitalState: " + previousHospitalState)
+    //	    log.info(s"$name> currentHospitalState: " + currentHospitalState)
+    //	    log.info(s"------------------------------ $name --------------------------------------")
+    //	    log.info(s"$name> BedsWithIncomingPatient: " + HospitalHelper.getBedsWithIncomingPatient(previousHospitalState, currentHospitalState) )
+    //	    log.info(s"$name> BedsWithOutgoingPatient: " + HospitalHelper.getBedsWithOutgoingPatient(previousHospitalState, currentHospitalState) )
+    //	    log.info(s"============================== $name - end   ==============================")
 
     case TransferResponse(id, status, acceptedIncomingBeds, fromHospital, toHospital, message) => {
-      // TODO: implement...
-
       status match {
-        case TRANSFER_REQUEST_ACCEPTED => log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_ACCEPTED")
-        case TRANSFER_REQUEST_REFUSED => log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_REFUSED")
-        case TRANSFER_REQUEST_PARTIAL => log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_PARTIAL")
+        case TRANSFER_REQUEST_ACCEPTED =>
+          log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_ACCEPTED, requesting next data.")
+          // Request next data.
+          sender ! NextHospitalStatesRequest(name)
+        case TRANSFER_REQUEST_REFUSED =>
+          // We should not obtain this
+          log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_REFUSED")
+          context.parent ! StopSimulationRequest(s"TransferRequest id = $id : TRANSFER_REQUEST_REFUSED")
+        case TRANSFER_REQUEST_PARTIAL =>
+          // We should not obtain this
+          log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_PARTIAL")
+          context.parent ! StopSimulationRequest(s"TransferRequest id = $id : TRANSFER_REQUEST_PARTIAL")
       }
 
     }
