@@ -71,6 +71,8 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
       status match {
         case TRANSFER_REQUEST_ACCEPTED =>
           log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_ACCEPTED, requesting next data.")
+          // TODO: Update current CDT hospital state removing transfered SI beds
+          
           // Request next data.
           context.parent ! NextHospitalStatesRequest(name)
         case TRANSFER_REQUEST_REFUSED =>
