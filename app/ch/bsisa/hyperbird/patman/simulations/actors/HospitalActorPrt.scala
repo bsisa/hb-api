@@ -25,13 +25,13 @@ class HospitalActorPrt(name : String, bedsNb : Int) extends Actor with ActorLogg
 	    currentHospitalState = Some(hospital)
 	    
 	    // Check incoming / outgoing patients
-	    val incoming = HospitalHelper.getBedsWithIncomingPatient(previousHospitalState, currentHospitalState)
-	    val bedsWithIncomingPatientTypeSi = incoming._1
-	    val bedsWithIncomingPatientTypeSc = incoming._2
-	    
-	    val outgoing = HospitalHelper.getBedsWithOutgoingPatient(previousHospitalState, currentHospitalState)
-	    val bedsWithOutgoingPatientTypeSi = outgoing._1
-	    val bedsWithOutgoingPatientTypeSc = outgoing._2
+//	    val incoming = HospitalHelper.getBedsWithIncomingPatient(previousHospitalState, currentHospitalState)
+//	    val bedsWithIncomingPatientTypeSi = incoming._1
+//	    val bedsWithIncomingPatientTypeSc = incoming._2
+//	    
+//	    val outgoing = HospitalHelper.getBedsWithOutgoingPatient(previousHospitalState, currentHospitalState)
+//	    val bedsWithOutgoingPatientTypeSi = outgoing._1
+//	    val bedsWithOutgoingPatientTypeSc = outgoing._2
 
 	    
 //	    log.info(s"$name> previousHospitalState: " + previousHospitalState)

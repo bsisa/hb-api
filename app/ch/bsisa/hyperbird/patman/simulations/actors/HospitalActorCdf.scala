@@ -34,7 +34,13 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
       val bedsWithOutgoingPatientTypeSc = outgoing._2
 
       // Send SI movements as Transfer requests to PRT
-      transferActor ! TransferRequest(id = elfin.Id, incomingBeds = bedsWithIncomingPatientTypeSi, outgoingBeds = bedsWithIncomingPatientTypeSi, fromHospitalCode = HOSPITAL_CODE_CDF, toHospitalCode = HOSPITAL_CODE_PRT, message = "Requesting incoming SI transfer")
+      transferActor ! TransferRequest(
+          id = elfin.Id, 
+          incomingBeds = bedsWithIncomingPatientTypeSi, 
+          outgoingBeds = bedsWithOutgoingPatientTypeSi, 
+          fromHospitalCode = HOSPITAL_CODE_CDF, 
+          toHospitalCode = HOSPITAL_CODE_PRT, 
+          message = "Requesting incoming SI transfer")
 
       //	    log.info(s"$name> previousHospitalState: " + previousHospitalState)
       //	    log.info(s"$name> currentHospitalState: " + currentHospitalState)
