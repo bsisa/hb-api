@@ -60,9 +60,9 @@ class DataSetActor extends Actor with ActorLogging {
   }
 
   def validateSameSchedule(elfin1: ELFIN, elfin2: ELFIN): Boolean = {
-    val date1 = DateUtil.isoWithoutTzDateFormat.parse(elfin1.IDENTIFIANT.get.DE.get)
+    val date1 = DateUtil.getIsoDateFormatterWithoutTz.parse(elfin1.IDENTIFIANT.get.DE.get)
     val hms1 = DateUtil.getHourMinuteSecond(date1)
-    val date2 = DateUtil.isoWithoutTzDateFormat.parse(elfin2.IDENTIFIANT.get.DE.get)
+    val date2 = DateUtil.getIsoDateFormatterWithoutTz.parse(elfin2.IDENTIFIANT.get.DE.get)
     val hms2 = DateUtil.getHourMinuteSecond(date2)
     (hms1._1 == hms2._1 && hms1._2 == hms2._2 && hms1._3 == hms2._3)
   }
@@ -116,7 +116,7 @@ class DataSetActor extends Actor with ActorLogging {
    */
   def isFirstStartSchedule(elfin: ELFIN): Boolean = {
 
-    val elfinSchedule = DateUtil.isoWithoutTzDateFormat.parse(elfin.IDENTIFIANT.get.DE.get)
+    val elfinSchedule = DateUtil.getIsoDateFormatterWithoutTz.parse(elfin.IDENTIFIANT.get.DE.get)
     val (elfinScheduleHour, elfinScheduleMinutes, elfinScheduleSeconds) = DateUtil.getHourMinuteSecond(elfinSchedule)
     val hospitalCode = getMixedContent(elfin.CARACTERISTIQUE.get.FRACTION.get.L(0).C(0).mixed)
 
