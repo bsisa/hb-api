@@ -72,7 +72,7 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
         case TRANSFER_REQUEST_ACCEPTED =>
           log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_ACCEPTED, requesting next data.")
           // Request next data.
-          sender ! NextHospitalStatesRequest(name)
+          context.parent ! NextHospitalStatesRequest(name)
         case TRANSFER_REQUEST_REFUSED =>
           // We should not obtain this
           log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_REFUSED")
