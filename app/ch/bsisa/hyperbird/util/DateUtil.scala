@@ -3,6 +3,7 @@ package ch.bsisa.hyperbird.util
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
+import java.text.DateFormat
 /**
  * Utility object aimed at centralising concerns with text to Date objects
  * used in geoXml.xsd related fields conversions.
@@ -57,60 +58,66 @@ object DateUtil {
     sdf
   }
   
-  
   /**
-   * Hb dates formatter
-   */
-  private val isoDateFormatterWithTz = { 
-    val sdf = new SimpleDateFormat(IsoDateFromatPatternWithTz)
-    sdf.setLenient(false)
-    sdf
-  }  
-
-  /**
-   * Hb dates formatter
-   */
-  private val isoDateFormatterWithoutTz = { 
-    val sdf = new SimpleDateFormat(IsoDateFromatPatternWithoutTz)
-    sdf.setLenient(false)
-    sdf
-  }    
-  
-  
-  /**
+   * TODO: move to getElfinUniqueIdDateFormatter to fix concurrency access problem
    * Returns a date formatter for elfin.Id/ID_G.
    */
   val elfinUniqueIdDateFormat = {
     idsFormatter
   }
 
+  def getElfinUniqueIdDateFormatter = {
+    val sdf = new SimpleDateFormat(DateFormatPattern)
+    sdf.setLenient(false)
+    sdf    
+  }
+  
+  
   /**
+   * TODO: move to getElfinIdentifiantDateFormatter to fix concurrency access problem
    * Returns a date formatter with pattern: `yyyyMMddHHmmssSSS`
    */
   val elfinIdentifiantDateFormat = {
     idsFormatter
   }
   
+  def getElfinIdentifiantDateFormatter = {
+    val sdf = new SimpleDateFormat(DateFormatPattern)
+    sdf.setLenient(false)
+    sdf
+  }
+  
   /**
+   * TODO: move to getHbDateFormatter to fix concurrency access problem
    * Returns a date formatter with pattern: `yyyy-MM-dd`
    */
   val hbDateFormat = {
     hbDateFormatter
   }  
   
+  def getHbDateFormatter = {
+    val sdf = new SimpleDateFormat(HbDateFormatPattern)
+    sdf.setLenient(false)
+    sdf
+  }    
+  
   /**
    * Returns a date formatter with pattern: `yyyyMMdd'T'HH:mm:ssZ`
    */
-  val isoWithTzDateFormat = {
-    isoDateFormatterWithTz
-  }  
+  def getIsoDateFormatterWithTz : DateFormat = {
+    val sdf = new SimpleDateFormat(IsoDateFromatPatternWithTz)
+    sdf.setLenient(false)
+    sdf
+  }
   
-    /**
+  /**
    * Returns a date formatter with pattern: `yyyyMMdd'T'HH:mm:ssZ`
    */
-  val isoWithoutTzDateFormat = {
-    isoDateFormatterWithoutTz
-  }  
+  def getIsoDateFormatterWithoutTz : DateFormat = {
+    val sdf = new SimpleDateFormat(IsoDateFromatPatternWithoutTz)
+    sdf.setLenient(false)
+    sdf
+  }
 
   /**
    * Returns a triplet (hour24:Int, minute:Int, second:Int) for the given date

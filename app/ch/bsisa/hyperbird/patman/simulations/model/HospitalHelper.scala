@@ -3,6 +3,7 @@ package ch.bsisa.hyperbird.patman.simulations.model
 import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.model.format.Implicits._
 import ch.bsisa.hyperbird.patman.simulations.Constants._
+import ch.bsisa.hyperbird.util.DateUtil
 
 /**
  *  Helper to go from ELFIN to Hospital and reverse.
@@ -22,7 +23,9 @@ object HospitalHelper {
 
   def toHospital(elfinHospitalState: ELFIN): Hospital = {
     val hospitalCode = getMixedContent(elfinHospitalState.CARACTERISTIQUE.get.FRACTION.get.L(0).C(0).mixed)
-
+    val scheduleStr = elfinHospitalState.IDENTIFIANT.get.DE.get
+    //play.api.Logger.info("scheduleStr = " + scheduleStr)
+    val schedule = DateUtil.getIsoDateFormatterWithoutTz.parse(scheduleStr)
     val beds = for {
       (l, index) <- (elfinHospitalState.CARACTERISTIQUE.get.FRACTION.get.L zipWithIndex) if (index > 0) // First L does not contain bed information
     } yield {
@@ -36,7 +39,7 @@ object HospitalHelper {
       bed
     }
 
-    Hospital(hospitalCode, beds)
+    Hospital(hospitalCode, schedule, beds)
   }
 
 }
