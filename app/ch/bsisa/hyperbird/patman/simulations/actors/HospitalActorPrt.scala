@@ -47,8 +47,16 @@ class HospitalActorPrt(name : String, bedsNb : Int) extends Actor with ActorLogg
 	    // Check state received hospital id matches our name otherwise cancel simulation!
 	    sender ! NextHospitalStatesRequest(name)
 
-	  case TransferRequest(id, incomingBeds, outgoingBeds, fromHospitalCode, toHospitalCode, message) => 
-	    log.info(s"Request for transfer from ${fromHospitalCode} to ${toHospitalCode} with in = $incomingBeds.size, out = $outgoingBeds.size, delta = ${incomingBeds.size-outgoingBeds.size}")	    
+	  case TransferRequest(id, incomingSiBeds, outgoingSiBeds, typeScToSiBeds, fromHospitalCode, toHospitalCode, message) => 
+	    log.info(s"Request for transfer from ${fromHospitalCode} to ${toHospitalCode} with in = incomingSiBeds.size, out = outgoingSiBeds.size, typeScToSiBeds = $typeScToSiBeds.size DELTA = ${incomingSiBeds.size-outgoingSiBeds.size+typeScToSiBeds.size}")	    
+	    // TODO: Request DataSet update for new Si beds => incomingSiBeds + typeScToSiBeds
+
+	    // TODO: Notify TransferReportActor of transfer events: Hospital from => to, Schedule, PatientNb, PatientType, TransferType, Reason for transfer: New SI or SC to SI
+	    
+	    // TODO: Update current PRT hospital state with new SI beds (outgoingSiBeds should be made OBSOLETE and always be 0 (Once DataSet update is implemented))
+	    
+	    // TODO: Confirm TRANSFER_REQUEST_ACCEPTED with TransferResponse to TransferActor
+	    
 	    
 	  case TransferResponse(id, status, acceptedIncomingBeds, fromHospital, toHospital, message) => {
 	    // TODO: implement...
