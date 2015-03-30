@@ -24,7 +24,12 @@ class HospitalActor(name : String, bedsNb : Int) extends Actor with ActorLogging
 	    currentHospitalState = Some(hospital)
 	    log.info(s"$name> previousHospitalState: " + previousHospitalState)
 	    log.info(s"$name> currentHospitalState: " + currentHospitalState)
+	    log.info(s"------------------------------ $name --------------------------------------")
+	    log.info(s"$name> BedsWithIncomingPatient: " + HospitalHelper.getBedsWithIncomingPatient(previousHospitalState, currentHospitalState) )
+	    log.info(s"$name> BedsWithOutgoingPatient: " + HospitalHelper.getBedsWithOutgoingPatient(previousHospitalState, currentHospitalState) )
 	    log.info(s"============================== $name - end   ==============================")
+	    
+	    
 	    // Check state received hospital id matches our name otherwise cancel simulation!
 	    sender ! NextHospitalStatesRequest(name)
 	}
