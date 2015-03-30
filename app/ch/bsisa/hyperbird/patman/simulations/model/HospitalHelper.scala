@@ -115,7 +115,7 @@ object HospitalHelper {
             (bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc)
           }
           // Previous available but nothing anymore in current: Everything is outgoing
-          case None => 
+          case None =>
             val previousNonEmptyBeds = previousState.beds.filter(bed => !bed.free)
             val bedsWithOutgoingPatientTypeSi = previousNonEmptyBeds.filter(isBedPatientTypeSi)
             val bedsWithOutgoingPatientTypeSc = previousNonEmptyBeds.filterNot(isBedPatientTypeSi)
@@ -128,6 +128,61 @@ object HospitalHelper {
           // no previous nor current state available
           case None => (List(), List())
         }
+    }
+  }
+
+  /**
+   * Return a pair of Seq[Bed]. The first one contains patients patientType SC to SI change while the second contains patients patientType SI to SC change
+   */
+  def getBedsWithPatientTypeChange(previousStateOption: Option[Hospital], currentStateOption: Option[Hospital]): (List[Bed], List[Bed]) = {
+
+    previousStateOption match {
+      case Some(previousState) =>
+        currentStateOption match {
+          // previous and current available
+          case Some(currentState) => {
+            // From SC to SI 
+            val bedsWithPatientTypeChangeFromScToSi = currentState.beds.filter { currentStateBed =>
+              if (!currentStateBed.free) {
+                // Check if the current patient was already there
+                val bedWithPatientTypeChange = previousState.beds.find(previousStateBed => currentStateBed.patientNb == previousStateBed.patientNb) match {
+                  case Some(previousStateBed) =>
+                    (currentStateBed.patientType != previousStateBed.patientType) &&
+                      (previousStateBed.patientType == PATIENT_TYPE_SC) &&
+                      (currentStateBed.patientType == PATIENT_TYPE_SI)
+                  case None => false
+                }
+                bedWithPatientTypeChange
+              } else {
+                // Skip empty bed
+                false
+              }
+            }
+            
+            // From SI to SC 
+            val bedsWithPatientTypeChangeFromSiToSc = currentState.beds.filter { currentStateBed =>
+              if (!currentStateBed.free) {
+                // Check if the current patient was already there
+                val bedWithPatientTypeChange = previousState.beds.find(previousStateBed => currentStateBed.patientNb == previousStateBed.patientNb) match {
+                  case Some(previousStateBed) =>
+                    (currentStateBed.patientType != previousStateBed.patientType) &&
+                      (previousStateBed.patientType == PATIENT_TYPE_SI) &&
+                      (currentStateBed.patientType == PATIENT_TYPE_SC)
+                  case None => false
+                }
+                bedWithPatientTypeChange
+              } else {
+                // Skip empty bed
+                false
+              }
+            }
+            (bedsWithPatientTypeChangeFromScToSi, bedsWithPatientTypeChangeFromSiToSc)
+          }
+          // previous available but no current: No existing bed change tracking.          
+          case None => (List(), List())
+        }
+      // No previous available: No existing bed change tracking.
+      case None => (List(), List())
     }
   }
 
