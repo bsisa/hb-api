@@ -90,6 +90,10 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
     case DataSetEmpty =>
       log.info(s"DataSetEmpty: stoping simulation ${self.path.name}")
       stop(self)
+      
+    case StopSimulationRequest(reason) => 
+      log.error(s"Simulation ${self.path.name} has been requested to stop for reason: $reason")
+      stop(self)
   }
 
   // 2. Dispatch HOSPITAL_STATE objects according to hospital identifier, for each given time t
