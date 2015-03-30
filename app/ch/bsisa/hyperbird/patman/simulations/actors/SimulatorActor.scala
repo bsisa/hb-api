@@ -74,8 +74,12 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
     // Request for next data from DataSetActor, waits to join both cdf and prt identical requests.
     case NextHospitalStatesRequest(fromHospital) => {
       fromHospital match {
-        case HOSPITAL_CODE_CDF => pendingCdfNextHospitalStatesRequest = true
-        case HOSPITAL_CODE_PRT => pendingPrtNextHospitalStatesRequest = true
+        case HOSPITAL_CODE_CDF => 
+          log.info("Received NextHospitalStatesRequest fromHospital = ${fromHospital}")
+          pendingCdfNextHospitalStatesRequest = true
+        case HOSPITAL_CODE_PRT => 
+          log.info("Received NextHospitalStatesRequest fromHospital = ${fromHospital}")
+          pendingPrtNextHospitalStatesRequest = true
       }
       if (pendingCdfNextHospitalStatesRequest && pendingPrtNextHospitalStatesRequest) {
         // Reset pending states to false

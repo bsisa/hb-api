@@ -50,12 +50,13 @@ class DataSetActor extends Actor with ActorLogging {
         case Some((cdfHospitalState, prtHospitalState)) => sender ! HospitalStatesResponse(cdfHospitalState, prtHospitalState, "Provide next record.")
         case None => sender ! DataSetEmpty
       }
-    case DataSetUpdateRequest(transferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule) =>
-      log.info("DataSetUpdateRequest for ${transferredSiBeds}, from $fromHospitalCode to $toHospitalCode from schedule: ${fromSchedule}")
+    case DataSetUpdateRequest(id, transferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule) =>
+      log.info(s"DataSetUpdateRequest id ${id} for ${transferredSiBeds}, from ${fromHospitalCode} to ${toHospitalCode} from schedule: ${fromSchedule}")
       // Do the job
       // TODO: Move all `transferredSiBeds` from `fromHospitalCode` to `toHospitalCode` from `fromSchedule` on.
+      
       // Send the response
-      sender ! DataSetUpdateResponse(DATASET_UPDATE_REQUEST_SUCCESS, fromHospitalCode, toHospitalCode, fromSchedule)
+      sender ! DataSetUpdateResponse(id, DATASET_UPDATE_RESPONSE_SUCCESS, transferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule)
   }
 
   def setDataSet(dataSet: Seq[ELFIN]): Unit = {

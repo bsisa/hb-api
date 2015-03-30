@@ -19,7 +19,7 @@ object Constants {
   val TRANSFER_REQUEST_REFUSED = "refused"
   val TRANSFER_REQUEST_PARTIAL = "partial"
     
-  val DATASET_UPDATE_REQUEST_SUCCESS = "success" 
-  val DATASET_UPDATE_REQUEST_FAILURE = "failure"
+  val DATASET_UPDATE_RESPONSE_SUCCESS = "success" 
+  val DATASET_UPDATE_RESPONSE_FAILURE = "failure"
     
 }
