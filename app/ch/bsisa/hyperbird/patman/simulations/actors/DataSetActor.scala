@@ -7,6 +7,7 @@ import ch.bsisa.hyperbird.model.format.Implicits._
 import ch.bsisa.hyperbird.patman.simulations.Constants._
 import ch.bsisa.hyperbird.patman.simulations.messages.DataSetUpdateRequest
 import ch.bsisa.hyperbird.patman.simulations.messages.DataSetUpdateResponse
+import ch.bsisa.hyperbird.patman.simulations.model.Bed
 
 class DataSetActor extends Actor with ActorLogging {
 
@@ -52,7 +53,9 @@ class DataSetActor extends Actor with ActorLogging {
       // =========================================================================================================
       // TODO: Move all `transferredSiBeds` from `fromHospitalCode` to `toHospitalCode` from `fromSchedule` on.
       // =========================================================================================================
-      
+      log.info(">>>>>>> START DATASET UPDATE     <<<<<<<<<< ")
+      updateDataset(transferredSiBeds, fromHospitalCode, toHospitalCode)
+      log.info(">>>>>>> DATASET UPDATE COMPLETED <<<<<<<<<< ")      
       // =========================================================================================================
       // Send the response
       sender ! DataSetUpdateResponse(id, DATASET_UPDATE_RESPONSE_SUCCESS, transferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule)
@@ -67,6 +70,37 @@ class DataSetActor extends Actor with ActorLogging {
     }
   }
 
+  /**
+   * Note: No need for fromSchedule. We deal with an iterator thus only fromSchedules are available.
+   * Current test implementation does only a copy of the existing data without modifying them.
+   */
+  def updateDataset(transferredSiBeds: List[Bed], fromHospitalCode: String, toHospitalCode: String): Unit = {
+
+    def doIt(updatedList: List[ELFIN]): List[ELFIN] = {
+      getNextHospitalStates(dataSetIterator) match {
+        case Some((cdfHospitalState, prtHospitalState)) => doIt(prtHospitalState :: cdfHospitalState :: updatedList)
+        case None => updatedList
+      }
+    }
+
+    // doIt build the list in reverse order preserving ordering
+    val reversedUpdatedElfins = doIt(Nil)
+    //log.info(s">>>>>> ${reversedUpdatedElfins}");
+    val updatedElfins: List[ELFIN] = reversedUpdatedElfins.reverse
+    //log.info(s">>>>>> ${updatedElfins}");
+    
+    dataSetIterator = updatedElfins.iterator
+    
+    //    val updatedDataSetIterator = for (elfin <- dataSetIterator) yield {
+    //      if (getHospitalCode(elfin) == fromHospitalCode) {
+    //
+    //      } else {
+    //
+    //      }
+    //    }
+    //Iterator()//TODO: REMOVE.
+  }
+
   def validateSameSchedule(elfin1: ELFIN, elfin2: ELFIN): Boolean = {
     val date1 = DateUtil.getIsoDateFormatterWithoutTz.parse(elfin1.IDENTIFIANT.get.DE.get)
     val hms1 = DateUtil.getHourMinuteSecond(date1)
@@ -76,8 +110,8 @@ class DataSetActor extends Actor with ActorLogging {
   }
 
   def validateExpectedHospitalCodes(cdfHospitalState: ELFIN, prtHospitalState: ELFIN): Boolean = {
-    val expectedCdfCode = getMixedContent(cdfHospitalState.CARACTERISTIQUE.get.FRACTION.get.L(0).C(0).mixed)
-    val expectedPrtCode = getMixedContent(prtHospitalState.CARACTERISTIQUE.get.FRACTION.get.L(0).C(0).mixed)
+    val expectedCdfCode = getHospitalCode(cdfHospitalState)
+    val expectedPrtCode = getHospitalCode(prtHospitalState)
     (expectedCdfCode == HOSPITAL_CODE_CDF && expectedPrtCode == HOSPITAL_CODE_PRT)
   }
 
@@ -126,7 +160,7 @@ class DataSetActor extends Actor with ActorLogging {
 
     val elfinSchedule = DateUtil.getIsoDateFormatterWithoutTz.parse(elfin.IDENTIFIANT.get.DE.get)
     val (elfinScheduleHour, elfinScheduleMinutes, elfinScheduleSeconds) = DateUtil.getHourMinuteSecond(elfinSchedule)
-    val hospitalCode = getMixedContent(elfin.CARACTERISTIQUE.get.FRACTION.get.L(0).C(0).mixed)
+    val hospitalCode = getHospitalCode(elfin)
 
     (hospitalCode == HOSPITAL_CODE_CDF) && (elfinScheduleHour == 8 && elfinScheduleMinutes == 0 && elfinScheduleSeconds == 0)
   }
@@ -142,6 +176,8 @@ class DataSetActor extends Actor with ActorLogging {
       None
     }
   }
+
+  def getHospitalCode(elfin: ELFIN): String = getMixedContent(elfin.CARACTERISTIQUE.get.FRACTION.get.L(0).C(0).mixed)
 
 }
 
