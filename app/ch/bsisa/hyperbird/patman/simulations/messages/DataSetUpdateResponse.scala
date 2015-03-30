@@ -1,5 +1,7 @@
 package ch.bsisa.hyperbird.patman.simulations.messages
 
-case class DataSetUpdateResponse(status: String) {
+import java.util.Date
+
+case class DataSetUpdateResponse(status: String, fromHospitalCode:String, toHospitalCode:String, fromSchedule:Date) {
 
 }
