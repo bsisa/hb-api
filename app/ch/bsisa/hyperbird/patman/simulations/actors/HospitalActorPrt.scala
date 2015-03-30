@@ -60,10 +60,12 @@ class HospitalActorPrt(name: String, bedsNb: Int) extends Actor with ActorLoggin
       status match {
         case DATASET_UPDATE_RESPONSE_SUCCESS =>
           log.info("DataSetUpdateResponse = DATASET_UPDATE_RESPONSE_SUCCESS")
+          // =========================================================================================================
           // TODO: Notify TransferReportActor of transfer events: Hospital from => to, Schedule, PatientNb, PatientType, TransferType, Reason for transfer: New SI or SC to SI
 
           // TODO: Update current PRT hospital state with new SI beds (outgoingSiBeds should be made OBSOLETE and always be 0 (Once DataSet update is implemented))
 
+          // =========================================================================================================          
           // TODO: Confirm TRANSFER_REQUEST_ACCEPTED with TransferResponse to TransferActor
           sender ! TransferResponse(id, TRANSFER_REQUEST_ACCEPTED, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, "Dataset update, transfer report notification, and hospitalActorPrt currentHospitalState all succeeded.")
           // Request next data.
