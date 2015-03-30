@@ -26,19 +26,31 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
 
       // Check incoming / outgoing patients
       val incoming = HospitalHelper.getBedsWithIncomingPatient(previousHospitalState, currentHospitalState)
+      // bedsWithIncomingPatientTypeSi should be transferred to PRT
       val bedsWithIncomingPatientTypeSi = incoming._1
+      // bedsWithIncomingPatientTypeSc should stay at CDF
       val bedsWithIncomingPatientTypeSc = incoming._2
 
       val outgoing = HospitalHelper.getBedsWithOutgoingPatient(previousHospitalState, currentHospitalState)
+      // bedsWithOutgoingPatientTypeSi should not happen at CDF as SI patient are moved to PRT
       val bedsWithOutgoingPatientTypeSi = outgoing._1
+      // bedsWithOutgoingPatientTypeSc are expected at CDF, we do nothing with it at the moment
       val bedsWithOutgoingPatientTypeSc = outgoing._2
 
+      // TODO: make use of it
+      val patientTypeChange = HospitalHelper.getBedsWithPatientTypeChange(previousHospitalState, currentHospitalState)
+      // patientTypeChangeFromScToSi should be transferred to PRT
+      val patientTypeChangeFromScToSi = patientTypeChange._1
+      // patientTypeChangeFromSiToSc should never be present here as SI patients move to PRT
+      val patientTypeChangeFromSiToSc = patientTypeChange._2
+      
       // Send SI movements as Transfer requests to PRT only if there some
-      if (bedsWithIncomingPatientTypeSi != Nil || bedsWithOutgoingPatientTypeSi != Nil) {
+      if (bedsWithIncomingPatientTypeSi != Nil || bedsWithOutgoingPatientTypeSi != Nil || patientTypeChangeFromScToSi != Nil) {
         transferActor ! TransferRequest(
           id = elfin.Id,
-          incomingBeds = bedsWithIncomingPatientTypeSi,
-          outgoingBeds = bedsWithOutgoingPatientTypeSi,
+          incomingSiBeds = bedsWithIncomingPatientTypeSi,
+          outgoingSiBeds = bedsWithOutgoingPatientTypeSi,
+          typeScToSiBeds = patientTypeChangeFromScToSi, 
           fromHospitalCode = HOSPITAL_CODE_CDF,
           toHospitalCode = HOSPITAL_CODE_PRT,
           message = "Requesting incoming SI transfer")

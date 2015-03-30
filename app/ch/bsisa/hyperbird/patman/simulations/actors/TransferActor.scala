@@ -12,9 +12,9 @@ class TransferActor(hospitalsActorRefs: Map[String, ActorRef]) extends Actor wit
   // Perform transfer
   
     def receive = {
-    case TransferRequest(id, incomingBeds, outgoingBeds, fromHospitalCode, toHospitalCode, message) => 
+    case TransferRequest(id, incomingSiBeds, outgoingSiBeds, typeScToSiBeds,fromHospitalCode, toHospitalCode, message) => 
       log.info(s"Request for transfer from ${fromHospitalCode} to ${toHospitalCode}")
-      hospitalsActorRefs(toHospitalCode) ! TransferRequest(id, incomingBeds, outgoingBeds, fromHospitalCode, toHospitalCode, message)
+      hospitalsActorRefs(toHospitalCode) ! TransferRequest(id, incomingSiBeds, outgoingSiBeds, typeScToSiBeds, fromHospitalCode, toHospitalCode, message)
     case TransferResponse(id, status, acceptedIncomingBeds, fromHospitalCode, toHospitalCode , messagemessage) => 
       log.info(s"TransferResponse from ${fromHospitalCode} to ${toHospitalCode}")
   }
