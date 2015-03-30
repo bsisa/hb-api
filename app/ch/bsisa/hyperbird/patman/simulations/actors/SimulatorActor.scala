@@ -16,68 +16,34 @@ import ch.bsisa.hyperbird.util.DateUtil
 
 class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb: Int = 8, allBedsNb: Option[Int] = None, saturationThreshold: Option[Int] = None) extends Actor with ActorLogging {
 
+  // Avoid Actor.context repetition i.e.: context.stop(self) => stop(self)
   import context._
 
+  // Create children actors
   val datasetActor = actorOf(Props(new DataSetActor), name = "dataSetActor")
-  val cdfHospitalActor = actorOf(Props(new HospitalActor("cdf")), name = "cdfHospitalActor")
-  val prtHospitalActor = actorOf(Props(new HospitalActor("prt")), name = "prtHospitalActor")
+  val cdfHospitalActor = actorOf(Props(new HospitalActor(name = "cdf", bedsNb = cdfBedsNb)), name = "cdfHospitalActor")
+  val prtHospitalActor = actorOf(Props(new HospitalActor(name = "prt", bedsNb = prtBedsNb)), name = "prtHospitalActor")
   val transferActor = actorOf(Props[TransferActor], name = "transferActor")
 
   // Process parameters
   val dateFromStr = DateUtil.hbDateFormat.format(dateFrom)
   val dateToStr = DateUtil.hbDateFormat.format(dateTo)
 
+  // Database query
   val xqueryFileName = "hospitalStatesSelection.xq"
   val queryString = Option(s"dateFrom=${dateFromStr}&dateTo=${dateToStr}")
 
-  // 1. Query database HOSPITAL_STATE objects for data according to provided constructor parameters (date from, date to, ...)
+  // Query database HOSPITAL_STATE objects for requested time range
   val futureElfins = XQueryWSHelper.runXQueryFile(xqueryFileName, queryString).map { response =>
-    log.debug(s">>>> runXQueryFile: Result of type ${response.ahcResponse.getContentType} received")
+
     // hospitalStatesSelection.xq returns a list of XML ELFIN elements within a single MELFIN element.
+    // ELFINs are sorted by schedule (IDENTIFIANT.DE), hospital code (CARACTERISTIQUE/FRACTION/L[POS='1']/C[POS='1']/string()) ascending
     val melfinWrappedBody = response.body.mkString
-    val elfins = ElfinFormat.elfinsFromXml(scala.xml.XML.loadString(melfinWrappedBody))
+    // Convert ELFIN XML to ELFIN objects 
+    val elfins: Seq[ELFIN] = ElfinFormat.elfinsFromXml(scala.xml.XML.loadString(melfinWrappedBody))
 
-    // Provided dataset to the dataset actor for the current simulation
-    // DataSetActor abstraction could scale to a cluster of actors if necessary.
+    // Provide dataset to the dataset actor for the current simulation. (Note: DataSetActor abstraction could scale to a cluster of actors if necessary)
     datasetActor ! DataSet(elfins)
-
-//    val elfinsIt: Iterator[ELFIN] = elfins.iterator
-//
-//    // We start analysis at a defined start schedule
-//    // Check searchFirstStartSchedule() for rules that apply
-//    val firstStartScheduleElfin = searchFirstStartSchedule(elfinsIt)
-//    firstStartScheduleElfin match {
-//      case Some(elfin) =>
-//        log.info("Found start schedule")
-//        // loop schedule by schedule
-//        getNextHospitalStates(elfin, elfinsIt) match {
-//          case Some((cdfHospitalState, prfHospitalState)) =>
-//            log.info("Obtained hospital states pair corresponding to start schedule")
-//            cdfHospitalActor ! cdfHospitalState
-//            prtHospitalActor ! prfHospitalState
-//          case None =>
-//            // No data stop simulation
-//            log.warning("Could not obtain hospital states pair corresponding to start schedule")
-//            log.info(s"Stopping simulation ${self.path.name}")
-//            stop(self)
-//        }
-//      case None =>
-//        // No data stop simulation
-//        log.warning("Could not obtain any hospital states to process")
-//        log.info(s"Stopping simulation ${self.path.name}")
-//        stop(self)
-//    }
-
-    //      for ((elfin, i) <- elfins.zipWithIndex) {
-    //        val isFirstScheduleStr = if (isFirstSchedule(elfin)) " >>>> IS FIRST SCHEDULE !!! " else ""
-    //        log.info(s"""ELFIN: DE = ${elfin.IDENTIFIANT.get.DE.get}, abbrev. =  ${getMixedContent(elfin.CARACTERISTIQUE.get.FRACTION.get.L(0).C(0).mixed)} ${isFirstScheduleStr}""")
-    //      }
-
-    //    val testCdfElfin = new ELFIN(Id = "testId", ID_G = "testID_G", CLASSE = "TEST_CDF", NATURE = "DOCUMENT")
-    //    val testPrtElfin = new ELFIN(Id = "testId", ID_G = "testID_G", CLASSE = "TEST_PRT", NATURE = "DOCUMENT")
-    //
-    //    cdfHospitalActor ! HospitalState(testCdfElfin)
-    //    prtHospitalActor ! HospitalState(testPrtElfin)
 
   }.recover {
     case e: Throwable => {
@@ -87,32 +53,40 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
     }
   }
 
-  // TODO: remove. Test only stop condition.
-  //var i = 0
+  // Mutable states enabling to join cdf and prt request for data 
+  var pendingCdfNextHospitalStatesRequest = false
+  var pendingPrtNextHospitalStatesRequest = false
 
+  /**
+   * Process messages
+   */
   def receive = {
 
-//    case DataSetReady =>
-//      log.info(s"DataSetReady message received, start processing.")
-//      datasetActor ! HospitalStatesRequest
+    // Data delivered by DataSetActor
     case HospitalStatesResponse(cdfHospitalState, prtHospitalState, message) =>
-      log.info(s"${message}")
-      // Trigger next iteration for test
-      datasetActor ! HospitalStatesRequest
-    case DataSetEmpty => 
-      log.info("Notified `DataSetEmpty`, stoping simulation.")
+      log.info(s"HospitalStatesResponse: ${message}")
+      cdfHospitalActor ! HospitalState(cdfHospitalState)
+      prtHospitalActor ! HospitalState(prtHospitalState)
+      
+    // Request for next data from DataSetActor, waits to join both cdf and prt identical requests.
+    case NextHospitalStatesRequest(fromHospital) => {
+      fromHospital match {
+        case HOSPITAL_CODE_CDF => pendingCdfNextHospitalStatesRequest = true
+        case HOSPITAL_CODE_PRT => pendingPrtNextHospitalStatesRequest = true
+      }
+      if (pendingCdfNextHospitalStatesRequest && pendingPrtNextHospitalStatesRequest) {
+        // Reset pending states to false
+        pendingCdfNextHospitalStatesRequest = false
+        pendingPrtNextHospitalStatesRequest = false
+        // Request next data for next cdf and prt schedule
+        datasetActor ! HospitalStatesRequest
+      }
+    }
+    
+    // When all data has been delivered by DataSetActor
+    case DataSetEmpty =>
+      log.info(s"DataSetEmpty: stoping simulation ${self.path.name}")
       stop(self)
-
-    //    case msg: String =>
-    //      log.info(s"SimulatorActor(dateFrom = ${dateFrom}, dateTo = ${dateTo}) received message '$msg'")
-    //      i = i + 1
-    //      if (i == 2) transferActor ! "Hello, received two messages as expected."
-    //
-    //      if (msg == "Stop") {
-    //        log.info(s"SimulatorActor(dateFrom = ${dateFrom}, dateTo = ${dateTo}) going to stop...")
-    //        // Stops this actor and all its supervised children
-    //        stop(self)
-    //      }
   }
 
   // 2. Dispatch HOSPITAL_STATE objects according to hospital identifier, for each given time t
@@ -127,91 +101,5 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
   //       I)  All objects have been processed 
   //           and
   //       II) SimulationResultManagerActor has sent `work completed` message
-
-//  /**
-//   * Returns true if `elfin` is a `08:00:00` o'clock schedule for `HOSPITAL_CODE_CDF`
-//   */
-//  def isFirstStartSchedule(elfin: ELFIN): Boolean = {
-//
-//    val elfinSchedule = DateUtil.isoWithoutTzDateFormat.parse(elfin.IDENTIFIANT.get.DE.get)
-//
-//    val calendar = Calendar.getInstance()
-//    calendar.setTime(elfinSchedule)
-//    val elfinScheduleHour = calendar.get(Calendar.HOUR_OF_DAY) // Hour in 24h format
-//    val elfinScheduleMinutes = calendar.get(Calendar.MINUTE)
-//    val elfinScheduleSeconds = calendar.get(Calendar.SECOND)
-//    val hospitalCode = getMixedContent(elfin.CARACTERISTIQUE.get.FRACTION.get.L(0).C(0).mixed)
-//
-//    (hospitalCode == HOSPITAL_CODE_CDF) && (elfinScheduleHour == 8 && elfinScheduleMinutes == 0 && elfinScheduleSeconds == 0)
-//  }
-//
-//  /**
-//   * Checks `elfinsIt` for first elfin satisfying isFirstSchedule test
-//   */
-//  def searchFirstStartSchedule(elfinsIt: Iterator[ELFIN]): Option[ELFIN] = {
-//    if (elfinsIt.hasNext) {
-//      val elfin = elfinsIt.next
-//      if (isFirstStartSchedule(elfin)) Option(elfin) else searchFirstStartSchedule(elfinsIt)
-//    } else {
-//      None
-//    }
-//  }
-
-  // TODO: review: no need of loop only need to provide a pair of HospitalState on demand
-  // of feedback messages...
-  //  def processData(firstElfin: ELFIN, elfinsIt: Iterator[ELFIN]): Unit = {
-  // 
-  //    def go(cdfHospitalState : ELFIN) : Unit = {
-  //    	if (elfinsIt.hasNext) { 
-  //    	  // Get associated HS
-  //    	  val prtHospitalState = elfinsIt.next
-  //    	  //checkSameSchedule
-  //    	  if (validateSameSchedule(cdfHospitalState,prtHospitalState) && validateExpectedHospitalCodes(cdfHospitalState,prtHospitalState)) {
-  //    	    // DO THE JOB for the successful pair...
-  //    	  }
-  //    	} else {
-  //    	  log.info(s"No corresponding CDF HospitalState for ${cdfHospitalState.IDENTIFIANT.get}")
-  //    	}
-  //    }
-  //
-  //    go(firstElfin)
-  //  }
-
-//  def validateExpectedHospitalCodes(cdfHospitalState: ELFIN, prtHospitalState: ELFIN): Boolean = {
-//    val expectedCdfCode = getMixedContent(cdfHospitalState.CARACTERISTIQUE.get.FRACTION.get.L(0).C(0).mixed)
-//    val expectedPrtCode = getMixedContent(prtHospitalState.CARACTERISTIQUE.get.FRACTION.get.L(0).C(0).mixed)
-//    (expectedCdfCode == HOSPITAL_CODE_CDF && expectedPrtCode == HOSPITAL_CODE_PRT)
-//  }
-
-//  def validateSameSchedule(elfin1: ELFIN, elfin2: ELFIN): Boolean = {
-//    val date1 = DateUtil.isoWithoutTzDateFormat.parse(elfin1.IDENTIFIANT.get.DE.get)
-//    val hms1 = DateUtil.getHourMinuteSecond(date1)
-//    val date2 = DateUtil.isoWithoutTzDateFormat.parse(elfin2.IDENTIFIANT.get.DE.get)
-//    val hms2 = DateUtil.getHourMinuteSecond(date2)
-//    (hms1._1 == hms2._1 && hms1._2 == hms2._2 && hms1._3 == hms2._3)
-//  }
-
-//  def getHourMinuteSecond(date: Date): (Int, Int, Int) = {
-//    val calendar = Calendar.getInstance()
-//    calendar.setTime(date)
-//    // Hour in 24h format
-//    (calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), calendar.get(Calendar.SECOND))
-//  }
-
-//  def getNextHospitalStates(cdfHospitalState: ELFIN, elfinsIt: Iterator[ELFIN]): Option[(ELFIN, ELFIN)] = {
-//    if (elfinsIt.hasNext) {
-//      // Get associated HS
-//      val prtHospitalState = elfinsIt.next
-//      //checkSameSchedule
-//      if (validateSameSchedule(cdfHospitalState, prtHospitalState) && validateExpectedHospitalCodes(cdfHospitalState, prtHospitalState)) {
-//        Option(cdfHospitalState, prtHospitalState)
-//      } else {
-//        None
-//      }
-//    } else {
-//      log.info(s"No corresponding CDF HospitalState for ${cdfHospitalState.IDENTIFIANT.get}")
-//      None
-//    }
-//  }
 
 }
