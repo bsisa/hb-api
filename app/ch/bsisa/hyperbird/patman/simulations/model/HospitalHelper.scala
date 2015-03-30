@@ -42,7 +42,7 @@ object HospitalHelper {
     Hospital(hospitalCode, schedule, beds)
   }
 
-  def isBedPatientTypeSi(bed: Bed): Boolean = bed.patientType == PATIENT_TYPE_SI
+  def isBedPatientTypeSi(bed: Bed): Boolean = (bed.patientType == PATIENT_TYPE_SI)
 
   /**
    * Return a pair of Seq[Bed]. The first one contains incoming SI patients while the second contains incoming SC patients.
@@ -114,16 +114,17 @@ object HospitalHelper {
             val bedsWithOutgoingPatientTypeSc = bedsWithOutgoingPatient.filterNot(isBedPatientTypeSi)
             (bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc)
           }
-          case None => (List(), List())
+          // Previous available but nothing anymore in current: Everything is outgoing
+          case None => 
+            val previousNonEmptyBeds = previousState.beds.filter(bed => !bed.free)
+            val bedsWithOutgoingPatientTypeSi = previousNonEmptyBeds.filter(isBedPatientTypeSi)
+            val bedsWithOutgoingPatientTypeSc = previousNonEmptyBeds.filterNot(isBedPatientTypeSi)
+            (bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc)
         }
       case None =>
         currentStateOption match {
-          // current available but no previous: Everything is incoming
-          case Some(currentState) =>
-            val currentNonEmptyBeds = currentState.beds.filter(bed => !bed.free)
-            val bedsWithOutgoingPatientTypeSi = currentNonEmptyBeds.filter(isBedPatientTypeSi)
-            val bedsWithOutgoingPatientTypeSc = currentNonEmptyBeds.filterNot(isBedPatientTypeSi)
-            (bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc)
+          // current available but no previous: Nothing outgoing
+          case Some(currentState) => (List(), List())
           // no previous nor current state available
           case None => (List(), List())
         }
