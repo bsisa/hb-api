@@ -57,7 +57,7 @@ class DataSetActor extends Actor with ActorLogging {
       // =========================================================================================================
       log.info(">>>>>>> START DATASET UPDATE     <<<<<<<<<< ")
       updateDataset(transferredSiBeds, fromHospitalCode, toHospitalCode)
-      log.info(">>>>>>> DATASET UPDATE COMPLETED <<<<<<<<<< ")      
+      log.info(">>>>>>> DATASET UPDATE COMPLETED <<<<<<<<<< ")
       // =========================================================================================================
       // Send the response
       sender ! DataSetUpdateResponse(id, DATASET_UPDATE_RESPONSE_SUCCESS, transferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule)
@@ -74,11 +74,13 @@ class DataSetActor extends Actor with ActorLogging {
 
   /**
    * Note: No need for fromSchedule. We deal with an iterator thus only fromSchedules are available.
-   * Current implementation modifies CARACTERISTIQUE.FRACTION.L Seq 
+   * Current implementation modifies CARACTERISTIQUE.FRACTION.L Seq
    * To review: case of several stay for a given patientNb
    */
   def updateDataset(transferredSiBeds: List[Bed], fromHospitalCode: String, toHospitalCode: String): Unit = {
 
+    log.info(s"::::::: transferredSiBeds = ${transferredSiBeds}" )
+    
     def doIt(updatedList: List[ELFIN]): List[ELFIN] = {
       getNextHospitalStates(dataSetIterator) match {
         case Some((cdfHospitalState, prtHospitalState)) => {
@@ -93,24 +95,33 @@ class DataSetActor extends Actor with ActorLogging {
                     <C POS="7"/>
                 </L>
            */
-          val bedsToTransfer = cdfHospitalState.CARACTERISTIQUE.get.FRACTION.get.L.seq.filter{ L =>  
-            val patientNb = getMixedContent(L.C(1).mixed) 
-            val bedForPatientNbOption = transferredSiBeds.find( bed => bed.patientNb == patientNb)
+
+          val cdfBedsOnly = for {
+            (l, index) <- (cdfHospitalState.CARACTERISTIQUE.get.FRACTION.get.L zipWithIndex) if (index > 0) // First L does not contain bed information
+          } yield { l }
+
+          val bedsToTransfer = cdfBedsOnly.filter { L =>
+            val patientNb = getMixedContent(L.C(1).mixed)
+            val bedForPatientNbOption = transferredSiBeds.find(bed => bed.patientNb == patientNb)
             (bedForPatientNbOption != None)
           }
+          log.info(s"::::::: bedsToTransfer = ${bedsToTransfer}")
           
-          val existingPlusTransferMerge = bedsToTransfer ++ prtHospitalState.CARACTERISTIQUE.get.FRACTION.get.L
+          val existingPlusTransferMerge = prtHospitalState.CARACTERISTIQUE.get.FRACTION.get.L ++ bedsToTransfer
           val updatedPrtHospitalState = ElfinUtil.replaceElfinCaracteristiqueFractionL(prtHospitalState, existingPlusTransferMerge)
-          
-          val bedsToKeep = cdfHospitalState.CARACTERISTIQUE.get.FRACTION.get.L.filter { L => 
-            val patientNb = getMixedContent(L.C(1).mixed) 
-            val bedForPatientNbOption = transferredSiBeds.find( bed => bed.patientNb == patientNb)
+
+          val bedsToKeep = cdfBedsOnly.filter { L =>
+            val patientNb = getMixedContent(L.C(1).mixed)
+            val bedForPatientNbOption = transferredSiBeds.find(bed => bed.patientNb == patientNb)
             (bedForPatientNbOption == None)
           }
           val updatedCdfHospitalState = ElfinUtil.replaceElfinCaracteristiqueFractionL(cdfHospitalState, bedsToKeep)
-          
+
+          log.info(s"::::::: bedsToKeep = ${bedsToKeep}")
+          // Recurse
           doIt(updatedPrtHospitalState :: updatedCdfHospitalState :: updatedList)
         }
+        // End condition
         case None => updatedList
       }
     }
@@ -120,9 +131,9 @@ class DataSetActor extends Actor with ActorLogging {
     //log.info(s">>>>>> ${reversedUpdatedElfins}");
     val updatedElfins: List[ELFIN] = reversedUpdatedElfins.reverse
     //log.info(s">>>>>> ${updatedElfins}");
-    
+
     dataSetIterator = updatedElfins.iterator
-    
+
     //    val updatedDataSetIterator = for (elfin <- dataSetIterator) yield {
     //      if (getHospitalCode(elfin) == fromHospitalCode) {
     //
