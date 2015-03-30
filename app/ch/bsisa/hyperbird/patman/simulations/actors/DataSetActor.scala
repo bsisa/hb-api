@@ -32,17 +32,13 @@ class DataSetActor extends Actor with ActorLogging {
               // No data stop simulation
               log.warning("Could not obtain hospital states pair corresponding to start schedule")
               log.info(s"Notify dataset empty for simulation ${self.path.name}")
-              //            log.info(s"Stopping simulation ${self.path.name}")
               sender ! DataSetEmpty
-            //            stop(self)
           }
         case None =>
           // No data stop simulation
           log.warning("Could not obtain any hospital states to process")
           log.info(s"Notify dataset empty for simulation ${self.path.name}")
           sender ! DataSetEmpty
-        //        log.info(s"Stopping simulation ${self.path.name}")
-        //        stop(self)
       }
     case HospitalStatesRequest =>
       log.info("HospitalStatesRequest")
@@ -53,8 +49,11 @@ class DataSetActor extends Actor with ActorLogging {
     case DataSetUpdateRequest(id, transferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule) =>
       log.info(s"DataSetUpdateRequest id ${id} for ${transferredSiBeds}, from ${fromHospitalCode} to ${toHospitalCode} from schedule: ${fromSchedule}")
       // Do the job
+      // =========================================================================================================
       // TODO: Move all `transferredSiBeds` from `fromHospitalCode` to `toHospitalCode` from `fromSchedule` on.
+      // =========================================================================================================
       
+      // =========================================================================================================
       // Send the response
       sender ! DataSetUpdateResponse(id, DATASET_UPDATE_RESPONSE_SUCCESS, transferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule)
   }
