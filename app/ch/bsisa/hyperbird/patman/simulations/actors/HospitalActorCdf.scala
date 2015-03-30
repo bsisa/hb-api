@@ -53,6 +53,7 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
           typeScToSiBeds = patientTypeChangeFromScToSi,
           fromHospitalCode = HOSPITAL_CODE_CDF,
           toHospitalCode = HOSPITAL_CODE_PRT,
+          fromSchedule = hospital.schedule,
           message = "Requesting incoming SI transfer")
       } else {
         // No transfer response to wait for, request next data.
@@ -66,7 +67,7 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
     //	    log.info(s"$name> BedsWithOutgoingPatient: " + HospitalHelper.getBedsWithOutgoingPatient(previousHospitalState, currentHospitalState) )
     //	    log.info(s"============================== $name - end   ==============================")
 
-    case TransferResponse(id, status, acceptedIncomingBeds, fromHospital, toHospital, message) => {
+    case TransferResponse(id, status, acceptedIncomingBeds, fromHospital, toHospital, fromSchedule, message) => {
       status match {
         case TRANSFER_REQUEST_ACCEPTED =>
           log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_ACCEPTED, requesting next data.")

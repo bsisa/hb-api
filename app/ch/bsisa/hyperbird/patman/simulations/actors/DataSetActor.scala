@@ -5,6 +5,7 @@ import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.util.DateUtil
 import ch.bsisa.hyperbird.model.format.Implicits._
 import ch.bsisa.hyperbird.patman.simulations.Constants._
+import ch.bsisa.hyperbird.patman.simulations.messages.DataSetUpdateRequest
 
 class DataSetActor extends Actor with ActorLogging {
 
@@ -48,6 +49,8 @@ class DataSetActor extends Actor with ActorLogging {
         case Some((cdfHospitalState, prtHospitalState)) => sender ! HospitalStatesResponse(cdfHospitalState, prtHospitalState, "Provide next record.")
         case None => sender ! DataSetEmpty
       }
+    case DataSetUpdateRequest(transferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule) =>
+      log.info("DataSetUpdateRequest for ${transferredSiBeds}, from $fromHospitalCode to $toHospitalCode from schedule: ${fromSchedule}")
   }
 
   def setDataSet(dataSet: Seq[ELFIN]): Unit = {
@@ -88,19 +91,19 @@ class DataSetActor extends Actor with ActorLogging {
       None
     }
   }
-  
+
   def getNextHospitalStates(elfinsIt: Iterator[ELFIN]): Option[(ELFIN, ELFIN)] = {
     if (elfinsIt.hasNext) {
       val cdfHospitalState = elfinsIt.next
       if (elfinsIt.hasNext) {
-	      // Get associated HS
-	      val prtHospitalState = elfinsIt.next        
-	      //checkSameSchedule
-	      if (validateSameSchedule(cdfHospitalState, prtHospitalState) && validateExpectedHospitalCodes(cdfHospitalState, prtHospitalState)) {
-	        Option(cdfHospitalState, prtHospitalState)
-	      } else {
-	        None
-	      }
+        // Get associated HS
+        val prtHospitalState = elfinsIt.next
+        //checkSameSchedule
+        if (validateSameSchedule(cdfHospitalState, prtHospitalState) && validateExpectedHospitalCodes(cdfHospitalState, prtHospitalState)) {
+          Option(cdfHospitalState, prtHospitalState)
+        } else {
+          None
+        }
       } else {
         log.info(s"No corresponding CDF HospitalState for ${cdfHospitalState.IDENTIFIANT.get}")
         None
@@ -109,7 +112,7 @@ class DataSetActor extends Actor with ActorLogging {
       log.info(s"No more data")
       None
     }
-  }  
+  }
 
   /**
    * Returns true if `elfin` is a `08:00:00` o'clock schedule for `HOSPITAL_CODE_CDF`
