@@ -6,6 +6,7 @@ import ch.bsisa.hyperbird.util.DateUtil
 import ch.bsisa.hyperbird.model.format.Implicits._
 import ch.bsisa.hyperbird.patman.simulations.Constants._
 import ch.bsisa.hyperbird.patman.simulations.messages.DataSetUpdateRequest
+import ch.bsisa.hyperbird.patman.simulations.messages.DataSetUpdateResponse
 
 class DataSetActor extends Actor with ActorLogging {
 
@@ -51,6 +52,10 @@ class DataSetActor extends Actor with ActorLogging {
       }
     case DataSetUpdateRequest(transferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule) =>
       log.info("DataSetUpdateRequest for ${transferredSiBeds}, from $fromHospitalCode to $toHospitalCode from schedule: ${fromSchedule}")
+      // Do the job
+      // TODO: Move all `transferredSiBeds` from `fromHospitalCode` to `toHospitalCode` from `fromSchedule` on.
+      // Send the response
+      sender ! DataSetUpdateResponse(DATASET_UPDATE_REQUEST_SUCCESS, fromHospitalCode, toHospitalCode, fromSchedule)
   }
 
   def setDataSet(dataSet: Seq[ELFIN]): Unit = {
