@@ -26,7 +26,7 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
 
   val hospitalsActorRefMap : Map[String, ActorRef] = Map(HOSPITAL_CODE_CDF -> cdfHospitalActor, HOSPITAL_CODE_PRT -> prtHospitalActor)
   
-  val transferActor = actorOf(Props(new TransferActor(hospitalsActorRefMap)), name = "transferActor")
+  val transferActor = actorOf(Props(new TransferActor(hospitalsActorRefMap, datasetActor)), name = "transferActor")
 
   // Process parameters
   val dateFromStr = DateUtil.hbDateFormat.format(dateFrom)
