@@ -27,7 +27,7 @@ object HospitalHelper {
     //play.api.Logger.info("scheduleStr = " + scheduleStr)
     val schedule = DateUtil.getIsoDateFormatterWithoutTz.parse(scheduleStr)
     val beds = for {
-      (l, index) <- (elfinHospitalState.CARACTERISTIQUE.get.FRACTION.get.L zipWithIndex) if (index > 0) // First L does not contain bed information
+      (l, index) <- (elfinHospitalState.CARACTERISTIQUE.get.FRACTION.get.L.toList zipWithIndex) if (index > 0) // First L does not contain bed information
     } yield {
       val c = l.C
       val bedId = getMixedContent(c(0).mixed)
@@ -47,7 +47,7 @@ object HospitalHelper {
   /**
    * Return a pair of Seq[Bed]. The first one contains incoming SI patients while the second contains incoming SC patients.
    */
-  def getBedsWithIncomingPatient(previousStateOption: Option[Hospital], currentStateOption: Option[Hospital]): (Seq[Bed], Seq[Bed]) = {
+  def getBedsWithIncomingPatient(previousStateOption: Option[Hospital], currentStateOption: Option[Hospital]): (List[Bed], List[Bed]) = {
 
     previousStateOption match {
       case Some(previousState) =>
@@ -71,7 +71,7 @@ object HospitalHelper {
             (bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
           }
           // previous available but no current: Nothing is incoming.          
-          case None => (Seq(), Seq())
+          case None => (List(), List())
         }
       case None =>
         currentStateOption match {
@@ -82,7 +82,7 @@ object HospitalHelper {
             val bedsWithIncomingPatientTypeSc = currentNonEmptyBeds.filterNot(isBedPatientTypeSi)
             (bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
           // no previous nor current state available
-          case None => (Seq(), Seq())
+          case None => (List(), List())
         }
     }
   }
@@ -90,7 +90,7 @@ object HospitalHelper {
   /**
    * Return a pair of Seq[Bed]. The first one contains outgoing SI patients while the second contains outgoing SC patients.
    */
-  def getBedsWithOutgoingPatient(previousStateOption: Option[Hospital], currentStateOption: Option[Hospital]): (Seq[Bed], Seq[Bed]) = {
+  def getBedsWithOutgoingPatient(previousStateOption: Option[Hospital], currentStateOption: Option[Hospital]): (List[Bed], List[Bed]) = {
 
     previousStateOption match {
       case Some(previousState) =>
@@ -114,7 +114,7 @@ object HospitalHelper {
             val bedsWithOutgoingPatientTypeSc = bedsWithOutgoingPatient.filterNot(isBedPatientTypeSi)
             (bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc)
           }
-          case None => (Seq(), Seq())
+          case None => (List(), List())
         }
       case None =>
         currentStateOption match {
@@ -125,7 +125,7 @@ object HospitalHelper {
             val bedsWithOutgoingPatientTypeSc = currentNonEmptyBeds.filterNot(isBedPatientTypeSi)
             (bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc)
           // no previous nor current state available
-          case None => (Seq(), Seq())
+          case None => (List(), List())
         }
     }
   }
