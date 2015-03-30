@@ -24,11 +24,12 @@ class TransferActor(hospitalsActorRefs: Map[String, ActorRef], dataSetActorRef :
       // Forward response to original requester (fromHospitalCode)
       hospitalsActorRefs(fromHospitalCode) ! TransferResponse(id, status, acceptedIncomingBeds, fromHospitalCode, toHospitalCode, fromSchedule, message)
       
-    case DataSetUpdateRequest(allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule) => 
-      dataSetActorRef ! DataSetUpdateRequest(allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule)
+    case DataSetUpdateRequest(id, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule) => 
+      dataSetActorRef ! DataSetUpdateRequest(id, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule)
       
-    case DataSetUpdateResponse(status, fromHospitalCode, toHospitalCode, fromSchedule) => 
-      hospitalsActorRefs(fromHospitalCode) ! DataSetUpdateResponse(status, fromHospitalCode, toHospitalCode, fromSchedule)
+    case DataSetUpdateResponse(id, status, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule) => 
+      hospitalsActorRefs(fromHospitalCode) ! DataSetUpdateResponse(id, status, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule)
+      hospitalsActorRefs(toHospitalCode) ! DataSetUpdateResponse(id, status, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule)
   }
 
 }
