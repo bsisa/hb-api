@@ -42,4 +42,92 @@ object HospitalHelper {
     Hospital(hospitalCode, schedule, beds)
   }
 
+  def isBedPatientTypeSi(bed: Bed): Boolean = bed.patientType == PATIENT_TYPE_SI
+
+  /**
+   * Return a pair of Seq[Bed]. The first one contains incoming SI patients while the second contains incoming SC patients.
+   */
+  def getBedsWithIncomingPatient(previousStateOption: Option[Hospital], currentStateOption: Option[Hospital]): (Seq[Bed], Seq[Bed]) = {
+
+    previousStateOption match {
+      case Some(previousState) =>
+        currentStateOption match {
+          // previous and current available
+          case Some(currentState) => {
+            // Incoming patients 
+            val bedsWithIncomingPatients = currentState.beds.filter { currentStateBed =>
+              if (!currentStateBed.free) {
+                // Check if the current patient was already there
+                val existingBed = previousState.beds.find(previousStateBed => currentStateBed.patientNb == previousStateBed.patientNb)
+                // Return true if was not previously there
+                (existingBed == None)
+              } else {
+                // Skip empty bed
+                false
+              }
+            }
+            val bedsWithIncomingPatientTypeSi = bedsWithIncomingPatients.filter(isBedPatientTypeSi)
+            val bedsWithIncomingPatientTypeSc = bedsWithIncomingPatients.filterNot(isBedPatientTypeSi)
+            (bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
+          }
+          // previous available but no current: Nothing is incoming.          
+          case None => (Seq(), Seq())
+        }
+      case None =>
+        currentStateOption match {
+          // current available but no previous: Everything is incoming
+          case Some(currentState) =>
+            val currentNonEmptyBeds = currentState.beds.filter(bed => !bed.free)
+            val bedsWithIncomingPatientTypeSi = currentNonEmptyBeds.filter(isBedPatientTypeSi)
+            val bedsWithIncomingPatientTypeSc = currentNonEmptyBeds.filterNot(isBedPatientTypeSi)
+            (bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
+          // no previous nor current state available
+          case None => (Seq(), Seq())
+        }
+    }
+  }
+
+  /**
+   * Return a pair of Seq[Bed]. The first one contains outgoing SI patients while the second contains outgoing SC patients.
+   */
+  def getBedsWithOutgoingPatient(previousStateOption: Option[Hospital], currentStateOption: Option[Hospital]): (Seq[Bed], Seq[Bed]) = {
+
+    previousStateOption match {
+      case Some(previousState) =>
+        currentStateOption match {
+          // previous and current available
+          case Some(currentState) => {
+            // Outgoing patients
+            val bedsWithOutgoingPatient = previousState.beds.filter { previousStateBed =>
+              if (!previousStateBed.free) {
+                // Check if the previous patient is still there
+                val existingBed = currentState.beds.find(currentStateBed => currentStateBed.patientNb == previousStateBed.patientNb)
+                // Return true if no more there
+                (existingBed == None)
+              } else {
+                // Skip empty bed
+                false
+              }
+            }
+            // Split outgoing in SI, SC.
+            val bedsWithOutgoingPatientTypeSi = bedsWithOutgoingPatient.filter(isBedPatientTypeSi)
+            val bedsWithOutgoingPatientTypeSc = bedsWithOutgoingPatient.filterNot(isBedPatientTypeSi)
+            (bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc)
+          }
+          case None => (Seq(), Seq())
+        }
+      case None =>
+        currentStateOption match {
+          // current available but no previous: Everything is incoming
+          case Some(currentState) =>
+            val currentNonEmptyBeds = currentState.beds.filter(bed => !bed.free)
+            val bedsWithOutgoingPatientTypeSi = currentNonEmptyBeds.filter(isBedPatientTypeSi)
+            val bedsWithOutgoingPatientTypeSc = currentNonEmptyBeds.filterNot(isBedPatientTypeSi)
+            (bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc)
+          // no previous nor current state available
+          case None => (Seq(), Seq())
+        }
+    }
+  }
+
 }
