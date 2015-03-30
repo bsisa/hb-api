@@ -1,6 +1,6 @@
 package ch.bsisa.hyperbird.patman.simulations.actors
 import akka.actor.{ Actor, ActorLogging }
-import ch.bsisa.hyperbird.patman.simulations.messages.{ DataSet, DataSetReady, DataSetEmpty, HospitalStatesRequest, HospitalStatesResponse }
+import ch.bsisa.hyperbird.patman.simulations.messages.{ DataSet, DataSetEmpty, HospitalStatesRequest, HospitalStatesResponse }
 import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.util.DateUtil
 import ch.bsisa.hyperbird.model.format.Implicits._
