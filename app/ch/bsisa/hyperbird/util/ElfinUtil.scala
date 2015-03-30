@@ -3,12 +3,15 @@ package ch.bsisa.hyperbird.util
 import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.model.format.Implicits._
 import ch.bsisa.hyperbird.model.proto._
+import ch.bsisa.hyperbird.model.CARACTERISTIQUE
 import ch.bsisa.hyperbird.model.NOM
 import ch.bsisa.hyperbird.model.IDENTIFIANT
 import java.util.Date
 import ch.bsisa.hyperbird.model.PARTENAIRE
 import ch.bsisa.hyperbird.model.PERSONNEType
 import ch.bsisa.hyperbird.CollectionsConfig
+import ch.bsisa.hyperbird.model.MATRICEType
+
 
 /**
  * Utility functions to deal with ELFIN immutable state replacement such as updating
@@ -41,6 +44,19 @@ object ElfinUtil {
       newElfinID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
   }
 
+  
+  /**
+   * Replaces the value elfin.CARACTERISTIQUE by an new CARACTERISTIQUE only containing FRACTION made of 
+   * the provided `newLSeq`. Any other CARACTERISTIQUE element is lost. The rest of the elfin information
+   * stays unchanged. The returned elfin is a new elfin instance.
+   */
+  def replaceElfinCaracteristiqueFractionL(elfin: ELFIN, newLSeq: Seq[ch.bsisa.hyperbird.model.L]): ELFIN = {
+    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, Some(CARACTERISTIQUE( FRACTION = Some(MATRICEType(newLSeq : _*)))) ,
+      elfin.PARTENAIRE, elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, elfin.Id,
+      elfin.ID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
+  }  
+  
+  
   /**
    * Replaces the elfin.IDENTIFIANT value by an IDENTIFIANT containing the provided user
    * specific values instead.
