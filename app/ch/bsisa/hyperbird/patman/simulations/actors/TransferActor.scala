@@ -16,20 +16,20 @@ class TransferActor(hospitalsActorRefs: Map[String, ActorRef], dataSetActorRef :
   def receive = {
 
     case TransferRequest(id, incomingSiBeds, outgoingSiBeds, typeScToSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
-      log.info(s"Request for transfer from ${fromHospitalCode} to ${toHospitalCode}")
+      //log.info(s"Request for transfer from ${fromHospitalCode} to ${toHospitalCode}")
       hospitalsActorRefs(toHospitalCode) ! TransferRequest(id, incomingSiBeds, outgoingSiBeds, typeScToSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, message)
 
     case TransferResponse(id, status, acceptedIncomingBeds, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
-      log.info(s"TransferResponse from ${fromHospitalCode} to ${toHospitalCode}")
+      //log.info(s"TransferResponse from ${fromHospitalCode} to ${toHospitalCode}")
       // Forward response to original requester (fromHospitalCode)
       hospitalsActorRefs(fromHospitalCode) ! TransferResponse(id, status, acceptedIncomingBeds, fromHospitalCode, toHospitalCode, fromSchedule, message)
       
-    case DataSetUpdateRequest(id, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule) => 
-      dataSetActorRef ! DataSetUpdateRequest(id, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule)
-      
-    case DataSetUpdateResponse(id, status, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule) => 
-      hospitalsActorRefs(fromHospitalCode) ! DataSetUpdateResponse(id, status, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule)
-      hospitalsActorRefs(toHospitalCode) ! DataSetUpdateResponse(id, status, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule)
+//    case DataSetUpdateRequest(id, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule) => 
+//      dataSetActorRef ! DataSetUpdateRequest(id, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule)
+//      
+//    case DataSetUpdateResponse(id, status, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule) => 
+//      hospitalsActorRefs(fromHospitalCode) ! DataSetUpdateResponse(id, status, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule)
+//      hospitalsActorRefs(toHospitalCode) ! DataSetUpdateResponse(id, status, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule)
   }
 
 }
