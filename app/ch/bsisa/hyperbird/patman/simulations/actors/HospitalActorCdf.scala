@@ -54,7 +54,7 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
           fromHospitalCode = HOSPITAL_CODE_CDF,
           toHospitalCode = HOSPITAL_CODE_PRT,
           fromSchedule = hospital.schedule,
-          message = "Requesting incoming SI transfer")
+          message = s"Requesting SI transfer for ${hospital.schedule} from ${HOSPITAL_CODE_CDF} to ${HOSPITAL_CODE_PRT} with:\n+ ${bedsWithIncomingPatientTypeSi.size} in, - ${bedsWithOutgoingPatientTypeSi.size} out, + ${patientTypeChangeFromScToSi.size} SC to SI in")
       } else {
         // No transfer response to wait for, request next data.
         sender ! NextHospitalStatesRequest(name)
@@ -71,7 +71,7 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
       status match {
         case TRANSFER_REQUEST_ACCEPTED =>
           log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_ACCEPTED, requesting next data.")
-          // TODO: Update current CDT hospital state removing transfered SI beds
+          // OBSOLETE TODO: Update current CDT hospital state removing transfered SI beds
           
           // Request next data.
           context.parent ! NextHospitalStatesRequest(name)
