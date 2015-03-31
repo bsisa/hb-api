@@ -13,6 +13,9 @@ import ch.bsisa.hyperbird.dao.ws.XQueryWSHelper
 import ch.bsisa.hyperbird.model.format.ElfinFormat
 import ch.bsisa.hyperbird.model.format.Implicits._
 import ch.bsisa.hyperbird.util.DateUtil
+import scala.concurrent.Await
+import scala.concurrent.Future
+import scala.concurrent.duration._
 
 class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb: Int = 8, allBedsNb: Option[Int] = None, saturationThreshold: Option[Int] = None) extends Actor with ActorLogging {
 
@@ -20,13 +23,13 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
   import context._
 
   // Create children actors
-  val datasetActor = actorOf(Props(new DataSetActor), name = "dataSetActor")
+//  val datasetActor = actorOf(Props(new DataSetActor), name = "dataSetActor")
   val cdfHospitalActor = actorOf(Props(new HospitalActorCdf(name = "cdf", bedsNb = cdfBedsNb)), name = "cdfHospitalActor")
   val prtHospitalActor = actorOf(Props(new HospitalActorPrt(name = "prt", bedsNb = prtBedsNb)), name = "prtHospitalActor")
 
   val hospitalsActorRefMap : Map[String, ActorRef] = Map(HOSPITAL_CODE_CDF -> cdfHospitalActor, HOSPITAL_CODE_PRT -> prtHospitalActor)
   
-  val transferActor = actorOf(Props(new TransferActor(hospitalsActorRefMap, datasetActor)), name = "transferActor")
+//  val transferActor = actorOf(Props(new TransferActor(hospitalsActorRefMap, datasetActor)), name = "transferActor")
 
   // Process parameters
   val dateFromStr = DateUtil.hbDateFormat.format(dateFrom)
@@ -37,7 +40,7 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
   val queryString = Option(s"dateFrom=${dateFromStr}&dateTo=${dateToStr}")
 
   // Query database HOSPITAL_STATE objects for requested time range
-  val futureElfins = XQueryWSHelper.runXQueryFile(xqueryFileName, queryString).map { response =>
+  val datasetAndTransferActorRefsPairFuture : Future[(Option[ActorRef], Option[ActorRef])] = XQueryWSHelper.runXQueryFile(xqueryFileName, queryString).map { response =>
 
     // hospitalStatesSelection.xq returns a list of XML ELFIN elements within a single MELFIN element.
     // ELFINs are sorted by schedule (IDENTIFIANT.DE), hospital code (CARACTERISTIQUE/FRACTION/L[POS='1']/C[POS='1']/string()) ascending
@@ -46,16 +49,28 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
     val elfins: Seq[ELFIN] = ElfinFormat.elfinsFromXml(scala.xml.XML.loadString(melfinWrappedBody))
 
     // Provide dataset to the dataset actor for the current simulation. (Note: DataSetActor abstraction could scale to a cluster of actors if necessary)
-    datasetActor ! DataSet(elfins)
-
+    //datasetActor ! DataSet(elfins)
+    
+    val datasetActor = actorOf(Props(new DataSetActor(elfins.iterator)), name = "dataSetActor")
+    val transferActor = actorOf(Props(new TransferActor(hospitalsActorRefMap, datasetActor)), name = "transferActor")
+    (Some(datasetActor), Some(transferActor))
   }.recover {
     case e: Throwable => {
       log.error(s"XQueryWSHelper.runXQueryFile failed with exception: ${e}")
       log.warning(s"Stopping SimulatorActor named: ${self.path.name}")
       stop(self)
+      (None,None)
     }
   }
 
+  // Initialisation process can block
+  val datasetAndTransferActorRefsPair = Await.result(datasetAndTransferActorRefsPairFuture, 1 minutes) // scala.concurrent.duration._
+  val datasetActor = datasetAndTransferActorRefsPair._1.get
+  val transferActor = datasetAndTransferActorRefsPair._2.get
+  
+  // Starts analysis by requesting the first record
+  datasetActor ! HospitalStatesRequestInit
+  
   // Mutable states enabling to join cdf and prt request for data 
   var pendingCdfNextHospitalStatesRequest = false
   var pendingPrtNextHospitalStatesRequest = false
