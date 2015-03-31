@@ -23,13 +23,13 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
   import context._
 
   // Create children actors
-//  val datasetActor = actorOf(Props(new DataSetActor), name = "dataSetActor")
+  //  val datasetActor = actorOf(Props(new DataSetActor), name = "dataSetActor")
   val cdfHospitalActor = actorOf(Props(new HospitalActorCdf(name = "cdf", bedsNb = cdfBedsNb)), name = "cdfHospitalActor")
   val prtHospitalActor = actorOf(Props(new HospitalActorPrt(name = "prt", bedsNb = prtBedsNb)), name = "prtHospitalActor")
 
-  val hospitalsActorRefMap : Map[String, ActorRef] = Map(HOSPITAL_CODE_CDF -> cdfHospitalActor, HOSPITAL_CODE_PRT -> prtHospitalActor)
-  
-//  val transferActor = actorOf(Props(new TransferActor(hospitalsActorRefMap, datasetActor)), name = "transferActor")
+  val hospitalsActorRefMap: Map[String, ActorRef] = Map(HOSPITAL_CODE_CDF -> cdfHospitalActor, HOSPITAL_CODE_PRT -> prtHospitalActor)
+
+  //  val transferActor = actorOf(Props(new TransferActor(hospitalsActorRefMap, datasetActor)), name = "transferActor")
 
   // Process parameters
   val dateFromStr = DateUtil.hbDateFormat.format(dateFrom)
@@ -40,7 +40,7 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
   val queryString = Option(s"dateFrom=${dateFromStr}&dateTo=${dateToStr}")
 
   // Query database HOSPITAL_STATE objects for requested time range
-  val datasetAndTransferActorRefsPairFuture : Future[(Option[ActorRef], Option[ActorRef])] = XQueryWSHelper.runXQueryFile(xqueryFileName, queryString).map { response =>
+  val datasetAndTransferActorRefsPairFuture: Future[(Option[ActorRef], Option[ActorRef])] = XQueryWSHelper.runXQueryFile(xqueryFileName, queryString).map { response =>
 
     // hospitalStatesSelection.xq returns a list of XML ELFIN elements within a single MELFIN element.
     // ELFINs are sorted by schedule (IDENTIFIANT.DE), hospital code (CARACTERISTIQUE/FRACTION/L[POS='1']/C[POS='1']/string()) ascending
@@ -50,7 +50,7 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
 
     // Provide dataset to the dataset actor for the current simulation. (Note: DataSetActor abstraction could scale to a cluster of actors if necessary)
     //datasetActor ! DataSet(elfins)
-    
+
     val datasetActor = actorOf(Props(new DataSetActor(elfins.iterator)), name = "dataSetActor")
     val transferActor = actorOf(Props(new TransferActor(hospitalsActorRefMap, datasetActor)), name = "transferActor")
     (Some(datasetActor), Some(transferActor))
@@ -59,7 +59,7 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
       log.error(s"XQueryWSHelper.runXQueryFile failed with exception: ${e}")
       log.warning(s"Stopping SimulatorActor named: ${self.path.name}")
       stop(self)
-      (None,None)
+      (None, None)
     }
   }
 
@@ -67,10 +67,10 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
   val datasetAndTransferActorRefsPair = Await.result(datasetAndTransferActorRefsPairFuture, 1 minutes) // scala.concurrent.duration._
   val datasetActor = datasetAndTransferActorRefsPair._1.get
   val transferActor = datasetAndTransferActorRefsPair._2.get
-  
+
   // Starts analysis by requesting the first record
   datasetActor ! HospitalStatesRequestInit
-  
+
   // Mutable states enabling to join cdf and prt request for data 
   var pendingCdfNextHospitalStatesRequest = false
   var pendingPrtNextHospitalStatesRequest = false
@@ -85,14 +85,14 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
       log.info(s"HospitalStatesResponse: ${message}")
       cdfHospitalActor ! HospitalState(cdfHospitalState, transferActor)
       prtHospitalActor ! HospitalState(prtHospitalState, transferActor)
-      
+
     // Request for next data from DataSetActor, waits to join both cdf and prt identical requests.
     case NextHospitalStatesRequest(fromHospital) => {
       fromHospital match {
-        case HOSPITAL_CODE_CDF => 
+        case HOSPITAL_CODE_CDF =>
           log.info(s"Received NextHospitalStatesRequest fromHospital = ${fromHospital}")
           pendingCdfNextHospitalStatesRequest = true
-        case HOSPITAL_CODE_PRT => 
+        case HOSPITAL_CODE_PRT =>
           log.info(s"Received NextHospitalStatesRequest fromHospital = ${fromHospital}")
           pendingPrtNextHospitalStatesRequest = true
       }
@@ -102,6 +102,12 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
         pendingPrtNextHospitalStatesRequest = false
         // Request next data for next cdf and prt schedule
         datasetActor ! HospitalStatesRequest
+      } else {
+        if (pendingPrtNextHospitalStatesRequest) {
+          log.info(s"Waiting for ${HOSPITAL_CODE_CDF} NextHospitalStatesRequest")
+        } else {
+          log.info(s"Waiting for ${HOSPITAL_CODE_PRT} NextHospitalStatesRequest")
+        }
       }
     }
 
@@ -110,7 +116,7 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
       log.info(s"DataSetEmpty: stoping simulation ${self.path.name}")
       stop(self)
 
-    case StopSimulationRequest(reason) => 
+    case StopSimulationRequest(reason) =>
       log.error(s"Simulation ${self.path.name} has been requested to stop for reason: $reason")
       stop(self)
   }
