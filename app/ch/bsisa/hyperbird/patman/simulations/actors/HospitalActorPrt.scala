@@ -46,36 +46,49 @@ class HospitalActorPrt(name: String, bedsNb: Int) extends Actor with ActorLoggin
       sender ! NextHospitalStatesRequest(name)
 
     case TransferRequest(id, incomingSiBeds, outgoingSiBeds, typeScToSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
-      log.info(s"Request for transfer from ${fromHospitalCode} to ${toHospitalCode} with in = ${incomingSiBeds.size}, out = ${outgoingSiBeds.size}, typeScToSiBeds = ${typeScToSiBeds.size} DELTA = ${incomingSiBeds.size - outgoingSiBeds.size + typeScToSiBeds.size}")
-      // TODO: Request DataSet update for new Si beds => incomingSiBeds + typeScToSiBeds
+      log.info(message)
+      //log.info(s"Request for transfer from ${fromHospitalCode} to ${toHospitalCode} with in = ${incomingSiBeds.size}, out = ${outgoingSiBeds.size}, typeScToSiBeds = ${typeScToSiBeds.size} DELTA = ${incomingSiBeds.size - outgoingSiBeds.size + typeScToSiBeds.size}")
+      // OBSOLETE TODO: Request DataSet update for new Si beds => incomingSiBeds + typeScToSiBeds
       val allTransferredSiBeds = incomingSiBeds ::: typeScToSiBeds
-      sender ! DataSetUpdateRequest(id, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule)
+      //sender ! DataSetUpdateRequest(id, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule)
 
+      // =========================================================================================================
+      // TODO: Notify TransferReportActor of transfer events: Hospital from => to, Schedule, PatientNb, PatientType, TransferType, Reason for transfer: New SI or SC to SI
+
+      // TODO: Update current PRT hospital state with new SI beds (outgoingSiBeds should be made OBSOLETE and always be 0 (Once DataSet update is implemented))
+
+      // =========================================================================================================          
+      // TODO: Confirm TRANSFER_REQUEST_ACCEPTED with TransferResponse to TransferActor
+      sender ! TransferResponse(id, TRANSFER_REQUEST_ACCEPTED, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, "Transfer report notification (TODO) and HospitalActor PRT update (TODO) succeeded.")
+      // Request next data.
+      context.parent ! NextHospitalStatesRequest(name)      
+      
+      
     case TransferResponse(id, status, acceptedIncomingBeds, fromHospital, toHospital, fromSchedule, message) => {
       // TODO: implement...
       log.info(s"TransferResponse: id = $id, $message")
     }
 
-    case DataSetUpdateResponse(id, status, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule) =>
-      status match {
-        case DATASET_UPDATE_RESPONSE_SUCCESS =>
-          log.info("DataSetUpdateResponse = DATASET_UPDATE_RESPONSE_SUCCESS")
-          // =========================================================================================================
-          // TODO: Notify TransferReportActor of transfer events: Hospital from => to, Schedule, PatientNb, PatientType, TransferType, Reason for transfer: New SI or SC to SI
-
-          // TODO: Update current PRT hospital state with new SI beds (outgoingSiBeds should be made OBSOLETE and always be 0 (Once DataSet update is implemented))
-
-          // =========================================================================================================          
-          // TODO: Confirm TRANSFER_REQUEST_ACCEPTED with TransferResponse to TransferActor
-          sender ! TransferResponse(id, TRANSFER_REQUEST_ACCEPTED, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, "Dataset update, transfer report notification, and hospitalActorPrt currentHospitalState all succeeded.")
-          // Request next data.
-          context.parent ! NextHospitalStatesRequest(name)
-
-        case DATASET_UPDATE_RESPONSE_FAILURE =>
-          log.info("DataSetUpdateResponse = DATASET_UPDATE_RESPONSE_FAILURE")
-          // Not likely we get this status. If we do: Terminate simulation
-          context.parent ! StopSimulationRequest
-      }
+//    case DataSetUpdateResponse(id, status, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule) =>
+//      status match {
+//        case DATASET_UPDATE_RESPONSE_SUCCESS =>
+//          log.info("DataSetUpdateResponse = DATASET_UPDATE_RESPONSE_SUCCESS")
+//          // =========================================================================================================
+//          // TODO: Notify TransferReportActor of transfer events: Hospital from => to, Schedule, PatientNb, PatientType, TransferType, Reason for transfer: New SI or SC to SI
+//
+//          // TODO: Update current PRT hospital state with new SI beds (outgoingSiBeds should be made OBSOLETE and always be 0 (Once DataSet update is implemented))
+//
+//          // =========================================================================================================          
+//          // TODO: Confirm TRANSFER_REQUEST_ACCEPTED with TransferResponse to TransferActor
+//          sender ! TransferResponse(id, TRANSFER_REQUEST_ACCEPTED, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, "Dataset update, transfer report notification, and hospitalActorPrt currentHospitalState all succeeded.")
+//          // Request next data.
+//          context.parent ! NextHospitalStatesRequest(name)
+//
+//        case DATASET_UPDATE_RESPONSE_FAILURE =>
+//          log.info("DataSetUpdateResponse = DATASET_UPDATE_RESPONSE_FAILURE")
+//          // Not likely we get this status. If we do: Terminate simulation
+//          context.parent ! StopSimulationRequest
+//      }
   }
 
 }
