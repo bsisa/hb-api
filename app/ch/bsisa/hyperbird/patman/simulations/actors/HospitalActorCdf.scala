@@ -6,10 +6,24 @@ import ch.bsisa.hyperbird.patman.simulations.model.HospitalHelper
 import ch.bsisa.hyperbird.patman.simulations.messages._
 import ch.bsisa.hyperbird.patman.simulations.model.Hospital
 
+/**
+ * Models CDF Hospital intensive care data such as bed, patient, patient type, transfer type
+ * and related behaviour intended for simulation.
+ */
 class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLogging {
 
+  /**
+   * Static state representation reflecting HOSPITAL_STATE database entries
+   * at a given time or schedule (08:00, 16:00, 22:00)
+   */
   var previousHospitalState: Option[Hospital] = None
   var currentHospitalState: Option[Hospital] = None
+
+  /**
+   * Dynamic state representation build from HOSPITAL_STATE database entries
+   * change events from schedule to schedule (08:00, 16:00, 22:00)
+   */
+  var simulatedHospitalState: Option[Hospital] = None
 
   def receive = {
     case HospitalState(elfin, transferActor) =>
@@ -44,7 +58,19 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
       // patientTypeChangeFromSiToSc should never be present here as SI patients move to PRT
       val patientTypeChangeFromSiToSc = patientTypeChange._2
 
-      // Send SI movements as Transfer requests to PRT only if there some
+      val tranferTypeOnlyChange = HospitalHelper.getBedsWithTransfertTypeChangeOnly(previousHospitalState, currentHospitalState)
+
+      // Update current CDT simulatedHospitalState removing transfered SI beds
+      simulatedHospitalState = HospitalHelper.updateSimulatedHospitalStateForCdf(
+        currentSimulatedHospitalStateOption = simulatedHospitalState,
+        newStaticHospitalStateOption = currentHospitalState,
+        bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc,
+        bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc, patientTypeChangeFromScToSi,
+        patientTypeChangeFromSiToSc, tranferTypeOnlyChange)
+
+        log.info(s"${name}> SIMULATED HS: ${simulatedHospitalState}")
+        
+      // Send SI movements as Transfer requests to PRT only if necessary
       if (bedsWithIncomingPatientTypeSi != Nil || bedsWithOutgoingPatientTypeSi != Nil || patientTypeChangeFromScToSi != Nil) {
         transferActor ! TransferRequest(
           id = elfin.Id,
@@ -71,8 +97,6 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
       status match {
         case TRANSFER_REQUEST_ACCEPTED =>
           log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_ACCEPTED, requesting next data.")
-          // OBSOLETE TODO: Update current CDT hospital state removing transfered SI beds
-          
           // Request next data.
           context.parent ! NextHospitalStatesRequest(name)
         case TRANSFER_REQUEST_REFUSED =>
