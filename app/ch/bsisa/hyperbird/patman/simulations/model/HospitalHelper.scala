@@ -4,6 +4,7 @@ import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.model.format.Implicits._
 import ch.bsisa.hyperbird.patman.simulations.Constants._
 import ch.bsisa.hyperbird.util.DateUtil
+import java.util.Date
 
 /**
  *  Helper to go from ELFIN to Hospital and reverse.
@@ -158,7 +159,7 @@ object HospitalHelper {
                 false
               }
             }
-            
+
             // From SI to SC 
             val bedsWithPatientTypeChangeFromSiToSc = currentState.beds.filter { currentStateBed =>
               if (!currentStateBed.free) {
@@ -185,8 +186,7 @@ object HospitalHelper {
       case None => (List(), List())
     }
   }
-  
-  
+
   /**
    * Return List[Bed] for which only TransferType changed. It excludes those already included in patientType change.
    */
@@ -205,8 +205,8 @@ object HospitalHelper {
                   case Some(previousStateBed) =>
                     // We exclude patient type change beds already included in getBedsWithPatientTypeChange check
                     (currentStateBed.patientType == previousStateBed.patientType) &&
-                    // We check transfer type changed (any change)
-                    (previousStateBed.transferType != currentStateBed.transferType)
+                      // We check transfer type changed (any change)
+                      (previousStateBed.transferType != currentStateBed.transferType)
                   case None => false
                 }
                 bedWithTransferTypeOnlyChange
@@ -223,6 +223,51 @@ object HospitalHelper {
       // No previous available: No existing bed change tracking.
       case None => List()
     }
-  }  
+  }
+
+  /**
+   * Returns a new copy of `currentSimulatedHospitalStateOption` updated with all provided information.
+   */
+  def updateSimulatedHospitalStateForCdf(
+    currentSimulatedHospitalStateOption: Option[Hospital], newStaticHospitalStateOption: Option[Hospital], bedsWithIncomingPatientTypeSi: List[Bed], bedsWithIncomingPatientTypeSc: List[Bed],
+    bedsWithOutgoingPatientTypeSi: List[Bed], bedsWithOutgoingPatientTypeSc: List[Bed], patientTypeChangeFromScToSi: List[Bed],
+    patientTypeChangeFromSiToSc: List[Bed], transfertTypeChangeOnly: List[Bed]): Option[Hospital] = {
+
+    currentSimulatedHospitalStateOption match {
+      case Some(currentSimulatedHospitalState) =>
+        newStaticHospitalStateOption match {
+          case Some(newStaticHospitalState) =>
+            // bedsWithIncomingPatientTypeSi - we do not care about : they did not exist before and are directly transferred.
+            // bedsWithIncomingPatientTypeSc - new incoming beds:  TO ADD
+            // bedsWithOutgoingPatientTypeSi - must be empty as we do not keep any SI bed
+            // bedsWithOutgoingPatientTypeSc - outgoing beds: TO REMOVE
+            // patientTypeChangeFromScToSi - beds we transfer: TO REMOVE
+            // patientTypeChangeFromSiToSc - must be empty as we do not keep any SI bed
+            // transfertTypeChangeOnly - beds with new updated information: TO REPLACE
+            val currentWithIncomingSc = currentSimulatedHospitalState.beds ++ bedsWithIncomingPatientTypeSc
+            val currentWithIncomingScMinusOutgoingSc = currentWithIncomingSc diff bedsWithOutgoingPatientTypeSc
+            val currentWithIncomingScMinusOutgoingScMinusScToSi = currentWithIncomingScMinusOutgoingSc diff patientTypeChangeFromScToSi
+            val currentWithIncomingScMinusOutgoingScMinusScToSiWithUpdatedTransferType =
+              (currentWithIncomingScMinusOutgoingScMinusScToSi diff transfertTypeChangeOnly) ++ transfertTypeChangeOnly
+            Some(Hospital(newStaticHospitalState.code, newStaticHospitalState.schedule, currentWithIncomingScMinusOutgoingScMinusScToSiWithUpdatedTransferType))
+          case None => Some(currentSimulatedHospitalState)
+        }
+
+      case None =>
+        newStaticHospitalStateOption match {
+          case Some(newStaticHospitalState) =>
+            // bedsWithIncomingPatientTypeSi - we do not care about : they are transferred.
+            // bedsWithIncomingPatientTypeSc - these are new beds we keep.
+            // bedsWithOutgoingPatientTypeSi - must be empty
+            // bedsWithOutgoingPatientTypeSc - must be empty
+            // patientTypeChangeFromScToSi - must be empty
+            // patientTypeChangeFromSiToSc - must be empty
+            // transfertTypeChangeOnly - must be empty
+            Some(Hospital(newStaticHospitalState.code, newStaticHospitalState.schedule, bedsWithIncomingPatientTypeSc))
+          case None => None
+        }
+    }
+
+  }
 
 }
