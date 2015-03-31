@@ -24,6 +24,9 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
    * change events from schedule to schedule (08:00, 16:00, 22:00)
    */
   var simulatedHospitalState: Option[Hospital] = None
+  
+  var totalNewSiTransferred: Int = 0
+  var totalScToSiTransferred: Int = 0
 
   def receive = {
     case HospitalState(elfin, transferActor) =>
@@ -81,6 +84,8 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
           toHospitalCode = HOSPITAL_CODE_PRT,
           fromSchedule = hospital.schedule,
           message = s"Requesting SI transfer for ${hospital.schedule} from ${HOSPITAL_CODE_CDF} to ${HOSPITAL_CODE_PRT} with:\n+ ${bedsWithIncomingPatientTypeSi.size} in, - ${bedsWithOutgoingPatientTypeSi.size} out, + ${patientTypeChangeFromScToSi.size} SC to SI in")
+          totalNewSiTransferred = totalNewSiTransferred + bedsWithIncomingPatientTypeSi.size  
+          totalScToSiTransferred = totalScToSiTransferred + patientTypeChangeFromScToSi.size
       } else {
         // No transfer response to wait for, request next data.
         sender ! NextHospitalStatesRequest(name)
@@ -97,6 +102,7 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
       status match {
         case TRANSFER_REQUEST_ACCEPTED =>
           log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_ACCEPTED, requesting next data.")
+          log.info(s"TOTAL TRANSFERRED = ${totalNewSiTransferred + totalScToSiTransferred} , New SI = ${totalNewSiTransferred}, SC to SI = ${totalScToSiTransferred}")
           // Request next data.
           context.parent ! NextHospitalStatesRequest(name)
         case TRANSFER_REQUEST_REFUSED =>
