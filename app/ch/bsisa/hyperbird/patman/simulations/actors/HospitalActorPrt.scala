@@ -11,9 +11,19 @@ import ch.bsisa.hyperbird.patman.simulations.model.Hospital
  */
 class HospitalActorPrt(name: String, bedsNb: Int) extends Actor with ActorLogging {
 
+  /**
+   * Static state representation reflecting HOSPITAL_STATE database entries
+   * at a given time or schedule (08:00, 16:00, 22:00)
+   */
   var previousHospitalState: Option[Hospital] = None
   var currentHospitalState: Option[Hospital] = None
-
+  
+  /**
+   * Dynamic state representation build from HOSPITAL_STATE database entries
+   * change events from schedule to schedule (08:00, 16:00, 22:00)
+   */
+  var simulatedHospitalState: Option[Hospital] = None  
+  
   def receive = {
     case HospitalState(elfin, transferActor) =>
       log.info(s"$name> HospitalActor(${name}) received new hospitalState schedule ${elfin.IDENTIFIANT.get.DE.get}")
