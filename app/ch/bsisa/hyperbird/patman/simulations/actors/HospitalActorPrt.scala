@@ -5,6 +5,10 @@ import ch.bsisa.hyperbird.patman.simulations.model.HospitalHelper
 import ch.bsisa.hyperbird.patman.simulations.messages._
 import ch.bsisa.hyperbird.patman.simulations.model.Hospital
 
+/**
+ * Models PRT Hospital intensive care data as bed, patient, patient type, transfer type 
+ * and related behaviour intended for simulation.
+ */
 class HospitalActorPrt(name: String, bedsNb: Int) extends Actor with ActorLogging {
 
   var previousHospitalState: Option[Hospital] = None
@@ -63,32 +67,11 @@ class HospitalActorPrt(name: String, bedsNb: Int) extends Actor with ActorLoggin
       // Request next data.
       context.parent ! NextHospitalStatesRequest(name)      
       
-      
     case TransferResponse(id, status, acceptedIncomingBeds, fromHospital, toHospital, fromSchedule, message) => {
-      // TODO: implement...
-      log.info(s"TransferResponse: id = $id, $message")
+      // No transfer request from PRT at the moment
+      log.warning(s"Unexpected transferResponse at PRT: id = $id, $message")
     }
 
-//    case DataSetUpdateResponse(id, status, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule) =>
-//      status match {
-//        case DATASET_UPDATE_RESPONSE_SUCCESS =>
-//          log.info("DataSetUpdateResponse = DATASET_UPDATE_RESPONSE_SUCCESS")
-//          // =========================================================================================================
-//          // TODO: Notify TransferReportActor of transfer events: Hospital from => to, Schedule, PatientNb, PatientType, TransferType, Reason for transfer: New SI or SC to SI
-//
-//          // TODO: Update current PRT hospital state with new SI beds (outgoingSiBeds should be made OBSOLETE and always be 0 (Once DataSet update is implemented))
-//
-//          // =========================================================================================================          
-//          // TODO: Confirm TRANSFER_REQUEST_ACCEPTED with TransferResponse to TransferActor
-//          sender ! TransferResponse(id, TRANSFER_REQUEST_ACCEPTED, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, "Dataset update, transfer report notification, and hospitalActorPrt currentHospitalState all succeeded.")
-//          // Request next data.
-//          context.parent ! NextHospitalStatesRequest(name)
-//
-//        case DATASET_UPDATE_RESPONSE_FAILURE =>
-//          log.info("DataSetUpdateResponse = DATASET_UPDATE_RESPONSE_FAILURE")
-//          // Not likely we get this status. If we do: Terminate simulation
-//          context.parent ! StopSimulationRequest
-//      }
   }
 
 }
