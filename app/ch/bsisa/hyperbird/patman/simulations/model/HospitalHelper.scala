@@ -185,5 +185,44 @@ object HospitalHelper {
       case None => (List(), List())
     }
   }
+  
+  
+  /**
+   * Return List[Bed] for which only TransferType changed. It excludes those already included in patientType change.
+   */
+  def getBedsWithTransfertTypeChangeOnly(previousStateOption: Option[Hospital], currentStateOption: Option[Hospital]): List[Bed] = {
+
+    previousStateOption match {
+      case Some(previousState) =>
+        currentStateOption match {
+          // previous and current available
+          case Some(currentState) => {
+            // Beds with transfer type only change 
+            val bedsWithTransferTypeOnlyChange = currentState.beds.filter { currentStateBed =>
+              if (!currentStateBed.free) {
+                // Check if the current patient was already there
+                val bedWithTransferTypeOnlyChange = previousState.beds.find(previousStateBed => currentStateBed.patientNb == previousStateBed.patientNb) match {
+                  case Some(previousStateBed) =>
+                    // We exclude patient type change beds already included in getBedsWithPatientTypeChange check
+                    (currentStateBed.patientType == previousStateBed.patientType) &&
+                    // We check transfer type changed (any change)
+                    (previousStateBed.transferType != currentStateBed.transferType)
+                  case None => false
+                }
+                bedWithTransferTypeOnlyChange
+              } else {
+                // Skip empty bed
+                false
+              }
+            }
+            bedsWithTransferTypeOnlyChange
+          }
+          // previous available but no current: No existing bed change tracking.          
+          case None => List()
+        }
+      // No previous available: No existing bed change tracking.
+      case None => List()
+    }
+  }  
 
 }
