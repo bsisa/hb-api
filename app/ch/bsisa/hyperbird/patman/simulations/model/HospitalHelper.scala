@@ -22,6 +22,9 @@ import java.util.Date
  */
 object HospitalHelper {
 
+  /**
+   * Converts generic ELFIN type for specific CLASSE='HOSPITAL_STATE' to semantic type Hospital
+   */
   def toHospital(elfinHospitalState: ELFIN): Hospital = {
     val hospitalCode = getMixedContent(elfinHospitalState.CARACTERISTIQUE.get.FRACTION.get.L(0).C(0).mixed)
     val scheduleStr = elfinHospitalState.IDENTIFIANT.get.DE.get
@@ -43,10 +46,13 @@ object HospitalHelper {
     Hospital(hospitalCode, schedule, beds)
   }
 
+  /**
+   * Shortcut function for repetitive Bed.patientType matches Constants.PATIENT_TYPE_SI test
+   */
   def isBedPatientTypeSi(bed: Bed): Boolean = (bed.patientType == PATIENT_TYPE_SI)
 
   /**
-   * Return a pair of Seq[Bed]. The first one contains incoming SI patients while the second contains incoming SC patients.
+   * Returns a pair of Seq[Bed]. The first one contains incoming SI patients while the second contains incoming SC patients.
    */
   def getBedsWithIncomingPatient(previousStateOption: Option[Hospital], currentStateOption: Option[Hospital]): (List[Bed], List[Bed]) = {
 
@@ -223,6 +229,25 @@ object HospitalHelper {
       // No previous available: No existing bed change tracking.
       case None => List()
     }
+  }
+
+  /**
+   * Encloses several beds updates function calls to provide a single tuple of 7th results as a time.
+   *
+   * List[Bed] results are:
+   *
+   * `(bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc,
+   *   bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc,
+   *   patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc,
+   *   tranferTypeOnlyChange)`
+   *
+   */
+  def getBedsUpdates(previousHospitalState: Option[Hospital], currentHospitalState: Option[Hospital]): (List[Bed], List[Bed], List[Bed], List[Bed], List[Bed], List[Bed], List[Bed]) = {
+    val incoming = HospitalHelper.getBedsWithIncomingPatient(previousHospitalState, currentHospitalState)
+    val outgoing = HospitalHelper.getBedsWithOutgoingPatient(previousHospitalState, currentHospitalState)
+    val patientTypeChange = HospitalHelper.getBedsWithPatientTypeChange(previousHospitalState, currentHospitalState)
+    val tranferTypeOnlyChange = HospitalHelper.getBedsWithTransfertTypeChangeOnly(previousHospitalState, currentHospitalState)
+    (incoming._1, incoming._2, outgoing._1, outgoing._2, patientTypeChange._1, patientTypeChange._2, tranferTypeOnlyChange)
   }
 
   /**
