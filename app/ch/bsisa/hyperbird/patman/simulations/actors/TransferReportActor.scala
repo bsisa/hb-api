@@ -22,19 +22,25 @@ class TransferReportActor extends Actor with ActorLogging {
       val futureTransferElfin: Future[ELFIN] = ElfinDAO.getNewFromCatalogue("TRANSFER")
       futureTransferElfin.map { elfinTransferTemplate =>
 
-        log.info(s">>>> OBTAINED TRANSFER FROM CATALOGUE:\n ${elfinTransferTemplate}")
-        
-        val elfinTransfer = ElfinUtil.assignElfinId(elfinTransferTemplate)
-        val incomingAndtypeScToSiBeds = incomingSiBeds ++ typeScToSiBeds
-        
-        val incomingAndTypeScToSiHospitalWrapper = Hospital(code = fromHospitalCode, schedule = fromSchedule, beds = incomingAndtypeScToSiBeds)
-        val incomingAndTypeScToSiHospitalWrapperElfin = HospitalHelper.toElfin(incomingAndTypeScToSiHospitalWrapper)
-        
-        val elfinTransferWithBeds = ElfinUtil.replaceElfinCaracteristiqueFractionL(elfinTransfer, incomingAndTypeScToSiHospitalWrapperElfin.CARACTERISTIQUE.get.FRACTION.get.L)
-        
-        val elfinTransferToCreate = elfinTransfer
-        // Update database with new elfin
-        ElfinDAO.create(elfinTransferToCreate)
+        try {
+
+          log.info(s">>>> OBTAINED TRANSFER FROM CATALOGUE:\n ${elfinTransferTemplate}")
+
+          val elfinTransfer = ElfinUtil.assignElfinId(elfinTransferTemplate)
+          val incomingAndtypeScToSiBeds = incomingSiBeds ++ typeScToSiBeds
+
+          val incomingAndTypeScToSiHospitalWrapper = Hospital(code = fromHospitalCode, schedule = fromSchedule, beds = incomingAndtypeScToSiBeds)
+          val incomingAndTypeScToSiHospitalWrapperElfin = HospitalHelper.toElfin(incomingAndTypeScToSiHospitalWrapper)
+
+          val elfinTransferWithBeds = ElfinUtil.replaceElfinCaracteristiqueFractionL(elfinTransfer, incomingAndTypeScToSiHospitalWrapperElfin.CARACTERISTIQUE.get.FRACTION.get.L)
+
+          val elfinTransferToCreate = elfinTransfer
+          // Update database with new elfin
+          ElfinDAO.create(elfinTransferToCreate)
+        } catch {
+          case e: Throwable => log.error(s"TransferReportActor complaining: ${e}")
+          case z: Any => log.error(s"TransferReportActor complaining with Any caught: ${z}")
+        }
 
       }
 
@@ -42,9 +48,9 @@ class TransferReportActor extends Actor with ActorLogging {
       log.info(s"TransferResponse id ${id} from ${fromHospitalCode} to ${toHospitalCode} status = ${status}")
     // We could write to database if status is not successful...
 
-    case DataSetEmpty => 
+    case DataSetEmpty =>
       sender ! WorkCompleted("TransferReportActor")
-      
+
   }
 
 }
