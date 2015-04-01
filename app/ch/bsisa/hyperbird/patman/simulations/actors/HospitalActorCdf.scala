@@ -24,71 +24,73 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
    * change events from schedule to schedule (08:00, 16:00, 22:00)
    */
   var simulatedHospitalState: Option[Hospital] = None
-  
+
   var totalNewSiTransferred: Int = 0
   var totalScToSiTransferred: Int = 0
 
   def receive = {
+    /**
+     *  New HOSPITAL_STATE data to process
+     */
     case HospitalState(elfin, transferActor) =>
+
       log.info(s"$name> HospitalActor(${name}) received new hospitalState schedule ${elfin.IDENTIFIANT.get.DE.get}")
+
+      // Convert generic ELFIN data structure of CLASSE='HOSPITAL_STATE' to semantic type Hospital 
       val hospital = HospitalHelper.toHospital(elfin)
+
       //	    log.info(s"============================== $name - start ==============================")
       //	    log.info(s"$name> previousHospitalState: " + previousHospitalState)
       //	    log.info(s"$name> currentHospitalState: " + currentHospitalState)
       //	    log.info(s"------------------------------ $name --------------------------------------")
 
-      // Roll states
+      // Roll hospital states
       previousHospitalState = currentHospitalState
       currentHospitalState = Some(hospital)
 
-      // Check incoming / outgoing patients
-      val incoming = HospitalHelper.getBedsWithIncomingPatient(previousHospitalState, currentHospitalState)
-      // bedsWithIncomingPatientTypeSi should be transferred to PRT
-      val bedsWithIncomingPatientTypeSi = incoming._1
-      // bedsWithIncomingPatientTypeSc should stay at CDF
-      val bedsWithIncomingPatientTypeSc = incoming._2
+      /**
+       *  - bedsWithIncomingPatientTypeSi should be transferred to PRT
+       *  - bedsWithIncomingPatientTypeSc should stay at CDF
+       *  - bedsWithOutgoingPatientTypeSi should not happen at CDF as SI patient are moved to PRT
+       *  - bedsWithOutgoingPatientTypeSc are expected at CDF, we do nothing with it at the moment
+       *  - patientTypeChangeFromScToSi should be transferred to PRT
+       *  - patientTypeChangeFromSiToSc should never be present here as SI patients move to PRT
+       *  - tranferTypeOnlyChange should replace their previous bed values with new updated ones
+       */
+      HospitalHelper.getBedsUpdates(previousHospitalState, currentHospitalState) match {
+        case (
+          bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc,
+          bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc,
+          patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc,
+          tranferTypeOnlyChange) =>
 
-      val outgoing = HospitalHelper.getBedsWithOutgoingPatient(previousHospitalState, currentHospitalState)
-      // bedsWithOutgoingPatientTypeSi should not happen at CDF as SI patient are moved to PRT
-      val bedsWithOutgoingPatientTypeSi = outgoing._1
-      // bedsWithOutgoingPatientTypeSc are expected at CDF, we do nothing with it at the moment
-      val bedsWithOutgoingPatientTypeSc = outgoing._2
+          // Update current CDT simulatedHospitalState removing transfered SI beds
+          simulatedHospitalState = HospitalHelper.updateSimulatedHospitalStateForCdf(
+            currentSimulatedHospitalStateOption = simulatedHospitalState,
+            newStaticHospitalStateOption = currentHospitalState,
+            bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc,
+            bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc, patientTypeChangeFromScToSi,
+            patientTypeChangeFromSiToSc, tranferTypeOnlyChange)
 
-      // SC to SI type change need to be transferred.
-      val patientTypeChange = HospitalHelper.getBedsWithPatientTypeChange(previousHospitalState, currentHospitalState)
-      // patientTypeChangeFromScToSi should be transferred to PRT
-      val patientTypeChangeFromScToSi = patientTypeChange._1
-      // patientTypeChangeFromSiToSc should never be present here as SI patients move to PRT
-      val patientTypeChangeFromSiToSc = patientTypeChange._2
+          log.info(s"${name}> SIMULATED HS: ${simulatedHospitalState}")
 
-      val tranferTypeOnlyChange = HospitalHelper.getBedsWithTransfertTypeChangeOnly(previousHospitalState, currentHospitalState)
-
-      // Update current CDT simulatedHospitalState removing transfered SI beds
-      simulatedHospitalState = HospitalHelper.updateSimulatedHospitalStateForCdf(
-        currentSimulatedHospitalStateOption = simulatedHospitalState,
-        newStaticHospitalStateOption = currentHospitalState,
-        bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc,
-        bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc, patientTypeChangeFromScToSi,
-        patientTypeChangeFromSiToSc, tranferTypeOnlyChange)
-
-        log.info(s"${name}> SIMULATED HS: ${simulatedHospitalState}")
-        
-      // Send SI movements as Transfer requests to PRT only if necessary
-      if (bedsWithIncomingPatientTypeSi != Nil || bedsWithOutgoingPatientTypeSi != Nil || patientTypeChangeFromScToSi != Nil) {
-        transferActor ! TransferRequest(
-          id = elfin.Id,
-          incomingSiBeds = bedsWithIncomingPatientTypeSi,
-          outgoingSiBeds = bedsWithOutgoingPatientTypeSi,
-          typeScToSiBeds = patientTypeChangeFromScToSi,
-          fromHospitalCode = HOSPITAL_CODE_CDF,
-          toHospitalCode = HOSPITAL_CODE_PRT,
-          fromSchedule = hospital.schedule,
-          message = s"Requesting SI transfer for ${hospital.schedule} from ${HOSPITAL_CODE_CDF} to ${HOSPITAL_CODE_PRT} with:\n+ ${bedsWithIncomingPatientTypeSi.size} in, - ${bedsWithOutgoingPatientTypeSi.size} out, + ${patientTypeChangeFromScToSi.size} SC to SI in")
-          totalNewSiTransferred = totalNewSiTransferred + bedsWithIncomingPatientTypeSi.size  
-          totalScToSiTransferred = totalScToSiTransferred + patientTypeChangeFromScToSi.size
-      } else {
-        // No transfer response to wait for, request next data.
-        sender ! NextHospitalStatesRequest(name)
+          // Send SI movements as Transfer requests to PRT only if necessary
+          if (bedsWithIncomingPatientTypeSi != Nil || bedsWithOutgoingPatientTypeSi != Nil || patientTypeChangeFromScToSi != Nil) {
+            transferActor ! TransferRequest(
+              id = elfin.Id,
+              incomingSiBeds = bedsWithIncomingPatientTypeSi,
+              outgoingSiBeds = bedsWithOutgoingPatientTypeSi,
+              typeScToSiBeds = patientTypeChangeFromScToSi,
+              fromHospitalCode = HOSPITAL_CODE_CDF,
+              toHospitalCode = HOSPITAL_CODE_PRT,
+              fromSchedule = hospital.schedule,
+              message = s"Requesting SI transfer for ${hospital.schedule} from ${HOSPITAL_CODE_CDF} to ${HOSPITAL_CODE_PRT} with:\n+ ${bedsWithIncomingPatientTypeSi.size} in, - ${bedsWithOutgoingPatientTypeSi.size} out, + ${patientTypeChangeFromScToSi.size} SC to SI in")
+            totalNewSiTransferred = totalNewSiTransferred + bedsWithIncomingPatientTypeSi.size
+            totalScToSiTransferred = totalScToSiTransferred + patientTypeChangeFromScToSi.size
+          } else {
+            // No transfer response to wait for, request next data.
+            sender ! NextHospitalStatesRequest(name)
+          }
       }
 
     //	    log.info(s"$name> previousHospitalState: " + previousHospitalState)
