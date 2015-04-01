@@ -29,7 +29,8 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
 
   val hospitalsActorRefMap: Map[String, ActorRef] = Map(HOSPITAL_CODE_CDF -> cdfHospitalActor, HOSPITAL_CODE_PRT -> prtHospitalActor)
 
-  //  val transferActor = actorOf(Props(new TransferActor(hospitalsActorRefMap, datasetActor)), name = "transferActor")
+  val transferReportActor = actorOf(Props(new TransferReportActor()), name = "transferReportActor")
+  val transferActor = actorOf(Props(new TransferActor(hospitalsActorRefMap, transferReportActor)), name = "transferActor")
 
   // Process parameters
   val dateFromStr = DateUtil.hbDateFormat.format(dateFrom)
@@ -40,7 +41,7 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
   val queryString = Option(s"dateFrom=${dateFromStr}&dateTo=${dateToStr}")
 
   // Query database HOSPITAL_STATE objects for requested time range
-  val datasetAndTransferActorRefsPairFuture: Future[(Option[ActorRef], Option[ActorRef])] = XQueryWSHelper.runXQueryFile(xqueryFileName, queryString).map { response =>
+  val datasetAndTransferActorRefsPairFuture: Future[Option[ActorRef]] = XQueryWSHelper.runXQueryFile(xqueryFileName, queryString).map { response =>
 
     // hospitalStatesSelection.xq returns a list of XML ELFIN elements within a single MELFIN element.
     // ELFINs are sorted by schedule (IDENTIFIANT.DE), hospital code (CARACTERISTIQUE/FRACTION/L[POS='1']/C[POS='1']/string()) ascending
@@ -52,21 +53,20 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
     //datasetActor ! DataSet(elfins)
 
     val datasetActor = actorOf(Props(new DataSetActor(elfins.iterator)), name = "dataSetActor")
-    val transferActor = actorOf(Props(new TransferActor(hospitalsActorRefMap, datasetActor)), name = "transferActor")
-    (Some(datasetActor), Some(transferActor))
+    
+    Some(datasetActor)
   }.recover {
     case e: Throwable => {
       log.error(s"XQueryWSHelper.runXQueryFile failed with exception: ${e}")
       log.warning(s"Stopping SimulatorActor named: ${self.path.name}")
       stop(self)
-      (None, None)
+      None
     }
   }
 
   // Initialisation process can block
-  val datasetAndTransferActorRefsPair = Await.result(datasetAndTransferActorRefsPairFuture, 1 minutes) // scala.concurrent.duration._
-  val datasetActor = datasetAndTransferActorRefsPair._1.get
-  val transferActor = datasetAndTransferActorRefsPair._2.get
+  val datasetActorRef = Await.result(datasetAndTransferActorRefsPairFuture, 1 minutes) // scala.concurrent.duration._
+  val datasetActor = datasetActorRef.get
 
   // Starts analysis by requesting the first record
   datasetActor ! HospitalStatesRequestInit
