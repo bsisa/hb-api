@@ -77,14 +77,13 @@ class HospitalActorPrt(name: String, bedsNb: Int) extends Actor with ActorLoggin
       // Request next data.
       context.parent ! NextHospitalStatesRequest(name)      
       
-    case TransferResponse(id, status, acceptedIncomingBeds, fromHospital, toHospital, fromSchedule, message) => {
+    case TransferResponse(id, status, acceptedIncomingBeds, fromHospital, toHospital, fromSchedule, message) => 
       // No transfer request from PRT at the moment
       log.warning(s"Unexpected transferResponse at PRT: id = $id, $message")
-    }
+
+    case DataSetEmpty => 
+      sender ! WorkCompleted("HosptialActorPrt")      
 
   }
 
 }
-
-
-

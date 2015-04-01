@@ -1,10 +1,7 @@
 package ch.bsisa.hyperbird.patman.simulations.actors
 
 import akka.actor.{ Actor, ActorRef, ActorLogging }
-import ch.bsisa.hyperbird.patman.simulations.messages.TransferRequest
-import ch.bsisa.hyperbird.patman.simulations.messages.TransferResponse
-import ch.bsisa.hyperbird.patman.simulations.messages.DataSetUpdateRequest
-import ch.bsisa.hyperbird.patman.simulations.messages.DataSetUpdateResponse
+import ch.bsisa.hyperbird.patman.simulations.messages._
 
 class TransferActor(hospitalsActorRefs: Map[String, ActorRef], transferReportActorRef : ActorRef) extends Actor with ActorLogging {
 
@@ -25,6 +22,9 @@ class TransferActor(hospitalsActorRefs: Map[String, ActorRef], transferReportAct
       // Forward response to original requester (fromHospitalCode)
       hospitalsActorRefs(fromHospitalCode) ! TransferResponse(id, status, acceptedIncomingBeds, fromHospitalCode, toHospitalCode, fromSchedule, message)
       transferReportActorRef ! TransferResponse(id, status, acceptedIncomingBeds, fromHospitalCode, toHospitalCode, fromSchedule, message)
+    
+    case DataSetEmpty => 
+      sender ! WorkCompleted("TransferActor")
       
 //    case DataSetUpdateRequest(id, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule) => 
 //      dataSetActorRef ! DataSetUpdateRequest(id, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule)

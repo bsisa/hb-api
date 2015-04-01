@@ -63,6 +63,9 @@ class DataSetActor(dataSetIterator: Iterator[ELFIN]) extends Actor with ActorLog
     //      // =========================================================================================================
     //      // Send the response
     //      sender ! DataSetUpdateResponse(id, DATASET_UPDATE_RESPONSE_SUCCESS, transferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule)
+    case DataSetEmpty => 
+      log.info("I knew it already, thanks.")
+      sender ! WorkCompleted("DataSetActor")
   }
 
   /**

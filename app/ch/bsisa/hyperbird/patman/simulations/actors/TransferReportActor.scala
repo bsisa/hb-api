@@ -2,15 +2,14 @@ package ch.bsisa.hyperbird.patman.simulations.actors
 
 import akka.actor.{ Actor, ActorRef, ActorLogging }
 import play.api.libs.concurrent.Execution.Implicits._
-
 import ch.bsisa.hyperbird.Implicits._
-import ch.bsisa.hyperbird.patman.simulations.messages.TransferRequest
-import ch.bsisa.hyperbird.patman.simulations.messages.TransferResponse
-import ch.bsisa.hyperbird.patman.simulations.messages.DataSetUpdateRequest
-import ch.bsisa.hyperbird.patman.simulations.messages.DataSetUpdateResponse
+import ch.bsisa.hyperbird.patman.simulations.messages._
 import ch.bsisa.hyperbird.dao.ElfinDAO
 import scala.concurrent.Future
 import ch.bsisa.hyperbird.model.ELFIN
+import ch.bsisa.hyperbird.util.ElfinUtil
+import ch.bsisa.hyperbird.patman.simulations.model.Hospital
+import ch.bsisa.hyperbird.patman.simulations.model.HospitalHelper
 
 class TransferReportActor extends Actor with ActorLogging {
 
@@ -21,9 +20,21 @@ class TransferReportActor extends Actor with ActorLogging {
       //      val transferEvenElfin = ELFIN
       //      ElfinDAO.create(elfin)
       val futureTransferElfin: Future[ELFIN] = ElfinDAO.getNewFromCatalogue("TRANSFER")
-      futureTransferElfin.map { elfin =>
+      futureTransferElfin.map { elfinTransferTemplate =>
 
-        log.info(s">>>> OBTAINED TRANSFER FROM CATALOGUE:\n ${elfin}")
+        log.info(s">>>> OBTAINED TRANSFER FROM CATALOGUE:\n ${elfinTransferTemplate}")
+        
+        val elfinTransfer = ElfinUtil.assignElfinId(elfinTransferTemplate)
+        val incomingAndtypeScToSiBeds = incomingSiBeds ++ typeScToSiBeds
+        
+        val incomingAndTypeScToSiHospitalWrapper = Hospital(code = fromHospitalCode, schedule = fromSchedule, beds = incomingAndtypeScToSiBeds)
+        val incomingAndTypeScToSiHospitalWrapperElfin = HospitalHelper.toElfin(incomingAndTypeScToSiHospitalWrapper)
+        
+        val elfinTransferWithBeds = ElfinUtil.replaceElfinCaracteristiqueFractionL(elfinTransfer, incomingAndTypeScToSiHospitalWrapperElfin.CARACTERISTIQUE.get.FRACTION.get.L)
+        
+        val elfinTransferToCreate = elfinTransfer
+        // Update database with new elfin
+        ElfinDAO.create(elfinTransferToCreate)
 
       }
 
@@ -31,6 +42,9 @@ class TransferReportActor extends Actor with ActorLogging {
       log.info(s"TransferResponse id ${id} from ${fromHospitalCode} to ${toHospitalCode} status = ${status}")
     // We could write to database if status is not successful...
 
+    case DataSetEmpty => 
+      sender ! WorkCompleted("TransferReportActor")
+      
   }
 
 }

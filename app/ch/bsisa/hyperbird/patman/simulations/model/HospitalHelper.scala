@@ -1,6 +1,7 @@
 package ch.bsisa.hyperbird.patman.simulations.model
 
 import ch.bsisa.hyperbird.model.ELFIN
+import ch.bsisa.hyperbird.model.format.ElfinFormat
 import ch.bsisa.hyperbird.model.format.Implicits._
 import ch.bsisa.hyperbird.patman.simulations.Constants._
 import ch.bsisa.hyperbird.util.DateUtil
@@ -44,6 +45,47 @@ object HospitalHelper {
     }
 
     Hospital(hospitalCode, schedule, beds)
+  }
+
+  def toElfin(hospital: Hospital): ELFIN = {
+
+    val bedsXmlElem = for ((bed, i) <- hospital.beds zipWithIndex) yield {
+
+      <!-- Identification lit -->
+      val bedXmlElem = <L POS="${i+1}">
+                         <!-- Numéro lit -->
+                         <C POS="1">${ bed.id }</C>
+                         <C POS="2">${ bed.patientNb }</C>
+                         <C POS="3">${ bed.patientType }</C>
+                         <C POS="4">${ bed.transferType }</C>
+                         <C POS="5">n/a</C>
+                         <C POS="6">${ if (bed.free) "libre" else "occupé" }</C>
+                         <C POS="7"/>
+                       </L>
+      bedXmlElem
+    }
+
+    // TODO: FORMAT DE as: 2015-03-09T16:00:00+01:00
+    
+    val hospitalElfinTemplateXmlElem = <ELFIN Id="N/A" ID_G="N/A" CLASSE="HOSPITAL" GROUPE="" TYPE="BIEN" NATURE="">
+                                         <IDENTIFIANT>
+                                           <AUT/>
+                                           <NOM>N/A</NOM>
+                                           <ALIAS>${ hospital.code }</ALIAS>
+    										<DE>${ hospital.schedule }</DE>
+                                         </IDENTIFIANT>
+                                         <CARACTERISTIQUE>
+                                           <!-- Liste des lits de l'hopital -->
+                                           <FRACTION>
+                                             ${ bedsXmlElem }
+                                           </FRACTION>
+                                         </CARACTERISTIQUE>
+                                         <DIVERS>
+                                           <REMARQUE/>
+                                         </DIVERS>
+                                       </ELFIN>
+
+    ElfinFormat.fromXml(hospitalElfinTemplateXmlElem)
   }
 
   /**

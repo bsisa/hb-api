@@ -16,6 +16,8 @@ import ch.bsisa.hyperbird.util.DateUtil
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import akka.actor.LocalActorRef
+import akka.actor.PoisonPill
 
 class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb: Int = 8, allBedsNb: Option[Int] = None, saturationThreshold: Option[Int] = None) extends Actor with ActorLogging {
 
@@ -24,6 +26,7 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
 
   // Create children actors
   //  val datasetActor = actorOf(Props(new DataSetActor), name = "dataSetActor")
+  val shutdownCoordinatorActor = actorOf(Props(new ShutdownCoordinatorActor), name = "shutdownCoordinatorActor")
   val cdfHospitalActor = actorOf(Props(new HospitalActorCdf(name = "cdf", bedsNb = cdfBedsNb)), name = "cdfHospitalActor")
   val prtHospitalActor = actorOf(Props(new HospitalActorPrt(name = "prt", bedsNb = prtBedsNb)), name = "prtHospitalActor")
 
@@ -53,7 +56,7 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
     //datasetActor ! DataSet(elfins)
 
     val datasetActor = actorOf(Props(new DataSetActor(elfins.iterator)), name = "dataSetActor")
-    
+
     Some(datasetActor)
   }.recover {
     case e: Throwable => {
@@ -74,6 +77,7 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
   // Mutable states enabling to join cdf and prt request for data 
   var pendingCdfNextHospitalStatesRequest = false
   var pendingPrtNextHospitalStatesRequest = false
+
 
   /**
    * Process messages
@@ -111,14 +115,24 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
       }
     }
 
-    // When all data has been delivered by DataSetActor
+    // When all data has been delivered by DataSetActor notify children and wait for WorkCompleted
     case DataSetEmpty =>
-      log.info(s"DataSetEmpty: stoping simulation ${self.path.name}")
+      log.info(s"Notifying ${children.size} children DataSetEmpty")
+      for (child <- children) {
+        child ! DataSetEmpty
+      }
+
+    // When all WorkCompleted messages have been received we should receive the StopSimulationRequest
+    case WorkCompleted(message) =>
+      // Termination size is minus 1 for ShutdownCoordinatorActor itself not responding to DataSetEmpty message.
+      shutdownCoordinatorActor ! ShutdownSignal(message = message, terminationSize = children.size-1)
+
+    // Shuts down the simulation 
+    case StopSimulationRequest(reason) =>
+      log.info(s"Simulation ${self.path.name} has been requested to stop for reason: $reason")
+      
       stop(self)
 
-    case StopSimulationRequest(reason) =>
-      log.error(s"Simulation ${self.path.name} has been requested to stop for reason: $reason")
-      stop(self)
   }
 
   // 2. Dispatch HOSPITAL_STATE objects according to hospital identifier, for each given time t
