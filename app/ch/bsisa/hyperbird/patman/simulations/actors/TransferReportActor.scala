@@ -23,7 +23,7 @@ class TransferReportActor extends Actor with ActorLogging {
       val futureTransferElfin: Future[ELFIN] = ElfinDAO.getNewFromCatalogue("TRANSFER")
       futureTransferElfin.map { elfin =>
 
-        log.info(">>>> OBTAINED TRANSFER FROM CATALOGUE:\n ${elfin}")
+        log.info(s">>>> OBTAINED TRANSFER FROM CATALOGUE:\n ${elfin}")
 
       }
 
