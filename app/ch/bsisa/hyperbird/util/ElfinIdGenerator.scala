@@ -16,7 +16,7 @@ import play.api.Logger
  */
 object ElfinIdGenerator {
 
-  val idActor = Akka.system.actorOf(Props[IdActor], name = "idactor")
+//  val idActor = Akka.system.actorOf(Props[IdActor], name = "idactor")
   
   
   /**
@@ -34,7 +34,7 @@ object ElfinIdGenerator {
    */
   def getNewElfinId(): String = {
     val newId = "G" + DateUtil.elfinUniqueIdDateFormat.format(new Date())
-    idActor ! s"new id ${newId} requested "
+//    idActor ! s"new id ${newId} requested "
     newId
   }
 
