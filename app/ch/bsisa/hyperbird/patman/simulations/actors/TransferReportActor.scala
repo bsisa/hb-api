@@ -10,6 +10,8 @@ import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.util.ElfinUtil
 import ch.bsisa.hyperbird.patman.simulations.model.Hospital
 import ch.bsisa.hyperbird.patman.simulations.model.HospitalHelper
+import ch.bsisa.hyperbird.model.IDENTIFIANT
+import ch.bsisa.hyperbird.util.DateUtil
 
 class TransferReportActor extends Actor with ActorLogging {
 
@@ -32,7 +34,25 @@ class TransferReportActor extends Actor with ActorLogging {
           val incomingAndTypeScToSiHospitalWrapper = Hospital(code = fromHospitalCode, schedule = fromSchedule, beds = incomingAndtypeScToSiBeds)
           val incomingAndTypeScToSiHospitalWrapperElfin = HospitalHelper.toElfin(incomingAndTypeScToSiHospitalWrapper)
 
-          val elfinTransferWithBeds = ElfinUtil.replaceElfinCaracteristiqueFractionL(elfinTransfer, incomingAndTypeScToSiHospitalWrapperElfin.CARACTERISTIQUE.get.FRACTION.get.L)
+          /*
+      <IDENTIFIANT>
+            <!-- Auteur de la saisie -->
+            <AUT/>
+            <!-- Id de la SIMULATION -->
+            <NOM/>
+            <!-- Code hopital FROM (Stable) -->
+            <ORIGINE/>
+            <!-- Code hopital TO (Stable) -->
+            <OBJECTIF/>
+            <!-- Date de transfer (correspond à l'horaire qui déclanche le transfert) expected values are at 08:00, 16:00 and 22:00 every day -->
+            <DE/>
+            <!-- Date de saisie effective YYYY-MM-dd HH:mm -->
+            <A/>
+           */
+          // NATURE={add, remove}
+          val identifiantTransfer = IDENTIFIANT(AUT = Some("FluxPatients - Simulator"), NOM = Option(id), ORIGINE = Option(fromHospitalCode), OBJECTIF = Option(toHospitalCode),DE = Option(DateUtil.getIsoDateFormatterWithoutTz.format(fromSchedule) ) )
+          val elfinTransferWithIdentifiant = ElfinUtil.replaceElfinIdentifiant(elfinTransfer, identifiantTransfer)
+          val elfinTransferWithBeds = ElfinUtil.replaceElfinCaracteristiqueFractionL(elfinTransferWithIdentifiant, incomingAndTypeScToSiHospitalWrapperElfin.CARACTERISTIQUE.get.FRACTION.get.L)
 
           // Update database with new elfin
           ElfinDAO.create(elfinTransferWithBeds)

@@ -55,7 +55,7 @@ object HospitalHelper {
     val bedsXmlElem = for ((bed, i) <- hospital.beds zipWithIndex) yield {
 
       <!-- Identification lit -->
-      val bedXmlElem = <L POS={(i+1).toString} >
+      val bedXmlElem = <L POS={ (i + 1).toString }>
                          <!-- Numéro lit -->
                          <C POS="1">{ bed.id }</C>
                          <C POS="2">{ bed.patientNb }</C>
@@ -73,7 +73,7 @@ object HospitalHelper {
                                            <AUT/>
                                            <NOM>N/A</NOM>
                                            <ALIAS>{ hospital.code }</ALIAS>
-    										<DE>{ DateUtil.getIsoDateFormatterWithoutTz.format(hospital.schedule) }</DE>
+                                           <DE>{ DateUtil.getIsoDateFormatterWithoutTz.format(hospital.schedule) }</DE>
                                          </IDENTIFIANT>
                                          <CARACTERISTIQUE>
                                            <!-- Liste des lits de l'hopital -->
@@ -85,7 +85,7 @@ object HospitalHelper {
                                            <REMARQUE/>
                                          </DIVERS>
                                        </ELFIN>
-                                             
+
     ElfinFormat.fromXml(hospitalElfinTemplateXmlElem)
   }
 
