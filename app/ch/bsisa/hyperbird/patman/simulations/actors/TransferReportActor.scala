@@ -8,12 +8,15 @@ import ch.bsisa.hyperbird.dao.ElfinDAO
 import scala.concurrent.Future
 import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.util.ElfinUtil
+import ch.bsisa.hyperbird.patman.simulations.Constants
+import ch.bsisa.hyperbird.patman.simulations.model.Bed
 import ch.bsisa.hyperbird.patman.simulations.model.Hospital
 import ch.bsisa.hyperbird.patman.simulations.model.HospitalHelper
 import ch.bsisa.hyperbird.model.IDENTIFIANT
 import ch.bsisa.hyperbird.util.DateUtil
+import java.util.Date
 
-class TransferReportActor extends Actor with ActorLogging {
+class TransferReportActor(simulationId: String) extends Actor with ActorLogging {
 
   def receive = {
 
@@ -26,36 +29,36 @@ class TransferReportActor extends Actor with ActorLogging {
 
         try {
 
-          log.info(s">>>> OBTAINED TRANSFER FROM CATALOGUE:\n ${elfinTransferTemplate}")
+          //log.info(s">>>> OBTAINED TRANSFER FROM CATALOGUE:\n ${elfinTransferTemplate}")
 
-          val elfinTransfer = ElfinUtil.assignElfinId(elfinTransferTemplate)
-          val incomingAndtypeScToSiBeds = incomingSiBeds ++ typeScToSiBeds
-
-          val incomingAndTypeScToSiHospitalWrapper = Hospital(code = fromHospitalCode, schedule = fromSchedule, beds = incomingAndtypeScToSiBeds)
-          val incomingAndTypeScToSiHospitalWrapperElfin = HospitalHelper.toElfin(incomingAndTypeScToSiHospitalWrapper)
-
-          /*
-      <IDENTIFIANT>
-            <!-- Auteur de la saisie -->
-            <AUT/>
-            <!-- Id de la SIMULATION -->
-            <NOM/>
-            <!-- Code hopital FROM (Stable) -->
-            <ORIGINE/>
-            <!-- Code hopital TO (Stable) -->
-            <OBJECTIF/>
-            <!-- Date de transfer (correspond à l'horaire qui déclanche le transfert) expected values are at 08:00, 16:00 and 22:00 every day -->
-            <DE/>
-            <!-- Date de saisie effective YYYY-MM-dd HH:mm -->
-            <A/>
+          /**
+           * Create at least one at most two TRANSFER entries:
+           * 1) NATURE="add" for incomingSiBeds and typeScToSiBeds
+           * 2) NATURE="remove" for type outgoingSiBeds
+           * This to allow easy selection for reporting
            */
-          // NATURE={add, remove}
-          val identifiantTransfer = IDENTIFIANT(AUT = Some("FluxPatients - Simulator"), NOM = Option(id), ORIGINE = Option(fromHospitalCode), OBJECTIF = Option(toHospitalCode),DE = Option(DateUtil.getIsoDateFormatterWithoutTz.format(fromSchedule) ) )
-          val elfinTransferWithIdentifiant = ElfinUtil.replaceElfinIdentifiant(elfinTransfer, identifiantTransfer)
-          val elfinTransferWithBeds = ElfinUtil.replaceElfinCaracteristiqueFractionL(elfinTransferWithIdentifiant, incomingAndTypeScToSiHospitalWrapperElfin.CARACTERISTIQUE.get.FRACTION.get.L)
 
-          // Update database with new elfin
-          ElfinDAO.create(elfinTransferWithBeds)
+          // Compute list of beds to transfer (+)
+          val bedsToAdd = incomingSiBeds ++ typeScToSiBeds
+
+          if (bedsToAdd.size > 0) {
+            val addTransferElfin = buildTransferElfin(
+              elfinTransferTemplate = elfinTransferTemplate, simulationId = simulationId, nature = Constants.TRANSFER_NATURE_ADD,
+              fromHospitalCode = fromHospitalCode, toHospitalCode = toHospitalCode, schedule = fromSchedule, beds = bedsToAdd)
+            // Update database 
+            ElfinDAO.create(addTransferElfin)
+          }
+
+          // Compute list of beds to notify to remove (outgoing patients) (-)
+          val bedsToRemove = outgoingSiBeds
+
+          if (bedsToRemove.size > 0) {
+            val removeTransferElfin = buildTransferElfin(
+              elfinTransferTemplate = elfinTransferTemplate, simulationId = simulationId, nature = Constants.TRANSFER_NATURE_REMOVE,
+              fromHospitalCode = fromHospitalCode, toHospitalCode = toHospitalCode, schedule = fromSchedule, beds = bedsToRemove)
+            ElfinDAO.create(removeTransferElfin)
+          }
+
         } catch {
           case e: Throwable => log.error(s"TransferReportActor complaining: ${e}")
           case z: Any => log.error(s"TransferReportActor complaining with Any caught: ${z}")
@@ -70,6 +73,19 @@ class TransferReportActor extends Actor with ActorLogging {
     case DataSetEmpty =>
       sender ! WorkCompleted("TransferReportActor")
 
+  }
+
+  def buildTransferElfin(elfinTransferTemplate: ELFIN, simulationId: String, nature: String, fromHospitalCode: String, toHospitalCode: String, schedule: Date, beds: List[Bed]): ELFIN = {
+
+    val elfinTransferWithId = ElfinUtil.assignElfinId(elfinTransferTemplate)
+    val elfinTransferWithNewNatureGroupeSource = ElfinUtil.replaceElfinNatureGroupeSource(elfin = elfinTransferWithId, newNature = nature, newGroupe = elfinTransferWithId.GROUPE, newSource = Some(simulationId))
+    val bedsHospitalWrapper = Hospital(code = fromHospitalCode, schedule = schedule, beds = beds)
+    val bedsHospitalWrapperElfin = HospitalHelper.toElfin(bedsHospitalWrapper)
+
+    val identifiantTransfer = IDENTIFIANT(AUT = Some("FluxPatients - Simulator"), NOM = None, ORIGINE = Option(fromHospitalCode), OBJECTIF = Option(toHospitalCode), DE = Option(DateUtil.getIsoDateFormatterWithoutTz.format(schedule)))
+    val elfinTransferWithIdentifiant = ElfinUtil.replaceElfinIdentifiant(elfinTransferWithNewNatureGroupeSource, identifiantTransfer)
+    val elfinTransferWithBeds = ElfinUtil.replaceElfinCaracteristiqueFractionL(elfinTransferWithIdentifiant, bedsHospitalWrapperElfin.CARACTERISTIQUE.get.FRACTION.get.L)
+    elfinTransferWithBeds
   }
 
 }

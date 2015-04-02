@@ -22,4 +22,7 @@ object Constants {
   val DATASET_UPDATE_RESPONSE_SUCCESS = "success" 
   val DATASET_UPDATE_RESPONSE_FAILURE = "failure"
     
+  val TRANSFER_NATURE_ADD = "add"
+  val TRANSFER_NATURE_REMOVE = "remove"
+    
 }
