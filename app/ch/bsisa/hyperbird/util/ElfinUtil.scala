@@ -56,6 +56,16 @@ object ElfinUtil {
       elfin.ID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
   }  
   
+
+  /**
+   * Replaces the value elfin.IDENTIFIANT by newIdentifiant and returns a new ELFIN
+   */
+  def replaceElfinIdentifiant(elfin: ELFIN, newIdentifiant: IDENTIFIANT) : ELFIN = {
+    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, Option(newIdentifiant) , elfin.CARACTERISTIQUE,
+      elfin.PARTENAIRE, elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, elfin.Id,
+      elfin.ID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
+    
+  }
   
   /**
    * Replaces the elfin.IDENTIFIANT value by an IDENTIFIANT containing the provided user
