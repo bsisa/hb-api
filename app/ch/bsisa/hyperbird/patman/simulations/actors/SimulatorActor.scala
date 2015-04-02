@@ -19,7 +19,7 @@ import scala.concurrent.duration._
 import akka.actor.LocalActorRef
 import akka.actor.PoisonPill
 
-class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb: Int = 8, allBedsNb: Option[Int] = None, saturationThreshold: Option[Int] = None) extends Actor with ActorLogging {
+class SimulatorActor(id: String, dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb: Int = 8, allBedsNb: Option[Int] = None, saturationThreshold: Option[Int] = None) extends Actor with ActorLogging {
 
   // Avoid Actor.context repetition i.e.: context.stop(self) => stop(self)
   import context._
@@ -32,7 +32,7 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
 
   val hospitalsActorRefMap: Map[String, ActorRef] = Map(HOSPITAL_CODE_CDF -> cdfHospitalActor, HOSPITAL_CODE_PRT -> prtHospitalActor)
 
-  val transferReportActor = actorOf(Props(new TransferReportActor()), name = "transferReportActor")
+  val transferReportActor = actorOf(Props(new TransferReportActor(simulationId = id)), name = "transferReportActor")
   val transferActor = actorOf(Props(new TransferActor(hospitalsActorRefMap, transferReportActor)), name = "transferActor")
 
   // Process parameters
@@ -52,9 +52,8 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
     // Convert ELFIN XML to ELFIN objects 
     val elfins: Seq[ELFIN] = ElfinFormat.elfinsFromXml(scala.xml.XML.loadString(melfinWrappedBody))
 
-    // Provide dataset to the dataset actor for the current simulation. (Note: DataSetActor abstraction could scale to a cluster of actors if necessary)
-    //datasetActor ! DataSet(elfins)
-
+    // Create datasetActor with dataset iterator for the current simulation. 
+    // Note: DataSetActor abstraction could scale to a cluster of actors if necessary
     val datasetActor = actorOf(Props(new DataSetActor(elfins.iterator)), name = "dataSetActor")
 
     Some(datasetActor)
@@ -68,8 +67,8 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
   }
 
   // Initialisation process can block
-  val datasetActorRef = Await.result(datasetAndTransferActorRefsPairFuture, 1 minutes) // scala.concurrent.duration._
-  val datasetActor = datasetActorRef.get
+  val datasetActorOption = Await.result(datasetAndTransferActorRefsPairFuture, 1 minutes) // scala.concurrent.duration._
+  val datasetActor = datasetActorOption.get
 
   // Starts analysis by requesting the first record
   datasetActor ! HospitalStatesRequestInit
@@ -101,9 +100,11 @@ class SimulatorActor(dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb
           pendingPrtNextHospitalStatesRequest = true
       }
       if (pendingCdfNextHospitalStatesRequest && pendingPrtNextHospitalStatesRequest) {
+        
         // Reset pending states to false
         pendingCdfNextHospitalStatesRequest = false
         pendingPrtNextHospitalStatesRequest = false
+        
         // Request next data for next cdf and prt schedule
         datasetActor ! HospitalStatesRequest
       } else {
