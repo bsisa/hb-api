@@ -11,7 +11,8 @@ import ch.bsisa.hyperbird.model.PARTENAIRE
 import ch.bsisa.hyperbird.model.PERSONNEType
 import ch.bsisa.hyperbird.CollectionsConfig
 import ch.bsisa.hyperbird.model.MATRICEType
-
+import scala.concurrent.Future
+import play.api.libs.concurrent.Execution.Implicits._
 
 /**
  * Utility functions to deal with ELFIN immutable state replacement such as updating
@@ -26,11 +27,14 @@ object ElfinUtil {
    * Replaces the value Id of the provided elfin with a newly generated Id leaving all
    * other elfin information unchanged. The returned elfin is a new elfin instance.
    */
-  def assignElfinId(elfin: ELFIN): ELFIN = {
-    val newElfinId = ElfinIdGenerator.getNewElfinId
-    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, elfin.CARACTERISTIQUE,
-      elfin.PARTENAIRE, elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, newElfinId,
-      elfin.ID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
+  def assignElfinId(elfin: ELFIN): Future[ELFIN] = {
+    val newElfinIdFuture : Future[String] = ElfinIdGenerator.getNewElfinId
+    val futureElfin : Future[ELFIN] = newElfinIdFuture.map { newElfinId =>
+      ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, elfin.CARACTERISTIQUE,
+        elfin.PARTENAIRE, elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, newElfinId,
+        elfin.ID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
+    }
+    futureElfin
   }
 
   /**
@@ -44,43 +48,40 @@ object ElfinUtil {
       newElfinID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
   }
 
-  
   /**
-   * Replaces the values of elfin attributes NATURE, GROUPE, SOURCE of the provided elfin with 
-   * the new provided ones leaving all other elfin information unchanged. 
-   * 
+   * Replaces the values of elfin attributes NATURE, GROUPE, SOURCE of the provided elfin with
+   * the new provided ones leaving all other elfin information unchanged.
+   *
    * The returned elfin is a new elfin instance.
    */
-  def replaceElfinNatureGroupeSource(elfin: ELFIN, newNature: String, newGroupe:Option[String], newSource:Option[String]): ELFIN = {
+  def replaceElfinNatureGroupeSource(elfin: ELFIN, newNature: String, newGroupe: Option[String], newSource: Option[String]): ELFIN = {
 
     ELFIN(MUTATIONS = elfin.MUTATIONS, GEOSELECTION = elfin.GEOSELECTION, IDENTIFIANT = elfin.IDENTIFIANT, CARACTERISTIQUE = elfin.CARACTERISTIQUE,
-      PARTENAIRE = elfin.PARTENAIRE, ACTIVITE = elfin.ACTIVITE, FORME = elfin.FORME, ANNEXE =elfin.ANNEXE, DIVERS = elfin.DIVERS, Id = elfin.Id,
-      ID_G = elfin.ID_G, CLASSE = elfin.CLASSE, GROUPE = newGroupe, TYPE = elfin.TYPE , NATURE = newNature, SOURCE = newSource)
-  }  
-  
-  
+      PARTENAIRE = elfin.PARTENAIRE, ACTIVITE = elfin.ACTIVITE, FORME = elfin.FORME, ANNEXE = elfin.ANNEXE, DIVERS = elfin.DIVERS, Id = elfin.Id,
+      ID_G = elfin.ID_G, CLASSE = elfin.CLASSE, GROUPE = newGroupe, TYPE = elfin.TYPE, NATURE = newNature, SOURCE = newSource)
+  }
+
   /**
-   * Replaces the value elfin.CARACTERISTIQUE by an new CARACTERISTIQUE only containing FRACTION made of 
+   * Replaces the value elfin.CARACTERISTIQUE by an new CARACTERISTIQUE only containing FRACTION made of
    * the provided `newLSeq`. Any other CARACTERISTIQUE element is lost. The rest of the elfin information
    * stays unchanged. The returned elfin is a new elfin instance.
    */
   def replaceElfinCaracteristiqueFractionL(elfin: ELFIN, newLSeq: Seq[ch.bsisa.hyperbird.model.L]): ELFIN = {
-    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, Some(CARACTERISTIQUE( FRACTION = Some(MATRICEType(newLSeq : _*)))) ,
+    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, Some(CARACTERISTIQUE(FRACTION = Some(MATRICEType(newLSeq: _*)))),
       elfin.PARTENAIRE, elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, elfin.Id,
       elfin.ID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
-  }  
-  
+  }
 
   /**
    * Replaces the value elfin.IDENTIFIANT by newIdentifiant and returns a new ELFIN
    */
-  def replaceElfinIdentifiant(elfin: ELFIN, newIdentifiant: IDENTIFIANT) : ELFIN = {
-    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, Option(newIdentifiant) , elfin.CARACTERISTIQUE,
+  def replaceElfinIdentifiant(elfin: ELFIN, newIdentifiant: IDENTIFIANT): ELFIN = {
+    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, Option(newIdentifiant), elfin.CARACTERISTIQUE,
       elfin.PARTENAIRE, elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, elfin.Id,
       elfin.ID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
-    
+
   }
-  
+
   /**
    * Replaces the elfin.IDENTIFIANT value by an IDENTIFIANT containing the provided user
    * specific values instead.

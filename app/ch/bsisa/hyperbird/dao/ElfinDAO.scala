@@ -24,8 +24,8 @@ import java.util.Calendar
  */
 object ElfinDAO {
 
-  val logger = Logger("ch.bsisa.hyperbird.dao.ElfinDAO")  
-  
+  val logger = Logger("ch.bsisa.hyperbird.dao.ElfinDAO")
+
   /**
    * Creates XML database ELFIN representation corresponding to the provided ELFIN object
    * into the database.
@@ -80,7 +80,12 @@ object ElfinDAO {
       WSQueries.filteredCollectionQuery(collectionsConfig.catalogueCollectionId, s"//ELFIN[@CLASSE='${classeName}']"))
 
     // Clone futureElfin[ELFIN] and assign a new generated ELFIN.Id to it
-    val futureElfinWithId: Future[ELFIN] = futureElfin.map(elfin => ElfinUtil.assignElfinId(elfin))
+    val futureElfinWithId: Future[ELFIN] = for {
+      elfin <- futureElfin
+      elfinWithId <- ElfinUtil.assignElfinId(elfin)
+    } yield {
+      elfinWithId
+    }
     futureElfinWithId
   }
 

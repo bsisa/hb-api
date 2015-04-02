@@ -23,6 +23,7 @@ import play.libs.Akka
 import akka.actor.Props
 import ch.bsisa.hyperbird.patman.simulations.actors.SimulatorActor
 import ch.bsisa.hyperbird.util.ElfinIdGenerator
+import scala.concurrent.Future
 
 /**
  * Patient management module simulation API controller.
@@ -33,21 +34,24 @@ import ch.bsisa.hyperbird.util.ElfinIdGenerator
  */
 object SimulationApi extends Controller with securesocial.core.SecureSocial {
 
-  
   /**
    * Starts a new simulation with the provided parameters
    */
-  def simulate(dateFrom : String, dateTo : String) = SecuredAction(ajaxCall = true).async { request =>
-    
-    // Make use of ELFIN Id generator to obtain a `unique` identifier for the current simulation
-    val simulatorActorId = s"simulatorActor${ElfinIdGenerator.getNewElfinId}"
-    Logger.debug(s"SimulationApi.simulate: Test with parameters: ${dateFrom}, ${dateTo} called by user: ${request.user}")
-    // Create the simulation
-    val simulatorActor = Akka.system.actorOf(Props(new SimulatorActor( simulatorActorId, DateUtil.hbDateFormat.parse(dateFrom), DateUtil.hbDateFormat.parse(dateTo) )), name = simulatorActorId)
-    // Provide feedback with simulation identifier. 
-    // TODO: possibly deal with exceptions.
-  	scala.concurrent.Future(Ok(s"Simulator id = ${simulatorActorId} with parameters: ${dateFrom}, ${dateTo}"))
-  }  
-  
-  
+  def simulate(dateFrom: String, dateTo: String) = SecuredAction(ajaxCall = true).async { request =>
+
+    val simulatorIdPostFixFuture: Future[String] = ElfinIdGenerator.getNewElfinId
+
+    simulatorIdPostFixFuture.map { simulatorIdPostFix =>
+      // Make use of ELFIN Id generator to obtain a `unique` identifier for the current simulation
+      val simulatorActorId = s"simulatorActor_${simulatorIdPostFix}"
+      Logger.debug(s"SimulationApi.simulate: Test with parameters: ${dateFrom}, ${dateTo} called by user: ${request.user}")
+      // Create the simulation
+      val simulatorActor = Akka.system.actorOf(Props(new SimulatorActor(simulatorActorId, DateUtil.hbDateFormat.parse(dateFrom), DateUtil.hbDateFormat.parse(dateTo))), name = simulatorActorId)
+      // Provide feedback with simulation identifier. 
+      // TODO: possibly deal with exceptions.
+      Ok(s"Simulator id = ${simulatorActorId} with parameters: ${dateFrom}, ${dateTo}")
+    }
+
+  }
+
 }
