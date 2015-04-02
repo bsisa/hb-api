@@ -34,9 +34,8 @@ class TransferReportActor extends Actor with ActorLogging {
 
           val elfinTransferWithBeds = ElfinUtil.replaceElfinCaracteristiqueFractionL(elfinTransfer, incomingAndTypeScToSiHospitalWrapperElfin.CARACTERISTIQUE.get.FRACTION.get.L)
 
-          val elfinTransferToCreate = elfinTransfer
           // Update database with new elfin
-          ElfinDAO.create(elfinTransferToCreate)
+          ElfinDAO.create(elfinTransferWithBeds)
         } catch {
           case e: Throwable => log.error(s"TransferReportActor complaining: ${e}")
           case z: Any => log.error(s"TransferReportActor complaining with Any caught: ${z}")
