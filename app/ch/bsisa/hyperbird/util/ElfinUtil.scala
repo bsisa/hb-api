@@ -46,6 +46,20 @@ object ElfinUtil {
 
   
   /**
+   * Replaces the values of elfin attributes NATURE, GROUPE, SOURCE of the provided elfin with 
+   * the new provided ones leaving all other elfin information unchanged. 
+   * 
+   * The returned elfin is a new elfin instance.
+   */
+  def replaceElfinNatureGroupeSource(elfin: ELFIN, newNature: String, newGroupe:Option[String], newSource:Option[String]): ELFIN = {
+
+    ELFIN(MUTATIONS = elfin.MUTATIONS, GEOSELECTION = elfin.GEOSELECTION, IDENTIFIANT = elfin.IDENTIFIANT, CARACTERISTIQUE = elfin.CARACTERISTIQUE,
+      PARTENAIRE = elfin.PARTENAIRE, ACTIVITE = elfin.ACTIVITE, FORME = elfin.FORME, ANNEXE =elfin.ANNEXE, DIVERS = elfin.DIVERS, Id = elfin.Id,
+      ID_G = elfin.ID_G, CLASSE = elfin.CLASSE, GROUPE = newGroupe, TYPE = elfin.TYPE , NATURE = newNature, SOURCE = newSource)
+  }  
+  
+  
+  /**
    * Replaces the value elfin.CARACTERISTIQUE by an new CARACTERISTIQUE only containing FRACTION made of 
    * the provided `newLSeq`. Any other CARACTERISTIQUE element is lost. The rest of the elfin information
    * stays unchanged. The returned elfin is a new elfin instance.
