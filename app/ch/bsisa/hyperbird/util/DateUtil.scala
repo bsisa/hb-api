@@ -10,10 +10,17 @@ import java.text.DateFormat
  * Several of them contain dates without having XSD date definition but
  * simply normalised text.
  *
- * <i>Note: By default never ever let a java.text.DateFormat be lenient,
- * this is a terrible default behaviour.</i>
+ * <b>Note i) : By default never ever let a java.text.DateFormat be lenient,
+ * this is a terrible default behaviour.</b>
  *
  * For date patterns check: http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html
+ * 
+ * <b>Note ii) : DateFormat/SimpleDateFormat must be created for each call otherwise it will  
+ * create concurrency access problem. As documented in Javadoc in Synchronization section:
+ * 
+ * <i>Date formats are not synchronized. It is recommended to create separate format instances for each thread. 
+ * If multiple threads access a format concurrently, it must be synchronized externally.</i>
+ * </b>
  * 
  */
 object DateUtil {
@@ -42,8 +49,9 @@ object DateUtil {
 
   /**
    * Ids formatter
+   * 
    */
-  private val idsFormatter = {
+  private def idsFormatter : SimpleDateFormat = {
     val sdf = new SimpleDateFormat(DateFormatPattern)
     sdf.setLenient(false)
     sdf
@@ -52,55 +60,34 @@ object DateUtil {
   /**
    * Hb dates formatter
    */
-  private val hbDateFormatter = { 
+  private def hbDateFormatter : SimpleDateFormat = { 
     val sdf = new SimpleDateFormat(HbDateFormatPattern)
     sdf.setLenient(false)
     sdf
   }
   
   /**
-   * TODO: move to getElfinUniqueIdDateFormatter to fix concurrency access problem
    * Returns a date formatter for elfin.Id/ID_G.
    */
-  val elfinUniqueIdDateFormat = {
+  def elfinUniqueIdDateFormat = {
     idsFormatter
   }
-
-  def getElfinUniqueIdDateFormatter = {
-    val sdf = new SimpleDateFormat(DateFormatPattern)
-    sdf.setLenient(false)
-    sdf    
-  }
-  
-  
+ 
   /**
-   * TODO: move to getElfinIdentifiantDateFormatter to fix concurrency access problem
    * Returns a date formatter with pattern: `yyyyMMddHHmmssSSS`
    */
-  val elfinIdentifiantDateFormat = {
+  def elfinIdentifiantDateFormat = {
     idsFormatter
   }
   
-  def getElfinIdentifiantDateFormatter = {
-    val sdf = new SimpleDateFormat(DateFormatPattern)
-    sdf.setLenient(false)
-    sdf
-  }
-  
   /**
-   * TODO: move to getHbDateFormatter to fix concurrency access problem
    * Returns a date formatter with pattern: `yyyy-MM-dd`
    */
-  val hbDateFormat = {
+  def hbDateFormat = {
     hbDateFormatter
   }  
   
-  def getHbDateFormatter = {
-    val sdf = new SimpleDateFormat(HbDateFormatPattern)
-    sdf.setLenient(false)
-    sdf
-  }    
-  
+ 
   /**
    * Returns a date formatter with pattern: `yyyyMMdd'T'HH:mm:ssZ`
    */
