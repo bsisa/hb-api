@@ -34,7 +34,7 @@ class HospitalActorPrt(name: String, bedsNb: Int) extends Actor with ActorLoggin
    * 							
    */
   def receive = {
-    case HospitalState(elfin, transferActor) =>
+    case HospitalState(elfin, transferActor) => {
       log.info(s"$name> HospitalActor(${name}) received new hospitalState schedule ${elfin.IDENTIFIANT.get.DE.get}")
       val hospital = HospitalHelper.toHospital(elfin)
       //	    log.info(s"============================== $name - start ==============================")
@@ -60,7 +60,7 @@ class HospitalActorPrt(name: String, bedsNb: Int) extends Actor with ActorLoggin
           bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc,
           bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc,
           patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc,
-          tranferTypeOnlyChange) =>
+          tranferTypeOnlyChange) => {
 
           // Update current PRT simulatedHospitalState removing transfered SI beds
           simulatedHospitalState = HospitalHelper.updateSimulatedHospitalStateForPrt(
@@ -71,6 +71,7 @@ class HospitalActorPrt(name: String, bedsNb: Int) extends Actor with ActorLoggin
             patientTypeChangeFromSiToSc, tranferTypeOnlyChange)
 
           log.info(s"${name}> SIMULATED HS: ${simulatedHospitalState}")
+          }
           
       }
       
