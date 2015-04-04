@@ -353,7 +353,7 @@ object HospitalHelper {
         newStaticHospitalStateOption match {
 
           // Compute delta from current to new hospital state 
-          case Some(newStaticHospitalState) =>  applyDeltas(bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc, bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc, patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc, transfertTypeChangeOnly, currentSimulatedHospitalState, newStaticHospitalState)
+          case Some(newStaticHospitalState) =>  applyDeltas(bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc, bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc, patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc, transfertTypeChangeOnly, Some(currentSimulatedHospitalState), newStaticHospitalState)
           // No new hospital state return current state unchanged
           case None => Some(currentSimulatedHospitalState)
         }
@@ -362,7 +362,7 @@ object HospitalHelper {
 
         newStaticHospitalStateOption match {
           // No current state only newStatic, same logic 
-          case Some(newStaticHospitalState) => applyDeltas(bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc, bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc, patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc, transfertTypeChangeOnly, currentSimulatedHospitalState, newStaticHospitalState)
+          case Some(newStaticHospitalState) => applyDeltas(bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc, bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc, patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc, transfertTypeChangeOnly, None, newStaticHospitalState)
 
           case None => None
         }
@@ -370,10 +370,27 @@ object HospitalHelper {
 
   }
   
-  private def applyDeltas(bedsWithIncomingPatientTypeSi: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], bedsWithIncomingPatientTypeSc: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], bedsWithOutgoingPatientTypeSi: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], bedsWithOutgoingPatientTypeSc: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], patientTypeChangeFromScToSi: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], patientTypeChangeFromSiToSc: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], transfertTypeChangeOnly: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], currentSimulatedHospitalState: ch.bsisa.hyperbird.patman.simulations.model.Hospital, newStaticHospitalState: ch.bsisa.hyperbird.patman.simulations.model.Hospital): Some[ch.bsisa.hyperbird.patman.simulations.model.Hospital] = {
+  /**
+   * TODO: review
+   */
+  private def applyDeltas(
+      bedsWithIncomingPatientTypeSi: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], 
+      bedsWithIncomingPatientTypeSc: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], 
+      bedsWithOutgoingPatientTypeSi: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], 
+      bedsWithOutgoingPatientTypeSc: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], 
+      patientTypeChangeFromScToSi: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], 
+      patientTypeChangeFromSiToSc: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], 
+      transfertTypeChangeOnly: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], 
+      currentSimulatedHospitalStateOption: Option[ch.bsisa.hyperbird.patman.simulations.model.Hospital], 
+      newStaticHospitalState: ch.bsisa.hyperbird.patman.simulations.model.Hospital): Some[ch.bsisa.hyperbird.patman.simulations.model.Hospital] = {
     // bedsWithOutgoingPatientTypeSi - TO REMOVE: they may either directly go out from PRT or are simulated in PRT and signaled out from CDF
     // bedsWithOutgoingPatientTypeSc - TO REMOVE: should only be from PRT
-    val currentMinusOutgoingBeds = (currentSimulatedHospitalState.beds diff bedsWithOutgoingPatientTypeSi) diff bedsWithOutgoingPatientTypeSc
+    //val currentMinusOutgoingBeds = (currentSimulatedHospitalState.beds diff bedsWithOutgoingPatientTypeSi) diff bedsWithOutgoingPatientTypeSc
+    val currentMinusOutgoingBeds = currentSimulatedHospitalStateOption match {
+      case Some(currentSimulatedHospitalState) => (currentSimulatedHospitalState.beds diff bedsWithOutgoingPatientTypeSi) diff bedsWithOutgoingPatientTypeSc
+      case None => (newStaticHospitalState.beds diff bedsWithOutgoingPatientTypeSi) diff bedsWithOutgoingPatientTypeSc
+    }
+
     // bedsWithIncomingPatientTypeSi - TO ADD: they may either directly come from PRT or be transferred from CDF
     // bedsWithIncomingPatientTypeSc - TO ADD: they come from PRT only
     val currentLeftPlusIncomingBeds = (currentMinusOutgoingBeds ++ bedsWithIncomingPatientTypeSc) ++ bedsWithIncomingPatientTypeSi
