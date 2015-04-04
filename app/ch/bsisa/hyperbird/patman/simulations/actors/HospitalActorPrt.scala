@@ -24,6 +24,15 @@ class HospitalActorPrt(name: String, bedsNb: Int) extends Actor with ActorLoggin
    */
   var simulatedHospitalState: Option[Hospital] = None  
   
+  /**
+   * A data loop includes: 
+   * - HospitalState (1) 		=> new state 
+   * - TransferRequest (0-n)	=> new SI patients from CDF
+   * - UpdateState (0-n)		=> purely technical: Keeps transferred beds status updated with event recorded at CDF.
+   *                           	May notify outgoing patient (bed to remove), patient type change (SI => SC), 
+   *                           	transfer type change. 
+   * 							
+   */
   def receive = {
     case HospitalState(elfin, transferActor) =>
       log.info(s"$name> HospitalActor(${name}) received new hospitalState schedule ${elfin.IDENTIFIANT.get.DE.get}")
@@ -37,6 +46,34 @@ class HospitalActorPrt(name: String, bedsNb: Int) extends Actor with ActorLoggin
       previousHospitalState = currentHospitalState
       currentHospitalState = Some(hospital)
 
+      /**
+       *  - bedsWithIncomingPatientTypeSi should be transferred to PRT
+       *  - bedsWithIncomingPatientTypeSc should stay at CDF
+       *  - bedsWithOutgoingPatientTypeSi should not happen at CDF as SI patient are moved to PRT
+       *  - bedsWithOutgoingPatientTypeSc are expected at CDF, we do nothing with it at the moment
+       *  - patientTypeChangeFromScToSi should be transferred to PRT
+       *  - patientTypeChangeFromSiToSc should never be present here as SI patients move to PRT
+       *  - tranferTypeOnlyChange should replace their previous bed values with new updated ones
+       */
+      HospitalHelper.getBedsUpdates(previousHospitalState, currentHospitalState) match {
+        case (
+          bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc,
+          bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc,
+          patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc,
+          tranferTypeOnlyChange) =>
+
+          // Update current PRT simulatedHospitalState removing transfered SI beds
+          simulatedHospitalState = HospitalHelper.updateSimulatedHospitalStateForPrt(
+            currentSimulatedHospitalStateOption = simulatedHospitalState,
+            newStaticHospitalStateOption = currentHospitalState,
+            bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc,
+            bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc, patientTypeChangeFromScToSi,
+            patientTypeChangeFromSiToSc, tranferTypeOnlyChange)
+
+          log.info(s"${name}> SIMULATED HS: ${simulatedHospitalState}")
+          
+      }
+      
       // Check incoming / outgoing patients
       //	    val incoming = HospitalHelper.getBedsWithIncomingPatient(previousHospitalState, currentHospitalState)
       //	    val bedsWithIncomingPatientTypeSi = incoming._1
@@ -58,6 +95,7 @@ class HospitalActorPrt(name: String, bedsNb: Int) extends Actor with ActorLoggin
 
       // Check state received hospital id matches our name otherwise cancel simulation!
       sender ! NextHospitalStatesRequest(name)
+  	}
 
     case TransferRequest(id, incomingSiBeds, outgoingSiBeds, typeScToSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
       log.info(message)

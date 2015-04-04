@@ -13,6 +13,22 @@ import ch.bsisa.hyperbird.patman.simulations.model.Hospital
 class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLogging {
 
   /**
+   * Messages stack lifecycle
+   * 
+   * 1) Empty
+   * 2) Filled in any order with: 
+   *    - HospitalState
+   *    - TransferRequestCreate
+   *    - TransferRequestUpdate
+   *    - TransferRequestDelete
+   */
+  var messagesStack = List()
+  
+  def addCheckMessagesStack = {
+    
+  }
+  
+  /**
    * Static state representation reflecting HOSPITAL_STATE database entries
    * at a given time or schedule (08:00, 16:00, 22:00)
    */
