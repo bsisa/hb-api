@@ -97,6 +97,108 @@ object HospitalHelper {
   /**
    * Returns a pair of Seq[Bed]. The first one contains incoming SI patients while the second contains incoming SC patients.
    */
+  def getBedsWithIncomingPatient(previousCdfStateOption: Option[Hospital], previousSimulatedPrtHospitalStateOption: Option[Hospital], currentStateOption: Option[Hospital]): (List[Bed], List[Bed]) = {
+
+    previousCdfStateOption match {
+      case Some(previousCdfState) =>
+
+        previousSimulatedPrtHospitalStateOption match {
+          case Some(previousSimulatedPrtHospitalState) =>
+
+            currentStateOption match {
+              // previous CDF, previous sim PRT and current CDF available
+              case Some(currentCdfState) => {
+
+                // Incoming patients 
+                val bedsWithIncomingPatients = currentCdfState.beds.filter { currentCdfStateBed =>
+                  if (!currentCdfStateBed.free) {
+                    // Check if the current patient was already there at CDF
+                    val existingBedAtCdf = previousCdfState.beds.find(previousStateBed => currentCdfStateBed.patientNb == previousStateBed.patientNb)
+                    // Check if the current patient was already there at PRT
+                    val existingBedAtPrt = previousSimulatedPrtHospitalState.beds.find(previousSimulatedPrtStateBed => currentCdfStateBed.patientNb == previousSimulatedPrtStateBed.patientNb)
+                    // Return true if was not previously there
+                    (existingBedAtCdf == None && existingBedAtPrt == None)
+                  } else {
+                    // Skip empty bed
+                    false
+                  }
+                }
+                val bedsWithIncomingPatientTypeSi = bedsWithIncomingPatients.filter(isBedPatientTypeSi)
+                val bedsWithIncomingPatientTypeSc = bedsWithIncomingPatients.filterNot(isBedPatientTypeSi)
+                (bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
+              }
+              // previous available but no current: Nothing is incoming.          
+              case None => (List(), List())
+            }
+
+          case None =>
+            currentStateOption match {
+              // previous and current available
+              case Some(currentState) => {
+                // Incoming patients 
+                val bedsWithIncomingPatients = currentState.beds.filter { currentStateBed =>
+                  if (!currentStateBed.free) {
+                    // Check if the current patient was already there
+                    val existingBed = previousCdfState.beds.find(previousStateBed => currentStateBed.patientNb == previousStateBed.patientNb)
+                    // Return true if was not previously there
+                    (existingBed == None)
+                  } else {
+                    // Skip empty bed
+                    false
+                  }
+                }
+                val bedsWithIncomingPatientTypeSi = bedsWithIncomingPatients.filter(isBedPatientTypeSi)
+                val bedsWithIncomingPatientTypeSc = bedsWithIncomingPatients.filterNot(isBedPatientTypeSi)
+                (bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
+              }
+              // previous available but no current: Nothing is incoming.          
+              case None => (List(), List())
+            }
+        }
+
+      case None =>
+        previousSimulatedPrtHospitalStateOption match {
+          case Some(previousSimulatedPrtHospitalState) =>
+            currentStateOption match {
+              // previous simulated PRT and current available
+              case Some(currentState) => {
+                // Incoming patients 
+                val bedsWithIncomingPatients = currentState.beds.filter { currentStateBed =>
+                  if (!currentStateBed.free) {
+                    // Check if the current patient was already there
+                    val existingBed = previousSimulatedPrtHospitalState.beds.find(previousStateBed => currentStateBed.patientNb == previousStateBed.patientNb)
+                    // Return true if was not previously there
+                    (existingBed == None)
+                  } else {
+                    // Skip empty bed
+                    false
+                  }
+                }
+                val bedsWithIncomingPatientTypeSi = bedsWithIncomingPatients.filter(isBedPatientTypeSi)
+                val bedsWithIncomingPatientTypeSc = bedsWithIncomingPatients.filterNot(isBedPatientTypeSi)
+                (bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
+              }
+              // previous available but no current: Nothing is incoming.          
+              case None => (List(), List())
+            }
+          case None =>
+            currentStateOption match {
+              // current available but no previous: Everything is incoming
+              case Some(currentState) =>
+                val currentNonEmptyBeds = currentState.beds.filter(bed => !bed.free)
+                val bedsWithIncomingPatientTypeSi = currentNonEmptyBeds.filter(isBedPatientTypeSi)
+                val bedsWithIncomingPatientTypeSc = currentNonEmptyBeds.filterNot(isBedPatientTypeSi)
+                (bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
+              // no previous nor current state available
+              case None => (List(), List())
+            }
+        }
+    }
+  }
+
+  /**
+   * Returns a pair of Seq[Bed]. The first one contains incoming SI patients while the second contains incoming SC patients.
+   */
   def getBedsWithIncomingPatient(previousStateOption: Option[Hospital], currentStateOption: Option[Hospital]): (List[Bed], List[Bed]) = {
 
     previousStateOption match {
@@ -294,6 +396,21 @@ object HospitalHelper {
   }
 
   /**
+   * TODO: CURRENT DEV...
+   */
+  def getCdfBedsUpdates(previousCdfHospitalState: Option[Hospital], currentCdfHospitalState: Option[Hospital], previousSimulatedPrtHospitalState: Option[Hospital]): (List[Bed], List[Bed], List[Bed], List[Bed], List[Bed], List[Bed], List[Bed]) = {
+    // DONE
+    val incoming = HospitalHelper.getBedsWithIncomingPatient(previousCdfHospitalState, previousSimulatedPrtHospitalState, currentCdfHospitalState)
+    // TODO
+    val outgoing = HospitalHelper.getBedsWithOutgoingPatient(previousCdfHospitalState, currentCdfHospitalState)
+    // TODO
+    val patientTypeChange = HospitalHelper.getBedsWithPatientTypeChange(previousCdfHospitalState, currentCdfHospitalState)
+    // TODO
+    val tranferTypeOnlyChange = HospitalHelper.getBedsWithTransfertTypeChangeOnly(previousCdfHospitalState, currentCdfHospitalState)
+    (incoming._1, incoming._2, outgoing._1, outgoing._2, patientTypeChange._1, patientTypeChange._2, tranferTypeOnlyChange)
+  }
+
+  /**
    * Returns a new copy of `currentSimulatedHospitalStateOption` updated with all provided information.
    */
   def updateSimulatedHospitalStateForCdf(
@@ -342,18 +459,18 @@ object HospitalHelper {
    * Returns a new copy of `currentSimulatedHospitalStateOption` updated with all provided information.
    */
   def updateSimulatedHospitalStateForPrt(
-    currentSimulatedHospitalStateOption: Option[Hospital], newStaticHospitalStateOption: Option[Hospital], bedsWithIncomingPatientTypeSi: List[Bed], bedsWithIncomingPatientTypeSc: List[Bed], 
-    bedsWithOutgoingPatientTypeSi: List[Bed], bedsWithOutgoingPatientTypeSc: List[Bed], patientTypeChangeFromScToSi: List[Bed], 
+    currentSimulatedHospitalStateOption: Option[Hospital], newStaticHospitalStateOption: Option[Hospital], bedsWithIncomingPatientTypeSi: List[Bed], bedsWithIncomingPatientTypeSc: List[Bed],
+    bedsWithOutgoingPatientTypeSi: List[Bed], bedsWithOutgoingPatientTypeSc: List[Bed], patientTypeChangeFromScToSi: List[Bed],
     patientTypeChangeFromSiToSc: List[Bed], transfertTypeChangeOnly: List[Bed]): Option[Hospital] = {
 
     currentSimulatedHospitalStateOption match {
 
       case Some(currentSimulatedHospitalState) =>
-    
+
         newStaticHospitalStateOption match {
 
           // Compute delta from current to new hospital state 
-          case Some(newStaticHospitalState) =>  applyDeltas(bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc, bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc, patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc, transfertTypeChangeOnly, Some(currentSimulatedHospitalState), newStaticHospitalState)
+          case Some(newStaticHospitalState) => applyDeltas(bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc, bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc, patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc, transfertTypeChangeOnly, Some(currentSimulatedHospitalState), newStaticHospitalState)
           // No new hospital state return current state unchanged
           case None => Some(currentSimulatedHospitalState)
         }
@@ -369,20 +486,20 @@ object HospitalHelper {
     }
 
   }
-  
+
   /**
    * TODO: review
    */
   private def applyDeltas(
-      bedsWithIncomingPatientTypeSi: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], 
-      bedsWithIncomingPatientTypeSc: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], 
-      bedsWithOutgoingPatientTypeSi: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], 
-      bedsWithOutgoingPatientTypeSc: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], 
-      patientTypeChangeFromScToSi: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], 
-      patientTypeChangeFromSiToSc: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], 
-      transfertTypeChangeOnly: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], 
-      currentSimulatedHospitalStateOption: Option[ch.bsisa.hyperbird.patman.simulations.model.Hospital], 
-      newStaticHospitalState: ch.bsisa.hyperbird.patman.simulations.model.Hospital): Some[ch.bsisa.hyperbird.patman.simulations.model.Hospital] = {
+    bedsWithIncomingPatientTypeSi: List[ch.bsisa.hyperbird.patman.simulations.model.Bed],
+    bedsWithIncomingPatientTypeSc: List[ch.bsisa.hyperbird.patman.simulations.model.Bed],
+    bedsWithOutgoingPatientTypeSi: List[ch.bsisa.hyperbird.patman.simulations.model.Bed],
+    bedsWithOutgoingPatientTypeSc: List[ch.bsisa.hyperbird.patman.simulations.model.Bed],
+    patientTypeChangeFromScToSi: List[ch.bsisa.hyperbird.patman.simulations.model.Bed],
+    patientTypeChangeFromSiToSc: List[ch.bsisa.hyperbird.patman.simulations.model.Bed],
+    transfertTypeChangeOnly: List[ch.bsisa.hyperbird.patman.simulations.model.Bed],
+    currentSimulatedHospitalStateOption: Option[ch.bsisa.hyperbird.patman.simulations.model.Hospital],
+    newStaticHospitalState: ch.bsisa.hyperbird.patman.simulations.model.Hospital): Some[ch.bsisa.hyperbird.patman.simulations.model.Hospital] = {
     // bedsWithOutgoingPatientTypeSi - TO REMOVE: they may either directly go out from PRT or are simulated in PRT and signaled out from CDF
     // bedsWithOutgoingPatientTypeSc - TO REMOVE: should only be from PRT
     //val currentMinusOutgoingBeds = (currentSimulatedHospitalState.beds diff bedsWithOutgoingPatientTypeSi) diff bedsWithOutgoingPatientTypeSc
