@@ -137,6 +137,7 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
             patientTypeChangeFromSiToSc, tranferTypeOnlyChange)
 
           log.info(s"${name}> SIMULATED HS: ${simulatedHospitalState}")
+          // TODO: send message to create simulatedHospitalState entry for the current state.
 
           // Send SI movements as Transfer requests to PRT only if necessary
           if (bedsWithIncomingPatientTypeSi != Nil || bedsWithOutgoingPatientTypeSi != Nil || patientTypeChangeFromScToSi != Nil) {
