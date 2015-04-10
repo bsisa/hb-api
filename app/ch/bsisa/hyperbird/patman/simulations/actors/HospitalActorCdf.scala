@@ -1,9 +1,8 @@
 package ch.bsisa.hyperbird.patman.simulations.actors
 import akka.actor.{ Actor, ActorRef, ActorLogging }
 import ch.bsisa.hyperbird.patman.simulations.Constants._
-import ch.bsisa.hyperbird.patman.simulations.messages.HospitalState
-import ch.bsisa.hyperbird.patman.simulations.model.HospitalHelper
 import ch.bsisa.hyperbird.patman.simulations.messages._
+import ch.bsisa.hyperbird.patman.simulations.model.HospitalHelper
 import ch.bsisa.hyperbird.patman.simulations.model.Hospital
 
 /**
@@ -22,11 +21,19 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
    *    - TransferRequestUpdate
    *    - TransferRequestDelete
    */
-  var messagesStack = List()
+  var messageState : Option[CdfMessageState] = None
   
-  def addCheckMessagesStack = {
-    
+  /**
+   * Check messages stack complete state
+   */
+  def checkMessageStateCompleted( msgStateOpt: Option[CdfMessageState]) : Boolean = {
+
+    msgStateOpt match {
+      case Some(msgState) => if (msgState.tc.isDefined && msgState.tu.isDefined && msgState.td.isDefined) true else false
+      case None => false
+    }
   }
+  
   
   /**
    * Static state representation reflecting HOSPITAL_STATE database entries
@@ -50,20 +57,57 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
      */
     case HospitalState(elfin, transferActor) =>
 
-      log.info(s"$name> HospitalActor(${name}) received new hospitalState schedule ${elfin.IDENTIFIANT.get.DE.get}")
+      log.info(s"$name> HospitalActor(${name}) received new hospitalState schedule ${elfin.IDENTIFIANT.get.DE.get}")      
+      
+      // ========== Manage messageState ===============================
+      // Init messageState
+      if (!messageState.isDefined) {
+        log.info(s"Initialising CdfMessageState")
+      } else if ( checkMessageStateCompleted(messageState) ) {
+        // Reset CdfMessageState with new HospitalState
+        log.info(s"Reset CdfMessageState with new HospitalState")
+        messageState = Some(CdfMessageState(HospitalState(elfin,transferActor), None, None, None))
+      } else {
+        val errMsg = s"$name> ERROR - HospitalActor(${name}) received new hospitalState schedule ${elfin.IDENTIFIANT.get.DE.get} before CdfMessageState completed!"
+        log.error(errMsg)
+        // Stop simulation while in unexpected state
+        sender ! StopSimulationRequest(errMsg)
+      }
 
       // Convert generic ELFIN data structure of CLASSE='HOSPITAL_STATE' to semantic type Hospital 
       val hospital = HospitalHelper.toHospital(elfin)
 
-      //	    log.info(s"============================== $name - start ==============================")
-      //	    log.info(s"$name> previousHospitalState: " + previousHospitalState)
-      //	    log.info(s"$name> currentHospitalState: " + currentHospitalState)
-      //	    log.info(s"------------------------------ $name --------------------------------------")
+
 
       // Roll hospital states
       previousHospitalState = currentHospitalState
       currentHospitalState = Some(hospital)
 
+      sender ! HospitalStateOk(elfin = elfin, fromHospital = name, previousSimulatedHospitalState = simulatedHospitalState)
+
+
+    case ComputeSimulatedState(elfin, transferActor, previousPrtSimulatedHospitalState) =>
+      
+            // Convert generic ELFIN data structure of CLASSE='HOSPITAL_STATE' to semantic type Hospital 
+      val hospital = HospitalHelper.toHospital(elfin)
+      
+//      
+//      // TODO: Refactor HospitalHelper.getBedsUpdates logic
+//      // 
+//      // Incoming patients are those who do not already exist at CDF nor PRT, either as SI or SC
+//      // => create TransferRequestCreate if of type SI at CDF
+//      // or those who do already exist at CDF as SC and changed to SI. They  must be moved to PRT and 
+//      // removed from CDF.
+//      // 
+//      // Updated patient are those who have been: 
+//      // A) Transferred to PRT and are either updated and still SI or updated and possibly changed to SC
+//      // B) At CDF as SC and updated
+//      // => create TransferRequestUpdate if of type SI or SC at PRT (follow up of CDF SI patients
+//      //    transferred to PRT)
+//      //
+//      // Outgoing patients identification at CDF must check not found at previous HS at CDF nor  
+//      // 
+//      
       /**
        *  - bedsWithIncomingPatientTypeSi should be transferred to PRT
        *  - bedsWithIncomingPatientTypeSc should stay at CDF
@@ -80,6 +124,10 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
           patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc,
           tranferTypeOnlyChange) =>
 
+            // 1) TransferRequestCreate
+            // 2) TransferRequestUpdate
+            // 3) TransferRequestDelete
+            
           // Update current CDT simulatedHospitalState removing transfered SI beds
           simulatedHospitalState = HospitalHelper.updateSimulatedHospitalStateForCdf(
             currentSimulatedHospitalStateOption = simulatedHospitalState,
@@ -108,14 +156,17 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
             sender ! NextHospitalStatesRequest(name)
           }
       }
-
-    //	    log.info(s"$name> previousHospitalState: " + previousHospitalState)
-    //	    log.info(s"$name> currentHospitalState: " + currentHospitalState)
-    //	    log.info(s"------------------------------ $name --------------------------------------")
-    //	    log.info(s"$name> BedsWithIncomingPatient: " + HospitalHelper.getBedsWithIncomingPatient(previousHospitalState, currentHospitalState) )
-    //	    log.info(s"$name> BedsWithOutgoingPatient: " + HospitalHelper.getBedsWithOutgoingPatient(previousHospitalState, currentHospitalState) )
-    //	    log.info(s"============================== $name - end   ==============================")
-
+      
+      
+      
+      
+    case TransferResponseCreate(correlationId, status, message) => 
+      log.info(s"Received TransferResponseCreate($correlationId, $message)")
+    case TransferResponseUpdate(correlationId, status, message) => 
+      log.info(s"Received TransferResponseUpdate($correlationId, $message)")
+    case TransferResponseDelete(correlationId, status, message) => 
+      log.info(s"Received TransferResponseDelete($correlationId, $message)")
+      
     case TransferResponse(id, status, acceptedIncomingBeds, fromHospital, toHospital, fromSchedule, message) => 
       status match {
         case TRANSFER_REQUEST_ACCEPTED =>
@@ -140,5 +191,23 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
 
 }
 
+/**
+ * Contains latest states to manage data loop
+ */
+case class CdfMessageState(hs:HospitalState, tc:Option[TransferRequestCreate] ,tu:Option[TransferRequestUpdate], td:Option[TransferRequestDelete]) {
+  
+}
+
+
+//	    log.info(s"============================== $name - start ==============================")
+//	    log.info(s"$name> previousHospitalState: " + previousHospitalState)
+//	    log.info(s"$name> currentHospitalState: " + currentHospitalState)
+//	    log.info(s"------------------------------ $name --------------------------------------")
+//	    log.info(s"$name> previousHospitalState: " + previousHospitalState)
+//	    log.info(s"$name> currentHospitalState: " + currentHospitalState)
+//	    log.info(s"------------------------------ $name --------------------------------------")
+//	    log.info(s"$name> BedsWithIncomingPatient: " + HospitalHelper.getBedsWithIncomingPatient(previousHospitalState, currentHospitalState) )
+//	    log.info(s"$name> BedsWithOutgoingPatient: " + HospitalHelper.getBedsWithOutgoingPatient(previousHospitalState, currentHospitalState) )
+//	    log.info(s"============================== $name - end   ==============================")
 
 

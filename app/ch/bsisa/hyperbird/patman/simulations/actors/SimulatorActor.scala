@@ -18,6 +18,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import akka.actor.LocalActorRef
 import akka.actor.PoisonPill
+import ch.bsisa.hyperbird.patman.simulations.model.Hospital
 
 class SimulatorActor(id: String, dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb: Int = 8, allBedsNb: Option[Int] = None, saturationThreshold: Option[Int] = None) extends Actor with ActorLogging {
 
@@ -73,10 +74,15 @@ class SimulatorActor(id: String, dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 
   // Starts analysis by requesting the first record
   datasetActor ! HospitalStatesRequestInit
 
+  // Mutable states enabling to join cdf and prt hospital state updates 
+  var pendingCdfHospitalStateUpdate = false
+  var previousCdfSimulatedHospitalState : Option[Hospital] = None
+  var pendingPrtHospitalStateUpdate = false
+  var previousPrtSimulatedHospitalState : Option[Hospital] = None  
+
   // Mutable states enabling to join cdf and prt request for data 
   var pendingCdfNextHospitalStatesRequest = false
   var pendingPrtNextHospitalStatesRequest = false
-
 
   /**
    * Process messages
@@ -86,8 +92,39 @@ class SimulatorActor(id: String, dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 
     // Data delivered by DataSetActor
     case HospitalStatesResponse(cdfHospitalState, prtHospitalState, message) =>
       log.info(s"HospitalStatesResponse: ${message}")
+      pendingCdfHospitalStateUpdate = true
+      previousCdfSimulatedHospitalState = None
       cdfHospitalActor ! HospitalState(cdfHospitalState, transferActor)
+      pendingPrtHospitalStateUpdate = true
+      previousPrtSimulatedHospitalState = None
       prtHospitalActor ! HospitalState(prtHospitalState, transferActor)
+
+    case HospitalStateOk(elfin, fromHospital, previousSimulatedHospitalState) =>
+      fromHospital match {
+        case HOSPITAL_CODE_CDF =>
+          log.info(s"Received HospitalStateOk fromHospital = ${fromHospital}")
+          pendingCdfHospitalStateUpdate = false
+          previousCdfSimulatedHospitalState = previousSimulatedHospitalState
+        case HOSPITAL_CODE_PRT =>
+          log.info(s"Received HospitalStateOk fromHospital = ${fromHospital}")
+          pendingPrtHospitalStateUpdate = false
+          previousPrtSimulatedHospitalState = previousSimulatedHospitalState
+      }
+      if (!pendingCdfHospitalStateUpdate && !pendingPrtHospitalStateUpdate) {
+
+        // Proceed with simulated states computations
+        log.info(s"ComputeSimulatedStates")
+        // Trigger CDF simulation computation while providing previous PRT simulated hospital state
+        cdfHospitalActor ! ComputeSimulatedState(elfin, transferActor, previousPrtSimulatedHospitalState)
+        // Trigger PRT simulation computation while providing previous CDF simulated hospital state        
+        prtHospitalActor ! ComputeSimulatedState(elfin, transferActor, previousCdfSimulatedHospitalState)        
+      } else {
+        if (pendingCdfHospitalStateUpdate) {
+          log.info(s"Waiting for ${HOSPITAL_CODE_CDF} NextHospitalStatesRequest")
+        } else {
+          log.info(s"Waiting for ${HOSPITAL_CODE_PRT} NextHospitalStatesRequest")
+        }
+      }
 
     // Request for next data from DataSetActor, waits to join both cdf and prt identical requests.
     case NextHospitalStatesRequest(fromHospital) => {
@@ -100,11 +137,11 @@ class SimulatorActor(id: String, dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 
           pendingPrtNextHospitalStatesRequest = true
       }
       if (pendingCdfNextHospitalStatesRequest && pendingPrtNextHospitalStatesRequest) {
-        
+
         // Reset pending states to false
         pendingCdfNextHospitalStatesRequest = false
         pendingPrtNextHospitalStatesRequest = false
-        
+
         // Request next data for next cdf and prt schedule
         datasetActor ! HospitalStatesRequest
       } else {
@@ -126,12 +163,12 @@ class SimulatorActor(id: String, dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 
     // When all WorkCompleted messages have been received we should receive the StopSimulationRequest
     case WorkCompleted(message) =>
       // Termination size is minus 1 for ShutdownCoordinatorActor itself not responding to DataSetEmpty message.
-      shutdownCoordinatorActor ! ShutdownSignal(message = message, terminationSize = children.size-1)
+      shutdownCoordinatorActor ! ShutdownSignal(message = message, terminationSize = children.size - 1)
 
     // Shuts down the simulation 
     case StopSimulationRequest(reason) =>
       log.info(s"Simulation ${self.path.name} has been requested to stop for reason: $reason")
-      
+
       stop(self)
 
   }
