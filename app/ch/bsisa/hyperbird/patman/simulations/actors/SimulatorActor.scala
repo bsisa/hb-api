@@ -25,21 +25,29 @@ class SimulatorActor(id: String, dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 
   // Avoid Actor.context repetition i.e.: context.stop(self) => stop(self)
   import context._
 
-  // Create children actors
+  // Process parameters ===============================================
+  val dateFromStr = DateUtil.hbDateFormat.format(dateFrom)
+  val dateToStr = DateUtil.hbDateFormat.format(dateTo)  
+  
+  // Create children actors ===========================================
   //  val datasetActor = actorOf(Props(new DataSetActor), name = "dataSetActor")
   val shutdownCoordinatorActor = actorOf(Props(new ShutdownCoordinatorActor), name = "shutdownCoordinatorActor")
-  val cdfHospitalActor = actorOf(Props(new HospitalActorCdf(name = "cdf", bedsNb = cdfBedsNb)), name = "cdfHospitalActor")
-  val prtHospitalActor = actorOf(Props(new HospitalActorPrt(name = "prt", bedsNb = prtBedsNb)), name = "prtHospitalActor")
+
+  // Report related actors
+  val simulatedHospitalStateReportActor = actorOf(Props(new SimulatedHospitalStateReportActor(simulationId = id)), name = "simulatedHospitalStateReportActor")
+  val transferReportActor = actorOf(Props(new TransferReportActor(simulationId = id)), name = "transferReportActor")
+  
+  // Hospital simulation actors
+  val cdfHospitalActor = actorOf(Props(new HospitalActorCdf(name = "cdf", bedsNb = cdfBedsNb, simulatedHospitalStateReportActor = simulatedHospitalStateReportActor)), name = "cdfHospitalActor")
+  val prtHospitalActor = actorOf(Props(new HospitalActorPrt(name = "prt", bedsNb = prtBedsNb, simulatedHospitalStateReportActor = simulatedHospitalStateReportActor)), name = "prtHospitalActor")
 
   val hospitalsActorRefMap: Map[String, ActorRef] = Map(HOSPITAL_CODE_CDF -> cdfHospitalActor, HOSPITAL_CODE_PRT -> prtHospitalActor)
 
-  val transferReportActor = actorOf(Props(new TransferReportActor(simulationId = id)), name = "transferReportActor")
+  // Transfers simulation actor
   val transferActor = actorOf(Props(new TransferActor(hospitalsActorRefMap, transferReportActor)), name = "transferActor")
 
-  // Process parameters
-  val dateFromStr = DateUtil.hbDateFormat.format(dateFrom)
-  val dateToStr = DateUtil.hbDateFormat.format(dateTo)
-
+  
+  // Load selected simulation data from database ====================== 
   // Database query
   val xqueryFileName = "hospitalStatesSelection.xq"
   val queryString = Option(s"dateFrom=${dateFromStr}&dateTo=${dateToStr}")

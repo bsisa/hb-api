@@ -9,7 +9,7 @@ import ch.bsisa.hyperbird.patman.simulations.model.Hospital
  * Models CDF Hospital intensive care data such as bed, patient, patient type, transfer type
  * and related behaviour intended for simulation.
  */
-class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLogging {
+class HospitalActorCdf(name: String, bedsNb: Int, simulatedHospitalStateReportActor: ActorRef) extends Actor with ActorLogging {
 
   /**
    * Messages stack lifecycle
@@ -113,6 +113,7 @@ class HospitalActorCdf(name: String, bedsNb: Int) extends Actor with ActorLoggin
 
           log.info(s"${name}> SIMULATED HS: ${simulatedHospitalState}")
           // TODO: send message to create simulatedHospitalState entry for the current state.
+          simulatedHospitalStateReportActor ! SimulatedHospitalState(hospitalState = simulatedHospitalState.get)
 
           // Send SI movements as Transfer requests to PRT only if necessary
           if (bedsWithIncomingPatientTypeSi != Nil || bedsWithOutgoingPatientTypeSi != Nil || patientTypeChangeFromScToSi != Nil) {

@@ -9,7 +9,7 @@ import ch.bsisa.hyperbird.patman.simulations.model.Hospital
  * Models PRT Hospital intensive care data as bed, patient, patient type, transfer type
  * and related behaviour intended for simulation.
  */
-class HospitalActorPrt(name: String, bedsNb: Int) extends Actor with ActorLogging {
+class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportActor: ActorRef) extends Actor with ActorLogging {
 
   /**
    * Static state representation reflecting HOSPITAL_STATE database entries
@@ -73,6 +73,7 @@ class HospitalActorPrt(name: String, bedsNb: Int) extends Actor with ActorLoggin
             patientTypeChangeFromSiToSc, tranferTypeOnlyChange)
 
           log.info(s"${name}> SIMULATED HS: ${simulatedHospitalState}")
+          simulatedHospitalStateReportActor ! SimulatedHospitalState(hospitalState = simulatedHospitalState.get)
         }
 
       }
