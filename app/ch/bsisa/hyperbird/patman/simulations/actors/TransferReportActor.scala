@@ -63,6 +63,9 @@ class TransferReportActor(simulationId: String) extends Actor with ActorLogging 
               ElfinDAO.create(removeTransferElfin)
             }
           }
+          
+          // TODO: we should also have beds to update for existing transfered beds which do have their 
+          // transfer type changed or (to review) SI to SC patient type change 
 
         } catch {
           case e: Throwable => log.error(s"TransferReportActor complaining: ${e}")
