@@ -20,7 +20,68 @@ class TransferReportActor(simulationId: String) extends Actor with ActorLogging 
 
   def receive = {
 
+    case TransferRequestCreate(id, bedsWithIncomingPatientTypeSi, patientTypeChangeFromScToSi, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
+      log.info(s"TransferReportActor received: ${message}")
+      val futureTransferElfin: Future[ELFIN] = ElfinDAO.getNewFromCatalogue("TRANSFER")
+      futureTransferElfin.map { elfinTransferTemplate =>
+        try {
+          val bedsToAdd = bedsWithIncomingPatientTypeSi ++ patientTypeChangeFromScToSi
+          if (bedsToAdd != Nil && bedsToAdd.size > 0) {
+            val addTransferElfinFuture = HospitalHelper.buildTransferElfin(
+              elfinTransferTemplate = elfinTransferTemplate, simulationId = simulationId, nature = Constants.TRANSFER_NATURE_ADD,
+              fromHospitalCode = fromHospitalCode, toHospitalCode = toHospitalCode, schedule = fromSchedule, beds = bedsToAdd)
+            // Update database 
+            addTransferElfinFuture.map { addTransferElfin =>
+              ElfinDAO.create(addTransferElfin)
+            }
+          }
+        } catch {
+          case e: Throwable => log.error(s"TransferReportActor complaining: ${e}")
+        }
+      }
+
+    case TransferRequestUpdate(id, patientTypeChangeFromSiToSc, bedsWithTransferTypeOnlyChangePatientTypeSi, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
+      log.info(s"TransferReportActor received: ${message}")
+      val futureTransferElfin: Future[ELFIN] = ElfinDAO.getNewFromCatalogue("TRANSFER")
+      futureTransferElfin.map { elfinTransferTemplate =>
+        try {
+          val bedsToUpdate = patientTypeChangeFromSiToSc ++ bedsWithTransferTypeOnlyChangePatientTypeSi
+          if (bedsToUpdate != Nil && bedsToUpdate.size > 0) {
+            val updateTransferElfinFuture = HospitalHelper.buildTransferElfin(
+              elfinTransferTemplate = elfinTransferTemplate, simulationId = simulationId, nature = Constants.TRANSFER_NATURE_UPDATE,
+              fromHospitalCode = fromHospitalCode, toHospitalCode = toHospitalCode, schedule = fromSchedule, beds = bedsToUpdate)
+            // Update database 
+            updateTransferElfinFuture.map { updateTransferElfin =>
+              ElfinDAO.create(updateTransferElfin)
+            }
+          }
+        } catch {
+          case e: Throwable => log.error(s"TransferReportActor complaining: ${e}")
+        }
+      }
+      
+    case TransferRequestDelete(id, bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
+      log.info(s"TransferReportActor received: ${message}")
+      val futureTransferElfin: Future[ELFIN] = ElfinDAO.getNewFromCatalogue("TRANSFER")
+      futureTransferElfin.map { elfinTransferTemplate =>
+        try {
+          val bedsToDelete = bedsWithOutgoingPatientTypeSi ++ bedsWithOutgoingPatientTypeSc
+          if (bedsToDelete != Nil && bedsToDelete.size > 0) {
+            val deleteTransferElfinFuture = HospitalHelper.buildTransferElfin(
+              elfinTransferTemplate = elfinTransferTemplate, simulationId = simulationId, nature = Constants.TRANSFER_NATURE_REMOVE,
+              fromHospitalCode = fromHospitalCode, toHospitalCode = toHospitalCode, schedule = fromSchedule, beds = bedsToDelete)
+            // Update database 
+            deleteTransferElfinFuture.map { deleteTransferElfin =>
+              ElfinDAO.create(deleteTransferElfin)
+            }
+          }
+        } catch {
+          case e: Throwable => log.error(s"TransferReportActor complaining: ${e}")
+        }
+      }
+      
     case TransferRequest(id, incomingSiBeds, outgoingSiBeds, typeScToSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
+
       log.info(s"TransferReportActor notified of transfer from ${fromHospitalCode} to ${toHospitalCode} at ${fromSchedule}")
       //      val transferEvenElfin = ELFIN
       //      ElfinDAO.create(elfin)
@@ -63,7 +124,7 @@ class TransferReportActor(simulationId: String) extends Actor with ActorLogging 
               ElfinDAO.create(removeTransferElfin)
             }
           }
-          
+
           // TODO: we should also have beds to update for existing transfered beds which do have their 
           // transfer type changed or (to review) SI to SC patient type change 
 
@@ -81,7 +142,5 @@ class TransferReportActor(simulationId: String) extends Actor with ActorLogging 
       sender ! WorkCompleted("TransferReportActor")
 
   }
-
-
 
 }

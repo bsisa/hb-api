@@ -348,9 +348,9 @@ object HospitalHelper {
   }
 
   /**
-   * Return List[Bed] for which only TransferType changed. It excludes those already included in patientType change.
+   * Return (bedsWithTransferTypeOnlyChangePatientTypeSi:List[Bed],bedsWithTransferTypeOnlyChangePatientTypeSc:List[Bed]) for which only TransferType changed. It excludes those already included in patientType change.
    */
-  def getBedsWithTransfertTypeChangeOnly(previousStateOption: Option[Hospital], currentStateOption: Option[Hospital]): List[Bed] = {
+  def getBedsWithTransfertTypeChangeOnly(previousStateOption: Option[Hospital], currentStateOption: Option[Hospital]): (List[Bed],List[Bed]) = {
 
     previousStateOption match {
       case Some(previousState) =>
@@ -361,7 +361,7 @@ object HospitalHelper {
             val bedsWithTransferTypeOnlyChange = currentState.beds.filter { currentStateBed =>
               if (!currentStateBed.free) {
                 // Check if the current patient was already there
-                val bedWithTransferTypeOnlyChange = previousState.beds.find(previousStateBed => currentStateBed.patientNb == previousStateBed.patientNb) match {
+                val isBedWithTransferTypeOnlyChange = previousState.beds.find(previousStateBed => currentStateBed.patientNb == previousStateBed.patientNb) match {
                   case Some(previousStateBed) =>
                     // We exclude patient type change beds already included in getBedsWithPatientTypeChange check
                     (currentStateBed.patientType == previousStateBed.patientType) &&
@@ -369,19 +369,21 @@ object HospitalHelper {
                       (previousStateBed.transferType != currentStateBed.transferType)
                   case None => false
                 }
-                bedWithTransferTypeOnlyChange
+                isBedWithTransferTypeOnlyChange
               } else {
                 // Skip empty bed
                 false
               }
             }
-            bedsWithTransferTypeOnlyChange
+            val bedsWithTransferTypeOnlyChangePatientTypeSi = bedsWithTransferTypeOnlyChange.filter(isBedPatientTypeSi)
+            val bedsWithTransferTypeOnlyChangePatientTypeSc = bedsWithTransferTypeOnlyChange.filterNot(isBedPatientTypeSi)
+            (bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc)
           }
           // previous available but no current: No existing bed change tracking.          
-          case None => List()
+          case None => (List(),List())
         }
       // No previous available: No existing bed change tracking.
-      case None => List()
+      case None => (List(),List())
     }
   }
 
@@ -396,18 +398,18 @@ object HospitalHelper {
    *   tranferTypeOnlyChange)`
    *
    */
-  def getBedsUpdates(previousHospitalState: Option[Hospital], currentHospitalState: Option[Hospital]): (List[Bed], List[Bed], List[Bed], List[Bed], List[Bed], List[Bed], List[Bed]) = {
+  def getBedsUpdates(previousHospitalState: Option[Hospital], currentHospitalState: Option[Hospital]): (List[Bed], List[Bed], List[Bed], List[Bed], List[Bed], List[Bed], List[Bed], List[Bed]) = {
     val incoming = HospitalHelper.getBedsWithIncomingPatient(previousHospitalState, currentHospitalState)
     val outgoing = HospitalHelper.getBedsWithOutgoingPatient(previousHospitalState, currentHospitalState)
     val patientTypeChange = HospitalHelper.getBedsWithPatientTypeChange(previousHospitalState, currentHospitalState)
     val tranferTypeOnlyChange = HospitalHelper.getBedsWithTransfertTypeChangeOnly(previousHospitalState, currentHospitalState)
-    (incoming._1, incoming._2, outgoing._1, outgoing._2, patientTypeChange._1, patientTypeChange._2, tranferTypeOnlyChange)
+    (incoming._1, incoming._2, outgoing._1, outgoing._2, patientTypeChange._1, patientTypeChange._2, tranferTypeOnlyChange._1, tranferTypeOnlyChange._2)
   }
 
   /**
    * TODO: CURRENT DEV...
    */
-  def getCdfBedsUpdates(previousCdfHospitalState: Option[Hospital], currentCdfHospitalState: Option[Hospital], previousSimulatedPrtHospitalState: Option[Hospital]): (List[Bed], List[Bed], List[Bed], List[Bed], List[Bed], List[Bed], List[Bed]) = {
+  def getCdfBedsUpdates(previousCdfHospitalState: Option[Hospital], currentCdfHospitalState: Option[Hospital], previousSimulatedPrtHospitalState: Option[Hospital]): (List[Bed], List[Bed], List[Bed], List[Bed], List[Bed], List[Bed], List[Bed], List[Bed]) = {
     // DONE
     val incoming = HospitalHelper.getBedsWithIncomingPatient(previousCdfHospitalState, previousSimulatedPrtHospitalState, currentCdfHospitalState)
     // TODO
@@ -416,33 +418,36 @@ object HospitalHelper {
     val patientTypeChange = HospitalHelper.getBedsWithPatientTypeChange(previousCdfHospitalState, currentCdfHospitalState)
     // TODO
     val tranferTypeOnlyChange = HospitalHelper.getBedsWithTransfertTypeChangeOnly(previousCdfHospitalState, currentCdfHospitalState)
-    (incoming._1, incoming._2, outgoing._1, outgoing._2, patientTypeChange._1, patientTypeChange._2, tranferTypeOnlyChange)
+    (incoming._1, incoming._2, outgoing._1, outgoing._2, patientTypeChange._1, patientTypeChange._2, tranferTypeOnlyChange._1, tranferTypeOnlyChange._2)
   }
 
   /**
+   * TODO: Full implementation review needed
+   * 
    * Returns a new copy of `currentSimulatedHospitalStateOption` updated with all provided information.
    */
   def updateSimulatedHospitalStateForCdf(
     currentSimulatedHospitalStateOption: Option[Hospital], newStaticHospitalStateOption: Option[Hospital], bedsWithIncomingPatientTypeSi: List[Bed], bedsWithIncomingPatientTypeSc: List[Bed],
     bedsWithOutgoingPatientTypeSi: List[Bed], bedsWithOutgoingPatientTypeSc: List[Bed], patientTypeChangeFromScToSi: List[Bed],
-    patientTypeChangeFromSiToSc: List[Bed], transfertTypeChangeOnly: List[Bed]): Option[Hospital] = {
+    patientTypeChangeFromSiToSc: List[Bed], transferTypeOnlyChangePatientTypeSi: List[Bed], transferTypeOnlyChangePatientTypeSc: List[Bed]): Option[Hospital] = {
 
     currentSimulatedHospitalStateOption match {
       case Some(currentSimulatedHospitalState) =>
         newStaticHospitalStateOption match {
           case Some(newStaticHospitalState) =>
-            // bedsWithIncomingPatientTypeSi - we do not care about : they did not exist before and are directly transferred.
-            // bedsWithIncomingPatientTypeSc - new incoming beds:  TO ADD
-            // bedsWithOutgoingPatientTypeSi - must be empty as we do not keep any SI bed
-            // bedsWithOutgoingPatientTypeSc - outgoing beds: TO REMOVE
-            // patientTypeChangeFromScToSi - beds we transfer: TO REMOVE
-            // patientTypeChangeFromSiToSc - must be empty as we do not keep any SI bed
-            // transfertTypeChangeOnly - beds with new updated information: TO REPLACE
+            // bedsWithIncomingPatientTypeSi - DO NOTHING - we do not care about : they did not exist before and are directly transferred.
+            // bedsWithIncomingPatientTypeSc - TO ADD - new incoming beds
+            // bedsWithOutgoingPatientTypeSi - DO NOTHING - must be empty as we do not keep any SI bed
+            // bedsWithOutgoingPatientTypeSc - TO REMOVE - outgoing SC beds
+            // patientTypeChangeFromScToSi - TO REMOVE - beds we transfer following patient type change 
+            // patientTypeChangeFromSiToSc - DO NOTHING - must be empty as we do not keep any SI bed. (They could be transferred back from PRT but this would not be dealt with here anyway.)
+            // transferTypeOnlyChangePatientTypeSi - DO NOTHING - SI beds with new updated transfer type information are managed at PRT side
+            // transferTypeOnlyChangePatientTypeSc - TO REPLACE - SC beds with new updated transfer type information 
             val currentWithIncomingSc = currentSimulatedHospitalState.beds ++ bedsWithIncomingPatientTypeSc
             val currentWithIncomingScMinusOutgoingSc = currentWithIncomingSc diff bedsWithOutgoingPatientTypeSc
             val currentWithIncomingScMinusOutgoingScMinusScToSi = currentWithIncomingScMinusOutgoingSc diff patientTypeChangeFromScToSi
             val currentWithIncomingScMinusOutgoingScMinusScToSiWithUpdatedTransferType =
-              (currentWithIncomingScMinusOutgoingScMinusScToSi diff transfertTypeChangeOnly) ++ transfertTypeChangeOnly
+              (currentWithIncomingScMinusOutgoingScMinusScToSi diff transferTypeOnlyChangePatientTypeSc) ++ transferTypeOnlyChangePatientTypeSc
             Some(Hospital(newStaticHospitalState.code, newStaticHospitalState.schedule, currentWithIncomingScMinusOutgoingScMinusScToSiWithUpdatedTransferType))
           case None => Some(currentSimulatedHospitalState)
         }
@@ -456,7 +461,8 @@ object HospitalHelper {
             // bedsWithOutgoingPatientTypeSc - must be empty
             // patientTypeChangeFromScToSi - must be empty
             // patientTypeChangeFromSiToSc - must be empty
-            // transfertTypeChangeOnly - must be empty
+            // transferTypeOnlyChangePatientTypeSi - must be empty
+            // transferTypeOnlyChangePatientTypeSc - must be empty
             Some(Hospital(newStaticHospitalState.code, newStaticHospitalState.schedule, bedsWithIncomingPatientTypeSc))
           case None => None
         }
