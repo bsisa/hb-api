@@ -28,7 +28,7 @@ class SimulatedHospitalStateReportActor(simulationId: String) extends Actor with
 
         try {
 
-          val elfinHospitalStateFuture = buildHospitalStateElfin(
+          val elfinHospitalStateFuture = HospitalHelper.buildHospitalStateElfin(
             elfinHospitalStateTemplate = elfinHospitalStateTemplate,
             simulationId = simulationId,
             hospitalState = hospitalState)
@@ -46,33 +46,6 @@ class SimulatedHospitalStateReportActor(simulationId: String) extends Actor with
     case DataSetEmpty =>
       sender ! WorkCompleted("TransferReportActor")
 
-  }
-
-  /**
-   * Builds `ELFIN` of CLASSE='HOSPITAL_STATE' for `Hospital`
-   */
-  def buildHospitalStateElfin(elfinHospitalStateTemplate: ELFIN, simulationId: String, hospitalState: Hospital): Future[ELFIN] = {
-
-    val ELFIN_SIMULATION_NATURE = "simulation"
-    val ELFIN_SIMULATION_ID_G = "G20150114160000006"
-    
-    val elfinHospitalStateWithIdFuture: Future[ELFIN] = ElfinUtil.assignElfinId(elfinHospitalStateTemplate)
-    
-    val elfinHospitalStateWithBedsFuture = elfinHospitalStateWithIdFuture.map { elfinHospitalStateWithId =>
-      // Assign ID_G: G20150114160000006 to have ELFIN_SIMULATION_NATURE store in a collection distinct 
-      // from end users recorded HOSPITAL_STATE ELFINs.
-      val elfinHospitalStateWithUpdatedID_G = ElfinUtil.replaceElfinID_G(elfinHospitalStateWithId, ELFIN_SIMULATION_ID_G)
-      
-      val elfinHospitalStateWithNewNatureGroupeSource = ElfinUtil.replaceElfinNatureGroupeSource(elfin = elfinHospitalStateWithUpdatedID_G, newNature = ELFIN_SIMULATION_NATURE, newGroupe = elfinHospitalStateWithUpdatedID_G.GROUPE, newSource = Some(simulationId))
-      val bedsHospitalWrapperElfin = HospitalHelper.toElfin(hospitalState)
-      val identifiantHospitalState = IDENTIFIANT(AUT = Some("FluxPatients - Simulator"), NOM = None, ORIGINE = None, OBJECTIF = None, DE = Option(DateUtil.getIsoDateFormatterWithoutTz.format(hospitalState.schedule)))
-      val elfinHospitalStateWithIdentifiant = ElfinUtil.replaceElfinIdentifiant(elfinHospitalStateWithNewNatureGroupeSource, identifiantHospitalState)
-      // TODO: we need L[0] to match Hospital meta-data unlike TRANSFER 
-      val elfinHospitalStateWithBeds = ElfinUtil.replaceElfinCaracteristiqueFractionL(elfinHospitalStateWithIdentifiant, bedsHospitalWrapperElfin.CARACTERISTIQUE.get.FRACTION.get.L)
-      elfinHospitalStateWithBeds
-    }
-
-    elfinHospitalStateWithBedsFuture
   }
 
 }
