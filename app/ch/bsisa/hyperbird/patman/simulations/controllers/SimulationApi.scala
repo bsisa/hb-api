@@ -46,13 +46,13 @@ object SimulationApi extends Controller with securesocial.core.SecureSocial {
 
     simulationIdFuture.map { simulationId =>
       // Make use of ELFIN Id generator to obtain a `unique` identifier for the current simulation
-      val simulatorActorId = s"simulatorActor_${simulationId}"
+      val simulatorActorName = s"simulatorActor_${simulationId}"
       Logger.debug(s"SimulationApi.simulate: Test with parameters: ${dateFrom}, ${dateTo} called by user: ${request.user}")
       // Create the simulation
-      val simulatorActor = Akka.system.actorOf(Props(new SimulatorActor(simulatorActorId, DateUtil.hbDateFormat.parse(dateFrom), DateUtil.hbDateFormat.parse(dateTo))), name = simulatorActorId)
+      val simulatorActor = Akka.system.actorOf(Props(new SimulatorActor(simulationId, DateUtil.hbDateFormat.parse(dateFrom), DateUtil.hbDateFormat.parse(dateTo))), name = simulatorActorName)
       // Provide feedback with simulation identifier. 
       // TODO: possibly deal with exceptions.
-      Ok(s"Simulator id = ${simulatorActorId} with parameters: ${dateFrom}, ${dateTo}")
+      Ok(s"Simulator id = ${simulationId}, name = ${simulatorActorName} with parameters: ${dateFrom}, ${dateTo}")
     }
 
   }
