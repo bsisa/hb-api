@@ -24,6 +24,7 @@ import akka.actor.Props
 import ch.bsisa.hyperbird.patman.simulations.actors.SimulatorActor
 import ch.bsisa.hyperbird.util.ElfinIdGenerator
 import scala.concurrent.Future
+import ch.bsisa.hyperbird.patman.simulations.model.HospitalHelper
 
 /**
  * Patient management module simulation API controller.
@@ -39,11 +40,13 @@ object SimulationApi extends Controller with securesocial.core.SecureSocial {
    */
   def simulate(dateFrom: String, dateTo: String) = SecuredAction(ajaxCall = true).async { request =>
 
-    val simulatorIdPostFixFuture: Future[String] = ElfinIdGenerator.getNewElfinId
+    val author: String = request.user.identityId.userId
 
-    simulatorIdPostFixFuture.map { simulatorIdPostFix =>
+    val simulationIdFuture = HospitalHelper.createSimulationDatabaseEntry(Some(author), dateFrom, dateTo)
+
+    simulationIdFuture.map { simulationId =>
       // Make use of ELFIN Id generator to obtain a `unique` identifier for the current simulation
-      val simulatorActorId = s"simulatorActor_${simulatorIdPostFix}"
+      val simulatorActorId = s"simulatorActor_${simulationId}"
       Logger.debug(s"SimulationApi.simulate: Test with parameters: ${dateFrom}, ${dateTo} called by user: ${request.user}")
       // Create the simulation
       val simulatorActor = Akka.system.actorOf(Props(new SimulatorActor(simulatorActorId, DateUtil.hbDateFormat.parse(dateFrom), DateUtil.hbDateFormat.parse(dateTo))), name = simulatorActorId)
