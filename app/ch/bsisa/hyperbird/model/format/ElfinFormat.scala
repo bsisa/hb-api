@@ -7,6 +7,7 @@ import play.api.libs.json.{ Json, JsObject, JsValue }
 import play.api.Logger
 import ch.bsisa.hyperbird.model.MELFIN
 import play.api.libs.json.JsArray
+import ch.bsisa.hyperbird.model.CARACTERISTIQUE
 
 /**
  * Functions helping to read and write ELFIN, MELFIN model object
@@ -42,6 +43,8 @@ object ElfinFormat {
 
   }
 
+  def caracteristiquefromXml(elfinXmlElem: scala.xml.Elem): CARACTERISTIQUE = scalaxb.fromXML[CARACTERISTIQUE](elfinXmlElem)
+  
   def toJson(elfin: ELFIN): JsValue = {
     try {
       Json.toJson(elfin)
