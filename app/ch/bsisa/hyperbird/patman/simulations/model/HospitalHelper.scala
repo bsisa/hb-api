@@ -1,5 +1,8 @@
 package ch.bsisa.hyperbird.patman.simulations.model
 
+import ch.bsisa.hyperbird.Implicits._
+import ch.bsisa.hyperbird.dao.ElfinDAO
+
 import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.model.format.ElfinFormat
 import ch.bsisa.hyperbird.model.format.Implicits._
@@ -11,8 +14,6 @@ import play.api.libs.concurrent.Execution.Implicits._
 import scala.concurrent.Future
 import ch.bsisa.hyperbird.patman.simulations.Constants
 import ch.bsisa.hyperbird.model.IDENTIFIANT
-
-
 
 /**
  *  Helper to go from ELFIN to Hospital and reverse.
@@ -526,20 +527,18 @@ object HospitalHelper {
     Some(Hospital(newStaticHospitalState.code, newStaticHospitalState.schedule, currentDeltaWithUpdated))
   }
 
-  
-  
   /**
    * Builds `ELFIN` of CLASSE='HOSPITAL_STATE' for `elfinHospitalStateTemplate: ELFIN`, `simulationId: String`, ``, `hospitalState: Hospital`
    */
   def buildHospitalStateElfin(elfinHospitalStateTemplate: ELFIN, simulationId: String, hospitalState: Hospital): Future[ELFIN] = {
 
     val elfinHospitalStateWithIdFuture: Future[ELFIN] = ElfinUtil.assignElfinId(elfinHospitalStateTemplate)
-    
+
     val elfinHospitalStateWithBedsFuture = elfinHospitalStateWithIdFuture.map { elfinHospitalStateWithId =>
       // Assign ID_G: G20150114160000006 to have ELFIN_SIMULATION_NATURE store in a collection distinct 
       // from end users recorded HOSPITAL_STATE ELFINs.
       val elfinHospitalStateWithUpdatedID_G = ElfinUtil.replaceElfinID_G(elfinHospitalStateWithId, Constants.ELFIN_HOSPITAL_STATE_SIMULATION_COLLECTION_ID)
-      
+
       val elfinHospitalStateWithNewNatureGroupeSource = ElfinUtil.replaceElfinNatureGroupeSource(elfin = elfinHospitalStateWithUpdatedID_G, newNature = Constants.ELFIN_HOSPITAL_STATE_SIMULATION_NATURE, newGroupe = elfinHospitalStateWithUpdatedID_G.GROUPE, newSource = Some(simulationId))
       val bedsHospitalWrapperElfin = HospitalHelper.toElfin(hospitalState)
       val identifiantHospitalState = IDENTIFIANT(AUT = Some("FluxPatients - Simulator"), NOM = None, ORIGINE = None, OBJECTIF = None, DE = Option(DateUtil.getIsoDateFormatterWithoutTz.format(hospitalState.schedule)))
@@ -551,14 +550,14 @@ object HospitalHelper {
 
     elfinHospitalStateWithBedsFuture
   }
-  
+
   /**
    * Builds `ELFIN` of CLASSE='TRANSFER' given provided parameters.
    */
   def buildTransferElfin(elfinTransferTemplate: ELFIN, simulationId: String, nature: String, fromHospitalCode: String, toHospitalCode: String, schedule: Date, beds: List[Bed]): Future[ELFIN] = {
 
     val elfinTransferWithIdFuture: Future[ELFIN] = ElfinUtil.assignElfinId(elfinTransferTemplate)
-    
+
     val elfinTransferWithBedsFuture = elfinTransferWithIdFuture.map { elfinTransferWithId =>
       val elfinTransferWithNewNatureGroupeSource = ElfinUtil.replaceElfinNatureGroupeSource(elfin = elfinTransferWithId, newNature = nature, newGroupe = elfinTransferWithId.GROUPE, newSource = Some(simulationId))
       val bedsHospitalWrapper = Hospital(code = fromHospitalCode, schedule = schedule, beds = beds)
@@ -569,9 +568,56 @@ object HospitalHelper {
       val elfinTransferWithBeds = ElfinUtil.replaceElfinCaracteristiqueFractionL(elfinTransferWithIdentifiant, bedsHospitalWrapperElfin.CARACTERISTIQUE.get.FRACTION.get.L)
       elfinTransferWithBeds
     }
-    
+
     elfinTransferWithBedsFuture
-  }  
-  
-  
+  }
+
+  /**
+   * Create SIMULATION database entry and return a the corresponding ELFIN.Id
+   */
+  def createSimulationDatabaseEntry(author: Option[String] = None, dateFrom: String, dateTo: String): Future[String] = {
+
+    val simulationIdFutureFuture = ElfinDAO.getNewFromCatalogue("SIMULATION").flatMap { simulationElfinTemplate =>
+      val simulationIdFuture = buildSimulationElfin(simulationElfinTemplate, author, dateFrom, dateTo).map { simulationElfin =>
+        ElfinDAO.create(simulationElfin)
+        simulationElfin.Id
+      }
+      simulationIdFuture
+    }
+    simulationIdFutureFuture
+  }
+
+  /**
+   * Builds `ELFIN` of CLASSE='SIMULATION' given provided parameters.
+   */
+  def buildSimulationElfin(elfinSimulationTemplate: ELFIN, author: Option[String] = None, dateFrom: String, dateTo: String): Future[ELFIN] = {
+
+    val simulationElfinWithIdFuture: Future[ELFIN] = ElfinUtil.assignElfinId(elfinSimulationTemplate)
+
+    val simulationElfinWithCaracteristiqueFuture: Future[ELFIN] = simulationElfinWithIdFuture.map { simulationElfinWithId =>
+
+      val identifiantSimulation = IDENTIFIANT(AUT = author, DE = Option(DateUtil.getIsoDateFormatterWithoutTz.format(new Date())))
+      val simulationElfinWithIdentifiant = ElfinUtil.replaceElfinIdentifiant(simulationElfinWithId, identifiantSimulation)
+
+      val characteristicsXmlElem =
+        <CARACTERISTIQUE>
+          <FRACTION>
+            <!-- Simulation parameters -->
+            <L POS="1">
+              <!-- Simulation parameter date from -->
+              <C POS="1">{ DateUtil.getIsoDateFormatterWithoutTz.format(DateUtil.hbDateFormat.parse(dateFrom)) }</C>
+              <!-- Simulation parameter date to -->
+              <C POS="2">{ DateUtil.getIsoDateFormatterWithoutTz.format(DateUtil.hbDateFormat.parse(dateTo)) }</C>
+            </L>
+          </FRACTION>
+        </CARACTERISTIQUE>
+
+      val caracteristique = ElfinFormat.caracteristiquefromXml(characteristicsXmlElem)
+      val simulationElfinWithCaracteristique = ElfinUtil.replaceElfinCaracteristique(simulationElfinWithIdentifiant, caracteristique)
+      simulationElfinWithCaracteristique
+    }
+
+    simulationElfinWithCaracteristiqueFuture
+  }
+
 }
