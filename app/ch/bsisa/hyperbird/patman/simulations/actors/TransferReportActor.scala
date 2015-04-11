@@ -42,7 +42,7 @@ class TransferReportActor(simulationId: String) extends Actor with ActorLogging 
           val bedsToAdd = incomingSiBeds ++ typeScToSiBeds
 
           if (bedsToAdd.size > 0) {
-            val addTransferElfinFuture = buildTransferElfin(
+            val addTransferElfinFuture = HospitalHelper.buildTransferElfin(
               elfinTransferTemplate = elfinTransferTemplate, simulationId = simulationId, nature = Constants.TRANSFER_NATURE_ADD,
               fromHospitalCode = fromHospitalCode, toHospitalCode = toHospitalCode, schedule = fromSchedule, beds = bedsToAdd)
             // Update database 
@@ -55,7 +55,7 @@ class TransferReportActor(simulationId: String) extends Actor with ActorLogging 
           val bedsToRemove = outgoingSiBeds
 
           if (bedsToRemove.size > 0) {
-            val removeTransferElfinFuture = buildTransferElfin(
+            val removeTransferElfinFuture = HospitalHelper.buildTransferElfin(
               elfinTransferTemplate = elfinTransferTemplate, simulationId = simulationId, nature = Constants.TRANSFER_NATURE_REMOVE,
               fromHospitalCode = fromHospitalCode, toHospitalCode = toHospitalCode, schedule = fromSchedule, beds = bedsToRemove)
             // Update database 
@@ -82,22 +82,6 @@ class TransferReportActor(simulationId: String) extends Actor with ActorLogging 
 
   }
 
-  def buildTransferElfin(elfinTransferTemplate: ELFIN, simulationId: String, nature: String, fromHospitalCode: String, toHospitalCode: String, schedule: Date, beds: List[Bed]): Future[ELFIN] = {
 
-    val elfinTransferWithIdFuture: Future[ELFIN] = ElfinUtil.assignElfinId(elfinTransferTemplate)
-    
-    val elfinTransferWithBedsFuture = elfinTransferWithIdFuture.map { elfinTransferWithId =>
-      val elfinTransferWithNewNatureGroupeSource = ElfinUtil.replaceElfinNatureGroupeSource(elfin = elfinTransferWithId, newNature = nature, newGroupe = elfinTransferWithId.GROUPE, newSource = Some(simulationId))
-      val bedsHospitalWrapper = Hospital(code = fromHospitalCode, schedule = schedule, beds = beds)
-      val bedsHospitalWrapperElfin = HospitalHelper.toElfin(bedsHospitalWrapper)
-
-      val identifiantTransfer = IDENTIFIANT(AUT = Some("FluxPatients - Simulator"), NOM = None, ORIGINE = Option(fromHospitalCode), OBJECTIF = Option(toHospitalCode), DE = Option(DateUtil.getIsoDateFormatterWithoutTz.format(schedule)))
-      val elfinTransferWithIdentifiant = ElfinUtil.replaceElfinIdentifiant(elfinTransferWithNewNatureGroupeSource, identifiantTransfer)
-      val elfinTransferWithBeds = ElfinUtil.replaceElfinCaracteristiqueFractionL(elfinTransferWithIdentifiant, bedsHospitalWrapperElfin.CARACTERISTIQUE.get.FRACTION.get.L)
-      elfinTransferWithBeds
-    }
-    
-    elfinTransferWithBedsFuture
-  }
 
 }
