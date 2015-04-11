@@ -58,12 +58,12 @@ object HospitalHelper {
   /**
    * Converts `Hospital` instance to ELFIN generic GeoXML representation.
    */
-  def toElfin(hospital: Hospital): ELFIN = {
+  def toElfin(hospital: Hospital, bedsPosStartIndex:Int = 1): ELFIN = {
 
     val bedsXmlElem = for ((bed, i) <- hospital.beds zipWithIndex) yield {
 
       <!-- Identification lit -->
-      val bedXmlElem = <L POS={ (i + 1).toString }>
+      val bedXmlElem = <L POS={ (i + bedsPosStartIndex).toString }>
                          <!-- Numéro lit -->
                          <C POS="1">{ bed.id }</C>
                          <C POS="2">{ bed.patientNb }</C>
@@ -96,6 +96,7 @@ object HospitalHelper {
 
     ElfinFormat.fromXml(hospitalElfinTemplateXmlElem)
   }
+  
 
   /**
    * Shortcut function for repetitive Bed.patientType matches Constants.PATIENT_TYPE_SI test
@@ -540,11 +541,31 @@ object HospitalHelper {
       val elfinHospitalStateWithUpdatedID_G = ElfinUtil.replaceElfinID_G(elfinHospitalStateWithId, Constants.ELFIN_HOSPITAL_STATE_SIMULATION_COLLECTION_ID)
 
       val elfinHospitalStateWithNewNatureGroupeSource = ElfinUtil.replaceElfinNatureGroupeSource(elfin = elfinHospitalStateWithUpdatedID_G, newNature = Constants.ELFIN_HOSPITAL_STATE_SIMULATION_NATURE, newGroupe = elfinHospitalStateWithUpdatedID_G.GROUPE, newSource = Some(simulationId))
-      val bedsHospitalWrapperElfin = HospitalHelper.toElfin(hospitalState)
+      // bedsPosStartIndex starts at 2 as we manually add lMeta with POS=1 at the head of lSeq
+      val bedsHospitalWrapperElfin = HospitalHelper.toElfin(hospital = hospitalState, bedsPosStartIndex = 2)
       val identifiantHospitalState = IDENTIFIANT(AUT = Some("FluxPatients - Simulator"), NOM = None, ORIGINE = None, OBJECTIF = None, DE = Option(DateUtil.getIsoDateFormatterWithoutTz.format(hospitalState.schedule)))
       val elfinHospitalStateWithIdentifiant = ElfinUtil.replaceElfinIdentifiant(elfinHospitalStateWithNewNatureGroupeSource, identifiantHospitalState)
+      
+      val lSeq : Seq[ch.bsisa.hyperbird.model.L] = bedsHospitalWrapperElfin.CARACTERISTIQUE.get.FRACTION.get.L
+      
+      // Meta-data identifying hospital
+      val lMetaXmlElem = <L POS="1">
+                    <!-- Code ALIAS (Stable) -->
+                    <C POS="1">{hospitalState.code}</C>
+                    <!-- Nom NOM (full name) -->
+                    <C POS="2">N/A</C>                    
+                    <!-- Id -->
+                    <C POS="3">N/A</C>
+                    <!-- ID_G -->
+                    <C POS="4">N/A</C>
+                </L>              
+      val lMeta = ElfinFormat.lFromXml(lMetaXmlElem)
+      val lSeqWithMeta : Seq[ch.bsisa.hyperbird.model.L] = lMeta +: lSeq 
+      
       // TODO: we need L[0] to match Hospital meta-data unlike TRANSFER 
-      val elfinHospitalStateWithBeds = ElfinUtil.replaceElfinCaracteristiqueFractionL(elfinHospitalStateWithIdentifiant, bedsHospitalWrapperElfin.CARACTERISTIQUE.get.FRACTION.get.L)
+      //val elfinHospitalStateWithBeds = ElfinUtil.replaceElfinCaracteristiqueFractionL(elfinHospitalStateWithIdentifiant, bedsHospitalWrapperElfin.CARACTERISTIQUE.get.FRACTION.get.L)
+      val elfinHospitalStateWithBeds = ElfinUtil.replaceElfinCaracteristiqueFractionL(elfinHospitalStateWithIdentifiant, lSeqWithMeta)
+      
       elfinHospitalStateWithBeds
     }
 
@@ -612,7 +633,7 @@ object HospitalHelper {
           </FRACTION>
         </CARACTERISTIQUE>
 
-      val caracteristique = ElfinFormat.caracteristiquefromXml(characteristicsXmlElem)
+      val caracteristique = ElfinFormat.caracteristiqueFromXml(characteristicsXmlElem)
       val simulationElfinWithCaracteristique = ElfinUtil.replaceElfinCaracteristique(simulationElfinWithIdentifiant, caracteristique)
       simulationElfinWithCaracteristique
     }
