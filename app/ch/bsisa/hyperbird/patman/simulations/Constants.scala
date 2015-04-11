@@ -24,6 +24,7 @@ object Constants {
 
   val TRANSFER_NATURE_ADD = "add"
   val TRANSFER_NATURE_REMOVE = "remove"
+  val TRANSFER_NATURE_UPDATE = "update"
 
   val ELFIN_HOSPITAL_STATE_SIMULATION_NATURE = "simulation"
 
