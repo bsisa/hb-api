@@ -14,15 +14,20 @@ object Constants {
   val TRANSFER_TYPE_SPEC = "spécialisé"
   val TRANSFER_TYPE_MED = "médicalisé"
   val TRANSFER_TYPE_NON_MED = "non-médicalisé"
-    
-  val TRANSFER_REQUEST_ACCEPTED = "accepted" 
+
+  val TRANSFER_REQUEST_ACCEPTED = "accepted"
   val TRANSFER_REQUEST_REFUSED = "refused"
   val TRANSFER_REQUEST_PARTIAL = "partial"
-    
-  val DATASET_UPDATE_RESPONSE_SUCCESS = "success" 
+
+  val DATASET_UPDATE_RESPONSE_SUCCESS = "success"
   val DATASET_UPDATE_RESPONSE_FAILURE = "failure"
-    
+
   val TRANSFER_NATURE_ADD = "add"
   val TRANSFER_NATURE_REMOVE = "remove"
-    
+
+  val ELFIN_HOSPITAL_STATE_SIMULATION_NATURE = "simulation"
+
+  val ELFIN_HOSPITAL_STATE_SIMULATION_COLLECTION_ID = "G20150114160000006"
+  //val ELFIN_SIMULATION_COLLECTION_ID = "G20150114160000007"
+
 }
