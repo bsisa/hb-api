@@ -61,6 +61,19 @@ object ElfinUtil {
       ID_G = elfin.ID_G, CLASSE = elfin.CLASSE, GROUPE = newGroupe, TYPE = elfin.TYPE, NATURE = newNature, SOURCE = newSource)
   }
 
+  
+  /**
+   * Replaces the value elfin.CARACTERISTIQUE by an new CARACTERISTIQUE. 
+   * The rest of the elfin information stays unchanged. 
+   * The returned elfin is a new elfin instance.
+   */
+  def replaceElfinCaracteristique(elfin: ELFIN, newCaracteristique: ch.bsisa.hyperbird.model.CARACTERISTIQUE): ELFIN = {
+    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, Some(newCaracteristique),
+      elfin.PARTENAIRE, elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, elfin.Id,
+      elfin.ID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
+  }  
+  
+  
   /**
    * Replaces the value elfin.CARACTERISTIQUE by an new CARACTERISTIQUE only containing FRACTION made of
    * the provided `newLSeq`. Any other CARACTERISTIQUE element is lost. The rest of the elfin information
