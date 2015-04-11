@@ -62,15 +62,16 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
           bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc,
           bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc,
           patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc,
-          tranferTypeOnlyChange) => {
+          bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc) => {
 
           // Update current PRT simulatedHospitalState removing transfered SI beds
           simulatedHospitalState = HospitalHelper.updateSimulatedHospitalStateForPrt(
             currentSimulatedHospitalStateOption = simulatedHospitalState,
             newStaticHospitalStateOption = currentHospitalState,
             bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc,
-            bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc, patientTypeChangeFromScToSi,
-            patientTypeChangeFromSiToSc, tranferTypeOnlyChange)
+            bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc, 
+            patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc, 
+            bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc)
 
           log.info(s"${name}> SIMULATED HS: ${simulatedHospitalState}")
           simulatedHospitalStateReportActor ! SimulatedHospitalState(hospitalState = simulatedHospitalState.get)
