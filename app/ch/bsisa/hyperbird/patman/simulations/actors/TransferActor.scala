@@ -25,17 +25,32 @@ class TransferActor(hospitalsActorRefs: Map[String, ActorRef], transferReportAct
       transferReportActorRef ! TransferRequestDelete(id, bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc, fromHospitalCode, toHospitalCode, fromSchedule, message)      
       
       
+    case TransferResponseCreate(correlationId, status, fromHospitalCode, toHospitalCode, message) => 
+      log.info(message)
+      hospitalsActorRefs(fromHospitalCode) ! TransferResponseCreate(correlationId, status, fromHospitalCode, toHospitalCode, message)
+      //transferReportActorRef ! TransferResponseCreate(correlationId, status, fromHospitalCode, toHospitalCode, message)      
       
-    case TransferRequest(id, incomingSiBeds, outgoingSiBeds, typeScToSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
-      //log.info(s"Request for transfer from ${fromHospitalCode} to ${toHospitalCode}")
-      hospitalsActorRefs(toHospitalCode) ! TransferRequest(id, incomingSiBeds, outgoingSiBeds, typeScToSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, message)
-      transferReportActorRef ! TransferRequest(id, incomingSiBeds, outgoingSiBeds, typeScToSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, message)
-
-    case TransferResponse(id, status, acceptedIncomingBeds, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
-      //log.info(s"TransferResponse from ${fromHospitalCode} to ${toHospitalCode}")
-      // Forward response to original requester (fromHospitalCode)
-      hospitalsActorRefs(fromHospitalCode) ! TransferResponse(id, status, acceptedIncomingBeds, fromHospitalCode, toHospitalCode, fromSchedule, message)
-      transferReportActorRef ! TransferResponse(id, status, acceptedIncomingBeds, fromHospitalCode, toHospitalCode, fromSchedule, message)
+    case TransferResponseUpdate(correlationId, status, fromHospitalCode, toHospitalCode, message) => 
+      log.info(message)
+      hospitalsActorRefs(fromHospitalCode) ! TransferResponseUpdate(correlationId, status, fromHospitalCode, toHospitalCode, message)
+      //transferReportActorRef ! TransferResponseUpdate(correlationId, status, fromHospitalCode, toHospitalCode, message)            
+      
+    case TransferResponseDelete(correlationId, status, fromHospitalCode, toHospitalCode, message) => 
+      log.info(message)
+      hospitalsActorRefs(fromHospitalCode) ! TransferResponseDelete(correlationId, status, fromHospitalCode, toHospitalCode, message)
+      //transferReportActorRef ! TransferResponseDelete(correlationId, status, fromHospitalCode, toHospitalCode, message)
+      
+      
+//    case TransferRequest(id, incomingSiBeds, outgoingSiBeds, typeScToSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
+//      //log.info(s"Request for transfer from ${fromHospitalCode} to ${toHospitalCode}")
+//      hospitalsActorRefs(toHospitalCode) ! TransferRequest(id, incomingSiBeds, outgoingSiBeds, typeScToSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, message)
+//      transferReportActorRef ! TransferRequest(id, incomingSiBeds, outgoingSiBeds, typeScToSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, message)
+//
+//    case TransferResponse(id, status, acceptedIncomingBeds, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
+//      //log.info(s"TransferResponse from ${fromHospitalCode} to ${toHospitalCode}")
+//      // Forward response to original requester (fromHospitalCode)
+//      hospitalsActorRefs(fromHospitalCode) ! TransferResponse(id, status, acceptedIncomingBeds, fromHospitalCode, toHospitalCode, fromSchedule, message)
+//      transferReportActorRef ! TransferResponse(id, status, acceptedIncomingBeds, fromHospitalCode, toHospitalCode, fromSchedule, message)
     
     case DataSetEmpty => 
       sender ! WorkCompleted("TransferActor")

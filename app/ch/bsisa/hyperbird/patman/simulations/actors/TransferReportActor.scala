@@ -134,9 +134,9 @@ class TransferReportActor(simulationId: String) extends Actor with ActorLogging 
 
       }
 
-    case TransferResponse(id, status, acceptedIncomingBeds, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
-      log.info(s"TransferResponse id ${id} from ${fromHospitalCode} to ${toHospitalCode} status = ${status}")
-    // We could write to database if status is not successful...
+//    case TransferResponse(id, status, acceptedIncomingBeds, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
+//      log.info(s"TransferResponse id ${id} from ${fromHospitalCode} to ${toHospitalCode} status = ${status}")
+//    // We could write to database if status is not successful...
 
     case DataSetEmpty =>
       sender ! WorkCompleted("TransferReportActor")

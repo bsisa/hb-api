@@ -279,46 +279,46 @@ class HospitalActorCdf(name: String, bedsNb: Int, simulatedHospitalStateReportAc
     //          }
     //      }
 
-    case TransferResponseCreate(correlationId, status, message) =>
+    case  TransferResponseCreate(correlationId, status, fromHospitalCode, toHospitalCode, message) =>
       log.info(s"Received TransferResponseCreate($correlationId, $message)")
       messageState = messageState match {
-        case Some(CdfMessageState(hs, tc, tu, td)) => Some(CdfMessageState(hs, Some(TransferResponseCreate(correlationId, status, message)), tu, td))
+        case Some(CdfMessageState(hs, tc, tu, td)) => Some(CdfMessageState(hs, Some(TransferResponseCreate(correlationId, status, fromHospitalCode, toHospitalCode, message)), tu, td))
         case None => None
       }
       if (checkMessageStateCompleted(messageState)) requestNextDataAndResetMessageState()
 
-    case TransferResponseUpdate(correlationId, status, message) =>
+    case TransferResponseUpdate(correlationId, status, fromHospitalCode, toHospitalCode, message) =>
       log.info(s"Received TransferResponseUpdate($correlationId, $message)")
       messageState = messageState match {
-        case Some(CdfMessageState(hs, tc, tu, td)) => Some(CdfMessageState(hs, tc, Some(TransferResponseUpdate(correlationId, status, message)), td))
+        case Some(CdfMessageState(hs, tc, tu, td)) => Some(CdfMessageState(hs, tc, Some(TransferResponseUpdate(correlationId, status, fromHospitalCode, toHospitalCode, message)), td))
         case None => None
       }
       if (checkMessageStateCompleted(messageState)) requestNextDataAndResetMessageState()
 
-    case TransferResponseDelete(correlationId, status, message) =>
+    case TransferResponseDelete(correlationId, status, fromHospitalCode, toHospitalCode, message) =>
       log.info(s"Received TransferResponseDelete($correlationId, $message)")
       messageState = messageState match {
-        case Some(CdfMessageState(hs, tc, tu, td)) => Some(CdfMessageState(hs, tc, tu, Some(TransferResponseDelete(correlationId, status, message))))
+        case Some(CdfMessageState(hs, tc, tu, td)) => Some(CdfMessageState(hs, tc, tu, Some(TransferResponseDelete(correlationId, status, fromHospitalCode, toHospitalCode, message))))
         case None => None
       }
       if (checkMessageStateCompleted(messageState)) requestNextDataAndResetMessageState()
 
-    case TransferResponse(id, status, acceptedIncomingBeds, fromHospital, toHospital, fromSchedule, message) =>
-      status match {
-        case TRANSFER_REQUEST_ACCEPTED =>
-          log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_ACCEPTED, requesting next data.")
-          log.info(s"TOTAL TRANSFERRED = ${totalNewSiTransferred + totalScToSiTransferred} , New SI = ${totalNewSiTransferred}, SC to SI = ${totalScToSiTransferred}")
-          // Request next data.
-          context.parent ! NextHospitalStatesRequest(name)
-        case TRANSFER_REQUEST_REFUSED =>
-          // We should not obtain this
-          log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_REFUSED")
-          context.parent ! StopSimulationRequest(s"TransferRequest id = $id : TRANSFER_REQUEST_REFUSED")
-        case TRANSFER_REQUEST_PARTIAL =>
-          // We should not obtain this
-          log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_PARTIAL")
-          context.parent ! StopSimulationRequest(s"TransferRequest id = $id : TRANSFER_REQUEST_PARTIAL")
-      }
+//    case TransferResponse(id, status, acceptedIncomingBeds, fromHospital, toHospital, fromSchedule, message) =>
+//      status match {
+//        case TRANSFER_REQUEST_ACCEPTED =>
+//          log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_ACCEPTED, requesting next data.")
+//          log.info(s"TOTAL TRANSFERRED = ${totalNewSiTransferred + totalScToSiTransferred} , New SI = ${totalNewSiTransferred}, SC to SI = ${totalScToSiTransferred}")
+//          // Request next data.
+//          context.parent ! NextHospitalStatesRequest(name)
+//        case TRANSFER_REQUEST_REFUSED =>
+//          // We should not obtain this
+//          log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_REFUSED")
+//          context.parent ! StopSimulationRequest(s"TransferRequest id = $id : TRANSFER_REQUEST_REFUSED")
+//        case TRANSFER_REQUEST_PARTIAL =>
+//          // We should not obtain this
+//          log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_PARTIAL")
+//          context.parent ! StopSimulationRequest(s"TransferRequest id = $id : TRANSFER_REQUEST_PARTIAL")
+//      }
 
     case DataSetEmpty =>
       sender ! WorkCompleted("HosptialActorCdf")
