@@ -9,6 +9,10 @@ import ch.bsisa.hyperbird.model.format.Implicits._
 import ch.bsisa.hyperbird.patman.simulations.Constants._
 import ch.bsisa.hyperbird.util.DateUtil
 import ch.bsisa.hyperbird.util.ElfinUtil
+
+import ch.bsisa.hyperbird.dao.ws.WSQueries
+import ch.bsisa.hyperbird.dao.ws.XQueryWSHelper
+
 import java.util.Date
 import play.api.libs.concurrent.Execution.Implicits._
 import scala.concurrent.Future
@@ -650,6 +654,38 @@ object HospitalHelper {
   }
 
   /**
+   * Update SIMULATION database entry with HospitalSimulationSummary
+   */
+  def updateSimulationDatabaseEntry(simulationId: String, hss: HospitalSimulationSummary): Unit = {
+
+    val simulationElfinFuture = XQueryWSHelper.find(WSQueries.elfinQuery(Constants.ELFIN_HOSPITAL_STATE_SIMULATION_COLLECTION_ID, elfinId = simulationId))
+
+    simulationElfinFuture.map { simulationElfin =>
+
+      val currLSeq = simulationElfin.CARACTERISTIQUE.get.FRACTION.get.L
+
+      val newLXmlElement = <L POS={ currLSeq.size.toString } >
+                             <!-- Code ALIAS (Stable) -->
+                             <C POS="1">{ hss.hospitalCode }</C>
+                             <!-- Total incoming SI -->
+                             <C POS="2">{ hss.totalIncomingSiPatient }</C>
+                             <!-- Total incoming SC -->
+                             <C POS="3">{ hss.totalIncomingScPatient }</C>
+                             <!-- Total outgoing SI -->
+                             <C POS="4">{ hss.totalOutgoingSiPatient }</C>
+                             <!-- Total outgoing SC -->
+                             <C POS="5">{ hss.totalOutgoingScPatient }</C>
+                           </L>
+
+      val newL = ElfinFormat.lFromXml(newLXmlElement)
+      val newLSeq = currLSeq :+ newL
+      val updatedSimulationElfin = ElfinUtil.replaceElfinCaracteristiqueFractionL(elfin = simulationElfin, newLSeq = newLSeq)
+      ElfinDAO.update(updatedSimulationElfin)
+    }
+
+  }
+
+  /**
    * Builds `ELFIN` of CLASSE='SIMULATION' given provided parameters.
    */
   def buildSimulationElfin(elfinSimulationTemplate: ELFIN, author: Option[String] = None, dateFrom: String, dateTo: String): Future[ELFIN] = {
@@ -685,19 +721,19 @@ object HospitalHelper {
   /**
    * HospitalSimulationSummary update helper
    */
-  def updateHospitalSimulationSummary(currentHss: Option[HospitalSimulationSummary], bedsWithIncomingPatientTypeSi: List[Bed], bedsWithIncomingPatientTypeSc: List[Bed], bedsWithOutgoingPatientTypeSi: List[Bed], bedsWithOutgoingPatientTypeSc: List[Bed]): HospitalSimulationSummary = {
+  def updateHospitalSimulationSummary(hospitalCode:String, currentHss: Option[HospitalSimulationSummary], bedsWithIncomingPatientTypeSi: List[Bed], bedsWithIncomingPatientTypeSc: List[Bed], bedsWithOutgoingPatientTypeSi: List[Bed], bedsWithOutgoingPatientTypeSc: List[Bed]): HospitalSimulationSummary = {
 
     val newHss = currentHss match {
 
       case Some(hss) =>
-        HospitalSimulationSummary(
+        HospitalSimulationSummary(hospitalCode = hss.hospitalCode,
           totalIncomingSiPatient = hss.totalIncomingScPatient + bedsWithIncomingPatientTypeSi.size,
           totalIncomingScPatient = hss.totalIncomingScPatient + bedsWithIncomingPatientTypeSc.size,
           totalOutgoingSiPatient = hss.totalOutgoingSiPatient + bedsWithOutgoingPatientTypeSi.size,
           totalOutgoingScPatient = hss.totalOutgoingScPatient + bedsWithOutgoingPatientTypeSc.size)
 
       case None =>
-        HospitalSimulationSummary(
+        HospitalSimulationSummary(hospitalCode = hospitalCode,
           totalIncomingSiPatient = bedsWithIncomingPatientTypeSi.size,
           totalIncomingScPatient = bedsWithIncomingPatientTypeSc.size,
           totalOutgoingSiPatient = bedsWithOutgoingPatientTypeSi.size,

@@ -19,6 +19,7 @@ import scala.concurrent.duration._
 import akka.actor.LocalActorRef
 import akka.actor.PoisonPill
 import ch.bsisa.hyperbird.patman.simulations.model.Hospital
+import ch.bsisa.hyperbird.patman.simulations.model.HospitalHelper
 
 class SimulatorActor(id: String, dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb: Int = 8, allBedsNb: Option[Int] = None, saturationThreshold: Option[Int] = None) extends Actor with ActorLogging {
 
@@ -173,7 +174,7 @@ class SimulatorActor(id: String, dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 
       hssOpt match {
         case Some(hss) => 
           // update SIMULATION entry
-          
+          HospitalHelper.updateSimulationDatabaseEntry(simulationId = id, hss = hss)
       }
       
       // Termination size is minus 1 for ShutdownCoordinatorActor itself not responding to DataSetEmpty message.

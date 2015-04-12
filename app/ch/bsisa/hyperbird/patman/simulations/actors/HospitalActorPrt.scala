@@ -73,6 +73,7 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
           // Update hospital simulation summary
           simulationSummary = Some(
               HospitalHelper.updateHospitalSimulationSummary(
+                  hospitalCode = name,
                   currentHss = simulationSummary, 
                   bedsWithIncomingPatientTypeSi = bedsWithIncomingPatientTypeSi, 
                   bedsWithIncomingPatientTypeSc = bedsWithIncomingPatientTypeSc, 
