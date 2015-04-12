@@ -8,6 +8,13 @@ object Constants {
   val BED_FREE_CODE = "libre"
   val BED_BUSY_CODE = "occupé"
 
+  val BED_REASON_FOR_TRANSFER_SI = "SI"
+  val BED_REASON_FOR_TRANSFER_SI_TO_SC = "SI to SC"
+  val BED_REASON_FOR_TRANSFER_SC = "SC"
+  val BED_REASON_FOR_TRANSFER_SC_TO_SI = "SC to SI"
+  val BED_REASON_FOR_TRANSFER_TRANSFER_TYPE_CHANGE_FOR_SI = "transfer type change for SI"
+  val BED_REASON_FOR_TRANSFER_TRANSFER_TYPE_CHANGE_FOR_SC = "transfer type change for SC"
+    
   val PATIENT_TYPE_SI = "soins intensifs"
   val PATIENT_TYPE_SC = "soins continus"
 

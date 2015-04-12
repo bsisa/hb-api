@@ -58,7 +58,7 @@ object HospitalHelper {
   /**
    * Converts `Hospital` instance to ELFIN generic GeoXML representation.
    */
-  def toElfin(hospital: Hospital, bedsPosStartIndex:Int = 1): ELFIN = {
+  def toElfin(hospital: Hospital, bedsPosStartIndex: Int = 1): ELFIN = {
 
     val bedsXmlElem = for ((bed, i) <- hospital.beds zipWithIndex) yield {
 
@@ -71,7 +71,7 @@ object HospitalHelper {
                          <C POS="4">{ bed.transferType }</C>
                          <C POS="5">n/a</C>
                          <C POS="6">{ if (bed.free) "libre" else "occupé" }</C>
-                         <C POS="7"/>
+                         <C POS="7">{ bed.reasonForTransfer.getOrElse("") }</C>
                        </L>
       bedXmlElem
     }
@@ -96,12 +96,19 @@ object HospitalHelper {
 
     ElfinFormat.fromXml(hospitalElfinTemplateXmlElem)
   }
-  
 
   /**
    * Shortcut function for repetitive Bed.patientType matches Constants.PATIENT_TYPE_SI test
    */
   def isBedPatientTypeSi(bed: Bed): Boolean = (bed.patientType == PATIENT_TYPE_SI)
+
+  /**
+   * Sets `reasonForTransfer` to all beds
+   */
+  def setReasonForTransfer(beds: List[Bed], reasonForTransfer: String): List[Bed] = {
+    val bedsWithReasonForTransfer = for (bed <- beds) yield { Bed(bed.id, bed.free, bed.patientNb, bed.patientType, bed.transferType, Some(reasonForTransfer)) }
+    bedsWithReasonForTransfer
+  }
 
   /**
    * Returns a pair of Seq[Bed]. The first one contains incoming SI patients while the second contains incoming SC patients.
@@ -134,7 +141,9 @@ object HospitalHelper {
                 }
                 val bedsWithIncomingPatientTypeSi = bedsWithIncomingPatients.filter(isBedPatientTypeSi)
                 val bedsWithIncomingPatientTypeSc = bedsWithIncomingPatients.filterNot(isBedPatientTypeSi)
-                (bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
+                val bedsWithIncomingPatientTypeSiAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSi, Constants.BED_REASON_FOR_TRANSFER_SI)
+                val bedsWithIncomingPatientTypeScAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSc, Constants.BED_REASON_FOR_TRANSFER_SC)
+                (bedsWithIncomingPatientTypeSiAndReasonForTransfer, bedsWithIncomingPatientTypeScAndReasonForTransfer)
               }
               // previous available but no current: Nothing is incoming.          
               case None => (List(), List())
@@ -158,7 +167,10 @@ object HospitalHelper {
                 }
                 val bedsWithIncomingPatientTypeSi = bedsWithIncomingPatients.filter(isBedPatientTypeSi)
                 val bedsWithIncomingPatientTypeSc = bedsWithIncomingPatients.filterNot(isBedPatientTypeSi)
-                (bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
+                //(bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
+                val bedsWithIncomingPatientTypeSiAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSi, Constants.BED_REASON_FOR_TRANSFER_SI)
+                val bedsWithIncomingPatientTypeScAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSc, Constants.BED_REASON_FOR_TRANSFER_SC)
+                (bedsWithIncomingPatientTypeSiAndReasonForTransfer, bedsWithIncomingPatientTypeScAndReasonForTransfer)
               }
               // previous available but no current: Nothing is incoming.          
               case None => (List(), List())
@@ -185,7 +197,10 @@ object HospitalHelper {
                 }
                 val bedsWithIncomingPatientTypeSi = bedsWithIncomingPatients.filter(isBedPatientTypeSi)
                 val bedsWithIncomingPatientTypeSc = bedsWithIncomingPatients.filterNot(isBedPatientTypeSi)
-                (bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
+                //(bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
+                val bedsWithIncomingPatientTypeSiAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSi, Constants.BED_REASON_FOR_TRANSFER_SI)
+                val bedsWithIncomingPatientTypeScAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSc, Constants.BED_REASON_FOR_TRANSFER_SC)
+                (bedsWithIncomingPatientTypeSiAndReasonForTransfer, bedsWithIncomingPatientTypeScAndReasonForTransfer)
               }
               // previous available but no current: Nothing is incoming.          
               case None => (List(), List())
@@ -197,7 +212,10 @@ object HospitalHelper {
                 val currentNonEmptyBeds = currentState.beds.filter(bed => !bed.free)
                 val bedsWithIncomingPatientTypeSi = currentNonEmptyBeds.filter(isBedPatientTypeSi)
                 val bedsWithIncomingPatientTypeSc = currentNonEmptyBeds.filterNot(isBedPatientTypeSi)
-                (bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
+                //(bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
+                val bedsWithIncomingPatientTypeSiAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSi, Constants.BED_REASON_FOR_TRANSFER_SI)
+                val bedsWithIncomingPatientTypeScAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSc, Constants.BED_REASON_FOR_TRANSFER_SC)
+                (bedsWithIncomingPatientTypeSiAndReasonForTransfer, bedsWithIncomingPatientTypeScAndReasonForTransfer)
               // no previous nor current state available
               case None => (List(), List())
             }
@@ -229,7 +247,10 @@ object HospitalHelper {
             }
             val bedsWithIncomingPatientTypeSi = bedsWithIncomingPatients.filter(isBedPatientTypeSi)
             val bedsWithIncomingPatientTypeSc = bedsWithIncomingPatients.filterNot(isBedPatientTypeSi)
-            (bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
+            //(bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
+            val bedsWithIncomingPatientTypeSiAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSi, Constants.BED_REASON_FOR_TRANSFER_SI)
+            val bedsWithIncomingPatientTypeScAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSc, Constants.BED_REASON_FOR_TRANSFER_SC)
+            (bedsWithIncomingPatientTypeSiAndReasonForTransfer, bedsWithIncomingPatientTypeScAndReasonForTransfer)
           }
           // previous available but no current: Nothing is incoming.          
           case None => (List(), List())
@@ -241,7 +262,10 @@ object HospitalHelper {
             val currentNonEmptyBeds = currentState.beds.filter(bed => !bed.free)
             val bedsWithIncomingPatientTypeSi = currentNonEmptyBeds.filter(isBedPatientTypeSi)
             val bedsWithIncomingPatientTypeSc = currentNonEmptyBeds.filterNot(isBedPatientTypeSi)
-            (bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
+            //(bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
+            val bedsWithIncomingPatientTypeSiAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSi, Constants.BED_REASON_FOR_TRANSFER_SI)
+            val bedsWithIncomingPatientTypeScAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSc, Constants.BED_REASON_FOR_TRANSFER_SC)
+            (bedsWithIncomingPatientTypeSiAndReasonForTransfer, bedsWithIncomingPatientTypeScAndReasonForTransfer)
           // no previous nor current state available
           case None => (List(), List())
         }
@@ -337,7 +361,10 @@ object HospitalHelper {
                 false
               }
             }
-            (bedsWithPatientTypeChangeFromScToSi, bedsWithPatientTypeChangeFromSiToSc)
+            //(bedsWithPatientTypeChangeFromScToSi, bedsWithPatientTypeChangeFromSiToSc)
+            val bedsWithPatientTypeChangeFromScToSiAndReasonForTransfer = setReasonForTransfer(bedsWithPatientTypeChangeFromScToSi, Constants.BED_REASON_FOR_TRANSFER_SC_TO_SI)
+            val bedsWithPatientTypeChangeFromSiToScAndReasonForTransfer = setReasonForTransfer(bedsWithPatientTypeChangeFromSiToSc, Constants.BED_REASON_FOR_TRANSFER_SI_TO_SC)
+            (bedsWithPatientTypeChangeFromScToSiAndReasonForTransfer, bedsWithPatientTypeChangeFromSiToScAndReasonForTransfer)
           }
           // previous available but no current: No existing bed change tracking.          
           case None => (List(), List())
@@ -350,7 +377,7 @@ object HospitalHelper {
   /**
    * Return (bedsWithTransferTypeOnlyChangePatientTypeSi:List[Bed],bedsWithTransferTypeOnlyChangePatientTypeSc:List[Bed]) for which only TransferType changed. It excludes those already included in patientType change.
    */
-  def getBedsWithTransfertTypeChangeOnly(previousStateOption: Option[Hospital], currentStateOption: Option[Hospital]): (List[Bed],List[Bed]) = {
+  def getBedsWithTransfertTypeChangeOnly(previousStateOption: Option[Hospital], currentStateOption: Option[Hospital]): (List[Bed], List[Bed]) = {
 
     previousStateOption match {
       case Some(previousState) =>
@@ -377,13 +404,16 @@ object HospitalHelper {
             }
             val bedsWithTransferTypeOnlyChangePatientTypeSi = bedsWithTransferTypeOnlyChange.filter(isBedPatientTypeSi)
             val bedsWithTransferTypeOnlyChangePatientTypeSc = bedsWithTransferTypeOnlyChange.filterNot(isBedPatientTypeSi)
-            (bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc)
+            //(bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc)
+            val bedsWithTransferTypeOnlyChangePatientTypeSiAndReasonForTransfer = setReasonForTransfer(bedsWithTransferTypeOnlyChangePatientTypeSi, Constants.BED_REASON_FOR_TRANSFER_TRANSFER_TYPE_CHANGE_FOR_SI)
+            val bedsWithTransferTypeOnlyChangePatientTypeScAndReasonForTransfer = setReasonForTransfer(bedsWithTransferTypeOnlyChangePatientTypeSc, Constants.BED_REASON_FOR_TRANSFER_TRANSFER_TYPE_CHANGE_FOR_SC)
+            (bedsWithTransferTypeOnlyChangePatientTypeSiAndReasonForTransfer, bedsWithTransferTypeOnlyChangePatientTypeScAndReasonForTransfer)                        
           }
           // previous available but no current: No existing bed change tracking.          
-          case None => (List(),List())
+          case None => (List(), List())
         }
       // No previous available: No existing bed change tracking.
-      case None => (List(),List())
+      case None => (List(), List())
     }
   }
 
@@ -423,7 +453,7 @@ object HospitalHelper {
 
   /**
    * TODO: Full implementation review needed
-   * 
+   *
    * Returns a new copy of `currentSimulatedHospitalStateOption` updated with all provided information.
    */
   def updateSimulatedHospitalStateForCdf(
@@ -512,7 +542,7 @@ object HospitalHelper {
     bedsWithOutgoingPatientTypeSc: List[ch.bsisa.hyperbird.patman.simulations.model.Bed],
     patientTypeChangeFromScToSi: List[ch.bsisa.hyperbird.patman.simulations.model.Bed],
     patientTypeChangeFromSiToSc: List[ch.bsisa.hyperbird.patman.simulations.model.Bed],
-    bedsWithTransferTypeOnlyChangePatientTypeSi: List[ch.bsisa.hyperbird.patman.simulations.model.Bed], 
+    bedsWithTransferTypeOnlyChangePatientTypeSi: List[ch.bsisa.hyperbird.patman.simulations.model.Bed],
     bedsWithTransferTypeOnlyChangePatientTypeSc: List[ch.bsisa.hyperbird.patman.simulations.model.Bed],
     currentSimulatedHospitalStateOption: Option[ch.bsisa.hyperbird.patman.simulations.model.Hospital],
     newStaticHospitalState: ch.bsisa.hyperbird.patman.simulations.model.Hospital): Some[ch.bsisa.hyperbird.patman.simulations.model.Hospital] = {
@@ -535,7 +565,7 @@ object HospitalHelper {
     val currentDeltaMinusUpdated = ((currentLeftPlusIncomingBeds diff patientTypeChangeFromScToSi) diff patientTypeChangeFromSiToSc) diff bedsWithTransferTypeOnlyChangePatientTypeSi
     //val currentDeltaWithUpdated = currentDeltaMinusUpdated ++ patientTypeChangeFromScToSi ++ patientTypeChangeFromSiToSc ++ transfertTypeChangeOnly
     val currentDeltaWithUpdated = currentDeltaMinusUpdated ++ patientTypeChangeFromScToSi ++ patientTypeChangeFromSiToSc ++ bedsWithTransferTypeOnlyChangePatientTypeSi
-    
+
     Some(Hospital(newStaticHospitalState.code, newStaticHospitalState.schedule, currentDeltaWithUpdated))
   }
 
@@ -556,27 +586,27 @@ object HospitalHelper {
       val bedsHospitalWrapperElfin = HospitalHelper.toElfin(hospital = hospitalState, bedsPosStartIndex = 2)
       val identifiantHospitalState = IDENTIFIANT(AUT = Some("FluxPatients - Simulator"), NOM = None, ORIGINE = None, OBJECTIF = None, DE = Option(DateUtil.getIsoDateFormatterWithoutTz.format(hospitalState.schedule)))
       val elfinHospitalStateWithIdentifiant = ElfinUtil.replaceElfinIdentifiant(elfinHospitalStateWithNewNatureGroupeSource, identifiantHospitalState)
-      
-      val lSeq : Seq[ch.bsisa.hyperbird.model.L] = bedsHospitalWrapperElfin.CARACTERISTIQUE.get.FRACTION.get.L
-      
+
+      val lSeq: Seq[ch.bsisa.hyperbird.model.L] = bedsHospitalWrapperElfin.CARACTERISTIQUE.get.FRACTION.get.L
+
       // Meta-data identifying hospital
       val lMetaXmlElem = <L POS="1">
-                    <!-- Code ALIAS (Stable) -->
-                    <C POS="1">{hospitalState.code}</C>
-                    <!-- Nom NOM (full name) -->
-                    <C POS="2">N/A</C>                    
-                    <!-- Id -->
-                    <C POS="3">N/A</C>
-                    <!-- ID_G -->
-                    <C POS="4">N/A</C>
-                </L>              
+                           <!-- Code ALIAS (Stable) -->
+                           <C POS="1">{ hospitalState.code }</C>
+                           <!-- Nom NOM (full name) -->
+                           <C POS="2">N/A</C>
+                           <!-- Id -->
+                           <C POS="3">N/A</C>
+                           <!-- ID_G -->
+                           <C POS="4">N/A</C>
+                         </L>
       val lMeta = ElfinFormat.lFromXml(lMetaXmlElem)
-      val lSeqWithMeta : Seq[ch.bsisa.hyperbird.model.L] = lMeta +: lSeq 
-      
+      val lSeqWithMeta: Seq[ch.bsisa.hyperbird.model.L] = lMeta +: lSeq
+
       // TODO: we need L[0] to match Hospital meta-data unlike TRANSFER 
       //val elfinHospitalStateWithBeds = ElfinUtil.replaceElfinCaracteristiqueFractionL(elfinHospitalStateWithIdentifiant, bedsHospitalWrapperElfin.CARACTERISTIQUE.get.FRACTION.get.L)
       val elfinHospitalStateWithBeds = ElfinUtil.replaceElfinCaracteristiqueFractionL(elfinHospitalStateWithIdentifiant, lSeqWithMeta)
-      
+
       elfinHospitalStateWithBeds
     }
 
