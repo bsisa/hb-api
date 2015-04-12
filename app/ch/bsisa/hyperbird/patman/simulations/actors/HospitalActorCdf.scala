@@ -4,6 +4,7 @@ import ch.bsisa.hyperbird.patman.simulations.Constants._
 import ch.bsisa.hyperbird.patman.simulations.messages._
 import ch.bsisa.hyperbird.patman.simulations.model.HospitalHelper
 import ch.bsisa.hyperbird.patman.simulations.model.Hospital
+import ch.bsisa.hyperbird.patman.simulations.model.HospitalSimulationSummary
 
 /**
  * Models CDF Hospital intensive care data such as bed, patient, patient type, transfer type
@@ -56,8 +57,13 @@ class HospitalActorCdf(name: String, bedsNb: Int, simulatedHospitalStateReportAc
    */
   var simulatedHospitalState: Option[Hospital] = None
 
-  var totalNewSiTransferred: Int = 0
-  var totalScToSiTransferred: Int = 0
+  /**
+   * Maintained hospital aggregated figures delivered at simulation end.
+   */
+  var simulationSummary: Option[HospitalSimulationSummary] = None
+
+  //  var totalNewSiTransferred: Int = 0
+  //  var totalScToSiTransferred: Int = 0
 
   def receive = {
     /**
@@ -127,6 +133,15 @@ class HospitalActorCdf(name: String, bedsNb: Int, simulatedHospitalStateReportAc
           patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc,
           bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc) =>
 
+          // Update hospital simulation summary
+          simulationSummary = Some(
+              HospitalHelper.updateHospitalSimulationSummary(
+                  currentHss = simulationSummary, 
+                  bedsWithIncomingPatientTypeSi = bedsWithIncomingPatientTypeSi, 
+                  bedsWithIncomingPatientTypeSc = bedsWithIncomingPatientTypeSc, 
+                  bedsWithOutgoingPatientTypeSi = bedsWithOutgoingPatientTypeSi, 
+                  bedsWithOutgoingPatientTypeSc = bedsWithOutgoingPatientTypeSc))
+
           // ================================================================================================================================= 
           // Update current CDT simulatedHospitalState removing transfered SI beds
           // =================================================================================================================================
@@ -186,23 +201,23 @@ class HospitalActorCdf(name: String, bedsNb: Int, simulatedHospitalStateReportAc
 
           transferActor ! transferReqDelete
 
-          // Send SI movements as Transfer requests to PRT only if necessary
-//          if (bedsWithIncomingPatientTypeSi != Nil || bedsWithOutgoingPatientTypeSi != Nil || patientTypeChangeFromScToSi != Nil) {
-//            transferActor ! TransferRequest(
-//              id = elfin.Id,
-//              incomingSiBeds = bedsWithIncomingPatientTypeSi,
-//              outgoingSiBeds = bedsWithOutgoingPatientTypeSi,
-//              typeScToSiBeds = patientTypeChangeFromScToSi,
-//              fromHospitalCode = HOSPITAL_CODE_CDF,
-//              toHospitalCode = HOSPITAL_CODE_PRT,
-//              fromSchedule = hospital.schedule,
-//              message = s"Requesting SI transfer for ${hospital.schedule} from ${HOSPITAL_CODE_CDF} to ${HOSPITAL_CODE_PRT} with:\n+ ${bedsWithIncomingPatientTypeSi.size} in, - ${bedsWithOutgoingPatientTypeSi.size} out, + ${patientTypeChangeFromScToSi.size} SC to SI in")
-//            totalNewSiTransferred = totalNewSiTransferred + bedsWithIncomingPatientTypeSi.size
-//            totalScToSiTransferred = totalScToSiTransferred + patientTypeChangeFromScToSi.size
-//          } else {
-//            // No transfer response to wait for, request next data.
-//            sender ! NextHospitalStatesRequest(name)
-//          }
+        // Send SI movements as Transfer requests to PRT only if necessary
+        //          if (bedsWithIncomingPatientTypeSi != Nil || bedsWithOutgoingPatientTypeSi != Nil || patientTypeChangeFromScToSi != Nil) {
+        //            transferActor ! TransferRequest(
+        //              id = elfin.Id,
+        //              incomingSiBeds = bedsWithIncomingPatientTypeSi,
+        //              outgoingSiBeds = bedsWithOutgoingPatientTypeSi,
+        //              typeScToSiBeds = patientTypeChangeFromScToSi,
+        //              fromHospitalCode = HOSPITAL_CODE_CDF,
+        //              toHospitalCode = HOSPITAL_CODE_PRT,
+        //              fromSchedule = hospital.schedule,
+        //              message = s"Requesting SI transfer for ${hospital.schedule} from ${HOSPITAL_CODE_CDF} to ${HOSPITAL_CODE_PRT} with:\n+ ${bedsWithIncomingPatientTypeSi.size} in, - ${bedsWithOutgoingPatientTypeSi.size} out, + ${patientTypeChangeFromScToSi.size} SC to SI in")
+        //            totalNewSiTransferred = totalNewSiTransferred + bedsWithIncomingPatientTypeSi.size
+        //            totalScToSiTransferred = totalScToSiTransferred + patientTypeChangeFromScToSi.size
+        //          } else {
+        //            // No transfer response to wait for, request next data.
+        //            sender ! NextHospitalStatesRequest(name)
+        //          }
       }
 
     //      sender ! HospitalStateOk(elfin = elfin, fromHospital = name, previousSimulatedHospitalState = simulatedHospitalState)
@@ -279,7 +294,7 @@ class HospitalActorCdf(name: String, bedsNb: Int, simulatedHospitalStateReportAc
     //          }
     //      }
 
-    case  TransferResponseCreate(correlationId, status, fromHospitalCode, toHospitalCode, message) =>
+    case TransferResponseCreate(correlationId, status, fromHospitalCode, toHospitalCode, message) =>
       log.info(s"Received TransferResponseCreate($correlationId, $message)")
       messageState = messageState match {
         case Some(CdfMessageState(hs, tc, tu, td)) => Some(CdfMessageState(hs, Some(TransferResponseCreate(correlationId, status, fromHospitalCode, toHospitalCode, message)), tu, td))
@@ -303,24 +318,25 @@ class HospitalActorCdf(name: String, bedsNb: Int, simulatedHospitalStateReportAc
       }
       if (checkMessageStateCompleted(messageState)) requestNextDataAndResetMessageState()
 
-//    case TransferResponse(id, status, acceptedIncomingBeds, fromHospital, toHospital, fromSchedule, message) =>
-//      status match {
-//        case TRANSFER_REQUEST_ACCEPTED =>
-//          log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_ACCEPTED, requesting next data.")
-//          log.info(s"TOTAL TRANSFERRED = ${totalNewSiTransferred + totalScToSiTransferred} , New SI = ${totalNewSiTransferred}, SC to SI = ${totalScToSiTransferred}")
-//          // Request next data.
-//          context.parent ! NextHospitalStatesRequest(name)
-//        case TRANSFER_REQUEST_REFUSED =>
-//          // We should not obtain this
-//          log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_REFUSED")
-//          context.parent ! StopSimulationRequest(s"TransferRequest id = $id : TRANSFER_REQUEST_REFUSED")
-//        case TRANSFER_REQUEST_PARTIAL =>
-//          // We should not obtain this
-//          log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_PARTIAL")
-//          context.parent ! StopSimulationRequest(s"TransferRequest id = $id : TRANSFER_REQUEST_PARTIAL")
-//      }
+    //    case TransferResponse(id, status, acceptedIncomingBeds, fromHospital, toHospital, fromSchedule, message) =>
+    //      status match {
+    //        case TRANSFER_REQUEST_ACCEPTED =>
+    //          log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_ACCEPTED, requesting next data.")
+    //          log.info(s"TOTAL TRANSFERRED = ${totalNewSiTransferred + totalScToSiTransferred} , New SI = ${totalNewSiTransferred}, SC to SI = ${totalScToSiTransferred}")
+    //          // Request next data.
+    //          context.parent ! NextHospitalStatesRequest(name)
+    //        case TRANSFER_REQUEST_REFUSED =>
+    //          // We should not obtain this
+    //          log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_REFUSED")
+    //          context.parent ! StopSimulationRequest(s"TransferRequest id = $id : TRANSFER_REQUEST_REFUSED")
+    //        case TRANSFER_REQUEST_PARTIAL =>
+    //          // We should not obtain this
+    //          log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_PARTIAL")
+    //          context.parent ! StopSimulationRequest(s"TransferRequest id = $id : TRANSFER_REQUEST_PARTIAL")
+    //      }
 
     case DataSetEmpty =>
+      // TODO: provide agreggates to store in SIMULATION
       sender ! WorkCompleted("HosptialActorCdf")
 
   }

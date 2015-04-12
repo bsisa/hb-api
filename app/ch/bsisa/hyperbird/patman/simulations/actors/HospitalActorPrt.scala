@@ -4,6 +4,7 @@ import ch.bsisa.hyperbird.patman.simulations.Constants._
 import ch.bsisa.hyperbird.patman.simulations.model.HospitalHelper
 import ch.bsisa.hyperbird.patman.simulations.messages._
 import ch.bsisa.hyperbird.patman.simulations.model.Hospital
+import ch.bsisa.hyperbird.patman.simulations.model.HospitalSimulationSummary
 
 /**
  * Models PRT Hospital intensive care data as bed, patient, patient type, transfer type
@@ -24,6 +25,11 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
    */
   var simulatedHospitalState: Option[Hospital] = None
 
+  /**
+   * Maintained hospital aggregated figures delivered at simulation end.
+   */
+  var simulationSummary : Option[HospitalSimulationSummary] = None
+  
   /**
    * A data loop includes:
    * - HospitalState (1) 		=> new state
@@ -64,6 +70,15 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
           patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc,
           bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc) => {
 
+          // Update hospital simulation summary
+          simulationSummary = Some(
+              HospitalHelper.updateHospitalSimulationSummary(
+                  currentHss = simulationSummary, 
+                  bedsWithIncomingPatientTypeSi = bedsWithIncomingPatientTypeSi, 
+                  bedsWithIncomingPatientTypeSc = bedsWithIncomingPatientTypeSc, 
+                  bedsWithOutgoingPatientTypeSi = bedsWithOutgoingPatientTypeSi, 
+                  bedsWithOutgoingPatientTypeSc = bedsWithOutgoingPatientTypeSc))            
+            
           // Update current PRT simulatedHospitalState removing transfered SI beds
           simulatedHospitalState = HospitalHelper.updateSimulatedHospitalStateForPrt(
             currentSimulatedHospitalStateOption = simulatedHospitalState,
@@ -145,6 +160,7 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
 //      log.warning(s"Unexpected transferResponse at PRT: id = $id, $message")
 
     case DataSetEmpty =>
+      // TODO: provide agreggates to store in SIMULATION
       sender ! WorkCompleted("HosptialActorPrt")
 
   }

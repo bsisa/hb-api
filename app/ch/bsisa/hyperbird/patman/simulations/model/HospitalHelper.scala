@@ -407,7 +407,7 @@ object HospitalHelper {
             //(bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc)
             val bedsWithTransferTypeOnlyChangePatientTypeSiAndReasonForTransfer = setReasonForTransfer(bedsWithTransferTypeOnlyChangePatientTypeSi, Constants.BED_REASON_FOR_TRANSFER_TRANSFER_TYPE_CHANGE_FOR_SI)
             val bedsWithTransferTypeOnlyChangePatientTypeScAndReasonForTransfer = setReasonForTransfer(bedsWithTransferTypeOnlyChangePatientTypeSc, Constants.BED_REASON_FOR_TRANSFER_TRANSFER_TYPE_CHANGE_FOR_SC)
-            (bedsWithTransferTypeOnlyChangePatientTypeSiAndReasonForTransfer, bedsWithTransferTypeOnlyChangePatientTypeScAndReasonForTransfer)                        
+            (bedsWithTransferTypeOnlyChangePatientTypeSiAndReasonForTransfer, bedsWithTransferTypeOnlyChangePatientTypeScAndReasonForTransfer)
           }
           // previous available but no current: No existing bed change tracking.          
           case None => (List(), List())
@@ -680,6 +680,30 @@ object HospitalHelper {
     }
 
     simulationElfinWithCaracteristiqueFuture
+  }
+
+  /**
+   * HospitalSimulationSummary update helper
+   */
+  def updateHospitalSimulationSummary(currentHss: Option[HospitalSimulationSummary], bedsWithIncomingPatientTypeSi: List[Bed], bedsWithIncomingPatientTypeSc: List[Bed], bedsWithOutgoingPatientTypeSi: List[Bed], bedsWithOutgoingPatientTypeSc: List[Bed]): HospitalSimulationSummary = {
+
+    val newHss = currentHss match {
+
+      case Some(hss) =>
+        HospitalSimulationSummary(
+          totalIncomingSiPatient = hss.totalIncomingScPatient + bedsWithIncomingPatientTypeSi.size,
+          totalIncomingScPatient = hss.totalIncomingScPatient + bedsWithIncomingPatientTypeSc.size,
+          totalOutgoingSiPatient = hss.totalOutgoingSiPatient + bedsWithOutgoingPatientTypeSi.size,
+          totalOutgoingScPatient = hss.totalOutgoingScPatient + bedsWithOutgoingPatientTypeSc.size)
+
+      case None =>
+        HospitalSimulationSummary(
+          totalIncomingSiPatient = bedsWithIncomingPatientTypeSi.size,
+          totalIncomingScPatient = bedsWithIncomingPatientTypeSc.size,
+          totalOutgoingSiPatient = bedsWithOutgoingPatientTypeSi.size,
+          totalOutgoingScPatient = bedsWithOutgoingPatientTypeSc.size)
+    }
+    newHss
   }
 
 }
