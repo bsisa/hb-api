@@ -169,7 +169,13 @@ class SimulatorActor(id: String, dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 
       }
 
     // When all WorkCompleted messages have been received we should receive the StopSimulationRequest
-    case WorkCompleted(message) =>
+    case WorkCompleted(message, hssOpt) =>
+      hssOpt match {
+        case Some(hss) => 
+          // update SIMULATION entry
+          
+      }
+      
       // Termination size is minus 1 for ShutdownCoordinatorActor itself not responding to DataSetEmpty message.
       shutdownCoordinatorActor ! ShutdownSignal(message = message, terminationSize = children.size - 1)
 

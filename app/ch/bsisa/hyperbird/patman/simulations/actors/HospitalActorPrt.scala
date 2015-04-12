@@ -161,7 +161,7 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
 
     case DataSetEmpty =>
       // TODO: provide agreggates to store in SIMULATION
-      sender ! WorkCompleted("HosptialActorPrt")
+      sender ! WorkCompleted("HosptialActorPrt", simulationSummary)
 
   }
 
