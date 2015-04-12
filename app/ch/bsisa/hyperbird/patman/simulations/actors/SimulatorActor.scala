@@ -32,7 +32,7 @@ class SimulatorActor(id: String, dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 
   
   // Create children actors ===========================================
   //  val datasetActor = actorOf(Props(new DataSetActor), name = "dataSetActor")
-  val shutdownCoordinatorActor = actorOf(Props(new ShutdownCoordinatorActor), name = "shutdownCoordinatorActor")
+  val shutdownCoordinatorActor = actorOf(Props(new ShutdownCoordinatorActor(simulationId = id)), name = "shutdownCoordinatorActor")
 
   // Report related actors
   val simulatedHospitalStateReportActor = actorOf(Props(new SimulatedHospitalStateReportActor(simulationId = id)), name = "simulatedHospitalStateReportActor")
@@ -171,14 +171,8 @@ class SimulatorActor(id: String, dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 
 
     // When all WorkCompleted messages have been received we should receive the StopSimulationRequest
     case WorkCompleted(message, hssOpt) =>
-      hssOpt match {
-        case Some(hss) => 
-          // update SIMULATION entry
-          HospitalHelper.updateSimulationDatabaseEntry(simulationId = id, hss = hss)
-      }
-      
       // Termination size is minus 1 for ShutdownCoordinatorActor itself not responding to DataSetEmpty message.
-      shutdownCoordinatorActor ! ShutdownSignal(message = message, terminationSize = children.size - 1)
+      shutdownCoordinatorActor ! ShutdownSignal(message = message, terminationSize = children.size - 1, hssOpt)
 
     // Shuts down the simulation 
     case StopSimulationRequest(reason) =>

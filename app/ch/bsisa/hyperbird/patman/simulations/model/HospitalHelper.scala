@@ -15,6 +15,7 @@ import ch.bsisa.hyperbird.dao.ws.XQueryWSHelper
 
 import java.util.Date
 import play.api.libs.concurrent.Execution.Implicits._
+import play.api.Logger
 import scala.concurrent.Future
 import ch.bsisa.hyperbird.patman.simulations.Constants
 import ch.bsisa.hyperbird.model.IDENTIFIANT
@@ -34,6 +35,8 @@ import ch.bsisa.hyperbird.model.IDENTIFIANT
  *
  */
 object HospitalHelper {
+
+  val logger = Logger("ch.bsisa.hyperbird.patman.simulations.model.HospitalHelper")
 
   /**
    * Converts generic ELFIN type for specific CLASSE='HOSPITAL_STATE' to semantic type Hospital
@@ -656,29 +659,34 @@ object HospitalHelper {
   /**
    * Update SIMULATION database entry with HospitalSimulationSummary
    */
-  def updateSimulationDatabaseEntry(simulationId: String, hss: HospitalSimulationSummary): Unit = {
+  def updateSimulationDatabaseEntry(simulationId: String, hssList: List[HospitalSimulationSummary]): Unit = {
 
-    val simulationElfinFuture = XQueryWSHelper.find(WSQueries.elfinQuery(Constants.ELFIN_HOSPITAL_STATE_SIMULATION_COLLECTION_ID, elfinId = simulationId))
+    logger.info(s">>>> updateSimulationDatabaseEntry(simulationId = ${simulationId})")
+
+    val simulationElfinFuture = XQueryWSHelper.find(WSQueries.elfinQuery(Constants.ELFIN_SIMULATION_COLLECTION_ID, elfinId = simulationId))
 
     simulationElfinFuture.map { simulationElfin =>
 
       val currLSeq = simulationElfin.CARACTERISTIQUE.get.FRACTION.get.L
 
-      val newLXmlElement = <L POS={ currLSeq.size.toString } >
-                             <!-- Code ALIAS (Stable) -->
-                             <C POS="1">{ hss.hospitalCode }</C>
-                             <!-- Total incoming SI -->
-                             <C POS="2">{ hss.totalIncomingSiPatient }</C>
-                             <!-- Total incoming SC -->
-                             <C POS="3">{ hss.totalIncomingScPatient }</C>
-                             <!-- Total outgoing SI -->
-                             <C POS="4">{ hss.totalOutgoingSiPatient }</C>
-                             <!-- Total outgoing SC -->
-                             <C POS="5">{ hss.totalOutgoingScPatient }</C>
-                           </L>
+      val newLXmlElements = for ((hss, i) <- hssList zipWithIndex) yield {
+        val newLXmlElement = <L POS={ (i + currLSeq.size + 1).toString }>
+                               <!-- Code ALIAS (Stable) -->
+                               <C POS="1">{ hss.hospitalCode }</C>
+                               <!-- Total incoming SI -->
+                               <C POS="2">{ hss.totalIncomingSiPatient }</C>
+                               <!-- Total incoming SC -->
+                               <C POS="3">{ hss.totalIncomingScPatient }</C>
+                               <!-- Total outgoing SI -->
+                               <C POS="4">{ hss.totalOutgoingSiPatient }</C>
+                               <!-- Total outgoing SC -->
+                               <C POS="5">{ hss.totalOutgoingScPatient }</C>
+                             </L>
+        newLXmlElement
+      }
 
-      val newL = ElfinFormat.lFromXml(newLXmlElement)
-      val newLSeq = currLSeq :+ newL
+      val newL = for (newLXmlElement <- newLXmlElements) yield { ElfinFormat.lFromXml(newLXmlElement) }
+      val newLSeq = currLSeq ++ newL
       val updatedSimulationElfin = ElfinUtil.replaceElfinCaracteristiqueFractionL(elfin = simulationElfin, newLSeq = newLSeq)
       ElfinDAO.update(updatedSimulationElfin)
     }
@@ -721,7 +729,7 @@ object HospitalHelper {
   /**
    * HospitalSimulationSummary update helper
    */
-  def updateHospitalSimulationSummary(hospitalCode:String, currentHss: Option[HospitalSimulationSummary], bedsWithIncomingPatientTypeSi: List[Bed], bedsWithIncomingPatientTypeSc: List[Bed], bedsWithOutgoingPatientTypeSi: List[Bed], bedsWithOutgoingPatientTypeSc: List[Bed]): HospitalSimulationSummary = {
+  def updateHospitalSimulationSummary(hospitalCode: String, currentHss: Option[HospitalSimulationSummary], bedsWithIncomingPatientTypeSi: List[Bed], bedsWithIncomingPatientTypeSc: List[Bed], bedsWithOutgoingPatientTypeSi: List[Bed], bedsWithOutgoingPatientTypeSc: List[Bed]): HospitalSimulationSummary = {
 
     val newHss = currentHss match {
 
