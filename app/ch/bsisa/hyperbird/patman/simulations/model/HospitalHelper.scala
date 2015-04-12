@@ -735,7 +735,7 @@ object HospitalHelper {
 
       case Some(hss) =>
         HospitalSimulationSummary(hospitalCode = hss.hospitalCode,
-          totalIncomingSiPatient = hss.totalIncomingScPatient + bedsWithIncomingPatientTypeSi.size,
+          totalIncomingSiPatient = hss.totalIncomingSiPatient + bedsWithIncomingPatientTypeSi.size,
           totalIncomingScPatient = hss.totalIncomingScPatient + bedsWithIncomingPatientTypeSc.size,
           totalOutgoingSiPatient = hss.totalOutgoingSiPatient + bedsWithOutgoingPatientTypeSi.size,
           totalOutgoingScPatient = hss.totalOutgoingScPatient + bedsWithOutgoingPatientTypeSc.size)
