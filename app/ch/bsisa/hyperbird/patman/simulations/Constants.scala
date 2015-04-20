@@ -7,6 +7,9 @@ object Constants {
 
   val BED_FREE_CODE = "libre"
   val BED_BUSY_CODE = "occupé"
+    
+  val BED_PENDING_INPUT = "en cours"
+  val BED_COMPLETED_INPUT = "terminé"
 
   val BED_REASON_FOR_TRANSFER_SI = "SI"
   val BED_REASON_FOR_TRANSFER_SI_TO_SC = "SI to SC"

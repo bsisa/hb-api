@@ -64,6 +64,10 @@ object HospitalHelper {
 
   /**
    * Converts `Hospital` instance to ELFIN generic GeoXML representation.
+   * We consider beds data built programmatically as always having input state 
+   * as completed {`terminé`} not pending {`en cours`}. This helps reporting
+   * queries reuse.  
+   * 
    */
   def toElfin(hospital: Hospital, bedsPosStartIndex: Int = 1): ELFIN = {
 
@@ -76,7 +80,7 @@ object HospitalHelper {
                          <C POS="2">{ bed.patientNb }</C>
                          <C POS="3">{ bed.patientType }</C>
                          <C POS="4">{ bed.transferType }</C>
-                         <C POS="5">n/a</C>
+                         <C POS="5">{ Constants.BED_COMPLETED_INPUT }</C>
                          <C POS="6">{ if (bed.free) "libre" else "occupé" }</C>
                          <C POS="7">{ bed.reasonForTransfer.getOrElse("") }</C>
                        </L>
