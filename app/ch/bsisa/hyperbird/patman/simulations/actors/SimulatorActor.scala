@@ -21,6 +21,9 @@ import akka.actor.PoisonPill
 import ch.bsisa.hyperbird.patman.simulations.model.Hospital
 import ch.bsisa.hyperbird.patman.simulations.model.HospitalHelper
 
+/**
+ * Simulation top coordinator actor
+ */
 class SimulatorActor(id: String, dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 6, prtBedsNb: Int = 8, allBedsNb: Option[Int] = None, saturationThreshold: Option[Int] = None) extends Actor with ActorLogging {
 
   // Avoid Actor.context repetition i.e.: context.stop(self) => stop(self)
