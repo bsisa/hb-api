@@ -463,7 +463,26 @@ object HospitalHelper {
   }
 
   /**
-   * TODO: Full implementation review needed
+   * CURRENT: Full implementation review needed
+   * =====================================================================================================================================
+   * ====                                      UPDATE ALGO CDF                                                                        ====
+   * =====================================================================================================================================
+   * These events are determined on static HOSPITAL_STATEs NOT on simulated hospital state.
+   *
+   *  - bedsWithIncomingPatientTypeSi must trigger TRANSFER NATURE="add"       => be transferred to PRT
+   *  - patientTypeChangeFromScToSi   must trigger TRANSFER NATURE="add"       => be transferred to PRT
+   *
+   *  - bedsWithOutgoingPatientTypeSi must trigger TRANSFER NATURE="remove"    => notify PRT these transferred SI patients are going out
+   *
+   *  - patientTypeChangeFromSiToSc   must trigger TRANSFER NATURE="update"    => notify PRT patients have had their patient type changed
+   *
+   *  - tranferTypeOnlyChange:
+   *       if SI patient type         must trigger TRANSFER NATURE="update"    => notify PRT patients have had transfer type changed
+   *                                                                              (replace their previous bed values with new updated ones)
+   *       if SC patient type         must update CDF `simulatedHospitalState` => replace their previous bed values with new updated ones
+   *
+   *  - bedsWithIncomingPatientTypeSc must update CDF `simulatedHospitalState` => stay at CDF
+   *  - bedsWithOutgoingPatientTypeSc must update CDF `simulatedHospitalState` => out of CDF
    *
    * Returns a new copy of `currentSimulatedHospitalStateOption` updated with all provided information.
    */
@@ -476,34 +495,37 @@ object HospitalHelper {
       case Some(currentSimulatedHospitalState) =>
         newStaticHospitalStateOption match {
           case Some(newStaticHospitalState) =>
-            // bedsWithIncomingPatientTypeSi - DO NOTHING - we do not care about : they did not exist before and are directly transferred.
-            // bedsWithIncomingPatientTypeSc - TO ADD - new incoming beds
-            // bedsWithOutgoingPatientTypeSi - DO NOTHING - must be empty as we do not keep any SI bed
-            // bedsWithOutgoingPatientTypeSc - TO REMOVE - outgoing SC beds
-            // patientTypeChangeFromScToSi - TO REMOVE - beds we transfer following patient type change 
-            // patientTypeChangeFromSiToSc - DO NOTHING - must be empty as we do not keep any SI bed. (They could be transferred back from PRT but this would not be dealt with here anyway.)
+            // bedsWithIncomingPatientTypeSi - DO NOTHING - These are transferred to PRT
+            // bedsWithIncomingPatientTypeSc - TO ADD - new CDF incoming beds
+            val currentWithIncomingSc = currentSimulatedHospitalState.beds ++ bedsWithIncomingPatientTypeSc
+            // bedsWithOutgoingPatientTypeSi - DO NOTHING - These changes are forwarded to PRT where the SI beds have been transferred
+            // bedsWithOutgoingPatientTypeSc - TO REMOVE - outgoing SC beds at CDF
+            val currentWithIncomingScMinusOutgoingSc = currentWithIncomingSc diff bedsWithOutgoingPatientTypeSc
+            // patientTypeChangeFromScToSi - TO REMOVE - beds we transfer to PRT following patient type change 
+            val currentWithIncomingScMinusOutgoingScMinusScToSi = currentWithIncomingScMinusOutgoingSc diff patientTypeChangeFromScToSi
+            // patientTypeChangeFromSiToSc - DO NOTHING - These changes are forwarded to PRT where the SI beds have been transferred. (They could be transferred back from PRT but this would not be dealt with here anyway.)
             // transferTypeOnlyChangePatientTypeSi - DO NOTHING - SI beds with new updated transfer type information are managed at PRT side
             // transferTypeOnlyChangePatientTypeSc - TO REPLACE - SC beds with new updated transfer type information 
-            val currentWithIncomingSc = currentSimulatedHospitalState.beds ++ bedsWithIncomingPatientTypeSc
-            val currentWithIncomingScMinusOutgoingSc = currentWithIncomingSc diff bedsWithOutgoingPatientTypeSc
-            val currentWithIncomingScMinusOutgoingScMinusScToSi = currentWithIncomingScMinusOutgoingSc diff patientTypeChangeFromScToSi
             val currentWithIncomingScMinusOutgoingScMinusScToSiWithUpdatedTransferType =
               (currentWithIncomingScMinusOutgoingScMinusScToSi diff transferTypeOnlyChangePatientTypeSc) ++ transferTypeOnlyChangePatientTypeSc
             Some(Hospital(newStaticHospitalState.code, newStaticHospitalState.schedule, currentWithIncomingScMinusOutgoingScMinusScToSiWithUpdatedTransferType))
-          case None => Some(currentSimulatedHospitalState)
+          case None => 
+            logger.error("updateSimulatedHospitalStateForCdf received None for newStaticHospitalStateOption !?")
+            // Nothing new provided keep the current simulated state unchanged. We do not expect such call.
+            Some(currentSimulatedHospitalState)
         }
 
       case None =>
         newStaticHospitalStateOption match {
           case Some(newStaticHospitalState) =>
-            // bedsWithIncomingPatientTypeSi - we do not care about : they are transferred.
-            // bedsWithIncomingPatientTypeSc - these are new beds we keep.
-            // bedsWithOutgoingPatientTypeSi - must be empty
-            // bedsWithOutgoingPatientTypeSc - must be empty
-            // patientTypeChangeFromScToSi - must be empty
-            // patientTypeChangeFromSiToSc - must be empty
-            // transferTypeOnlyChangePatientTypeSi - must be empty
-            // transferTypeOnlyChangePatientTypeSc - must be empty
+            // bedsWithIncomingPatientTypeSi - DO NOTHING - These are transferred to PRT
+            // bedsWithIncomingPatientTypeSc - TO ADD - new CDF incoming beds
+            // bedsWithOutgoingPatientTypeSi - DO NOTHING - No current state: must be empty
+            // bedsWithOutgoingPatientTypeSc - DO NOTHING - No current state: must be empty
+            // patientTypeChangeFromScToSi - DO NOTHING - No current state: must be empty
+            // patientTypeChangeFromSiToSc - DO NOTHING - No current state: must be empty
+            // transferTypeOnlyChangePatientTypeSi - DO NOTHING - No current state: must be empty
+            // transferTypeOnlyChangePatientTypeSc - DO NOTHING - No current state: must be empty
             Some(Hospital(newStaticHospitalState.code, newStaticHospitalState.schedule, bedsWithIncomingPatientTypeSc))
           case None => None
         }
