@@ -62,9 +62,10 @@ class HospitalActorCdf(name: String, bedsNb: Int, simulatedHospitalStateReportAc
    */
   var simulationSummary: Option[HospitalSimulationSummary] = None
 
-  //  var totalNewSiTransferred: Int = 0
-  //  var totalScToSiTransferred: Int = 0
 
+  /**
+   * Actor received message trait implementation
+   */
   def receive = {
     /**
      *  New HOSPITAL_STATE data to process
@@ -72,21 +73,6 @@ class HospitalActorCdf(name: String, bedsNb: Int, simulatedHospitalStateReportAc
     case HospitalState(elfin, transferActor) =>
 
       log.info(s"$name> HospitalActor(${name}) received new hospitalState schedule ${elfin.IDENTIFIANT.get.DE.get}")
-
-      //      // ========== Manage messageState ===============================
-      //      // Init messageState
-      //      if (!messageState.isDefined) {
-      //        log.info(s"Initialising CdfMessageState")
-      //      } else if ( checkMessageStateCompleted(messageState) ) {
-      //        // Reset CdfMessageState with new HospitalState
-      //        log.info(s"Reset CdfMessageState with new HospitalState")
-      //        messageState = Some(CdfMessageState(HospitalState(elfin,transferActor), None, None, None))
-      //      } else {
-      //        val errMsg = s"$name> ERROR - HospitalActor(${name}) received new hospitalState schedule ${elfin.IDENTIFIANT.get.DE.get} before CdfMessageState completed!"
-      //        log.error(errMsg)
-      //        // Stop simulation while in unexpected state
-      //        sender ! StopSimulationRequest(errMsg)
-      //      }
 
       // Convert generic ELFIN data structure of CLASSE='HOSPITAL_STATE' to semantic type Hospital 
       val hospital = HospitalHelper.toHospital(elfin)
@@ -122,8 +108,6 @@ class HospitalActorCdf(name: String, bedsNb: Int, simulatedHospitalStateReportAc
        *
        *  - bedsWithIncomingPatientTypeSc must update CDF `simulatedHospitalState` => stay at CDF
        *  - bedsWithOutgoingPatientTypeSc must update CDF `simulatedHospitalState` => out of CDF
-       *
-       *
        *
        */
       HospitalHelper.getBedsUpdates(previousHospitalState, currentHospitalState) match {
@@ -202,98 +186,7 @@ class HospitalActorCdf(name: String, bedsNb: Int, simulatedHospitalStateReportAc
 
           transferActor ! transferReqDelete
 
-        // Send SI movements as Transfer requests to PRT only if necessary
-        //          if (bedsWithIncomingPatientTypeSi != Nil || bedsWithOutgoingPatientTypeSi != Nil || patientTypeChangeFromScToSi != Nil) {
-        //            transferActor ! TransferRequest(
-        //              id = elfin.Id,
-        //              incomingSiBeds = bedsWithIncomingPatientTypeSi,
-        //              outgoingSiBeds = bedsWithOutgoingPatientTypeSi,
-        //              typeScToSiBeds = patientTypeChangeFromScToSi,
-        //              fromHospitalCode = HOSPITAL_CODE_CDF,
-        //              toHospitalCode = HOSPITAL_CODE_PRT,
-        //              fromSchedule = hospital.schedule,
-        //              message = s"Requesting SI transfer for ${hospital.schedule} from ${HOSPITAL_CODE_CDF} to ${HOSPITAL_CODE_PRT} with:\n+ ${bedsWithIncomingPatientTypeSi.size} in, - ${bedsWithOutgoingPatientTypeSi.size} out, + ${patientTypeChangeFromScToSi.size} SC to SI in")
-        //            totalNewSiTransferred = totalNewSiTransferred + bedsWithIncomingPatientTypeSi.size
-        //            totalScToSiTransferred = totalScToSiTransferred + patientTypeChangeFromScToSi.size
-        //          } else {
-        //            // No transfer response to wait for, request next data.
-        //            sender ! NextHospitalStatesRequest(name)
-        //          }
       }
-
-    //      sender ! HospitalStateOk(elfin = elfin, fromHospital = name, previousSimulatedHospitalState = simulatedHospitalState)
-
-    //    case ComputeSimulatedState(elfin, transferActor, previousPrtSimulatedHospitalState) =>
-    //      
-    //            // Convert generic ELFIN data structure of CLASSE='HOSPITAL_STATE' to semantic type Hospital 
-    //      val hospital = HospitalHelper.toHospital(elfin)
-    //      
-    ////      
-    ////      // TODO: Refactor HospitalHelper.getBedsUpdates logic
-    ////      // 
-    ////      // Incoming patients are those who do not already exist at CDF nor PRT, either as SI or SC
-    ////      // => create TransferRequestCreate if of type SI at CDF
-    ////      // or those who do already exist at CDF as SC and changed to SI. They  must be moved to PRT and 
-    ////      // removed from CDF.
-    ////      // 
-    ////      // Updated patient are those who have been: 
-    ////      // A) Transferred to PRT and are either updated and still SI or updated and possibly changed to SC
-    ////      // B) At CDF as SC and updated
-    ////      // => create TransferRequestUpdate if of type SI or SC at PRT (follow up of CDF SI patients
-    ////      //    transferred to PRT)
-    ////      //
-    ////      // Outgoing patients identification at CDF must check not found at previous HS at CDF nor  
-    ////      // 
-    ////      
-    //      /**
-    //       *  - bedsWithIncomingPatientTypeSi should be transferred to PRT
-    //       *  - bedsWithIncomingPatientTypeSc should stay at CDF
-    //       *  - bedsWithOutgoingPatientTypeSi should not happen at CDF as SI patient are moved to PRT
-    //       *  - bedsWithOutgoingPatientTypeSc are expected at CDF, we do nothing with it at the moment
-    //       *  - patientTypeChangeFromScToSi should be transferred to PRT
-    //       *  - patientTypeChangeFromSiToSc should never be present here as SI patients move to PRT
-    //       *  - tranferTypeOnlyChange should replace their previous bed values with new updated ones
-    //       */
-    //      HospitalHelper.getBedsUpdates(previousHospitalState, currentHospitalState) match {
-    //        case (
-    //          bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc,
-    //          bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc,
-    //          patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc,
-    //          tranferTypeOnlyChange) =>
-    //
-    //            // 1) TransferRequestCreate
-    //            // 2) TransferRequestUpdate
-    //            // 3) TransferRequestDelete
-    //            
-    //          // Update current CDT simulatedHospitalState removing transfered SI beds
-    //          simulatedHospitalState = HospitalHelper.updateSimulatedHospitalStateForCdf(
-    //            currentSimulatedHospitalStateOption = simulatedHospitalState,
-    //            newStaticHospitalStateOption = currentHospitalState,
-    //            bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc,
-    //            bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc, patientTypeChangeFromScToSi,
-    //            patientTypeChangeFromSiToSc, tranferTypeOnlyChange)
-    //
-    //          log.info(s"${name}> SIMULATED HS: ${simulatedHospitalState}")
-    //          // TODO: send message to create simulatedHospitalState entry for the current state.
-    //
-    //          // Send SI movements as Transfer requests to PRT only if necessary
-    //          if (bedsWithIncomingPatientTypeSi != Nil || bedsWithOutgoingPatientTypeSi != Nil || patientTypeChangeFromScToSi != Nil) {
-    //            transferActor ! TransferRequest(
-    //              id = elfin.Id,
-    //              incomingSiBeds = bedsWithIncomingPatientTypeSi,
-    //              outgoingSiBeds = bedsWithOutgoingPatientTypeSi,
-    //              typeScToSiBeds = patientTypeChangeFromScToSi,
-    //              fromHospitalCode = HOSPITAL_CODE_CDF,
-    //              toHospitalCode = HOSPITAL_CODE_PRT,
-    //              fromSchedule = hospital.schedule,
-    //              message = s"Requesting SI transfer for ${hospital.schedule} from ${HOSPITAL_CODE_CDF} to ${HOSPITAL_CODE_PRT} with:\n+ ${bedsWithIncomingPatientTypeSi.size} in, - ${bedsWithOutgoingPatientTypeSi.size} out, + ${patientTypeChangeFromScToSi.size} SC to SI in")
-    //            totalNewSiTransferred = totalNewSiTransferred + bedsWithIncomingPatientTypeSi.size
-    //            totalScToSiTransferred = totalScToSiTransferred + patientTypeChangeFromScToSi.size
-    //          } else {
-    //            // No transfer response to wait for, request next data.
-    //            sender ! NextHospitalStatesRequest(name)
-    //          }
-    //      }
 
     case TransferResponseCreate(correlationId, status, fromHospitalCode, toHospitalCode, message) =>
       log.info(s"Received TransferResponseCreate($correlationId, $message)")
@@ -319,25 +212,7 @@ class HospitalActorCdf(name: String, bedsNb: Int, simulatedHospitalStateReportAc
       }
       if (checkMessageStateCompleted(messageState)) requestNextDataAndResetMessageState()
 
-    //    case TransferResponse(id, status, acceptedIncomingBeds, fromHospital, toHospital, fromSchedule, message) =>
-    //      status match {
-    //        case TRANSFER_REQUEST_ACCEPTED =>
-    //          log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_ACCEPTED, requesting next data.")
-    //          log.info(s"TOTAL TRANSFERRED = ${totalNewSiTransferred + totalScToSiTransferred} , New SI = ${totalNewSiTransferred}, SC to SI = ${totalScToSiTransferred}")
-    //          // Request next data.
-    //          context.parent ! NextHospitalStatesRequest(name)
-    //        case TRANSFER_REQUEST_REFUSED =>
-    //          // We should not obtain this
-    //          log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_REFUSED")
-    //          context.parent ! StopSimulationRequest(s"TransferRequest id = $id : TRANSFER_REQUEST_REFUSED")
-    //        case TRANSFER_REQUEST_PARTIAL =>
-    //          // We should not obtain this
-    //          log.info(s"TransferRequest id = $id : TRANSFER_REQUEST_PARTIAL")
-    //          context.parent ! StopSimulationRequest(s"TransferRequest id = $id : TRANSFER_REQUEST_PARTIAL")
-    //      }
-
     case DataSetEmpty =>
-      // TODO: provide agreggates to store in SIMULATION
       sender ! WorkCompleted("HosptialActorCdf", simulationSummary)
 
   }
