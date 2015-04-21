@@ -98,7 +98,7 @@ object DateUtil {
   }
   
   /**
-   * Returns a date formatter with pattern: `yyyyMMdd'T'HH:mm:ssZ`
+   * Returns a date formatter with pattern: `yyyyMMdd'T'HH:mm:ss`
    */
   def getIsoDateFormatterWithoutTz : DateFormat = {
     val sdf = new SimpleDateFormat(IsoDateFromatPatternWithoutTz)
