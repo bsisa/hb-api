@@ -29,6 +29,9 @@ object ApplicationBuild extends Build {
     appDependencies,
     settings = Defaults.defaultSettings ++ scalaxbSettings).settings(
       
+      // Configure this on a per spec basis
+      //parallelExecution in Test := false        
+        
       // Making test output logs
       javaOptions in Test += "-Dlogger.file=conf/test-logger.xml",
       // ========================================================================        
