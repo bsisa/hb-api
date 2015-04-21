@@ -420,6 +420,90 @@ class HospitalHelperSpec extends BaseSerialisationSpec {
         bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc)
   }    
   
+
+  /**
+   * STEP 5
+   * 
+   * 501
+   * 9997922 SC out MED
+   * 9997419 SI in SPEC
+   * 
+   * 504B => 502  
+   * 9997101 SI MED - no change
+   * 
+   * 503A
+   * 9995826 SI to SC    pat type change
+   *         SPEC to MED trn type change
+   * 
+   * 506 
+   * 9993784 SC out MED
+   * 9990075 SI in  SPEC
+   * 
+   * SI in    size 2
+   * SC in    size 0
+   * SI out   size 0
+   * SC out   size 2
+   * SI to SC size 1
+   * 
+   */
+  rollHospitalStates(hospitalState5)
+
+  HospitalHelper.getBedsUpdates(previousHospitalState, currentHospitalState) match {
+    case (
+      bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc,
+      bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc,
+      patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc,
+      bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc) =>
+
+      testBedsUpdatesOutcome(hospitalStateNb = 5,
+        bedsWithIncomingPatientTypeSi = bedsWithIncomingPatientTypeSi, expectedBedsWithIncomingPatientTypeSiNb = 2,
+        bedsWithIncomingPatientTypeSc = bedsWithIncomingPatientTypeSc, expectedBedsWithIncomingPatientTypeScNb = 0,
+        bedsWithOutgoingPatientTypeSi = bedsWithOutgoingPatientTypeSi, expectedBedsWithOutgoingPatientTypeSiNb = 0,
+        bedsWithOutgoingPatientTypeSc = bedsWithOutgoingPatientTypeSc, expectedBedsWithOutgoingPatientTypeScNb = 2,
+        patientTypeChangeFromScToSi = patientTypeChangeFromScToSi, expectedPatientTypeChangeFromScToSiNb = 0,
+        patientTypeChangeFromSiToSc = patientTypeChangeFromSiToSc, expectedPatientTypeChangeFromSiToScNb = 1,
+        bedsWithTransferTypeOnlyChangePatientTypeSi = bedsWithTransferTypeOnlyChangePatientTypeSi, expectedBedsWithTransferTypeOnlyChangePatientTypeSiNb = 0,
+        bedsWithTransferTypeOnlyChangePatientTypeSc = bedsWithTransferTypeOnlyChangePatientTypeSc, expectedBedsWithTransferTypeOnlyChangePatientTypeScNb = 0)
+
+//      val incomingSiBed = bedsWithIncomingPatientTypeSi(0)
+//      
+//      s"Incoming SI bed" should {
+//        s"have patient id 9997101" in {
+//          incomingSiBed.patientNb mustEqual "9997101"
+//        }
+//        s"have patient type ${Constants.PATIENT_TYPE_SI}" in {
+//          incomingSiBed.patientType mustEqual Constants.PATIENT_TYPE_SI
+//        }
+//        s"have transfer type ${Constants.TRANSFER_TYPE_MED}" in {
+//          incomingSiBed.transferType mustEqual Constants.TRANSFER_TYPE_MED
+//        }
+//        s"have bed id 504B" in {
+//        	incomingSiBed.id mustEqual "504B"  
+//        }
+//      }
+      
+      // Update hospital simulation summary
+      simulationSummary = Some(
+        HospitalHelper.updateHospitalSimulationSummary(
+          hospitalCode = EXPECTED_CDF_CODE,
+          currentHss = simulationSummary,
+          bedsWithIncomingPatientTypeSi = bedsWithIncomingPatientTypeSi,
+          bedsWithIncomingPatientTypeSc = bedsWithIncomingPatientTypeSc,
+          bedsWithOutgoingPatientTypeSi = bedsWithOutgoingPatientTypeSi,
+          bedsWithOutgoingPatientTypeSc = bedsWithOutgoingPatientTypeSc))
+
+      // ================================================================================================================================= 
+      // Update current CDT simulatedHospitalState removing transfered SI beds
+      // =================================================================================================================================
+      // TODO: Full implementation review needed. Follow above algorithm description (UPDATE ALGO CDF)
+      simulatedHospitalState = HospitalHelper.updateSimulatedHospitalStateForCdf(
+        currentSimulatedHospitalStateOption = simulatedHospitalState,
+        newStaticHospitalStateOption = currentHospitalState,
+        bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc,
+        bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc,
+        patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc,
+        bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc)
+  }    
   
   
   /**
