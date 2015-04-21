@@ -1,8 +1,9 @@
-    <ELFIN NATURE="" TYPE="DOCUMENT" GROUPE="" CLASSE="HOSPITAL_STATE" ID_G="G20150114160000004" Id="G20150210234441740">
+
+    <ELFIN NATURE="" TYPE="DOCUMENT" GROUPE="" CLASSE="HOSPITAL_STATE" ID_G="G20150114160000004" Id="G20150210234328681">
         <IDENTIFIANT>
             <AUT>ACW</AUT>
-            <DE>2015-01-14T08:00:00+01:00</DE>
-            <A>2015-02-20T09:05:41+01:00</A>
+            <DE>2015-01-15T22:00:00+01:00</DE>
+            <A>2015-02-20T09:22:59+01:00</A>
         </IDENTIFIANT>
         <CARACTERISTIQUE>
             <FRACTION>
@@ -14,27 +15,27 @@
                 </L>
                 <L POS="2">
                     <C POS="1">501</C>
-                    <C POS="2"/>
-                    <C POS="3"/>
-                    <C POS="4"/>
+                    <C POS="2">9997419</C>
+                    <C POS="3">soins intensifs</C>
+                    <C POS="4">médicalisé</C>
                     <C POS="5">terminé</C>
-                    <C POS="6">libre</C>
+                    <C POS="6">occupé</C>
                     <C POS="7"/>
                 </L>
                 <L POS="3">
                     <C POS="1">502</C>
-                    <C POS="2"/>
-                    <C POS="3"/>
-                    <C POS="4"/>
+                    <C POS="2">9997101</C>
+                    <C POS="3">soins intensifs</C>
+                    <C POS="4">médicalisé</C>
                     <C POS="5">terminé</C>
-                    <C POS="6">libre</C>
+                    <C POS="6">occupé</C>
                     <C POS="7"/>
                 </L>
                 <L POS="4">
                     <C POS="1">503A</C>
                     <C POS="2">9995826</C>
-                    <C POS="3">soins intensifs</C>
-                    <C POS="4">spécialisé</C>
+                    <C POS="3">soins continus</C>
+                    <C POS="4">médicalisé</C>
                     <C POS="5">terminé</C>
                     <C POS="6">occupé</C>
                     <C POS="7"/>
@@ -59,11 +60,11 @@
                 </L>
                 <L POS="7">
                     <C POS="1">504A</C>
-                    <C POS="2"/>
-                    <C POS="3"/>
-                    <C POS="4"/>
+                    <C POS="2">9996878</C>
+                    <C POS="3">soins intensifs</C>
+                    <C POS="4">médicalisé</C>
                     <C POS="5">terminé</C>
-                    <C POS="6">libre</C>
+                    <C POS="6">occupé</C>
                     <C POS="7"/>
                 </L>
                 <L POS="8">
@@ -95,9 +96,9 @@
                 </L>
                 <L POS="11">
                     <C POS="1">506</C>
-                    <C POS="2">9990360</C>
-                    <C POS="3">soins continus</C>
-                    <C POS="4">médicalisé</C>
+                    <C POS="2">9990075</C>
+                    <C POS="3">soins intensifs</C>
+                    <C POS="4">spécialisé</C>
                     <C POS="5">terminé</C>
                     <C POS="6">occupé</C>
                     <C POS="7"/>
