@@ -11,6 +11,7 @@ import play.api.libs.json._
 import ch.bsisa.hyperbird.patman.simulations.model.Bed
 import ch.bsisa.hyperbird.patman.simulations.model.HospitalHelper
 import ch.bsisa.hyperbird.patman.simulations.model.Hospital
+import ch.bsisa.hyperbird.util.DateUtil
 
 /**
  * Tests HospitalHelper
@@ -26,6 +27,7 @@ import ch.bsisa.hyperbird.patman.simulations.model.Hospital
 class HospitalHelperSpec extends BaseSerialisationSpec {
 
   val EXPECTED_CDF_CODE = "cdf"
+    val EXPECTED_SCHEDULE_STR = "2015-01-14T08:00:00+01:00" 
   
   val simulationsTestResourcesPath = TestResourcesDir + "simulations/"
   val hospitalState1ElfinFile = "HOSPITAL_STATE_1.xml"
@@ -48,13 +50,16 @@ class HospitalHelperSpec extends BaseSerialisationSpec {
     s"have code '${EXPECTED_CDF_CODE}'" in {
       hospitalState1.code mustEqual EXPECTED_CDF_CODE
     }
-    s"havd 10 beds" in {
+    s"have schedule '${EXPECTED_SCHEDULE_STR}'" in {
+      hospitalState1.schedule mustEqual DateUtil.getIsoDateFormatterWithoutTz.parse(EXPECTED_SCHEDULE_STR)
+    }
+    s"have 10 beds" in {
       hospitalState1.beds must have size(10)
     }
-    s"havd 3 busy beds" in {
+    s"have 3 busy beds" in {
       hospitalState1.beds.filterNot(b => b.free) must have size(3)
     }
-    s"havd 7 free beds" in {
+    s"have 7 free beds" in {
       hospitalState1.beds.filter(b => b.free) must have size(7)
     }    
   }
