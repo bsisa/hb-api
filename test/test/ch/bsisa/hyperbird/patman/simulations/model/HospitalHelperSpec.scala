@@ -12,6 +12,7 @@ import ch.bsisa.hyperbird.patman.simulations.model.Bed
 import ch.bsisa.hyperbird.patman.simulations.model.HospitalHelper
 import ch.bsisa.hyperbird.patman.simulations.model.Hospital
 import ch.bsisa.hyperbird.util.DateUtil
+import ch.bsisa.hyperbird.patman.simulations.model.HospitalSimulationSummary
 
 /**
  * Tests HospitalHelper
@@ -74,9 +75,6 @@ class HospitalHelperSpec extends BaseSerialisationSpec {
   val elfinHs8 = scalaxb.fromXML[ELFIN](hospitalState8Xml)
   val elfinHs9 = scalaxb.fromXML[ELFIN](hospitalState9Xml)
 
-  //  var previousHospitalState: Option[Hospital] = None
-  //  var currentHospitalState: Option[Hospital] = None
-
   // Convert generic ELFIN data structure of CLASSE='HOSPITAL_STATE' to semantic type Hospital 
   val hospitalState1 = HospitalHelper.toHospital(elfinHs1)
   val hospitalState2 = HospitalHelper.toHospital(elfinHs2)
@@ -87,6 +85,30 @@ class HospitalHelperSpec extends BaseSerialisationSpec {
   val hospitalState7 = HospitalHelper.toHospital(elfinHs7)
   val hospitalState8 = HospitalHelper.toHospital(elfinHs8)
   val hospitalState9 = HospitalHelper.toHospital(elfinHs9)
+
+  // ================================================================== 
+  // 	WARNING - Tests MUST be sequential to succeed  
+  // ==================================================================  
+  // Mutable references to previous/current hospital states
+  var previousHospitalState: Option[Hospital] = None
+  var currentHospitalState: Option[Hospital] = None
+
+  /**
+   * Dynamic state representation build from HOSPITAL_STATE database entries
+   * change events from schedule to schedule (08:00, 16:00, 22:00)
+   */
+  var simulatedHospitalState: Option[Hospital] = None
+
+  /**
+   * Maintained hospital aggregated figures delivered at simulation end.
+   */
+  var simulationSummary: Option[HospitalSimulationSummary] = None
+
+  // ==================================================================
+
+  // ==================================================================
+  // 	Check loaded / transformed test data are what we expect 
+  // ==================================================================
 
   "The hospitalState1" should {
     s"have code '${EXPECTED_CDF_CODE}'" in {
@@ -105,7 +127,7 @@ class HospitalHelperSpec extends BaseSerialisationSpec {
       hospitalState1.beds.filter(b => b.free) must have size (7)
     }
   }
-  
+
   "The hospitalState2" should {
     s"have code '${EXPECTED_CDF_CODE}'" in {
       hospitalState2.code mustEqual EXPECTED_CDF_CODE
@@ -123,7 +145,7 @@ class HospitalHelperSpec extends BaseSerialisationSpec {
       hospitalState3.schedule mustEqual DateUtil.getIsoDateFormatterWithoutTz.parse(EXPECTED_SCHEDULE_3_STR)
     }
   }
-  
+
   "The hospitalState4" should {
     s"have code '${EXPECTED_CDF_CODE}'" in {
       hospitalState4.code mustEqual EXPECTED_CDF_CODE
@@ -132,7 +154,7 @@ class HospitalHelperSpec extends BaseSerialisationSpec {
       hospitalState4.schedule mustEqual DateUtil.getIsoDateFormatterWithoutTz.parse(EXPECTED_SCHEDULE_4_STR)
     }
   }
-  
+
   "The hospitalState5" should {
     s"have code '${EXPECTED_CDF_CODE}'" in {
       hospitalState5.code mustEqual EXPECTED_CDF_CODE
@@ -141,7 +163,7 @@ class HospitalHelperSpec extends BaseSerialisationSpec {
       hospitalState5.schedule mustEqual DateUtil.getIsoDateFormatterWithoutTz.parse(EXPECTED_SCHEDULE_5_STR)
     }
   }
-  
+
   "The hospitalState6" should {
     s"have code '${EXPECTED_CDF_CODE}'" in {
       hospitalState6.code mustEqual EXPECTED_CDF_CODE
@@ -150,7 +172,7 @@ class HospitalHelperSpec extends BaseSerialisationSpec {
       hospitalState6.schedule mustEqual DateUtil.getIsoDateFormatterWithoutTz.parse(EXPECTED_SCHEDULE_6_STR)
     }
   }
-  
+
   "The hospitalState7" should {
     s"have code '${EXPECTED_CDF_CODE}'" in {
       hospitalState7.code mustEqual EXPECTED_CDF_CODE
@@ -159,7 +181,7 @@ class HospitalHelperSpec extends BaseSerialisationSpec {
       hospitalState7.schedule mustEqual DateUtil.getIsoDateFormatterWithoutTz.parse(EXPECTED_SCHEDULE_7_STR)
     }
   }
-  
+
   "The hospitalState8" should {
     s"have code '${EXPECTED_CDF_CODE}'" in {
       hospitalState8.code mustEqual EXPECTED_CDF_CODE
@@ -168,7 +190,7 @@ class HospitalHelperSpec extends BaseSerialisationSpec {
       hospitalState8.schedule mustEqual DateUtil.getIsoDateFormatterWithoutTz.parse(EXPECTED_SCHEDULE_8_STR)
     }
   }
-  
+
   "The hospitalState9" should {
     s"have code '${EXPECTED_CDF_CODE}'" in {
       hospitalState9.code mustEqual EXPECTED_CDF_CODE
@@ -176,37 +198,50 @@ class HospitalHelperSpec extends BaseSerialisationSpec {
     s"have schedule '${EXPECTED_SCHEDULE_9_STR}'" in {
       hospitalState9.schedule mustEqual DateUtil.getIsoDateFormatterWithoutTz.parse(EXPECTED_SCHEDULE_9_STR)
     }
-  }  
-  
+  }
 
-  // Roll hospital states
-  //      previousHospitalState = currentHospitalState
-  //      currentHospitalState = Some(hospital)  
+  // ==================================================================
+  // 	Test dynamic simulation behaviour  
+  // ==================================================================  
 
-  val bed501 = Bed("501", false, "4267921", "soins continus", "médicalisé", Some("SC"))
-  val bed506 = Bed("506", false, "4303782", "soins continus", "médicalisé", Some("SC"))
+  rollHospitalStates(hospitalState1)
 
-  val bedList1 = List(bed501, bed506)
+  HospitalHelper.getBedsUpdates(previousHospitalState, currentHospitalState) match {
+    case (
+      bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc,
+      bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc,
+      patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc,
+      bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc) =>
 
-  HospitalHelper
+      // Update hospital simulation summary
+      simulationSummary = Some(
+        HospitalHelper.updateHospitalSimulationSummary(
+          hospitalCode = EXPECTED_CDF_CODE,
+          currentHss = simulationSummary,
+          bedsWithIncomingPatientTypeSi = bedsWithIncomingPatientTypeSi,
+          bedsWithIncomingPatientTypeSc = bedsWithIncomingPatientTypeSc,
+          bedsWithOutgoingPatientTypeSi = bedsWithOutgoingPatientTypeSi,
+          bedsWithOutgoingPatientTypeSc = bedsWithOutgoingPatientTypeSc))
 
-  //  "The 'Hello world' string" should {
-  //    "contain 11 characters" in {
-  //      "Hello world" must have size(11)
-  //    }
-  //    "start with 'Hello'" in {
-  //      "Hello world" must startWith("Hello")
-  //    }
-  //    "end with 'world'" in {
-  //      "Hello world" must endWith("world")
-  //    }
-  //  }
+      // ================================================================================================================================= 
+      // Update current CDT simulatedHospitalState removing transfered SI beds
+      // =================================================================================================================================
+      // TODO: Full implementation review needed. Follow above algorithm description (UPDATE ALGO CDF)
+      simulatedHospitalState = HospitalHelper.updateSimulatedHospitalStateForCdf(
+        currentSimulatedHospitalStateOption = simulatedHospitalState,
+        newStaticHospitalStateOption = currentHospitalState,
+        bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc,
+        bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc,
+        patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc,
+        bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc)
+  }
 
-  //  s"The ANNEXEJsonFilePath at ${ANNEXEJsonFilePath} " should {
-  //    s"convert to ch.bsisa.hyperbird.model.ANNEXE" in {
-  //      annexeFromFile.RENVOI(0).POS must be equalTo (1)
-  //      annexeFromFile.RENVOI(1).POS must be equalTo (2)
-  //    }
-  //  }
+  /**
+   * Mutates var references.
+   */
+  def rollHospitalStates(newHospitalState: Hospital) = {
+    previousHospitalState = currentHospitalState
+    currentHospitalState = Some(newHospitalState)
+  }
 
 }
