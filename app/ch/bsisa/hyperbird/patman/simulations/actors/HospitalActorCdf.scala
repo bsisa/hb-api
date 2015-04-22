@@ -146,7 +146,7 @@ class HospitalActorCdf(name: String, bedsNb: Int, simulatedHospitalStateReportAc
           // =================================================================================================================================
           // Always send SI movements as TransferRequestCreate, TransferRequestUpdate, TransferRequestDelete to PRT
           // =================================================================================================================================          
-          // This is necessary even if not beds are involved to complete the expected messageState checkMessageStateCompleted.
+          // This is necessary even if no beds are involved to complete the expected messageState checkMessageStateCompleted.
           // Note: Possible minor optimisation: we could directly update the messageState and bypass unnecessary message.
 
           // 1) TransferRequestCreate  =======================================================================================================

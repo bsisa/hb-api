@@ -12,6 +12,45 @@ import ch.bsisa.hyperbird.patman.simulations.model.HospitalSimulationSummary
  */
 class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportActor: ActorRef) extends Actor with ActorLogging {
 
+  
+  /**
+   * Messages stack lifecycle
+   *
+   * 1) Empty
+   * 2) Filled in any order with:
+   *    - HospitalState
+   *    - TransferRequestCreate
+   *    - TransferRequestUpdate
+   *    - TransferRequestDelete
+   */
+  var messageState: Option[PrtMessageState] = None  
+  
+  /**
+   * Check messages stack complete state
+   */
+  def checkMessageStateCompleted(msgStateOpt: Option[PrtMessageState]): Boolean = {
+
+    msgStateOpt match {
+      case Some(msgState) => if (msgState.tc.isDefined && msgState.tu.isDefined && msgState.td.isDefined) true else false
+      case None => false
+    }
+  }  
+  
+  /**
+   * Trigger next HospitalState processing if available after having reset messageState to None
+   * and sent 
+   */
+  def requestNextDataAndSendStateToReportAndResetMessageState() = {
+    
+    // Now that all updates have been applied to simulatedHospitalState send current simulated state to report actor
+    log.info(s"${name}> SIMULATED HS: ${simulatedHospitalState}")
+    simulatedHospitalStateReportActor ! SimulatedHospitalState(hospitalState = simulatedHospitalState.get)    
+    
+    messageState = None
+    // Request next data.
+    context.parent ! NextHospitalStatesRequest(name)
+  }  
+  
   /**
    * Static state representation reflecting HOSPITAL_STATE database entries
    * at a given time or schedule (08:00, 16:00, 22:00)
@@ -80,7 +119,7 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
                   bedsWithOutgoingPatientTypeSi = bedsWithOutgoingPatientTypeSi, 
                   bedsWithOutgoingPatientTypeSc = bedsWithOutgoingPatientTypeSc))            
             
-          // Update current PRT simulatedHospitalState removing transfered SI beds
+          // Update current PRT simulatedHospitalState tracking `static` PRT changes only
           simulatedHospitalState = HospitalHelper.updateSimulatedHospitalStateForPrt(
             currentSimulatedHospitalStateOption = simulatedHospitalState,
             newStaticHospitalStateOption = currentHospitalState,
@@ -89,8 +128,9 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
             patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc, 
             bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc)
 
-          log.info(s"${name}> SIMULATED HS: ${simulatedHospitalState}")
-          simulatedHospitalStateReportActor ! SimulatedHospitalState(hospitalState = simulatedHospitalState.get)
+          // TODO: this must not be done before both `static` and `dynamic` PRT changes have been applied to simulatedHospitalState
+          // TODO: fix: log.info(s"${name}> SIMULATED HS: ${simulatedHospitalState}")
+          // TODO: fix: simulatedHospitalStateReportActor ! SimulatedHospitalState(hospitalState = simulatedHospitalState.get)
         }
 
       }
@@ -125,17 +165,52 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
     //    }
 
     case TransferRequestCreate(id, bedsWithIncomingPatientTypeSi, patientTypeChangeFromScToSi, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
+      
+      // TODO: UPDATE SIMULATED STATE
+      
       log.info(message)
-      sender !  TransferResponseCreate(correlationId = id, status = true, fromHospitalCode = fromHospitalCode, toHospitalCode = toHospitalCode, message = s"TransferResponseCreate for id ${id} accepted.")
+      val tRespCreate = TransferResponseCreate(correlationId = id, status = true, fromHospitalCode = fromHospitalCode, toHospitalCode = toHospitalCode, message = s"TransferResponseCreate for id ${id} accepted.")
+      sender ! tRespCreate
+      // Update message state
+      messageState = messageState match {
+        case Some(PrtMessageState(hs, tc, tu, td)) => Some(PrtMessageState(hs, Some(tRespCreate), tu, td))
+        case None => None
+      }      
+      // Check message state
+      if (checkMessageStateCompleted(messageState)) requestNextDataAndSendStateToReportAndResetMessageState()      
+      
       
     case TransferRequestUpdate(id, patientTypeChangeFromSiToSc, bedsWithTransferTypeOnlyChangePatientTypeSi, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
+      
+      // TODO: UPDATE SIMULATED STATE
+      
       log.info(message)
-      sender !  TransferResponseUpdate(correlationId = id, status = true, fromHospitalCode = fromHospitalCode, toHospitalCode = toHospitalCode, message = s"TransferRequestUpdate for id ${id} accepted.")
+      
+      val tRespUpdate = TransferResponseUpdate(correlationId = id, status = true, fromHospitalCode = fromHospitalCode, toHospitalCode = toHospitalCode, message = s"TransferRequestUpdate for id ${id} accepted.") 
+      sender ! tRespUpdate
+      // Update message state
+      messageState = messageState match {
+        case Some(PrtMessageState(hs, tc, tu, td)) => Some(PrtMessageState(hs, tc, Some(tRespUpdate), td))
+        case None => None
+      }      
+      // Check message state
+      if (checkMessageStateCompleted(messageState)) requestNextDataAndSendStateToReportAndResetMessageState()
       
     case TransferRequestDelete(id, bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
-      log.info(message)
-      sender !  TransferResponseDelete(correlationId = id, status = true, fromHospitalCode = fromHospitalCode, toHospitalCode = toHospitalCode, message = s"TransferRequestDelete for id ${id} accepted.")     
       
+      // TODO: UPDATE SIMULATED STATE
+      
+      log.info(message)
+      
+      val tRespDelete = TransferResponseDelete(correlationId = id, status = true, fromHospitalCode = fromHospitalCode, toHospitalCode = toHospitalCode, message = s"TransferRequestDelete for id ${id} accepted.") 
+      sender ! tRespDelete
+      // Update message state
+      messageState = messageState match {
+        case Some(PrtMessageState(hs, tc, tu, td)) => Some(PrtMessageState(hs, tc, tu, Some(tRespDelete)))
+        case None => None
+      }      
+      // Check message state
+      if (checkMessageStateCompleted(messageState)) requestNextDataAndSendStateToReportAndResetMessageState()
       
     
 //    case TransferRequest(id, incomingSiBeds, outgoingSiBeds, typeScToSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
@@ -167,3 +242,11 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
   }
 
 }
+
+/**
+ * Contains latest states to manage data loop
+ */
+case class PrtMessageState(hs: HospitalState, tc: Option[TransferResponseCreate], tu: Option[TransferResponseUpdate], td: Option[TransferResponseDelete]) {
+
+}
+
