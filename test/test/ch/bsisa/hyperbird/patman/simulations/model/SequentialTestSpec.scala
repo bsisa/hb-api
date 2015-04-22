@@ -16,7 +16,7 @@ import ch.bsisa.hyperbird.util.DateUtil
 import ch.bsisa.hyperbird.patman.simulations.model.HospitalSimulationSummary
 
 /**
- * Tests HospitalHelper
+ * Shows Unit test style with sequential configuration.
  *
  * Tip: from sbt play console run:
  * {{{
@@ -39,13 +39,12 @@ class SequentialTestSpec extends Specification {
     }
     """be List("hello")""" in {
       sharedList = List("hello")
-      Thread.sleep(3000)
+      Thread.sleep(1000)// Might not prove sequentiality 
       println(s"sharedList = ${sharedList}")
       sharedList mustEqual List("hello")
     }
     """be List("hello","dude")""" in {
       sharedList = sharedList :+ "dude"
-      Thread.sleep(3000)
       println(s"sharedList = ${sharedList}")
       sharedList mustEqual List("hello","dude")
     }    
