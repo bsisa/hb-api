@@ -244,14 +244,21 @@ class HospitalHelperSpec extends Specification {
     // 	HOSPITAL_STATE_1
     // ==================================================================
 
-    s"simulate HS t=1 be an Hospital instance" in {
+    s"Simulated HS t=1 must be an Hospital instance" in {
       println(s"starting t=1 ")
       rollHospitalStates(hospitalState1)
       updateVarsForStep()
       println(s"simulatedHospitalState t1 = ${simulatedHospitalState}")
       simulatedHospitalState must beSome[Hospital]
     }
-
+    s"Simulated HS t=1 must contain 0 SI beds" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SI) must have size 0
+    }
+    s"Simulated HS t=1 must contain 1 SC beds" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SC) must have size 1
+    }    
+    
+    
     s"HospitalState 1 provides 2 incoming SI beds" in {
       bedsWithIncomingPatientTypeSiVar must have size 2
     }
@@ -288,7 +295,14 @@ class HospitalHelperSpec extends Specification {
       println(s"simulatedHospitalState t2 = ${simulatedHospitalState}")
       simulatedHospitalState must beSome[Hospital]
     }
-
+    s"Simulated HS t=2 must contain 0 SI beds" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SI) must have size 0
+    }
+    s"Simulated HS t=2 must contain 2 SC beds" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SC) must have size 2
+    }
+    
+    
     s"HospitalState 2 provides 1 incoming SI beds" in {
       bedsWithIncomingPatientTypeSiVar must have size 1
     }
@@ -326,7 +340,13 @@ class HospitalHelperSpec extends Specification {
       println(s"simulatedHospitalState t3 = ${simulatedHospitalState}")
       simulatedHospitalState must beSome[Hospital]
     }
-
+    s"Simulated HS t=3 must contain 0 SI beds" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SI) must have size 0
+    }
+    s"Simulated HS t=3 must contain 2 SC beds" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SC) must have size 2
+    }
+    
     s"HospitalState 3 provides 0 incoming SI beds" in {
       bedsWithIncomingPatientTypeSiVar must have size 0
     }
@@ -355,6 +375,7 @@ class HospitalHelperSpec extends Specification {
     
     // ==================================================================
     // 	HOSPITAL_STATE_4
+    //  Bed 504B New SI patient id 9997101 MED 
     // ==================================================================
 
     s"simulate HS t=4 be an Hospital instance" in {
@@ -363,6 +384,12 @@ class HospitalHelperSpec extends Specification {
       updateVarsForStep()
       println(s"simulatedHospitalState t4 = ${simulatedHospitalState}")
       simulatedHospitalState must beSome[Hospital]
+    }
+    s"Simulated HS t=4 must contain 0 SI beds" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SI) must have size 0
+    }
+    s"Simulated HS t=4 must contain 2 SC beds" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SC) must have size 2
     }
 
     s"HospitalState 4 provides 1 incoming SI beds" in {
@@ -423,6 +450,14 @@ class HospitalHelperSpec extends Specification {
       println(s"simulatedHospitalState t5 = ${simulatedHospitalState}")
       simulatedHospitalState must beSome[Hospital]
     }
+    s"Simulated HS t=5 must contain 0 SI beds" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SI) must have size 0
+    }
+    // The single SC bed present in hospitalState5 is a former SI patient transferred to PRT which change 
+    // his patient type to SC while staying a PRT.
+    s"Simulated HS t=5 must contain 0 SC beds" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SC) must have size 0
+    }
     
     s"HospitalState 5 provides 2 incoming SI beds" in {
       bedsWithIncomingPatientTypeSiVar must have size 2
@@ -462,6 +497,15 @@ class HospitalHelperSpec extends Specification {
       println(s"simulatedHospitalState t6 = ${simulatedHospitalState}")
       simulatedHospitalState must beSome[Hospital]
     }    
+    s"Simulated HS t=6 must contain 0 SI beds" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SI) must have size 0
+    }
+    // The single SC bed present in hospitalState6 is a former SI patient transferred to PRT which change 
+    // his patient type to SC while staying a PRT.
+    s"Simulated HS t=6 must contain 0 SC beds" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SC) must have size 0
+    }
+    
     s"HospitalState 6 provides 0 incoming SI beds" in {
       bedsWithIncomingPatientTypeSiVar must have size 0
     }
@@ -501,6 +545,15 @@ class HospitalHelperSpec extends Specification {
       println(s"simulatedHospitalState t7 = ${simulatedHospitalState}")
       simulatedHospitalState must beSome[Hospital]
     }    
+    s"Simulated HS t=7 must contain 0 SI beds" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SI) must have size 0
+    }
+    // Both SC beds present in hospitalState7 are a former SI patient transferred to PRT which changed 
+    // their patient type to SC while staying a PRT (beds 503A, 505)    
+    s"Simulated HS t=7 must contain 0 SC beds" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SC) must have size 0
+    }
+    
     s"HospitalState 7 provides 0 incoming SI beds" in {
       bedsWithIncomingPatientTypeSiVar must have size 0
     }
@@ -540,6 +593,15 @@ class HospitalHelperSpec extends Specification {
       println(s"simulatedHospitalState t8 = ${simulatedHospitalState}")
       simulatedHospitalState must beSome[Hospital]
     }    
+    s"Simulated HS t=8 must contain 0 SI beds" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SI) must have size 0
+    }
+    // Both SC beds present in hospitalState7 are a former SI patient transferred to PRT which changed 
+    // their patient type to SC while staying a PRT (beds 503A, 505)    
+    s"Simulated HS t=8 must contain 0 SC beds" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SC) must have size 0
+    }
+    
     s"HospitalState 8 provides 0 incoming SI beds" in {
       bedsWithIncomingPatientTypeSiVar must have size 0
     }
@@ -581,6 +643,25 @@ class HospitalHelperSpec extends Specification {
       println(s"simulatedHospitalState t9 = ${simulatedHospitalState}")
       simulatedHospitalState must beSome[Hospital]
     }
+    s"Simulated HS t=9 must contain 0 SI beds" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SI) must have size 0
+    }
+    // A new SC beds is present in hospitalState9 in bed 504B. 
+    // Former SI patient transferred to PRT which changed their patient type to SC while staying a PRT are beds 503A, 505
+    // Bed 503A is now outgoing
+    s"Simulated HS t=9 must contain 1 SC beds" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SC) must have size 1
+    }
+    s"Simulated HS t=9 single SC beds must be in bed 504B" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SC)(0).id mustEqual "504B"
+    }
+    s"Simulated HS t=9 single SC beds must have patient number 9997437" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SC)(0).patientNb mustEqual "9997437"
+    }
+    s"Simulated HS t=9 single SC beds must have transfer type `médicalisé`" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SC)(0).transferType mustEqual Constants.TRANSFER_TYPE_MED
+    }    
+    
     s"HospitalState 9 provides 0 incoming SI beds" in {
       bedsWithIncomingPatientTypeSiVar must have size 0
     }
