@@ -324,50 +324,56 @@ class HospitalHelperForPrtSpec extends Specification {
       simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SC) must have size 4
     }
       
-      // TODO: test expected simulation state after transfer processing.
       
-//    // ==================================================================
-//    // 	HOSPITAL_STATE_2
-//    // ==================================================================    
-//
-//    s"simulate HS t=2 be an Hospital instance" in {
-//      println(s"starting t=2 ")
-//      rollHospitalStates(hospitalState2)
-//      updateVarsForStep()
-//      println(s"simulatedHospitalState t2 = ${simulatedHospitalState}")
-//      simulatedHospitalState must beSome[Hospital]
-//    }
-//    s"Simulated HS t=2 must contain 0 SI beds" in {
-//      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SI) must have size 0
-//    }
-//    s"Simulated HS t=2 must contain 2 SC beds" in {
-//      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SC) must have size 2
-//    }
-//
-//    s"HospitalState 2 provides 1 incoming SI beds" in {
-//      bedsWithIncomingPatientTypeSiVar must have size 1
-//    }
-//    s"HospitalState 2 provides 1 incoming SC bed" in {
-//      bedsWithIncomingPatientTypeScVar must have size 1
-//    }
-//    s"HospitalState 2 provides 0 outgoing SI bed" in {
-//      bedsWithOutgoingPatientTypeSiVar must have size 0
-//    }
-//    s"HospitalState 2 provides 0 outgoing SC bed" in {
-//      bedsWithOutgoingPatientTypeScVar must have size 0
-//    }
-//    s"HospitalState 2 provides 0 patient type change from SC to SI" in {
-//      patientTypeChangeFromScToSiVar must have size 0
-//    }
-//    s"HospitalState 2 provides 0 patient type change from SI to SC" in {
-//      patientTypeChangeFromSiToScVar must have size 0
-//    }
-//    s"HospitalState 2 provides 0 tranfer type change for SI" in {
-//      bedsWithTransferTypeOnlyChangePatientTypeSiVar must have size 0
-//    }
-//    s"HospitalState 2 provides 0 tranfer type change for SC" in {
-//      bedsWithTransferTypeOnlyChangePatientTypeScVar must have size 0
-//    }
+    // ==================================================================
+    // 	HOSPITAL_STATE_2
+    //  Bed 3 OUT SC NON_MED patient id 4357461
+    //  Bed 4 OUT SC NON_MED patient id 4060637
+    //  Bed 5 IN  SC NON_MED patient id 4233301
+    //  Bed 6 IN  SC NON_MED patient id 4099840
+    //  Bed 9 OUT  SC NON_MED patient id 4107215
+    // ==================================================================
+
+    s"simulate HS t=2 be an Hospital instance" in {
+      println(s"starting t=2 ")
+      rollHospitalStates(hospitalState2)
+      updateVarsForStep()
+      println(s"simulatedHospitalState t2 = ${simulatedHospitalState}")
+      simulatedHospitalState must beSome[Hospital]
+    }
+    // The 2 si patients come from CDF
+    s"Simulated HS t=2 must contain 2 SI beds" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SI) must have size 2
+    }
+    // 4 - 3 + 2
+    s"Simulated HS t=2 must contain 3 SC beds" in {
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SC) must have size 3
+    }
+
+    s"HospitalState 2 provides 0 incoming SI beds" in {
+      bedsWithIncomingPatientTypeSiVar must have size 0
+    }
+    s"HospitalState 2 provides 2 incoming SC bed" in {
+      bedsWithIncomingPatientTypeScVar must have size 2
+    }
+    s"HospitalState 2 provides 0 outgoing SI bed" in {
+      bedsWithOutgoingPatientTypeSiVar must have size 0
+    }
+    s"HospitalState 2 provides 3 outgoing SC bed" in {
+      bedsWithOutgoingPatientTypeScVar must have size 3
+    }
+    s"HospitalState 2 provides 0 patient type change from SC to SI" in {
+      patientTypeChangeFromScToSiVar must have size 0
+    }
+    s"HospitalState 2 provides 0 patient type change from SI to SC" in {
+      patientTypeChangeFromSiToScVar must have size 0
+    }
+    s"HospitalState 2 provides 0 tranfer type change for SI" in {
+      bedsWithTransferTypeOnlyChangePatientTypeSiVar must have size 0
+    }
+    s"HospitalState 2 provides 0 tranfer type change for SC" in {
+      bedsWithTransferTypeOnlyChangePatientTypeScVar must have size 0
+    }
 //
 //    // ==================================================================
 //    // 	HOSPITAL_STATE_3
