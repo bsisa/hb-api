@@ -321,7 +321,7 @@ class HospitalHelperForPrtSpec extends Specification {
     }
     
     s"HospitalState 1 after CDF TransferCreate processing must contain 4 SC beds" in {
-      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SI) must have size 4
+      simulatedHospitalState.get.beds.filter(b => b.patientType == Constants.PATIENT_TYPE_SC) must have size 4
     }
       
       // TODO: test expected simulation state after transfer processing.
