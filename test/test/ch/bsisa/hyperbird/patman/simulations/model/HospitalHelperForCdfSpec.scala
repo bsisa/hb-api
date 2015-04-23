@@ -16,19 +16,19 @@ import ch.bsisa.hyperbird.util.DateUtil
 import ch.bsisa.hyperbird.patman.simulations.model.HospitalSimulationSummary
 
 /**
- * Tests HospitalHelper
+ * Tests HospitalHelperForCdfSpec
  * 
  * Warning: `Simulation` test MUST be sequential to behave correctly
  *
  * Tip: from sbt play console run:
  * {{{
- * test-only test.ch.bsisa.hyperbird.patman.simulations.model.HospitalHelperSpec
+ * test-only test.ch.bsisa.hyperbird.patman.simulations.model.HospitalHelperForCdfSpec
  * }}}
  * to have only the current test run.
  *
  * @author Patrick Refondini
  */
-class HospitalHelperSpec extends Specification {
+class HospitalHelperForCdfSpec extends Specification {
   // Set sequential execution
   sequential
 
