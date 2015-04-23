@@ -31,8 +31,12 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
   def checkMessageStateCompleted(msgStateOpt: Option[PrtMessageState]): Boolean = {
 
     msgStateOpt match {
-      case Some(msgState) => if (msgState.tc.isDefined && msgState.tu.isDefined && msgState.td.isDefined) true else false
-      case None => false
+      case Some(msgState) => 
+        log.info(s">>>> PRT: checkMessageStateCompleted: msgState = ${msgState}")
+        if (msgState.tc.isDefined && msgState.tu.isDefined && msgState.td.isDefined) true else false
+      case None => 
+        log.info(s">>>> PRT: checkMessageStateCompleted: msgState = None")
+        false
     }
   }  
   
@@ -45,7 +49,7 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
     // Now that all updates have been applied to simulatedHospitalState send current simulated state to report actor
     log.info(s"${name}> SIMULATED HS: ${simulatedHospitalState}")
     simulatedHospitalStateReportActor ! SimulatedHospitalState(hospitalState = simulatedHospitalState.get)    
-    
+    // Reset message state
     messageState = None
     // Request next data.
     context.parent ! NextHospitalStatesRequest(name)
@@ -80,7 +84,10 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
    */
   def receive = {
     case HospitalState(elfin, transferActor) => {
+      
       log.info(s"$name> HospitalActor(${name}) received new hospitalState schedule ${elfin.IDENTIFIANT.get.DE.get}")
+
+      // Convert HOSPITAL_STATE ELFIN in XML format to semantic Hospital type
       val hospital = HospitalHelper.toHospital(elfin)
       //	    log.info(s"============================== $name - start ==============================")
       //	    log.info(s"$name> previousHospitalState: " + previousHospitalState)
@@ -91,8 +98,13 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
       previousHospitalState = currentHospitalState
       currentHospitalState = Some(hospital)
 
-      //      sender ! HospitalStateOk(elfin = elfin, fromHospital = name, previousSimulatedHospitalState = simulatedHospitalState) 
-
+      // Manage messageState
+      if (messageState.isEmpty) {
+        messageState = Some(PrtMessageState(HospitalState(elfin, transferActor), tc = None, tu = None, td = None))
+      } else {
+        log.error(s">PRT: We do not expect SOME messageState while receiving a new HospitalState !!!")
+      }      
+      
       /**
        *  - bedsWithIncomingPatientTypeSi should be transferred to PRT
        *  - bedsWithIncomingPatientTypeSc should stay at CDF
@@ -155,7 +167,10 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
       //        transferActor ! TransferRequest(id = elfin.Id , incomingBeds = bedsWithIncomingPatientTypeSi, outgoingBeds = bedsWithIncomingPatientTypeSi , fromHospitalCode = HOSPITAL_CODE_CDF, toHospitalCode = HOSPITAL_CODE_PRT, message = "Requesting incoming SI transfer")
 
       // Check state received hospital id matches our name otherwise cancel simulation!
-      sender ! NextHospitalStatesRequest(name)
+      //sender ! NextHospitalStatesRequest(name)
+      
+      // Check message state
+      if (checkMessageStateCompleted(messageState)) requestNextDataAndSendStateToReportAndResetMessageState()      
     }
 
     //    case ComputeSimulatedState(elfin, transferActor, previousCdfSimulatedHospitalState) => {
@@ -165,8 +180,31 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
     //    }
 
     case TransferRequestCreate(id, bedsWithIncomingPatientTypeSi, patientTypeChangeFromScToSi, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
-      
-      // TODO: UPDATE SIMULATED STATE
+
+      // Update hospital simulation summary
+      // Sum up CDF incoming SI and CDF patient type change from SC to SI which are all transferred here at PRT
+      val incomingTransferredSi = bedsWithIncomingPatientTypeSi ++ patientTypeChangeFromScToSi
+      simulationSummary = Some(
+        HospitalHelper.updateHospitalSimulationSummary(
+          hospitalCode = name,
+          currentHss = simulationSummary,
+          bedsWithIncomingPatientTypeSi = incomingTransferredSi,
+          bedsWithIncomingPatientTypeSc = List(),
+          bedsWithOutgoingPatientTypeSi = List(),
+          bedsWithOutgoingPatientTypeSc = List()))
+
+      // Update current PRT simulatedHospitalState tracking `dynamic` incoming transferred patients
+      simulatedHospitalState = HospitalHelper.updateSimulatedHospitalStateForPrt(
+        currentSimulatedHospitalStateOption = simulatedHospitalState,
+        newStaticHospitalStateOption = currentHospitalState,
+        bedsWithIncomingPatientTypeSi = incomingTransferredSi,
+        bedsWithIncomingPatientTypeSc = List(),
+        bedsWithOutgoingPatientTypeSi = List(),
+        bedsWithOutgoingPatientTypeSc = List(),
+        patientTypeChangeFromScToSi = List(),
+        patientTypeChangeFromSiToSc = List(),
+        bedsWithTransferTypeOnlyChangePatientTypeSi = List(),
+        bedsWithTransferTypeOnlyChangePatientTypeSc = List())      
       
       log.info(message)
       val tRespCreate = TransferResponseCreate(correlationId = id, status = true, fromHospitalCode = fromHospitalCode, toHospitalCode = toHospitalCode, message = s"TransferResponseCreate for id ${id} accepted.")
@@ -182,7 +220,20 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
       
     case TransferRequestUpdate(id, patientTypeChangeFromSiToSc, bedsWithTransferTypeOnlyChangePatientTypeSi, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
       
-      // TODO: UPDATE SIMULATED STATE
+      // TransferRequestUpdate track tranferred SI changes and does not lead to any hospital simulation summary update
+
+      // Update current PRT simulatedHospitalState tracking `dynamic` updates of transferred patients
+      simulatedHospitalState = HospitalHelper.updateSimulatedHospitalStateForPrt(
+        currentSimulatedHospitalStateOption = simulatedHospitalState,
+        newStaticHospitalStateOption = currentHospitalState,
+        bedsWithIncomingPatientTypeSi = List(),
+        bedsWithIncomingPatientTypeSc = List(),
+        bedsWithOutgoingPatientTypeSi = List(),
+        bedsWithOutgoingPatientTypeSc = List(),
+        patientTypeChangeFromScToSi = List(),
+        patientTypeChangeFromSiToSc = patientTypeChangeFromSiToSc,
+        bedsWithTransferTypeOnlyChangePatientTypeSi = bedsWithTransferTypeOnlyChangePatientTypeSi,
+        bedsWithTransferTypeOnlyChangePatientTypeSc = List())      
       
       log.info(message)
       
@@ -198,7 +249,28 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
       
     case TransferRequestDelete(id, bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
       
-      // TODO: UPDATE SIMULATED STATE
+      // Update hospital simulation summary
+      simulationSummary = Some(
+        HospitalHelper.updateHospitalSimulationSummary(
+          hospitalCode = name,
+          currentHss = simulationSummary,
+          bedsWithIncomingPatientTypeSi = List(),
+          bedsWithIncomingPatientTypeSc = List(),
+          bedsWithOutgoingPatientTypeSi = bedsWithOutgoingPatientTypeSi,
+          bedsWithOutgoingPatientTypeSc = bedsWithOutgoingPatientTypeSc))
+
+      // Update current PRT simulatedHospitalState tracking `dynamic` incoming transferred patients
+      simulatedHospitalState = HospitalHelper.updateSimulatedHospitalStateForPrt(
+        currentSimulatedHospitalStateOption = simulatedHospitalState,
+        newStaticHospitalStateOption = currentHospitalState,
+        bedsWithIncomingPatientTypeSi = List(),
+        bedsWithIncomingPatientTypeSc = List(),
+        bedsWithOutgoingPatientTypeSi = bedsWithOutgoingPatientTypeSi,
+        bedsWithOutgoingPatientTypeSc = bedsWithOutgoingPatientTypeSc,
+        patientTypeChangeFromScToSi = List(),
+        patientTypeChangeFromSiToSc = List(),
+        bedsWithTransferTypeOnlyChangePatientTypeSi = List(),
+        bedsWithTransferTypeOnlyChangePatientTypeSc = List())      
       
       log.info(message)
       
