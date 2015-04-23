@@ -1,0 +1,111 @@
+
+    <ELFIN NATURE="" TYPE="DOCUMENT" GROUPE="" CLASSE="HOSPITAL_STATE" ID_G="G20150114160000004" Id="G20150210234541965">
+        <IDENTIFIANT>
+            <AUT>PCO</AUT>
+            <DE>2015-01-14T22:00:00+01:00</DE>
+            <A>2015-03-06T10:26:15+01:00</A>
+        </IDENTIFIANT>
+        <CARACTERISTIQUE>
+            <FRACTION>
+                <L POS="1">
+                    <C POS="1">prt</C>
+                    <C POS="2">Hôpital de Pourtalès</C>
+                    <C POS="3">G20150128113316766</C>
+                    <C POS="4">G20150114160000001</C>
+                </L>
+                <L POS="2">
+                    <C POS="1">1</C>
+                    <C POS="2"/>
+                    <C POS="3"/>
+                    <C POS="4"/>
+                    <C POS="5">terminé</C>
+                    <C POS="6">libre</C>
+                    <C POS="7"/>
+                </L>
+                <L POS="3">
+                    <C POS="1">2</C>
+                    <C POS="2">4219226</C>
+                    <C POS="3">soins continus</C>
+                    <C POS="4">non-médicalisé</C>
+                    <C POS="5">terminé</C>
+                    <C POS="6">occupé</C>
+                    <C POS="7"/>
+                </L>
+                <L POS="4">
+                    <C POS="1">3</C>
+                    <C POS="2"/>
+                    <C POS="3"/>
+                    <C POS="4"/>
+                    <C POS="5">terminé</C>
+                    <C POS="6">libre</C>
+                    <C POS="7"/>
+                </L>
+                <L POS="5">
+                    <C POS="1">4</C>
+                    <C POS="2">4024786</C>
+                    <C POS="3">soins intensifs</C>
+                    <C POS="4">médicalisé</C>
+                    <C POS="5">terminé</C>
+                    <C POS="6">occupé</C>
+                    <C POS="7"/>
+                </L>
+                <L POS="6">
+                    <C POS="1">5</C>
+                    <C POS="2">4233301</C>
+                    <C POS="3">soins continus</C>
+                    <C POS="4">non-médicalisé</C>
+                    <C POS="5">terminé</C>
+                    <C POS="6">occupé</C>
+                    <C POS="7"/>
+                </L>
+                <L POS="7">
+                    <C POS="1">6</C>
+                    <C POS="2">4099840</C>
+                    <C POS="3">soins continus</C>
+                    <C POS="4">non-médicalisé</C>
+                    <C POS="5">terminé</C>
+                    <C POS="6">occupé</C>
+                    <C POS="7"/>
+                </L>
+                <L POS="8">
+                    <C POS="1">7</C>
+                    <C POS="2"/>
+                    <C POS="3"/>
+                    <C POS="4"/>
+                    <C POS="5">terminé</C>
+                    <C POS="6">libre</C>
+                    <C POS="7"/>
+                </L>
+                <L POS="9">
+                    <C POS="1">8</C>
+                    <C POS="2"/>
+                    <C POS="3"/>
+                    <C POS="4"/>
+                    <C POS="5">terminé</C>
+                    <C POS="6">libre</C>
+                    <C POS="7"/>
+                </L>
+                <L POS="10">
+                    <C POS="1">9</C>
+                    <C POS="2"/>
+                    <C POS="3"/>
+                    <C POS="4"/>
+                    <C POS="5">terminé</C>
+                    <C POS="6">libre</C>
+                    <C POS="7"/>
+                </L>
+                <L POS="11">
+                    <C POS="1">10</C>
+                    <C POS="2"/>
+                    <C POS="3"/>
+                    <C POS="4"/>
+                    <C POS="5">terminé</C>
+                    <C POS="6">libre</C>
+                    <C POS="7"/>
+                </L>
+            </FRACTION>
+        </CARACTERISTIQUE>
+        <DIVERS>
+            <REMARQUE/>
+        </DIVERS>
+    </ELFIN>
