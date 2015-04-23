@@ -32,10 +32,8 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
 
     msgStateOpt match {
       case Some(msgState) => 
-        log.info(s">>>> PRT: checkMessageStateCompleted: msgState = ${msgState}")
         if (msgState.tc.isDefined && msgState.tu.isDefined && msgState.td.isDefined) true else false
       case None => 
-        log.info(s">>>> PRT: checkMessageStateCompleted: msgState = None")
         false
     }
   }  

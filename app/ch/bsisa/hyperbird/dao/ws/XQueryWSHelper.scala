@@ -211,7 +211,7 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
     // Keep asynchronous calls asynchronous to allow Play free threads
     val resultFuture: Future[ELFIN] = singleElfinResponseFuture.map { resp =>
       // We expect to receive XML content
-      Logger.debug(s">>>> proceedWithSingleElfinResponse: Result of type ${resp.ahcResponse.getContentType} received")
+      //Logger.debug(s">>>> proceedWithSingleElfinResponse: Result of type ${resp.ahcResponse.getContentType} received")
       val bodyString = resp.body.mkString
       if (!(bodyString.length > 0)) {
         throw ResultNotFoundException(s"No ELFIN found for query: ${query}")

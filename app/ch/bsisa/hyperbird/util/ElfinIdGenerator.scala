@@ -18,7 +18,7 @@ import java.util.Date
 
 /**
  * Basic generator
- * TODO: review existing implementation use actor for thread safe counter
+ * Uses actor for thread safe counter
  */
 object ElfinIdGenerator {
 
@@ -86,8 +86,8 @@ object ElfinIdGenerator {
       val gMatch = uniqueIdMatchIt.group(GmatchGroupName)
       val dateMatch = uniqueIdMatchIt.group(DateMatchGroupName)
 
-      println(s"${GmatchGroupName} value = ${gMatch}")
-      println(s"${DateMatchGroupName} value = ${dateMatch}")
+      //println(s"${GmatchGroupName} value = ${gMatch}")
+      //println(s"${DateMatchGroupName} value = ${dateMatch}")
 
       /* NOTE: This validation assertion does not hold true with 
        * current existing values and is currently dropped.
