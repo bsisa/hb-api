@@ -85,7 +85,7 @@ class HospitalActorCdf(name: String, bedsNb: Int, simulatedHospitalStateReportAc
       if (messageState.isEmpty) {
         messageState = Some(CdfMessageState(HospitalState(elfin, transferActor), tc = None, tu = None, td = None))
       } else {
-        log.error(s"We do not expect SOME messageState while receiving a new HospitalState !!!")
+    	  log.error(s">CDF: We do not expect SOME messageState while receiving a new HospitalState !!!")
       }
 
       /**
