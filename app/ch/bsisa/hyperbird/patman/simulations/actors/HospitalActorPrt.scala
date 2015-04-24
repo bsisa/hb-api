@@ -12,7 +12,6 @@ import ch.bsisa.hyperbird.patman.simulations.model.HospitalSimulationSummary
  */
 class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportActor: ActorRef) extends Actor with ActorLogging {
 
-  
   /**
    * Messages stack lifecycle
    *
@@ -23,36 +22,36 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
    *    - TransferRequestUpdate
    *    - TransferRequestDelete
    */
-  var messageState: Option[PrtMessageState] = None  
-  
+  var messageState: Option[PrtMessageState] = None
+
   /**
    * Check messages stack complete state
    */
   def checkMessageStateCompleted(msgStateOpt: Option[PrtMessageState]): Boolean = {
 
     msgStateOpt match {
-      case Some(msgState) => 
+      case Some(msgState) =>
         if (msgState.tc.isDefined && msgState.tu.isDefined && msgState.td.isDefined) true else false
-      case None => 
+      case None =>
         false
     }
-  }  
-  
+  }
+
   /**
    * Trigger next HospitalState processing if available after having reset messageState to None
-   * and sent 
+   * and sent
    */
   def requestNextDataAndSendStateToReportAndResetMessageState() = {
-    
+
     // Now that all updates have been applied to simulatedHospitalState send current simulated state to report actor
     log.info(s"${name}> SIMULATED HS: ${simulatedHospitalState}")
-    simulatedHospitalStateReportActor ! SimulatedHospitalState(hospitalState = simulatedHospitalState.get)    
+    simulatedHospitalStateReportActor ! SimulatedHospitalState(hospitalState = simulatedHospitalState.get)
     // Reset message state
     messageState = None
     // Request next data.
     context.parent ! NextHospitalStatesRequest(name)
-  }  
-  
+  }
+
   /**
    * Static state representation reflecting HOSPITAL_STATE database entries
    * at a given time or schedule (08:00, 16:00, 22:00)
@@ -69,8 +68,8 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
   /**
    * Maintained hospital aggregated figures delivered at simulation end.
    */
-  var simulationSummary : Option[HospitalSimulationSummary] = None
-  
+  var simulationSummary: Option[HospitalSimulationSummary] = None
+
   /**
    * A data loop includes:
    * - HospitalState (1) 		=> new state
@@ -82,7 +81,7 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
    */
   def receive = {
     case HospitalState(elfin, transferActor) => {
-      
+
       log.info(s"$name> HospitalActor(${name}) received new hospitalState schedule ${elfin.IDENTIFIANT.get.DE.get}")
 
       // Convert HOSPITAL_STATE ELFIN in XML format to semantic Hospital type
@@ -97,12 +96,11 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
       currentHospitalState = Some(hospital)
 
       // Manage messageState
-      if (messageState.isEmpty) {
-        messageState = Some(PrtMessageState(HospitalState(elfin, transferActor), tc = None, tu = None, td = None))
-      } else {
-        log.error(s">PRT: We do not expect SOME messageState while receiving a new HospitalState !!!")
-      }      
-      
+      messageState = messageState match {
+        case Some(PrtMessageState(hs, tc, tu, td)) => Some(PrtMessageState(Some(HospitalState(elfin, transferActor)), tc, tu, td))
+        case None => Some(PrtMessageState(Some(HospitalState(elfin, transferActor)), tc = None, tu = None, td = None))
+      }
+
       /**
        *  - bedsWithIncomingPatientTypeSi should be transferred to PRT
        *  - bedsWithIncomingPatientTypeSc should stay at CDF
@@ -121,21 +119,21 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
 
           // Update hospital simulation summary
           simulationSummary = Some(
-              HospitalHelper.updateHospitalSimulationSummary(
-                  hospitalCode = name,
-                  currentHss = simulationSummary, 
-                  bedsWithIncomingPatientTypeSi = bedsWithIncomingPatientTypeSi, 
-                  bedsWithIncomingPatientTypeSc = bedsWithIncomingPatientTypeSc, 
-                  bedsWithOutgoingPatientTypeSi = bedsWithOutgoingPatientTypeSi, 
-                  bedsWithOutgoingPatientTypeSc = bedsWithOutgoingPatientTypeSc))            
-            
+            HospitalHelper.updateHospitalSimulationSummary(
+              hospitalCode = name,
+              currentHss = simulationSummary,
+              bedsWithIncomingPatientTypeSi = bedsWithIncomingPatientTypeSi,
+              bedsWithIncomingPatientTypeSc = bedsWithIncomingPatientTypeSc,
+              bedsWithOutgoingPatientTypeSi = bedsWithOutgoingPatientTypeSi,
+              bedsWithOutgoingPatientTypeSc = bedsWithOutgoingPatientTypeSc))
+
           // Update current PRT simulatedHospitalState tracking `static` PRT changes only
           simulatedHospitalState = HospitalHelper.updateSimulatedHospitalStateForPrt(
             currentSimulatedHospitalStateOption = simulatedHospitalState,
             newStaticHospitalStateOption = currentHospitalState,
             bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc,
-            bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc, 
-            patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc, 
+            bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc,
+            patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc,
             bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc)
 
           // TODO: this must not be done before both `static` and `dynamic` PRT changes have been applied to simulatedHospitalState
@@ -166,9 +164,9 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
 
       // Check state received hospital id matches our name otherwise cancel simulation!
       //sender ! NextHospitalStatesRequest(name)
-      
+
       // Check message state
-      if (checkMessageStateCompleted(messageState)) requestNextDataAndSendStateToReportAndResetMessageState()      
+      if (checkMessageStateCompleted(messageState)) requestNextDataAndSendStateToReportAndResetMessageState()
     }
 
     //    case ComputeSimulatedState(elfin, transferActor, previousCdfSimulatedHospitalState) => {
@@ -202,22 +200,21 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
         patientTypeChangeFromScToSi = List(),
         patientTypeChangeFromSiToSc = List(),
         bedsWithTransferTypeOnlyChangePatientTypeSi = List(),
-        bedsWithTransferTypeOnlyChangePatientTypeSc = List())      
-      
+        bedsWithTransferTypeOnlyChangePatientTypeSc = List())
+
       log.info(message)
       val tRespCreate = TransferResponseCreate(correlationId = id, status = true, fromHospitalCode = fromHospitalCode, toHospitalCode = toHospitalCode, message = s"TransferResponseCreate for id ${id} accepted.")
       sender ! tRespCreate
-      // Update message state
+      // Manage messageState
       messageState = messageState match {
         case Some(PrtMessageState(hs, tc, tu, td)) => Some(PrtMessageState(hs, Some(tRespCreate), tu, td))
-        case None => None
-      }      
+        case None => Some(PrtMessageState(hs = None, tc = Some(tRespCreate), tu = None, td = None))
+      }
       // Check message state
-      if (checkMessageStateCompleted(messageState)) requestNextDataAndSendStateToReportAndResetMessageState()      
-      
-      
+      if (checkMessageStateCompleted(messageState)) requestNextDataAndSendStateToReportAndResetMessageState()
+
     case TransferRequestUpdate(id, patientTypeChangeFromSiToSc, bedsWithTransferTypeOnlyChangePatientTypeSi, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
-      
+
       // TransferRequestUpdate track tranferred SI changes and does not lead to any hospital simulation summary update
 
       // Update current PRT simulatedHospitalState tracking `dynamic` updates of transferred patients
@@ -231,22 +228,22 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
         patientTypeChangeFromScToSi = List(),
         patientTypeChangeFromSiToSc = patientTypeChangeFromSiToSc,
         bedsWithTransferTypeOnlyChangePatientTypeSi = bedsWithTransferTypeOnlyChangePatientTypeSi,
-        bedsWithTransferTypeOnlyChangePatientTypeSc = List())      
-      
+        bedsWithTransferTypeOnlyChangePatientTypeSc = List())
+
       log.info(message)
-      
-      val tRespUpdate = TransferResponseUpdate(correlationId = id, status = true, fromHospitalCode = fromHospitalCode, toHospitalCode = toHospitalCode, message = s"TransferRequestUpdate for id ${id} accepted.") 
+
+      val tRespUpdate = TransferResponseUpdate(correlationId = id, status = true, fromHospitalCode = fromHospitalCode, toHospitalCode = toHospitalCode, message = s"TransferRequestUpdate for id ${id} accepted.")
       sender ! tRespUpdate
-      // Update message state
+      // Manage messageState
       messageState = messageState match {
         case Some(PrtMessageState(hs, tc, tu, td)) => Some(PrtMessageState(hs, tc, Some(tRespUpdate), td))
-        case None => None
+        case None => Some(PrtMessageState(hs = None, tc = None, tu = Some(tRespUpdate), td = None))
       }      
       // Check message state
       if (checkMessageStateCompleted(messageState)) requestNextDataAndSendStateToReportAndResetMessageState()
-      
+
     case TransferRequestDelete(id, bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
-      
+
       // Update hospital simulation summary
       simulationSummary = Some(
         HospitalHelper.updateHospitalSimulationSummary(
@@ -268,42 +265,41 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
         patientTypeChangeFromScToSi = List(),
         patientTypeChangeFromSiToSc = List(),
         bedsWithTransferTypeOnlyChangePatientTypeSi = List(),
-        bedsWithTransferTypeOnlyChangePatientTypeSc = List())      
-      
+        bedsWithTransferTypeOnlyChangePatientTypeSc = List())
+
       log.info(message)
-      
-      val tRespDelete = TransferResponseDelete(correlationId = id, status = true, fromHospitalCode = fromHospitalCode, toHospitalCode = toHospitalCode, message = s"TransferRequestDelete for id ${id} accepted.") 
+
+      val tRespDelete = TransferResponseDelete(correlationId = id, status = true, fromHospitalCode = fromHospitalCode, toHospitalCode = toHospitalCode, message = s"TransferRequestDelete for id ${id} accepted.")
       sender ! tRespDelete
-      // Update message state
+      // Manage messageState
       messageState = messageState match {
-        case Some(PrtMessageState(hs, tc, tu, td)) => Some(PrtMessageState(hs, tc, tu, Some(tRespDelete)))
-        case None => None
-      }      
+        case Some(PrtMessageState(hs, tc, tu, td)) => Some(PrtMessageState(hs, tc, tu, Some(tRespDelete) ))
+        case None => Some(PrtMessageState(hs = None, tc = None, tu = None, td = Some(tRespDelete)))
+      }            
       // Check message state
       if (checkMessageStateCompleted(messageState)) requestNextDataAndSendStateToReportAndResetMessageState()
-      
-    
-//    case TransferRequest(id, incomingSiBeds, outgoingSiBeds, typeScToSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
-//      log.info(message)
-//      //log.info(s"Request for transfer from ${fromHospitalCode} to ${toHospitalCode} with in = ${incomingSiBeds.size}, out = ${outgoingSiBeds.size}, typeScToSiBeds = ${typeScToSiBeds.size} DELTA = ${incomingSiBeds.size - outgoingSiBeds.size + typeScToSiBeds.size}")
-//      // OBSOLETE TODO: Request DataSet update for new Si beds => incomingSiBeds + typeScToSiBeds
-//      val allTransferredSiBeds = incomingSiBeds ::: typeScToSiBeds
-//      //sender ! DataSetUpdateRequest(id, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule)
-//
-//      // =========================================================================================================
-//      // TODO: Notify TransferReportActor of transfer events: Hospital from => to, Schedule, PatientNb, PatientType, TransferType, Reason for transfer: New SI or SC to SI
-//
-//      // TODO: Update current PRT hospital state with new SI beds (outgoingSiBeds should be made OBSOLETE and always be 0 (Once DataSet update is implemented))
-//
-//      // =========================================================================================================          
-//      // TODO: Confirm TRANSFER_REQUEST_ACCEPTED with TransferResponse to TransferActor
-//      sender ! TransferResponse(id, TRANSFER_REQUEST_ACCEPTED, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, "Transfer report notification (TODO) and HospitalActor PRT update (TODO) succeeded.")
-//      // Request next data.
-//      context.parent ! NextHospitalStatesRequest(name)
-//
-//    case TransferResponse(id, status, acceptedIncomingBeds, fromHospital, toHospital, fromSchedule, message) =>
-//      // No transfer request from PRT at the moment
-//      log.warning(s"Unexpected transferResponse at PRT: id = $id, $message")
+
+    //    case TransferRequest(id, incomingSiBeds, outgoingSiBeds, typeScToSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
+    //      log.info(message)
+    //      //log.info(s"Request for transfer from ${fromHospitalCode} to ${toHospitalCode} with in = ${incomingSiBeds.size}, out = ${outgoingSiBeds.size}, typeScToSiBeds = ${typeScToSiBeds.size} DELTA = ${incomingSiBeds.size - outgoingSiBeds.size + typeScToSiBeds.size}")
+    //      // OBSOLETE TODO: Request DataSet update for new Si beds => incomingSiBeds + typeScToSiBeds
+    //      val allTransferredSiBeds = incomingSiBeds ::: typeScToSiBeds
+    //      //sender ! DataSetUpdateRequest(id, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule)
+    //
+    //      // =========================================================================================================
+    //      // TODO: Notify TransferReportActor of transfer events: Hospital from => to, Schedule, PatientNb, PatientType, TransferType, Reason for transfer: New SI or SC to SI
+    //
+    //      // TODO: Update current PRT hospital state with new SI beds (outgoingSiBeds should be made OBSOLETE and always be 0 (Once DataSet update is implemented))
+    //
+    //      // =========================================================================================================          
+    //      // TODO: Confirm TRANSFER_REQUEST_ACCEPTED with TransferResponse to TransferActor
+    //      sender ! TransferResponse(id, TRANSFER_REQUEST_ACCEPTED, allTransferredSiBeds, fromHospitalCode, toHospitalCode, fromSchedule, "Transfer report notification (TODO) and HospitalActor PRT update (TODO) succeeded.")
+    //      // Request next data.
+    //      context.parent ! NextHospitalStatesRequest(name)
+    //
+    //    case TransferResponse(id, status, acceptedIncomingBeds, fromHospital, toHospital, fromSchedule, message) =>
+    //      // No transfer request from PRT at the moment
+    //      log.warning(s"Unexpected transferResponse at PRT: id = $id, $message")
 
     case DataSetEmpty =>
       // TODO: provide agreggates to store in SIMULATION
@@ -315,8 +311,14 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
 
 /**
  * Contains latest states to manage data loop
+ *
+ * Unlike CdfMessageState in PrtMessageState `hs` is an option. Indeed we are guaranteed to have HospitalActorCdf and HospitalActorPrt
+ * process the same schedule (a tuple of ELFIN). When HospitalActorCdf receives the new data it requests transfer create,update,delete
+ * to HospitalActorPrt and HospitalActorPrt might receive these transfer requests before having received its new ELFIN data.
+ * PrtMessageState creation process must support hs or tc or tu or td only data at creation time depending on the context of its first
+ * initialisation.
  */
-case class PrtMessageState(hs: HospitalState, tc: Option[TransferResponseCreate], tu: Option[TransferResponseUpdate], td: Option[TransferResponseDelete]) {
+case class PrtMessageState(hs: Option[HospitalState], tc: Option[TransferResponseCreate], tu: Option[TransferResponseUpdate], td: Option[TransferResponseDelete]) {
 
 }
 
