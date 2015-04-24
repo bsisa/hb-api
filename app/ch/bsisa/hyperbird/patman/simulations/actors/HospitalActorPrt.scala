@@ -283,6 +283,10 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
 
   }
 
+  /**
+   * Returns updated versions of `simulationSummary`, `simulatedHospitalState` parameters by 
+   * applying `incomingTransferredSi` to them.
+   */
   def updateStateForTransferRequestCreate(
     simulationSummary: Option[HospitalSimulationSummary], simulatedHospitalState: Option[Hospital], currentHospitalState: Option[Hospital],
     incomingTransferredSi: List[Bed]): (Option[HospitalSimulationSummary], Option[Hospital]) = {
@@ -312,6 +316,10 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
     (updatedSimulationSummary, updatedSimulatedHospitalState)
   }
 
+  /**
+   * Returns updated version of simulatedHospitalState` parameter by applying 
+   * `patientTypeChangeFromSiToSc`, `bedsWithTransferTypeOnlyChangePatientTypeSi`to it.
+   */  
   def updateStateForTransferRequestUpdate(
     simulatedHospitalState: Option[Hospital], currentHospitalState: Option[Hospital],
     patientTypeChangeFromSiToSc: List[Bed], bedsWithTransferTypeOnlyChangePatientTypeSi: List[Bed]): Option[Hospital] = {
@@ -333,6 +341,10 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
     updatedSimulatedHospitalState
   }
 
+  /**
+   * Returns updated versions of `simulationSummary`, `simulatedHospitalState` parameters as a tuple  
+   * by applying `bedsWithOutgoingPatientTypeSi`, `bedsWithOutgoingPatientTypeSc`to them.
+   */  
   def updateStateForTransferRequestDelete(
     simulationSummary: Option[HospitalSimulationSummary], simulatedHospitalState: Option[Hospital], currentHospitalState: Option[Hospital],
     bedsWithOutgoingPatientTypeSi: List[Bed], bedsWithOutgoingPatientTypeSc: List[Bed]): (Option[HospitalSimulationSummary], Option[Hospital]) = {
