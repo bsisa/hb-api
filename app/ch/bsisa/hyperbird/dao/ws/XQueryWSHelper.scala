@@ -153,7 +153,7 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
     // ELFIN element is contained alone in a MELFIN element. 
     val melfinXML = ElfinFormat.toXml(MELFIN(elfin))
 
-    Logger.debug("elfinResourceUrl for PUT : " + elfinResourceUrl)
+    //Logger.debug("elfinResourceUrl for PUT : " + elfinResourceUrl)
 
     // TODO: more investigation to catch basic authentication failures instead of silently failing.
     val responseFuture: Future[Response] = WS.url(elfinResourceUrl).
