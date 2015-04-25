@@ -559,16 +559,24 @@ object HospitalHelper {
 
             // Fix duplicate for CDF SC to SI => PRT SI to SC => PRT SC to SI scenario
             // 1) Remove any Bed with same patient number in current list as in incoming list.
-            val currentBedsWithoutIncoming = currentSimulatedHospitalState.beds filterNot { bedsWithIncomingPatientTypeSi.contains(_) }
+            val currentBedsWithoutIncomingSi = currentSimulatedHospitalState.beds filterNot { bedsWithIncomingPatientTypeSi.contains(_) }
+            val currentBedsWithoutIncoming = currentBedsWithoutIncomingSi filterNot { bedsWithIncomingPatientTypeSc.contains(_) }
             // 2) Add incoming list beds to current list.
             val bedsWithIncomingSi = currentBedsWithoutIncoming ++ bedsWithIncomingPatientTypeSi
             
             // bedsWithIncomingPatientTypeSc - TO ADD
             val bedsWithIncomingSiAndSc = bedsWithIncomingSi ++ bedsWithIncomingPatientTypeSc
+            
             // bedsWithOutgoingPatientTypeSi - TO REMOVE - outgoing SI beds either at PRT or CDF
-            val bedsWithIncomingMinusOutgoingSi = bedsWithIncomingSiAndSc diff bedsWithOutgoingPatientTypeSi
+            // Fix removing actual transferred patients (not simulated) by forbidding removal of newStaticHospitalState beds.
+            // Outgoing patients present in newStaticHospitalState.beds should only happen when an actual transfer is done from
+            // CDF to PRT with outgoing CDF patient xxx incoming PRT patient xxx. Applying removal to PRT would be wrong.
+            val bedsWithOutgoingPatientTypeSiAndNotActuallyTransferred = bedsWithOutgoingPatientTypeSi filterNot { newStaticHospitalState.beds.contains(_) }
+            val bedsWithIncomingMinusOutgoingSi = bedsWithIncomingSiAndSc diff bedsWithOutgoingPatientTypeSiAndNotActuallyTransferred
             // bedsWithOutgoingPatientTypeSc - TO REMOVE - outgoing SC beds either at PRT or CDF (SI to SC)
-            val bedsWithIncomingMinusOutgoing = bedsWithIncomingMinusOutgoingSi diff bedsWithOutgoingPatientTypeSc
+            // Fix removing actual transferred patients (not simulated) by forbidding removal of newStaticHospitalState beds.
+            val bedsWithOutgoingPatientTypeScAndNotActuallyTransferred = bedsWithOutgoingPatientTypeSc filterNot { newStaticHospitalState.beds.contains(_) }
+            val bedsWithIncomingMinusOutgoing = bedsWithIncomingMinusOutgoingSi diff bedsWithOutgoingPatientTypeScAndNotActuallyTransferred
             // patientTypeChangeFromScToSi - TO UPDATE - beds with type change 
             val bedsWithIncomingMinusOutgoingWithScToSiUpdate = (bedsWithIncomingMinusOutgoing diff patientTypeChangeFromScToSi) ++ patientTypeChangeFromScToSi
             // patientTypeChangeFromSiToSc - TO UPDATE - beds with type change 
