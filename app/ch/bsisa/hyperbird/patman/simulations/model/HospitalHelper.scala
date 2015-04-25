@@ -555,12 +555,19 @@ object HospitalHelper {
         newStaticHospitalStateOption match {
           case Some(newStaticHospitalState) =>
             // bedsWithIncomingPatientTypeSi - TO ADD - ( Directly incoming or transferred from CDF)
-            val bedsWithIncomingSi = currentSimulatedHospitalState.beds ++ bedsWithIncomingPatientTypeSi
+            //val bedsWithIncomingSi = currentSimulatedHospitalState.beds ++ bedsWithIncomingPatientTypeSi
+
+            // Fix duplicate for CDF SC to SI => PRT SI to SC => PRT SC to SI scenario
+            // 1) Remove any Bed with same patient number in current list as in incoming list.
+            val currentBedsWithoutIncoming = currentSimulatedHospitalState.beds filterNot { bedsWithIncomingPatientTypeSi.contains(_) }
+            // 2) Add incoming list beds to current list.
+            val bedsWithIncomingSi = currentBedsWithoutIncoming ++ bedsWithIncomingPatientTypeSi
+            
             // bedsWithIncomingPatientTypeSc - TO ADD
             val bedsWithIncomingSiAndSc = bedsWithIncomingSi ++ bedsWithIncomingPatientTypeSc
-            // bedsWithOutgoingPatientTypeSi - TO REMOVE 
+            // bedsWithOutgoingPatientTypeSi - TO REMOVE - outgoing SI beds either at PRT or CDF
             val bedsWithIncomingMinusOutgoingSi = bedsWithIncomingSiAndSc diff bedsWithOutgoingPatientTypeSi
-            // bedsWithOutgoingPatientTypeSc - TO REMOVE - outgoing SC beds at CDF
+            // bedsWithOutgoingPatientTypeSc - TO REMOVE - outgoing SC beds either at PRT or CDF (SI to SC)
             val bedsWithIncomingMinusOutgoing = bedsWithIncomingMinusOutgoingSi diff bedsWithOutgoingPatientTypeSc
             // patientTypeChangeFromScToSi - TO UPDATE - beds with type change 
             val bedsWithIncomingMinusOutgoingWithScToSiUpdate = (bedsWithIncomingMinusOutgoing diff patientTypeChangeFromScToSi) ++ patientTypeChangeFromScToSi
