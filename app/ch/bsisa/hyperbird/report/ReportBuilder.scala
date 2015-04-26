@@ -3,7 +3,7 @@ package ch.bsisa.hyperbird.report
 import ch.bsisa.hyperbird.Implicits._
 import ch.bsisa.hyperbird.dao.ws.{ WSQueries, XQueryWSHelper }
 import ch.bsisa.hyperbird.model.ELFIN
-import io.github.cloudify.scala.spdf.{ Portrait, PdfConfig, Pdf }
+import io.github.cloudify.scala.spdf.{ Landscape, PageOrientation, Portrait, PdfConfig, Pdf }
 import org.apache.commons.codec.binary.Base64
 import play.api.Play
 import play.api.libs.Files.TemporaryFile
@@ -93,11 +93,21 @@ object ReportBuilder {
       // Render report body to HTML and save it to disk
       val reportContentHtmlString = renderTemplate(contentTemplateName, resultData, reportTitle)
 
+      // Extract CARSET.CAR[@NAME='pageOrientation']/@VALEUR and return whether orientation is portrait or landscape
+      val pageOrientation : PageOrientation = reportElfin.CARACTERISTIQUE.get.CARSET match {
+        case Some(carset) =>
+          carset.CAR.find( car => car.NOM.getOrElse(false) == "pageOrientation") match {
+            case Some(car) => if (car.VALEUR.getOrElse("not-defined") == "landscape") Landscape else Portrait
+            case None => Portrait
+          }
+        case None => Portrait
+      }
+      
       // Configure wkhtmltopdf 
       val pdf = Pdf(
         reportConfig.wkhtmltopdfPath,
         new PdfConfig {
-          orientation := Portrait
+          orientation := pageOrientation
           pageSize := "A4"
           headerHtml := reportHeaderHtmlTempFile.file.getAbsolutePath
           footerHtml := reportFooterHtmlTempFile.file.getAbsolutePath
