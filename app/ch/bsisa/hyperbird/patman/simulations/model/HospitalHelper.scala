@@ -121,121 +121,10 @@ object HospitalHelper {
     bedsWithReasonForTransfer
   }
 
-  /**
-   * Returns a pair of Seq[Bed]. The first one contains incoming SI patients while the second contains incoming SC patients.
-   */
-  def getBedsWithIncomingPatient(previousCdfStateOption: Option[Hospital], previousSimulatedPrtHospitalStateOption: Option[Hospital], currentStateOption: Option[Hospital]): (List[Bed], List[Bed]) = {
-
-    previousCdfStateOption match {
-      case Some(previousCdfState) =>
-
-        previousSimulatedPrtHospitalStateOption match {
-          case Some(previousSimulatedPrtHospitalState) =>
-
-            currentStateOption match {
-              // previous CDF, previous sim PRT and current CDF available
-              case Some(currentCdfState) => {
-
-                // Incoming patients 
-                val bedsWithIncomingPatients = currentCdfState.beds.filter { currentCdfStateBed =>
-                  if (!currentCdfStateBed.free) {
-                    // Check if the current patient was already there at CDF
-                    val existingBedAtCdf = previousCdfState.beds.find(previousStateBed => currentCdfStateBed.patientNb == previousStateBed.patientNb)
-                    // Check if the current patient was already there at PRT
-                    val existingBedAtPrt = previousSimulatedPrtHospitalState.beds.find(previousSimulatedPrtStateBed => currentCdfStateBed.patientNb == previousSimulatedPrtStateBed.patientNb)
-                    // Return true if was not previously there
-                    (existingBedAtCdf == None && existingBedAtPrt == None)
-                  } else {
-                    // Skip empty bed
-                    false
-                  }
-                }
-                val bedsWithIncomingPatientTypeSi = bedsWithIncomingPatients.filter(isBedPatientTypeSi)
-                val bedsWithIncomingPatientTypeSc = bedsWithIncomingPatients.filterNot(isBedPatientTypeSi)
-                val bedsWithIncomingPatientTypeSiAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSi, Constants.BED_REASON_FOR_TRANSFER_SI)
-                val bedsWithIncomingPatientTypeScAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSc, Constants.BED_REASON_FOR_TRANSFER_SC)
-                (bedsWithIncomingPatientTypeSiAndReasonForTransfer, bedsWithIncomingPatientTypeScAndReasonForTransfer)
-              }
-              // previous available but no current: Nothing is incoming.          
-              case None => (List(), List())
-            }
-
-          case None =>
-            currentStateOption match {
-              // previous and current available
-              case Some(currentState) => {
-                // Incoming patients 
-                val bedsWithIncomingPatients = currentState.beds.filter { currentStateBed =>
-                  if (!currentStateBed.free) {
-                    // Check if the current patient was already there
-                    val existingBed = previousCdfState.beds.find(previousStateBed => currentStateBed.patientNb == previousStateBed.patientNb)
-                    // Return true if was not previously there
-                    (existingBed == None)
-                  } else {
-                    // Skip empty bed
-                    false
-                  }
-                }
-                val bedsWithIncomingPatientTypeSi = bedsWithIncomingPatients.filter(isBedPatientTypeSi)
-                val bedsWithIncomingPatientTypeSc = bedsWithIncomingPatients.filterNot(isBedPatientTypeSi)
-                //(bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
-                val bedsWithIncomingPatientTypeSiAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSi, Constants.BED_REASON_FOR_TRANSFER_SI)
-                val bedsWithIncomingPatientTypeScAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSc, Constants.BED_REASON_FOR_TRANSFER_SC)
-                (bedsWithIncomingPatientTypeSiAndReasonForTransfer, bedsWithIncomingPatientTypeScAndReasonForTransfer)
-              }
-              // previous available but no current: Nothing is incoming.          
-              case None => (List(), List())
-            }
-        }
-
-      case None =>
-        previousSimulatedPrtHospitalStateOption match {
-          case Some(previousSimulatedPrtHospitalState) =>
-            currentStateOption match {
-              // previous simulated PRT and current available
-              case Some(currentState) => {
-                // Incoming patients 
-                val bedsWithIncomingPatients = currentState.beds.filter { currentStateBed =>
-                  if (!currentStateBed.free) {
-                    // Check if the current patient was already there
-                    val existingBed = previousSimulatedPrtHospitalState.beds.find(previousStateBed => currentStateBed.patientNb == previousStateBed.patientNb)
-                    // Return true if was not previously there
-                    (existingBed == None)
-                  } else {
-                    // Skip empty bed
-                    false
-                  }
-                }
-                val bedsWithIncomingPatientTypeSi = bedsWithIncomingPatients.filter(isBedPatientTypeSi)
-                val bedsWithIncomingPatientTypeSc = bedsWithIncomingPatients.filterNot(isBedPatientTypeSi)
-                //(bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
-                val bedsWithIncomingPatientTypeSiAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSi, Constants.BED_REASON_FOR_TRANSFER_SI)
-                val bedsWithIncomingPatientTypeScAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSc, Constants.BED_REASON_FOR_TRANSFER_SC)
-                (bedsWithIncomingPatientTypeSiAndReasonForTransfer, bedsWithIncomingPatientTypeScAndReasonForTransfer)
-              }
-              // previous available but no current: Nothing is incoming.          
-              case None => (List(), List())
-            }
-          case None =>
-            currentStateOption match {
-              // current available but no previous: Everything is incoming
-              case Some(currentState) =>
-                val currentNonEmptyBeds = currentState.beds.filter(bed => !bed.free)
-                val bedsWithIncomingPatientTypeSi = currentNonEmptyBeds.filter(isBedPatientTypeSi)
-                val bedsWithIncomingPatientTypeSc = currentNonEmptyBeds.filterNot(isBedPatientTypeSi)
-                //(bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
-                val bedsWithIncomingPatientTypeSiAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSi, Constants.BED_REASON_FOR_TRANSFER_SI)
-                val bedsWithIncomingPatientTypeScAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSc, Constants.BED_REASON_FOR_TRANSFER_SC)
-                (bedsWithIncomingPatientTypeSiAndReasonForTransfer, bedsWithIncomingPatientTypeScAndReasonForTransfer)
-              // no previous nor current state available
-              case None => (List(), List())
-            }
-        }
-    }
-  }
 
   /**
    * Returns a pair of Seq[Bed]. The first one contains incoming SI patients while the second contains incoming SC patients.
+   * Only SI at CDF end can be a reason for transfer, not SC.
    */
   def getBedsWithIncomingPatient(previousStateOption: Option[Hospital], currentStateOption: Option[Hospital]): (List[Bed], List[Bed]) = {
 
@@ -259,9 +148,16 @@ object HospitalHelper {
             val bedsWithIncomingPatientTypeSi = bedsWithIncomingPatients.filter(isBedPatientTypeSi)
             val bedsWithIncomingPatientTypeSc = bedsWithIncomingPatients.filterNot(isBedPatientTypeSi)
             //(bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
-            val bedsWithIncomingPatientTypeSiAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSi, Constants.BED_REASON_FOR_TRANSFER_SI)
-            val bedsWithIncomingPatientTypeScAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSc, Constants.BED_REASON_FOR_TRANSFER_SC)
-            (bedsWithIncomingPatientTypeSiAndReasonForTransfer, bedsWithIncomingPatientTypeScAndReasonForTransfer)
+            
+            if (currentState.code == Constants.HOSPITAL_CODE_CDF) {
+	            val bedsWithIncomingPatientTypeSiAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSi, Constants.BED_REASON_FOR_TRANSFER_SI)
+	            (bedsWithIncomingPatientTypeSiAndReasonForTransfer, bedsWithIncomingPatientTypeSc)
+//	            val bedsWithIncomingPatientTypeScAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSc, Constants.BED_REASON_FOR_TRANSFER_SC)
+//	            (bedsWithIncomingPatientTypeSiAndReasonForTransfer, bedsWithIncomingPatientTypeScAndReasonForTransfer)              
+            } else {
+              (bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
+            }
+
           }
           // previous available but no current: Nothing is incoming.          
           case None => (List(), List())
@@ -274,9 +170,15 @@ object HospitalHelper {
             val bedsWithIncomingPatientTypeSi = currentNonEmptyBeds.filter(isBedPatientTypeSi)
             val bedsWithIncomingPatientTypeSc = currentNonEmptyBeds.filterNot(isBedPatientTypeSi)
             //(bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc)
+            
+            if (currentState.code == Constants.HOSPITAL_CODE_CDF) {
             val bedsWithIncomingPatientTypeSiAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSi, Constants.BED_REASON_FOR_TRANSFER_SI)
-            val bedsWithIncomingPatientTypeScAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSc, Constants.BED_REASON_FOR_TRANSFER_SC)
-            (bedsWithIncomingPatientTypeSiAndReasonForTransfer, bedsWithIncomingPatientTypeScAndReasonForTransfer)
+            (bedsWithIncomingPatientTypeSiAndReasonForTransfer, bedsWithIncomingPatientTypeSc)
+//            val bedsWithIncomingPatientTypeScAndReasonForTransfer = setReasonForTransfer(bedsWithIncomingPatientTypeSc, Constants.BED_REASON_FOR_TRANSFER_SC)
+//            (bedsWithIncomingPatientTypeSiAndReasonForTransfer, bedsWithIncomingPatientTypeScAndReasonForTransfer)
+            } else {
+              (bedsWithIncomingPatientTypeSi,bedsWithIncomingPatientTypeSc)
+            }
           // no previous nor current state available
           case None => (List(), List())
         }
@@ -373,9 +275,19 @@ object HospitalHelper {
               }
             }
             //(bedsWithPatientTypeChangeFromScToSi, bedsWithPatientTypeChangeFromSiToSc)
-            val bedsWithPatientTypeChangeFromScToSiAndReasonForTransfer = setReasonForTransfer(bedsWithPatientTypeChangeFromScToSi, Constants.BED_REASON_FOR_TRANSFER_SC_TO_SI)
-            val bedsWithPatientTypeChangeFromSiToScAndReasonForTransfer = setReasonForTransfer(bedsWithPatientTypeChangeFromSiToSc, Constants.BED_REASON_FOR_TRANSFER_SI_TO_SC)
-            (bedsWithPatientTypeChangeFromScToSiAndReasonForTransfer, bedsWithPatientTypeChangeFromSiToScAndReasonForTransfer)
+            
+            /**
+             * Reason for transfer only applies to CDF. We log both SI to SC and SC to SI to remember some SC entries by PRT originaly came from CDF.
+             */
+            if (currentState.code == Constants.HOSPITAL_CODE_CDF) {
+	            val bedsWithPatientTypeChangeFromScToSiAndReasonForTransfer = setReasonForTransfer(bedsWithPatientTypeChangeFromScToSi, Constants.BED_REASON_FOR_TRANSFER_SC_TO_SI)
+	            val bedsWithPatientTypeChangeFromSiToScAndReasonForTransfer = setReasonForTransfer(bedsWithPatientTypeChangeFromSiToSc, Constants.BED_REASON_FOR_TRANSFER_SI_TO_SC)
+	            (bedsWithPatientTypeChangeFromScToSiAndReasonForTransfer, bedsWithPatientTypeChangeFromSiToScAndReasonForTransfer)              
+            } else {
+            	(bedsWithPatientTypeChangeFromScToSi,bedsWithPatientTypeChangeFromSiToSc)
+            }
+            
+
           }
           // previous available but no current: No existing bed change tracking.          
           case None => (List(), List())
@@ -386,7 +298,9 @@ object HospitalHelper {
   }
 
   /**
-   * Return (bedsWithTransferTypeOnlyChangePatientTypeSi:List[Bed],bedsWithTransferTypeOnlyChangePatientTypeSc:List[Bed]) for which only TransferType changed. It excludes those already included in patientType change.
+   * Return (bedsWithTransferTypeOnlyChangePatientTypeSi:List[Bed],bedsWithTransferTypeOnlyChangePatientTypeSc:List[Bed]) 
+   * for which only TransferType changed. 
+   * It excludes those already included in patientType change.
    */
   def getBedsWithTransfertTypeChangeOnly(previousStateOption: Option[Hospital], currentStateOption: Option[Hospital]): (List[Bed], List[Bed]) = {
 
@@ -415,8 +329,10 @@ object HospitalHelper {
             }
             val bedsWithTransferTypeOnlyChangePatientTypeSi = bedsWithTransferTypeOnlyChange.filter(isBedPatientTypeSi)
             val bedsWithTransferTypeOnlyChangePatientTypeSc = bedsWithTransferTypeOnlyChange.filterNot(isBedPatientTypeSi)
-            //(bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc)
-            val bedsWithTransferTypeOnlyChangePatientTypeSiAndReasonForTransfer = setReasonForTransfer(bedsWithTransferTypeOnlyChangePatientTypeSi, Constants.BED_REASON_FOR_TRANSFER_TRANSFER_TYPE_CHANGE_FOR_SI)
+
+            // Preserve original reason for transfer rather than overwriting it with update message. 
+            val bedsWithTransferTypeOnlyChangePatientTypeSiAndReasonForTransfer = setReasonForTransfer(bedsWithTransferTypeOnlyChangePatientTypeSi, Constants.BED_REASON_FOR_TRANSFER_SI)
+            // For SC patients it is not possible to state here if it is managed at CDF as expected or at PRT for a formerly transferred SI bed. Thus keep this update message as reason for change.
             val bedsWithTransferTypeOnlyChangePatientTypeScAndReasonForTransfer = setReasonForTransfer(bedsWithTransferTypeOnlyChangePatientTypeSc, Constants.BED_REASON_FOR_TRANSFER_TRANSFER_TYPE_CHANGE_FOR_SC)
             (bedsWithTransferTypeOnlyChangePatientTypeSiAndReasonForTransfer, bedsWithTransferTypeOnlyChangePatientTypeScAndReasonForTransfer)
           }
@@ -447,20 +363,6 @@ object HospitalHelper {
     (incoming._1, incoming._2, outgoing._1, outgoing._2, patientTypeChange._1, patientTypeChange._2, tranferTypeOnlyChange._1, tranferTypeOnlyChange._2)
   }
 
-  /**
-   * TODO: CURRENT DEV...
-   */
-  def getCdfBedsUpdates(previousCdfHospitalState: Option[Hospital], currentCdfHospitalState: Option[Hospital], previousSimulatedPrtHospitalState: Option[Hospital]): (List[Bed], List[Bed], List[Bed], List[Bed], List[Bed], List[Bed], List[Bed], List[Bed]) = {
-    // DONE
-    val incoming = HospitalHelper.getBedsWithIncomingPatient(previousCdfHospitalState, previousSimulatedPrtHospitalState, currentCdfHospitalState)
-    // TODO
-    val outgoing = HospitalHelper.getBedsWithOutgoingPatient(previousCdfHospitalState, currentCdfHospitalState)
-    // TODO
-    val patientTypeChange = HospitalHelper.getBedsWithPatientTypeChange(previousCdfHospitalState, currentCdfHospitalState)
-    // TODO
-    val tranferTypeOnlyChange = HospitalHelper.getBedsWithTransfertTypeChangeOnly(previousCdfHospitalState, currentCdfHospitalState)
-    (incoming._1, incoming._2, outgoing._1, outgoing._2, patientTypeChange._1, patientTypeChange._2, tranferTypeOnlyChange._1, tranferTypeOnlyChange._2)
-  }
 
   /**
    * 
