@@ -11,6 +11,7 @@ object Constants {
   val BED_PENDING_INPUT = "en cours"
   val BED_COMPLETED_INPUT = "terminé"
 
+  val BED_REASON_FOR_TRANSFER_NONE = "none"
   val BED_REASON_FOR_TRANSFER_SI = "SI"
   val BED_REASON_FOR_TRANSFER_SI_TO_SC = "SI to SC"
   val BED_REASON_FOR_TRANSFER_SC = "SC"
