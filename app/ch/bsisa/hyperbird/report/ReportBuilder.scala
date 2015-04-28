@@ -5,6 +5,7 @@ import ch.bsisa.hyperbird.dao.ws.{ WSQueries, XQueryWSHelper }
 import ch.bsisa.hyperbird.model.ELFIN
 import io.github.cloudify.scala.spdf.{ Landscape, PageOrientation, Portrait, PdfConfig, Pdf }
 import org.apache.commons.codec.binary.Base64
+import play.api.Logger
 import play.api.Play
 import play.api.libs.Files.TemporaryFile
 import play.api.mvc.Result
@@ -18,12 +19,14 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.xml.{ Elem, XML }
 import scala.xml.PrettyPrinter
 import java.io.File
-import play.api.Logger
 
 /**
  * PDF report builder based on wkhtmltopdf
  */
 object ReportBuilder {
+
+  val REPORT_TITLE_QUERY_PARAM_NAME = "reportTitle"
+  val REPORT_FILENAME_PREFIX_QUERY_PARAM_NAME = "reportFileNamePrefix"
 
   /**
    * Renders template by name to String for wkhtmltopdf to process
@@ -57,7 +60,7 @@ object ReportBuilder {
    * </ELFIN>
    *
    */
-  def writeReport(reportElfin: ELFIN, queryString: Option[String])(implicit reportConfig: ReportConfig): Future[TemporaryFile] = {
+  def writeReport(reportElfin: ELFIN, queryString: Option[String], queryStringMapOption: Option[Map[String, String]] = None)(implicit reportConfig: ReportConfig): Future[TemporaryFile] = {
 
     // ==============================================================
     // Extract parameters from reportElfin
@@ -66,8 +69,30 @@ object ReportBuilder {
     val contentTemplateName = reportElfin.CARACTERISTIQUE.get.CAR2.get.VALEUR.get
     val footerTemplateName = reportElfin.CARACTERISTIQUE.get.CAR3.get.VALEUR.get
     val queryFileName = reportElfin.CARACTERISTIQUE.get.CAR4.get.VALEUR.get
-    val reportFileNamePrefix = reportElfin.CARACTERISTIQUE.get.CAR5.get.VALEUR.get
-    val reportTitle = reportElfin.CARACTERISTIQUE.get.CAR6.get.VALEUR.get
+
+    // Get reportTitle, reportFileNamePrefix information from query parameters if available 
+    // fallback to default from ELFIN report configuration otherwise.
+    // This allow a single complex XQuery to produce reports with different names and titles
+    // avoiding XQuery logic duplication 
+    val reportParams = queryStringMapOption match {
+      case Some(queryStringMap) =>
+        Logger.debug(s"ReportBuilder.writeReport: queryStringMap = ${queryStringMap}")
+        val reportFileNamePrefix = queryStringMap.get(REPORT_FILENAME_PREFIX_QUERY_PARAM_NAME) match {
+          case Some(reportFileNamePrefix) => reportFileNamePrefix
+          case None => reportElfin.CARACTERISTIQUE.get.CAR5.get.VALEUR.get
+        }
+        val reportTitle = queryStringMap.get(REPORT_TITLE_QUERY_PARAM_NAME) match {
+          case Some(reportTitle) => reportTitle
+          case None => reportElfin.CARACTERISTIQUE.get.CAR6.get.VALEUR.get
+        }
+        (reportTitle, reportFileNamePrefix)
+      case None =>
+        Logger.debug(s"ReportBuilder.writeReport: queryStringMap = None")
+        val reportFileNamePrefix = reportElfin.CARACTERISTIQUE.get.CAR5.get.VALEUR.get
+        val reportTitle = reportElfin.CARACTERISTIQUE.get.CAR6.get.VALEUR.get
+        (reportTitle, reportFileNamePrefix)
+    }
+
     // URL encoding is necessary for query content but not for file name
     //val queryFileName = URLEncoder.encode(reportElfin.DIVERS.get.METHODE.get, "UTF-8")
 
@@ -77,6 +102,10 @@ object ReportBuilder {
     val responseFuture = XQueryWSHelper.runXQueryFile(queryFileName.trim, queryString)
 
     responseFuture.map { response =>
+
+      val reportTitle = reportParams._1
+      val reportFileNamePrefix = reportParams._2
+
       // Work with String expected to contain HTML.
       val resultData = response.body
       // XML data unused at the moment.
@@ -94,15 +123,15 @@ object ReportBuilder {
       val reportContentHtmlString = renderTemplate(contentTemplateName, resultData, reportTitle)
 
       // Extract CARSET.CAR[@NAME='pageOrientation']/@VALEUR and return whether orientation is portrait or landscape
-      val pageOrientation : PageOrientation = reportElfin.CARACTERISTIQUE.get.CARSET match {
+      val pageOrientation: PageOrientation = reportElfin.CARACTERISTIQUE.get.CARSET match {
         case Some(carset) =>
-          carset.CAR.find( car => car.NOM.getOrElse(false) == "pageOrientation") match {
+          carset.CAR.find(car => car.NOM.getOrElse(false) == "pageOrientation") match {
             case Some(car) => if (car.VALEUR.getOrElse("not-defined") == "landscape") Landscape else Portrait
             case None => Portrait
           }
         case None => Portrait
       }
-      
+
       // Configure wkhtmltopdf 
       val pdf = Pdf(
         reportConfig.wkhtmltopdfPath,

@@ -714,11 +714,13 @@ object Api extends Controller with securesocial.core.SecureSocial {
    */
   def getReport(reportCollectionId : String, reportElfinId : String) = SecuredAction(ajaxCall = true).async { request =>
 
-    val queryString = if (request.rawQueryString != null && request.rawQueryString.nonEmpty) Option(request.rawQueryString) else None
+    // Flatten Map[String, Seq[String]] to a Map[String, String]
+    val queryStringMap : Map[String,String] = request.queryString.map { case (key,value) => key -> value.mkString }
+    val queryString : Option[String]= if (request.rawQueryString != null && request.rawQueryString.nonEmpty) Option(request.rawQueryString) else None
     Logger.debug(s"getReport(reportCollectionId=${reportCollectionId}, reportElfinId=${reportElfinId}) called, queryString = ${queryString.getOrElse("")}")
 
     XQueryWSHelper.find(WSQueries.elfinQuery(reportCollectionId, reportElfinId)).flatMap { reportElfin =>
-      ReportBuilder.writeReport(reportElfin, queryString)
+      ReportBuilder.writeReport(reportElfin, queryString, Some(queryStringMap))
     }.map { tempFile =>
       Ok.sendFile(tempFile.file)
     }.recover {
