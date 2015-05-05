@@ -570,7 +570,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
    *
    * For that reason we do not process the request body for DELETE operation.
    * In addition trying to process it would fail with REST client such as
-   * Restangular which does not sent any body for DELETE operations.
+   * Restangular which does not send any body for DELETE operations.
    */
   def deleteElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true).async { request =>
     try {
