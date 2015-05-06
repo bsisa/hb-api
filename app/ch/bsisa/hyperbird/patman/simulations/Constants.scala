@@ -1,5 +1,10 @@
 package ch.bsisa.hyperbird.patman.simulations
 
+/**
+ * Patman Simulation related constant values.
+ * 
+ * @author Patrick Refondini
+ */
 object Constants {
 
   val HOSPITAL_CODE_CDF = "cdf"
@@ -39,6 +44,7 @@ object Constants {
 
   val ELFIN_HOSPITAL_STATE_SIMULATION_NATURE = "simulation"
 
+  val ELFIN_TRANSFER_SIMULATION_COLLECTION_ID = "G20150114160000005"
   val ELFIN_HOSPITAL_STATE_SIMULATION_COLLECTION_ID = "G20150114160000006"
   val ELFIN_SIMULATION_COLLECTION_ID = "G20150114160000007"
 

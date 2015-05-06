@@ -2,6 +2,7 @@ package ch.bsisa.hyperbird
 
 import ch.bsisa.hyperbird.dao.DbConfig
 import ch.bsisa.hyperbird.report.ReportConfig
+import ch.bsisa.hyperbird.patman.simulations.PatmanConfig
 
 /**
  * Configuration objects exposed as implicit values.
@@ -35,8 +36,13 @@ object Implicits {
   implicit val apiConfig = new ApiConfig
 
   /**
-   * Report Configuration
+   * Report configuration
    */
   implicit val reportConfig = new ReportConfig
+  
+  /**
+   * Optional Patman configuration
+   */
+  implicit val patmanConfig = new PatmanConfig  
 
 }
