@@ -1,0 +1,75 @@
+	
+#####################################################################################
+#
+# HyperBird configurations
+#
+#####################################################################################
+
+
+hb { 
+	
+	db { 
+		# Database configurations
+		"protocol": "http://",
+		"hostName": "localhost",
+		"port": 8080,
+		"restPrefix": "/exist/rest" ,
+		"name": "/db/hb4",
+		"user": "admin",
+		"password": "THE_ADMIN_PWD" 
+	},
+	collection {
+	    # Contains initialisaton configurations and users, roles
+		"configuration": "G10000101010101000"
+		# Contains ELFIN objects catalogue
+		"catalogue": "G20140101000012345"
+		# Contains database stored XQueries
+		"xqueries": "queries"
+	},
+	init {
+		# hb.init Elfin.Id . 
+		# Note: This Elfin.ID_G must match the hb.collection.configuration collection id.
+		"id": "G20050101000012345"
+	},
+	api {
+		# Root folder where ELFIN annexes are stored.
+	    "annexesRootFolder" : "/PATH/TO/HYPERBIRD/ANNEXES/ROOT",	
+		# Folder to upload temporary file chunks to.
+	    "temporaryUploadFolder" : "/tmp/hb-uploads",	    
+		# REST base URL. Use for instance by Restangular.   
+		"baseUrl": "http://localhost:9000/api/melfin/"
+		"clientDebugEnabled": false
+	},
+	report {
+        wkhtmltopdf {
+          "path": "/usr/local/bin/wkhtmltopdf"
+        }
+    },
+	patman {
+        simulation {
+        	# Repeats every 24 hours at refresh time
+	       	"refresh-time": "00:23:15"
+        }
+    }	
+}
+
+# SMTP section required for securesocial plugin
+smtp {
+	host=smtp.gmail.com
+	#port=25
+	#port=587
+	ssl=true
+	#tls=true
+	user="your_user"
+	password=your_password
+	from="your_from_address"
+}
+
+
+# Default Play configurations
+include "application_prod.conf"
+
+# SecureSocial plugin configurations
+include "securesocial_prod.conf"
+
+
