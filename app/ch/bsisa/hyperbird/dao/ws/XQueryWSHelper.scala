@@ -139,7 +139,7 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
    *  @see ch.bsisa.hyperbird.dao.ElfinDAO.update
    *
    *  TODO: implement this method and rely on it for ElfinDAO.update for simplicity.
-   *  Not high priority.
+   *  Low priority.
    */
   override def replace(elfin: ELFIN)(implicit conf: DbConfig): Unit = ???
 

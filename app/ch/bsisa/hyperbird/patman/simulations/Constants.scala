@@ -7,6 +7,12 @@ package ch.bsisa.hyperbird.patman.simulations
  */
 object Constants {
 
+  val BACKGROUND_JOBS_AUTHOR = "Patman System"
+  
+  val FIND_DATE_RANGE_FOR_SIMULATION_XQUERY = "findDateRangeForSimulation.xq"
+  val FIND_DATE_RANGE_FOR_SIMULATION_XQUERY_DATE_FROM_FIELD = "dateFrom"
+  val FIND_DATE_RANGE_FOR_SIMULATION_XQUERY_DATE_TO_FIELD = "dateTo"
+  
   val HOSPITAL_CODE_CDF = "cdf"
   val HOSPITAL_CODE_PRT = "prt"
 
