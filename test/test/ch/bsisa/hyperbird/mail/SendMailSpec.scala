@@ -36,14 +36,6 @@ class SendMailSpec extends PlaySpecification {
   "Test mail" should {
     s"send " in new WithApplication {
       val res = Sender.send(
-        // from: (String, String), 
-        // to: Seq[String], 
-        // cc: Seq[String], 
-        // bcc: Seq[String], 
-        // subject: String, 
-        // message: String, 
-        // richMessage: Option[String], 
-        // attachment: Option[java.io.File])
         new Mail(
           from = ("refon@pobox.com", "Refon"),
           to = Seq("patrick.refondini@escalesoft.com"),
@@ -78,35 +70,6 @@ Meilleures salutations,
       resSubStr mustEqual searchStr
     }
   }
-
-  /*
-Mail(
-    from: (String, String), // (email -> name)
-    to: Seq[String],
-    cc: Seq[String] = Seq.empty,
-    bcc: Seq[String] = Seq.empty,
-    subject: String,
-    message: String,
-    richMessage: Option[String] = None,
-    attachment: Option[(java.io.File)] = None
-  ) 
- */
-
-  // 
-  //  send a new Mail (
-  //    from = "john.smith@mycompany.com" -> "John Smith",
-  //    to = Seq("dev@mycompany.com", "marketing@mycompany.com"),
-  //    subject = "Our New Strategy (tm)",
-  //    message = "Please find attach the latest strategy document.",
-  //    richMessage = "Here's the <blink>latest</blink> <strong>Strategy</strong>..."
-  //  )
-  // 
-  //  send a new Mail (
-  //    from = "john.smith@mycompany.com" -> "John Smith",
-  //    to = "dev@mycompany.com" :: "marketing@mycompany.com" :: Nil,
-  //    subject = "Our 5-year plan",
-  //    message = "Here is the presentation with the stuff we're going to for the next five years.",
-  //    attachment = new java.io.File("/home/boss/important-presentation.ppt")
-  //  )  
+  
 
 }
