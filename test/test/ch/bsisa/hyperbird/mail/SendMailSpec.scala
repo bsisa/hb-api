@@ -50,15 +50,15 @@ Meilleures salutations,
 	
 HyperBird 5
 """,
-          richMessage = Some(s"""
-Bonjour,
-          
-ceci est un test d'envoi d'email <em>en HTML</em> depuis HB5.
-              
-Meilleures salutations,
-	
-<i>HyperBird 5</i>
-
+          richMessage = Some(s"""<br />
+Bonjour,<br />
+<br />
+ceci est un test d'envoi d'email <strong>en HTML</strong> depuis HB5.<br />
+<br />
+Meilleures salutations,<br />
+<br />
+<i>HyperBird 5</i><br />
+<br />
 """),
           //attachment = None))
           attachment = Some(new java.io.File("./README"))))
