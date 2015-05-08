@@ -5,6 +5,7 @@ import akka.actor.{ Actor, ActorLogging }
 import ch.bsisa.hyperbird.Implicits._
 import ch.bsisa.hyperbird.dao.ws.XQueryWSHelper
 import ch.bsisa.hyperbird.util.DateUtil
+import ch.bsisa.hyperbird.mail._
 import ch.bsisa.hyperbird.patman.simulations.Constants._
 import ch.bsisa.hyperbird.patman.simulations.messages._
 import ch.bsisa.hyperbird.patman.simulations.SimulationLauncher
@@ -78,18 +79,43 @@ class RefreshSimulationActor extends Actor with ActorLogging {
                   val futureSimulationId = SimulationLauncher.launchSimulation(author, simulationDateFrom, simulationDateTo)
                   futureSimulationId.map { simId =>
                     log.info(s"Simulation launched with Id ${simId} for author ${author}, dateFrom ${simulationDateFrom}, dateTo ${simulationDateTo}")
-                  }
+                    // 4) Notify system configured users of the latest simulation update/failure by email.
+                    sendNotification(s"FluxPatients Simulation Refresh performed no the ${new Date()}",
+                      s"""
+Automatick FluxPatients Simulation successfully launched
+                        
+Id:        ${simId}
+Author:    ${author}
+Date from: ${simulationDateFrom} 
+Date to:   ${simulationDateTo}
 
-                  // 4) Notify system configured users of the latest simulation update/failure by email.
-                  // TODO: notify
+HyperBird - Patman
+""")
+                  }
 
                 case None =>
                   log.warning("Simulation refresh cancelled. Date range 'date to' field could not be obtained.")
-                // TODO: notify
+                  // TODO: notify
+                  sendNotification(s"FluxPatients Simulation Refresh CANCELLED on the ${new Date()}",
+                    s"""
+Automatick FluxPatients Simulation failed to launched
+
+Cause: Date range 'date to' field could not be obtained.
+
+HyperBird - Patman
+""")
               }
             case None =>
               log.warning("Simulation refresh cancelled. Date range 'date from' field could not be obtained.")
-            // TODO: notify
+              // TODO: notify
+              sendNotification(s"FluxPatients Simulation Refresh CANCELLED on the ${new Date()}",
+                s"""
+Automatick FluxPatients Simulation failed to launched
+
+Cause: Date range 'date from' field could not be obtained.
+
+HyperBird - Patman
+""")
           }
 
         }
@@ -97,10 +123,53 @@ class RefreshSimulationActor extends Actor with ActorLogging {
       } catch {
         case e: Throwable =>
           log.error(s"Simulation refresh failed. Error: ${e}")
-        // TODO: notify
+          // TODO: notify
+          sendNotification(s"FluxPatients Simulation Refresh FAILED on the ${new Date()}",
+            s"""
+Automatick FluxPatients Simulation failed to launched
+
+Cause: ${e.getMessage()}
+              
+StackTrace: 
+              
+${e.getStackTrace()}
+
+HyperBird - Patman
+""")
       }
 
-    case _ => log.warning("Unsupported RefreshSimulationActor message received. Droping it.")
+    case _ =>
+      log.warning("Unsupported RefreshSimulationActor message received. Droping it.")
+      sendNotification(s"FluxPatients Unsupported RefreshSimulationActor message received on the ${new Date()}",
+        s"""
+
+Unsupported RefreshSimulationActor message received
+
+This should have no impact on the software behaviour. 
+Although this warning shows possible misconfiguration 
+incorrect behaviour introduced in source code change. 
+
+Please request your IT staff to check this out.
+
+HyperBird - Patman
+""")
+  }
+
+  /**
+   * TODO: Parametrise From, To addresses. Could come from configuration file or database, each
+   * user having mandatory email.
+   */
+  def sendNotification(subject: String, message: String): Unit = {
+    val res = Sender.send(
+      new Mail(
+        from = ("patrick.refondini@escalesoft.com", "Patrick Refondini"),
+        to = Seq("Patrick Refondini <patrick.refondini@escalesoft.com>"),
+        cc = Seq.empty,
+        bcc = Seq.empty,
+        subject = subject,
+        message = message,
+        richMessage = None,
+        attachment = None))
   }
 
 }
