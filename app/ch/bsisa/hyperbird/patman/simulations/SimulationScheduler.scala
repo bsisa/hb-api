@@ -50,8 +50,8 @@ object SimulationScheduler {
         val cl = Akka.system.scheduler.schedule(secondsFromStart.seconds, 24.hours, simulationRefreshActor, msg)
         
         // Use 3 minutes refresh rate for tests
-        //Logger.warn(">>>> TEST SIMULATION REFRESH RATE ACTIVE : 3 minutes <<<<")
-        //val cl = Akka.system.scheduler.schedule(secondsFromStart.seconds, 3.minutes, simulationRefreshActor, msg)
+//        Logger.warn(">>>> TEST SIMULATION REFRESH RATE ACTIVE : 3 minutes <<<<")
+//        val cl = Akka.system.scheduler.schedule(secondsFromStart.seconds, 3.minutes, simulationRefreshActor, msg)
         
       case None => // nothing to do 
     }
