@@ -80,7 +80,7 @@ class RefreshSimulationActor extends Actor with ActorLogging {
                   futureSimulationId.map { simId =>
                     log.info(s"Simulation launched with Id ${simId} for author ${author}, dateFrom ${simulationDateFrom}, dateTo ${simulationDateTo}")
                     // 4) Notify system configured users of the latest simulation update/failure by email.
-                    sendNotification(s"FluxPatients Simulation Refresh performed no the ${new Date()}",
+                    sendNotification(s"FluxPatients Simulation Refresh performed on ${new Date()}",
                       s"""
 Automatick FluxPatients Simulation successfully launched
                         
@@ -96,7 +96,7 @@ HyperBird - Patman
                 case None =>
                   log.warning("Simulation refresh cancelled. Date range 'date to' field could not be obtained.")
                   // TODO: notify
-                  sendNotification(s"FluxPatients Simulation Refresh CANCELLED on the ${new Date()}",
+                  sendNotification(s"FluxPatients Simulation Refresh CANCELLED on ${new Date()}",
                     s"""
 Automatick FluxPatients Simulation failed to launched
 
@@ -108,7 +108,7 @@ HyperBird - Patman
             case None =>
               log.warning("Simulation refresh cancelled. Date range 'date from' field could not be obtained.")
               // TODO: notify
-              sendNotification(s"FluxPatients Simulation Refresh CANCELLED on the ${new Date()}",
+              sendNotification(s"FluxPatients Simulation Refresh CANCELLED on ${new Date()}",
                 s"""
 Automatick FluxPatients Simulation failed to launched
 
@@ -124,7 +124,7 @@ HyperBird - Patman
         case e: Throwable =>
           log.error(s"Simulation refresh failed. Error: ${e}")
           // TODO: notify
-          sendNotification(s"FluxPatients Simulation Refresh FAILED on the ${new Date()}",
+          sendNotification(s"FluxPatients Simulation Refresh FAILED on ${new Date()}",
             s"""
 Automatick FluxPatients Simulation failed to launched
 
@@ -140,7 +140,7 @@ HyperBird - Patman
 
     case _ =>
       log.warning("Unsupported RefreshSimulationActor message received. Droping it.")
-      sendNotification(s"FluxPatients Unsupported RefreshSimulationActor message received on the ${new Date()}",
+      sendNotification(s"FluxPatients Unsupported RefreshSimulationActor message received on ${new Date()}",
         s"""
 
 Unsupported RefreshSimulationActor message received
