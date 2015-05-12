@@ -1,4 +1,5 @@
-1500:com.typesafe.plugin.CommonsMailerPlugin
+# 1500:com.typesafe.plugin.CommonsMailerPlugin
+# 1500:play.api.libs.mailer.CommonsMailerPlugin (Play 2.3) check: https://github.com/playframework/play-mailer
 9994:securesocial.core.DefaultAuthenticatorStore
 9995:securesocial.core.DefaultIdGenerator
 9996:securesocial.core.providers.utils.DefaultPasswordValidator
