@@ -1,32 +1,42 @@
 <configuration>
 
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${hb-app.dir}/hyperbird.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- Daily rollover with compression -->
-            <fileNamePattern>hyperbird-log-%d{yyyy-MM-dd}.gz</fileNamePattern>
-            <!-- keep 30 days worth of history -->
-            <maxHistory>30</maxHistory>
-        </rollingPolicy>
-        <encoder>
-            <pattern>%date{yyyy-MM-dd HH:mm:ss ZZZZ} - [%level] - from %logger in %thread %n%message%n%xException%n</pattern>
+	<appender name="FILE"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>hyperbird_dev.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- Daily rollover with compression -->
+			<fileNamePattern>hyperbird-log-%d{yyyy-MM-dd}.gz</fileNamePattern>
+			<!-- keep 30 days worth of history -->
+			<maxHistory>30</maxHistory>
+		</rollingPolicy>
+		<encoder>
+			<pattern>%date{yyyy-MM-dd HH:mm:ss ZZZZ} - [%level] - from %logger in %thread %n%message%n%xException%n</pattern>
 			<!-- this quadruples logging throughput -->
-            <immediateFlush>false</immediateFlush>
-        </encoder>
-    </appender>
-    
+			<immediateFlush>false</immediateFlush>
+		</encoder>
+	</appender>
+
+
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>[%level]-%date{HH:mm:ss} : %logger> %message%n%xException%n</pattern>
+		</encoder>
+	</appender>
 
 	<!-- additivity=false ensures access log data only goes to the access log -->
-    <logger name="application" level="INFO" additivity="false">
-        <appender-ref ref="FILE" />
-    </logger>
+	<logger name="application" level="INFO" additivity="false">
+		<appender-ref ref="FILE" />
+		<appender-ref ref="STDOUT" />
+	</logger>
 
-    <logger name="play" level="INFO" additivity="false">
-        <appender-ref ref="FILE" />
-    </logger>    
-    
-    <root level="INFO">
-        <appender-ref ref="FILE"/>
-    </root>
+	<logger name="play" level="INFO" additivity="false">
+		<appender-ref ref="FILE" />
+		<appender-ref ref="STDOUT" />
+	</logger>
+
+	<root level="INFO">
+		<appender-ref ref="FILE" />
+		<appender-ref ref="STDOUT" />
+	</root>
 
 </configuration>
