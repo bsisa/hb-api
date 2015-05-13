@@ -13,7 +13,7 @@ object ApplicationBuild extends Build {
   val appVersion = "5.1.0"
 
   val appDependencies = Seq(
-    "io.github.cloudify" %% "spdf" % "1.0.0",
+    "io.github.cloudify" %% "spdf" % "1.3.1",
     "org.apache.poi" % "poi" % "3.10-FINAL",
     "org.apache.poi" % "poi-ooxml" % "3.10-FINAL",
     "commons-io" % "commons-io" % "2.4",
