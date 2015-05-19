@@ -60,7 +60,7 @@ object ReportBuilder {
    * </ELFIN>
    *
    */
-  def writeReport(reportElfin: ELFIN, queryString: Option[String], queryStringMapOption: Option[Map[String, String]] = None)(implicit reportConfig: ReportConfig): Future[TemporaryFile] = {
+  def writeReport(reportElfin: ELFIN, queryString: Option[String], queryStringMapOption: Option[Map[String, String]] = None)(implicit reportConfig: ReportConfig, apiConfig: ch.bsisa.hyperbird.ApiConfig): Future[TemporaryFile] = {
 
     // ==============================================================
     // Extract parameters from reportElfin
@@ -99,7 +99,21 @@ object ReportBuilder {
     // ==============================================================
     // Run XQuery by file name
     // ==============================================================
-    val responseFuture = XQueryWSHelper.runXQueryFile(queryFileName.trim, queryString)
+    
+    // Add annexesRootFolderPath information if available in apiConfig
+    // Note: First introduced to add print support to Gespatri IMMEUBLE latests 'photo' from ANNEXE
+    val augmentedQueryString = if (apiConfig.annexesRootFolder.trim().size > 0) {
+        val annexesRootFolderPath = apiConfig.annexesRootFolder
+        val queryStringWithAnnexesRootFolderPath = queryString match {
+          case Some(qs) => qs + s"&annexesRootFolderPath=${annexesRootFolderPath}"
+          case None => s"?annexesRootFolderPath=${annexesRootFolderPath}"
+        }       
+        Some(queryStringWithAnnexesRootFolderPath)
+    } else {
+      queryString
+    }
+    
+    val responseFuture = XQueryWSHelper.runXQueryFile(queryFileName.trim, augmentedQueryString)
 
     responseFuture.map { response =>
 
