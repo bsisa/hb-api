@@ -35,7 +35,6 @@ object ReportBuilder {
     val ru = scala.reflect.runtime.universe
     val m = ru.runtimeMirror(getClass.getClassLoader)
     val template = m.reflectModule(m.staticModule(templateName + "$")).instance.asInstanceOf[Template2[A, String, Result]]
-
     template.render(data, reportTitle).toString
   }
 
@@ -134,7 +133,10 @@ object ReportBuilder {
       play.api.libs.Files.writeFile(reportFooterHtmlTempFile.file, renderTemplate(footerTemplateName, resultData, reportTitle))
 
       // Render report body to HTML and save it to disk
-      val reportContentHtmlString = renderTemplate(contentTemplateName, resultData, reportTitle)
+      val reportContentHtmlTempFile = new TemporaryFile(java.io.File.createTempFile("hb5ReportContent", ".html"))
+      
+      //val reportContentHtmlString = renderTemplate(contentTemplateName, resultData, reportTitle)
+      play.api.libs.Files.writeFile(reportContentHtmlTempFile.file, renderTemplate(contentTemplateName, resultData, reportTitle))
 
       // Extract CARSET.CAR[@NAME='pageOrientation']/@VALEUR and return whether orientation is portrait or landscape
       val pageOrientation: PageOrientation = reportElfin.CARACTERISTIQUE.get.CARSET match {
@@ -158,7 +160,7 @@ object ReportBuilder {
       // Create empty temporary file for final PDF report outcome.
       val tempResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))
       // Process HTML temporary files to PDF using wkhtmltopdf
-      pdf.run(reportContentHtmlString, tempResult.file)
+      pdf.run(reportContentHtmlTempFile.file, tempResult.file)
 
       tempResult
     }
