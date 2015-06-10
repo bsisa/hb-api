@@ -40,12 +40,12 @@ class TransferReportActor(simulationId: String) extends Actor with ActorLogging 
         }
       }
 
-    case TransferRequestUpdate(id, patientTypeChangeFromSiToSc, bedsWithTransferTypeOnlyChangePatientTypeSi, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
+    case TransferRequestUpdate(id, patientTypeChangeFromSiToSc, bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
       log.info(s"TransferReportActor received: ${message}")
       val futureTransferElfin: Future[ELFIN] = ElfinDAO.getNewFromCatalogue("TRANSFER")
       futureTransferElfin.map { elfinTransferTemplate =>
         try {
-          val bedsToUpdate = patientTypeChangeFromSiToSc ++ bedsWithTransferTypeOnlyChangePatientTypeSi
+          val bedsToUpdate = patientTypeChangeFromSiToSc ++ bedsWithTransferTypeOnlyChangePatientTypeSi ++ bedsWithTransferTypeOnlyChangePatientTypeSc
           if (bedsToUpdate != Nil && bedsToUpdate.size > 0) {
             val updateTransferElfinFuture = HospitalHelper.buildTransferElfin(
               elfinTransferTemplate = elfinTransferTemplate, simulationId = simulationId, nature = Constants.TRANSFER_NATURE_UPDATE,

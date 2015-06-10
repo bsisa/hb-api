@@ -104,7 +104,12 @@ class HospitalActorCdf(name: String, bedsNb: Int, simulatedHospitalStateReportAc
        *  - tranferTypeOnlyChange:
        *       if SI patient type         must trigger TRANSFER NATURE="update"    => notify PRT patients have had transfer type changed
        *                                                                              (replace their previous bed values with new updated ones)
-       *       if SC patient type         must update CDF `simulatedHospitalState` => replace their previous bed values with new updated ones
+       *       if SC patient type         
+       *              if was formerly SI patient type (see #4 Patient management simulation creates duplicate entries in specific conditions with minor impact)
+       *                                  must trigger TRANSFER NATURE="update"    => notify PRT patients have had transfer type changed
+       *                                                                              (replace their previous bed values with new updated ones)
+       *              else
+       *                                  must update CDF `simulatedHospitalState` => replace their previous bed values with new updated ones 
        *
        *  - bedsWithIncomingPatientTypeSc must update CDF `simulatedHospitalState` => stay at CDF
        *  - bedsWithOutgoingPatientTypeSc must update CDF `simulatedHospitalState` => out of CDF
@@ -117,6 +122,20 @@ class HospitalActorCdf(name: String, bedsNb: Int, simulatedHospitalStateReportAc
           patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc,
           bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc) =>
 
+          // Fix #4 by adding missing 'remoteBedsWithTransferTypeOnlyChangePatientTypeSc' and  'localBedsWithTransferTypeOnlyChangePatientTypeSc'
+          // Indeed formerly SI at CDF that have changed to SC need remote update request when their transfer type changes 
+          // similarly to 'bedsWithTransferTypeOnlyChangePatientTypeSi' while local beds can keep the same processing logic. 
+          val remoteBedsWithTransferTypeOnlyChangePatientTypeSc = simulatedHospitalState match {
+            // Keep only beds which are not managed in local simulated hospital state. These are managed at remote end (PRT site).
+            case Some(localSimulatedHospitalState) => bedsWithTransferTypeOnlyChangePatientTypeSc diff localSimulatedHospitalState.beds
+            case None                              => bedsWithTransferTypeOnlyChangePatientTypeSc // This should be empty list
+          }
+            // Keep only beds which are managed in local simulated hospital state. These are managed at local end (CDF site).
+          val localBedsWithTransferTypeOnlyChangePatientTypeSc = simulatedHospitalState match {
+            case Some(localSimulatedHospitalState) => bedsWithTransferTypeOnlyChangePatientTypeSc intersect localSimulatedHospitalState.beds
+            case None                              => bedsWithTransferTypeOnlyChangePatientTypeSc // This should be empty list
+          }
+
           // Update hospital simulation summary
           simulationSummary = Some(
               HospitalHelper.updateHospitalSimulationSummary(
@@ -128,16 +147,15 @@ class HospitalActorCdf(name: String, bedsNb: Int, simulatedHospitalStateReportAc
                   bedsWithOutgoingPatientTypeSc = bedsWithOutgoingPatientTypeSc))
 
           // ================================================================================================================================= 
-          // Update current CDT simulatedHospitalState removing transfered SI beds
+          // Update current CDT simulatedHospitalState removing transferred SI beds
           // =================================================================================================================================
-          // TODO: Full implementation review needed. Follow above algorithm description (UPDATE ALGO CDF)
           simulatedHospitalState = HospitalHelper.updateSimulatedHospitalStateForCdf(
             currentSimulatedHospitalStateOption = simulatedHospitalState,
             newStaticHospitalStateOption = currentHospitalState,
             bedsWithIncomingPatientTypeSi, bedsWithIncomingPatientTypeSc,
             bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc,
             patientTypeChangeFromScToSi, patientTypeChangeFromSiToSc,
-            bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc)
+            bedsWithTransferTypeOnlyChangePatientTypeSi, localBedsWithTransferTypeOnlyChangePatientTypeSc)
 
           log.info(s"${name}> SIMULATED HS: ${simulatedHospitalState}")
           // Send message to create simulatedHospitalState entry for the current state.
@@ -152,9 +170,6 @@ class HospitalActorCdf(name: String, bedsNb: Int, simulatedHospitalStateReportAc
           // 1) TransferRequestCreate  =======================================================================================================
           // - bedsWithIncomingPatientTypeSi must trigger TRANSFER NATURE="add"       => be transferred to PRT
           // - patientTypeChangeFromScToSi   must trigger TRANSFER NATURE="add"       => be transferred to PRT            
-
-          // Compute list of beds to transfer (+)
-          //val bedsToAddTransfer = bedsWithIncomingPatientTypeSi ++ patientTypeChangeFromScToSi
           val tranferReqCreate = TransferRequestCreate(
             id = elfin.Id, bedsWithIncomingPatientTypeSi = bedsWithIncomingPatientTypeSi, patientTypeChangeFromScToSi = patientTypeChangeFromScToSi,
             fromHospitalCode = HOSPITAL_CODE_CDF, toHospitalCode = HOSPITAL_CODE_PRT, fromSchedule = hospital.schedule,
@@ -164,12 +179,19 @@ class HospitalActorCdf(name: String, bedsNb: Int, simulatedHospitalStateReportAc
 
           // 2) TransferRequestUpdate  =======================================================================================================
           // patientTypeChangeFromSiToSc   must trigger TRANSFER NATURE="update"    => notify PRT patients have had their patient type changed
-          // tranferTypeOnlyChange:
-          //    if SI patient type         must trigger TRANSFER NATURE="update"    => notify PRT patients have had transfer type changed
-          //                                                                          (replace their previous bed values with new updated ones)            
-          //val bedsToUpdateTransfer = patientTypeChangeFromSiToSc ++ bedsWithTransferTypeOnlyChangePatientTypeSi              
+
+          //  - tranferTypeOnlyChange:
+          //       if SI patient type         must trigger TRANSFER NATURE="update"    => notify PRT patients have had transfer type changed
+          //                                                                              (replace their previous bed values with new updated ones)
+          //       if SC patient type         
+          //              if was formerly SI patient type (see #4 Patient management simulation creates duplicate entries in specific conditions with minor impact)
+          //                                  must trigger TRANSFER NATURE="update"    => notify PRT patients have had transfer type changed
+          //                                                                              (replace their previous bed values with new updated ones)
+          //              else
+          //                                  must update CDF `simulatedHospitalState` => replace their previous bed values with new updated ones
           val transferReqUpdate = TransferRequestUpdate(
             id = elfin.Id, patientTypeChangeFromSiToSc = patientTypeChangeFromSiToSc, bedsWithTransferTypeOnlyChangePatientTypeSi = bedsWithTransferTypeOnlyChangePatientTypeSi,
+            bedsWithTransferTypeOnlyChangePatientTypeSc = remoteBedsWithTransferTypeOnlyChangePatientTypeSc,
             fromHospitalCode = HOSPITAL_CODE_CDF, toHospitalCode = HOSPITAL_CODE_PRT, fromSchedule = hospital.schedule,
             message = s"Requesting SI TransferRequestUpdate for ${hospital.schedule} from ${HOSPITAL_CODE_CDF} to ${HOSPITAL_CODE_PRT} with: ${patientTypeChangeFromSiToSc.size} SI to SC and ${bedsWithTransferTypeOnlyChangePatientTypeSi.size} transfer type change.")
 
@@ -178,7 +200,6 @@ class HospitalActorCdf(name: String, bedsNb: Int, simulatedHospitalStateReportAc
           // 3) TransferRequestDelete  =======================================================================================================
           // bedsWithOutgoingPatientTypeSi must trigger TRANSFER NATURE="remove"    => notify PRT these transferred SI patients are going out
           // bedsWithOutgoingPatientTypeSc must also be included in case they were previously SI transferred to PRT with SI to SC type change. 
-          //val bedsToDeleteTransfer = bedsWithOutgoingPatientTypeSi
           val transferReqDelete = TransferRequestDelete(
             id = elfin.Id, bedsWithOutgoingPatientTypeSi = bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc = bedsWithOutgoingPatientTypeSc,
             fromHospitalCode = HOSPITAL_CODE_CDF, toHospitalCode = HOSPITAL_CODE_PRT, fromSchedule = hospital.schedule,

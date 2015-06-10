@@ -104,7 +104,8 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
        *  - bedsWithOutgoingPatientTypeSc are expected at CDF, we do nothing with it at the moment
        *  - patientTypeChangeFromScToSi should be transferred to PRT
        *  - patientTypeChangeFromSiToSc should never be present here as SI patients move to PRT
-       *  - tranferTypeOnlyChange should replace their previous bed values with new updated ones
+       *  - bedsWithTransferTypeOnlyChangePatientTypeSi should replace their previous bed values with new updated ones
+       *  - bedsWithTransferTypeOnlyChangePatientTypeSc should replace their previous bed values with new updated ones
        */
       HospitalHelper.getBedsUpdates(previousHospitalState, currentHospitalState) match {
         case (
@@ -140,7 +141,10 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
         case Some(PrtMessageState(hs, tc, tu, td)) =>
           // Check if any delayed operation is pending
           if (tc.isDefined) {
-            updateStateForTransferRequestCreate(simulationSummary = simulationSummary, simulatedHospitalState = simulatedHospitalState, currentHospitalState = currentHospitalState, incomingTransferredSi = delayedUpdateStateForTransferRequestCreate.get.incomingTransferredSi) match {
+            updateStateForTransferRequestCreate(
+                simulationSummary = simulationSummary, simulatedHospitalState = simulatedHospitalState, 
+                currentHospitalState = currentHospitalState, 
+                incomingTransferredSi = delayedUpdateStateForTransferRequestCreate.get.incomingTransferredSi) match {
               case (hssOpt, hOpt) =>
                 simulationSummary = hssOpt
                 simulatedHospitalState = hOpt
@@ -148,11 +152,19 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
             delayedUpdateStateForTransferRequestCreate = None
           }
           if (tu.isDefined) {
-            simulatedHospitalState = updateStateForTransferRequestUpdate(simulatedHospitalState = simulatedHospitalState, currentHospitalState = currentHospitalState, patientTypeChangeFromSiToSc = delayedUpdateStateForTransferRequestUpdate.get.patientTypeChangeFromSiToSc, bedsWithTransferTypeOnlyChangePatientTypeSi = delayedUpdateStateForTransferRequestUpdate.get.bedsWithTransferTypeOnlyChangePatientTypeSi)
+            simulatedHospitalState = updateStateForTransferRequestUpdate(
+                simulatedHospitalState = simulatedHospitalState, currentHospitalState = currentHospitalState, 
+                patientTypeChangeFromSiToSc = delayedUpdateStateForTransferRequestUpdate.get.patientTypeChangeFromSiToSc, 
+                bedsWithTransferTypeOnlyChangePatientTypeSi = delayedUpdateStateForTransferRequestUpdate.get.bedsWithTransferTypeOnlyChangePatientTypeSi,
+                bedsWithTransferTypeOnlyChangePatientTypeSc = delayedUpdateStateForTransferRequestUpdate.get.bedsWithTransferTypeOnlyChangePatientTypeSc)
             delayedUpdateStateForTransferRequestUpdate = None
           }
           if (td.isDefined) {
-            updateStateForTransferRequestDelete(simulationSummary = simulationSummary, simulatedHospitalState = simulatedHospitalState, currentHospitalState = currentHospitalState, bedsWithOutgoingPatientTypeSi = delayedUpdateStateForTransferRequestDelete.get.bedsWithOutgoingPatientTypeSi, bedsWithOutgoingPatientTypeSc = delayedUpdateStateForTransferRequestDelete.get.bedsWithOutgoingPatientTypeSc) match {
+            updateStateForTransferRequestDelete(
+                simulationSummary = simulationSummary, simulatedHospitalState = simulatedHospitalState, 
+                currentHospitalState = currentHospitalState, 
+                bedsWithOutgoingPatientTypeSi = delayedUpdateStateForTransferRequestDelete.get.bedsWithOutgoingPatientTypeSi, 
+                bedsWithOutgoingPatientTypeSc = delayedUpdateStateForTransferRequestDelete.get.bedsWithOutgoingPatientTypeSc) match {
               case (hssOpt, hOpt) =>
                 simulationSummary = hssOpt
                 simulatedHospitalState = hOpt
@@ -207,7 +219,7 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
       // Check message state
       if (checkMessageStateCompleted(messageState)) requestNextDataAndSendStateToReportAndResetMessageState()
 
-    case TransferRequestUpdate(id, patientTypeChangeFromSiToSc, bedsWithTransferTypeOnlyChangePatientTypeSi, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
+    case TransferRequestUpdate(id, patientTypeChangeFromSiToSc, bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
 
       log.debug(message)
 
@@ -223,15 +235,25 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
               // Update now
               simulatedHospitalState = updateStateForTransferRequestUpdate(
                 simulatedHospitalState = simulatedHospitalState, currentHospitalState = currentHospitalState,
-                patientTypeChangeFromSiToSc = patientTypeChangeFromSiToSc, bedsWithTransferTypeOnlyChangePatientTypeSi = bedsWithTransferTypeOnlyChangePatientTypeSi)
+                patientTypeChangeFromSiToSc = patientTypeChangeFromSiToSc,
+                bedsWithTransferTypeOnlyChangePatientTypeSi = bedsWithTransferTypeOnlyChangePatientTypeSi,
+                bedsWithTransferTypeOnlyChangePatientTypeSc = bedsWithTransferTypeOnlyChangePatientTypeSc)
             case None =>
               // Update call delayed upon hospitalState availability. Save update data for later call.
-              delayedUpdateStateForTransferRequestUpdate = Some(UpdateStateForTransferRequestUpdateParameters(patientTypeChangeFromSiToSc = patientTypeChangeFromSiToSc, bedsWithTransferTypeOnlyChangePatientTypeSi = bedsWithTransferTypeOnlyChangePatientTypeSi))
+              delayedUpdateStateForTransferRequestUpdate = Some(
+                  UpdateStateForTransferRequestUpdateParameters(
+                      patientTypeChangeFromSiToSc = patientTypeChangeFromSiToSc, 
+                      bedsWithTransferTypeOnlyChangePatientTypeSi = bedsWithTransferTypeOnlyChangePatientTypeSi,
+                      bedsWithTransferTypeOnlyChangePatientTypeSc = bedsWithTransferTypeOnlyChangePatientTypeSc))
           }
           Some(PrtMessageState(hs, tc, Some(tRespUpdate), td))
         case None =>
           // Update call delayed upon hospitalState availability. Save update data for later call.
-          delayedUpdateStateForTransferRequestUpdate = Some(UpdateStateForTransferRequestUpdateParameters(patientTypeChangeFromSiToSc = patientTypeChangeFromSiToSc, bedsWithTransferTypeOnlyChangePatientTypeSi = bedsWithTransferTypeOnlyChangePatientTypeSi))
+          delayedUpdateStateForTransferRequestUpdate = Some(
+              UpdateStateForTransferRequestUpdateParameters(
+                  patientTypeChangeFromSiToSc = patientTypeChangeFromSiToSc, 
+                  bedsWithTransferTypeOnlyChangePatientTypeSi = bedsWithTransferTypeOnlyChangePatientTypeSi,
+                  bedsWithTransferTypeOnlyChangePatientTypeSc = bedsWithTransferTypeOnlyChangePatientTypeSc))
           Some(PrtMessageState(hs = None, tc = None, tu = Some(tRespUpdate), td = None))
       }
 
@@ -322,7 +344,8 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
    */  
   def updateStateForTransferRequestUpdate(
     simulatedHospitalState: Option[Hospital], currentHospitalState: Option[Hospital],
-    patientTypeChangeFromSiToSc: List[Bed], bedsWithTransferTypeOnlyChangePatientTypeSi: List[Bed]): Option[Hospital] = {
+    patientTypeChangeFromSiToSc: List[Bed], bedsWithTransferTypeOnlyChangePatientTypeSi: List[Bed], 
+    bedsWithTransferTypeOnlyChangePatientTypeSc: List[Bed]): Option[Hospital] = {
     // Remark: TransferRequestUpdate track tranferred SI changes and does not lead to any hospital simulation summary update
 
     // Update current PRT simulatedHospitalState tracking `dynamic` updates of transferred patients
@@ -336,7 +359,7 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
       patientTypeChangeFromScToSi = List(),
       patientTypeChangeFromSiToSc = patientTypeChangeFromSiToSc,
       bedsWithTransferTypeOnlyChangePatientTypeSi = bedsWithTransferTypeOnlyChangePatientTypeSi,
-      bedsWithTransferTypeOnlyChangePatientTypeSc = List())
+      bedsWithTransferTypeOnlyChangePatientTypeSc = bedsWithTransferTypeOnlyChangePatientTypeSc)
 
     updatedSimulatedHospitalState
   }
@@ -389,6 +412,6 @@ class HospitalActorPrt(name: String, bedsNb: Int, simulatedHospitalStateReportAc
 case class PrtMessageState(hs: Option[HospitalState], tc: Option[TransferResponseCreate], tu: Option[TransferResponseUpdate], td: Option[TransferResponseDelete])
 
 case class UpdateStateForTransferRequestCreateParameters(incomingTransferredSi: List[Bed])
-case class UpdateStateForTransferRequestUpdateParameters(patientTypeChangeFromSiToSc: List[Bed], bedsWithTransferTypeOnlyChangePatientTypeSi: List[Bed])
+case class UpdateStateForTransferRequestUpdateParameters(patientTypeChangeFromSiToSc: List[Bed], bedsWithTransferTypeOnlyChangePatientTypeSi: List[Bed], bedsWithTransferTypeOnlyChangePatientTypeSc: List[Bed])
 case class UpdateStateForTransferRequestDeleteParameters(bedsWithOutgoingPatientTypeSi: List[Bed], bedsWithOutgoingPatientTypeSc: List[Bed]) 
 

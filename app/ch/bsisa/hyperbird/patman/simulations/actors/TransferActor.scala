@@ -17,8 +17,8 @@ class TransferActor(hospitalsActorRefs: Map[String, ActorRef], transferReportAct
       hospitalsActorRefs(toHospitalCode) ! tReqCreate 
       transferReportActorRef ! tReqCreate
       
-    case TransferRequestUpdate(id, patientTypeChangeFromSiToSc, bedsWithTransferTypeOnlyChangePatientTypeSi, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
-      val tReqUpdate = TransferRequestUpdate(id, patientTypeChangeFromSiToSc, bedsWithTransferTypeOnlyChangePatientTypeSi, fromHospitalCode, toHospitalCode, fromSchedule, message)
+    case TransferRequestUpdate(id, patientTypeChangeFromSiToSc, bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc, fromHospitalCode, toHospitalCode, fromSchedule, message) =>
+      val tReqUpdate = TransferRequestUpdate(id, patientTypeChangeFromSiToSc, bedsWithTransferTypeOnlyChangePatientTypeSi, bedsWithTransferTypeOnlyChangePatientTypeSc, fromHospitalCode, toHospitalCode, fromSchedule, message)
       hospitalsActorRefs(toHospitalCode) ! tReqUpdate
       transferReportActorRef ! tReqUpdate
       
