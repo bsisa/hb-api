@@ -491,7 +491,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
       // Application data based access right
       WithClasseEditRight.isAuthorized(user = user, elfinClasse = elfin.CLASSE)
       //elfin.IDENTIFIANT.get.GER
-      WithManagerEditRight.isAuthorized(elfin, request)
+      WithManagerEditRight.isAuthorizedJs(elfin, request)
 
       // Test identifiers consistency between URL and JSON body
       if (elfin.Id.equals(elfinId)) {
@@ -541,7 +541,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
       // Application data based access right
       WithClasseEditRight.isAuthorized(user = user, elfinClasse = elfin.CLASSE)
-      WithManagerEditRight.isAuthorized(elfin, request)
+      WithManagerEditRight.isAuthorizedJs(elfin, request)
       
       // Test identifiers consistency between URL and JSON body
       if (elfin.ID_G.equals(collectionId) && elfin.Id.equals(elfinId)) {
@@ -595,7 +595,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
           // Application data based access right
           WithClasseEditRight.isAuthorized(user = user, elfinClasse = elfin.CLASSE)
           
-          WithManagerEditRight.isAuthorized(elfin, request)
+          WithManagerEditRight.isAuthorizedAny(elfin, request)
           // Delete elfin from database
           ElfinDAO.delete(elfin)
 

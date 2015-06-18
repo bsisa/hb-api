@@ -11,6 +11,8 @@ import play.api.Logger
 /**
  * Contains methods to check user access rights given ELFIN CLASSE
  * information
+ * 
+ * TODO: solve type duplicate method due to useless type parametrisation mismatch. 
  */
 // TODO: evaluate whether to adapt once SecureSocial 2.1.4 is out provided it includes 
 // request access similar to https://github.com/mohiva/play-silhouette/pull/152 
@@ -25,7 +27,7 @@ case object WithManagerEditRight {
    * authorised data manager rights or if optional data manager rights in turn off. 
    * Otherwise throws as WithManagerEditRightException
    */
-  def isAuthorized(elfin: ELFIN, request: securesocial.core.SecuredRequest[play.api.libs.json.JsValue])(implicit apiConfig: ApiConfig): Boolean = {
+  def isAuthorizedJs(elfin: ELFIN, request: securesocial.core.SecuredRequest[play.api.libs.json.JsValue])(implicit apiConfig: ApiConfig): Boolean = {
     
     val dataManagerRight: String = request.headers.get(HTTP_HEADER_DATA_MANAGER_ACCESS_RIGHTS_CREATE_UPDATE).getOrElse("")
     
@@ -58,7 +60,7 @@ case object WithManagerEditRight {
    * authorised data manager rights or if optional data manager rights in turn off. 
    * Otherwise throws as WithManagerEditRightException
    */  
-  def isAuthorized(elfin: ELFIN, request: securesocial.core.SecuredRequest[play.api.mvc.AnyContent])(implicit apiConfig: ApiConfig): Boolean = {    
+  def isAuthorizedAny(elfin: ELFIN, request: securesocial.core.SecuredRequest[play.api.mvc.AnyContent])(implicit apiConfig: ApiConfig): Boolean = {    
     
     val dataManagerRight: String = request.headers.get(HTTP_HEADER_DATA_MANAGER_ACCESS_RIGHTS_CREATE_UPDATE).getOrElse("")
     
