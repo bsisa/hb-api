@@ -15,8 +15,7 @@ import org.joda.time.DateTime
 import ch.bsisa.hyperbird.util.DateUtil
 import ch.bsisa.hyperbird.patman.simulations.SimulationScheduler
 
-import ch.bsisa.hyperbird.Implicits.patmanConfig
-import ch.bsisa.hyperbird.Implicits.dbConfig
+import ch.bsisa.hyperbird.Implicits._
 
 /**
  * Handles global settings for the application providing some hooks.
@@ -35,6 +34,9 @@ object Global extends GlobalSettings {
    */
   override def onStart(app: Application) = {
     Logger.info(s"HyperBird application started at ${new Date()}")
+    
+    OptionalConfigLogger.log()
+    
     // Optional. Will only be effective if the corresponding configuration is available.
    	SimulationScheduler.trySchedulingSimulation() 
   }
