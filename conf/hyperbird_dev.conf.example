@@ -36,9 +36,12 @@ hb {
 		# Folder to upload temporary file chunks to.
 	    "temporaryUploadFolder" : "/tmp/hb-uploads",	    
 		# REST base URL. Use for instance by Restangular.   
-		"baseUrl": "http://localhost:9000/api/melfin/"
+		"baseUrl": "http://localhost:9000/api/melfin/",
 		"clientDebugEnabled": true,
-		"queryCacheEnabled" : true
+		# Enables server side queries caching
+		"queryCacheEnabled" : true,
+		# Enables data manager security if set to true (Relies on METIER and IDENTIFIANT/GER informations)
+		"dataManagerSecurityEnabled" : false		
 	},
 	report {
         wkhtmltopdf {

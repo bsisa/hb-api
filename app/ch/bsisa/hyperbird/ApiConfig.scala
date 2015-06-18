@@ -45,13 +45,20 @@ class ApiConfig {
 
   /**
    * Used by Api service to enable or disable queries cache feature.
-   *
-   * '''WARNING''': This feature is still in alpha state and should not be activated in production yet. Before production use it requires design review, extended testing and tuning (TTL,...) to make sure no unintended side effects exist.
    */
   val queryCacheEnabled: Boolean = Play.current.configuration.getBoolean(ApiConfig.QueryCacheEnabledUrlKey) match {
     case Some(queryCacheEnabledValue) => queryCacheEnabledValue
     case None => false // This property is optional, fallback to false without requiring configuration.
   }
+  
+  
+  /**
+   * Used by Api service to enable or disable data manager based security feature.
+   */
+  val dataManagerSecurityEnabled: Boolean = Play.current.configuration.getBoolean(ApiConfig.DataManagerSecurityEnabledUrlKey) match {
+    case Some(dataManagerSecurityEnabledValue) => dataManagerSecurityEnabledValue
+    case None => false // This property is optional, fallback to false without requiring configuration.
+  }  
 
 }
 
@@ -70,5 +77,8 @@ object ApiConfig {
   private val BaseUrlKey = "hb.api.baseUrl"
   private val ClientDebugEnabledUrlKey = "hb.api.clientDebugEnabled"
   private val QueryCacheEnabledUrlKey = "hb.api.queryCacheEnabled"
+  private val DataManagerSecurityEnabledUrlKey = "hb.api.dataManagerSecurityEnabled"
+  
+  
 
 }
