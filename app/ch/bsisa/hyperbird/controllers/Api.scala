@@ -36,6 +36,8 @@ import java.io.ByteArrayInputStream
 import ch.bsisa.hyperbird.security.social.WithRole
 import ch.bsisa.hyperbird.security.social.WithClasseEditRight
 import ch.bsisa.hyperbird.security.social.WithClasseEditRightException
+import ch.bsisa.hyperbird.security.social.WithManagerEditRight
+import ch.bsisa.hyperbird.security.social.WithManagerEditRightException
 import securesocial.core.SocialUser
 import ch.bsisa.hyperbird.security.social.User
 import ch.bsisa.hyperbird.cache.CacheHelper
@@ -55,7 +57,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
   val JSON_FORMAT = "json"
   val ORIGINAL_FORMAT = "original"
-
+  
   /**
    * Helper function obtaining configuration information.
    */
@@ -488,6 +490,8 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
       // Application data based access right
       WithClasseEditRight.isAuthorized(user = user, elfinClasse = elfin.CLASSE)
+      //elfin.IDENTIFIANT.get.GER
+      WithManagerEditRight.isAuthorized(elfin, request)
 
       // Test identifiers consistency between URL and JSON body
       if (elfin.Id.equals(elfinId)) {
@@ -537,7 +541,8 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
       // Application data based access right
       WithClasseEditRight.isAuthorized(user = user, elfinClasse = elfin.CLASSE)
-
+      WithManagerEditRight.isAuthorized(elfin, request)
+      
       // Test identifiers consistency between URL and JSON body
       if (elfin.ID_G.equals(collectionId) && elfin.Id.equals(elfinId)) {
         // Update database with new elfin
@@ -553,6 +558,9 @@ object Api extends Controller with securesocial.core.SecureSocial {
         ExceptionsManager.manageException(errorMsg = Option(errorMsg))
       }
     } catch {
+      case e: WithManagerEditRightException =>
+        val errorMsg = s"Failed to perform update for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
+        manageWithManagerEditRightException(exception = e, errorMsg = Option(errorMsg))      
       case e: WithClasseEditRightException =>
         val errorMsg = s"Failed to perform update for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
         manageWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))
@@ -586,6 +594,8 @@ object Api extends Controller with securesocial.core.SecureSocial {
         try {
           // Application data based access right
           WithClasseEditRight.isAuthorized(user = user, elfinClasse = elfin.CLASSE)
+          
+          WithManagerEditRight.isAuthorized(elfin, request)
           // Delete elfin from database
           ElfinDAO.delete(elfin)
 
@@ -692,6 +702,14 @@ object Api extends Controller with securesocial.core.SecureSocial {
       "DESCRIPTION" -> errorMsg.getOrElse("").toString)
     Status(403)(jsonExceptionMsg) // 403 - Forbidden
   }
+  
+  def manageWithManagerEditRightException(exception: WithManagerEditRightException, errorMsg: Option[String] = None): SimpleResult = {
+    Logger.warn("Api exception: " + exception.toString + " - " + errorMsg.getOrElse(""))
+    val jsonExceptionMsg = Json.obj(
+      "ERROR" -> "security.exception.manager.edit.right",
+      "DESCRIPTION" -> errorMsg.getOrElse("").toString)
+    Status(403)(jsonExceptionMsg) // 403 - Forbidden
+  }  
 
   /**
    * Encapsulate `manageWithClasseEditRightException` in a asynchronous call for use in Action.async context.
