@@ -122,8 +122,24 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
     // Perform call to eXist REST service to get collections list
     val responseFuture: Future[Response] = WS.url(query).get()
 
-    proceedWithSingleElfinResponse(responseFuture, query)
+    proceedWithSingleElfinResponseToElfinClass(responseFuture, query)
   }
+  
+  /**
+   * WS specific implementation to query 0 to 1 ELFIN and return original XML format.
+   * 
+   * This is outside the 'QueriesProcessor' trait. 
+   * Indead the API is designed around Scala classes not specific JSON, XML,... formats.
+   * The purpose of the current function is to avoid XML to class back to XML conversions 
+   * for performances considerations.   
+   */
+  def findXml(query: String): Future[scala.xml.Node] = {
+    // Perform call to eXist REST service to get collections list
+    val responseFuture: Future[Response] = WS.url(query).get()
+
+    proceedWithSingleElfinResponseToXML(responseFuture, query)
+  }  
+  
 
   override def delete(elfin: ELFIN)(implicit conf: DbConfig): Unit = {
     val fileName = ElfinIdGenerator.getElfinFileName(elfin)
@@ -169,7 +185,7 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
     val query = WSQueries.elfinUserPerEmailQuery(email)
     val responseFuture: Future[Response] = WS.url(query).withHeaders(("Content-Type", "application/xquery")).get
 
-    proceedWithSingleElfinResponse(responseFuture, query)
+    proceedWithSingleElfinResponseToElfinClass(responseFuture, query)
   }
 
   /**
@@ -202,14 +218,20 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
      responseFuture     
   }
   
+
   
   /**
-   * Proceeds with response for ELFIN queries expecting a single result.
+   * Proceeds validating response expected to contain a single result for ELFIN 'query'.
+   * The response body must contain a single ELFIN in XML format.
+   * 
+   * Returns a 'Future[scala.xml.Node]' where Node is an ELFIN element if valid. 
+   * Otherwise throws ResultNotFoundException, ExpectedSingleResultException
+   * 
    */
-  private def proceedWithSingleElfinResponse(singleElfinResponseFuture: Future[Response], query : String) : Future[ELFIN] = {
+  private def proceedWithSingleElfinResponseToXML(singleElfinResponseFuture: Future[Response], query : String) : Future[scala.xml.Node] = {
   
     // Keep asynchronous calls asynchronous to allow Play free threads
-    val resultFuture: Future[ELFIN] = singleElfinResponseFuture.map { resp =>
+    val resultFuture: Future[scala.xml.Node] = singleElfinResponseFuture.map { resp =>
       // We expect to receive XML content
       //Logger.debug(s">>>> proceedWithSingleElfinResponse: Result of type ${resp.ahcResponse.getContentType} received")
       val bodyString = resp.body.mkString
@@ -225,14 +247,23 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
           throw ExpectedSingleResultException(s"Found more than a single ELFIN (${elfinNodeSeq.size}) for query: ${query}")
         } else {
           val elfinElem = elfinNodeSeq(0)
-          // Transform XML to ELFIN object
-          val elfin = ElfinFormat.fromXml(elfinElem)
-          elfin
+          elfinElem
         }
       }
     }
     resultFuture  
-  }
+  }  
+  
+  /**
+   * Wraps 'proceedWithSingleElfinResponseToXML' to convert ELFIN in XML format to JSON format.
+   */
+  private def proceedWithSingleElfinResponseToElfinClass(singleElfinResponseFuture: Future[Response], query : String) : Future[ELFIN] = {
+  
+    val elfinXmlElemFuture = proceedWithSingleElfinResponseToXML(singleElfinResponseFuture, query)
+    val elfinClassFuture = elfinXmlElemFuture.map { elfinElem =>  ElfinFormat.fromXml(elfinElem)}
+    elfinClassFuture
+  
+  }  
   
   
 }

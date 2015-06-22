@@ -78,7 +78,7 @@ GET      /api/melfin/:collectionId                               ch.bsisa.hyperb
 #GET      /api/melfin/catalogue/:className     ch.bsisa.hyperbird.controllers.Api.getNewElfin(className)
 
 # Elfin CRUD operations
-GET      /api/melfin/:collectionId/:elfinId                      ch.bsisa.hyperbird.controllers.Api.getElfin(collectionId, elfinId) 
+GET      /api/melfin/:collectionId/:elfinId                      ch.bsisa.hyperbird.controllers.Api.getElfin(collectionId, elfinId, format ?= "json") 
 POST     /api/melfin/:collectionId/:elfinId                      ch.bsisa.hyperbird.controllers.Api.createElfin(collectionId, elfinId)
 PUT      /api/melfin/:collectionId/:elfinId                      ch.bsisa.hyperbird.controllers.Api.updateElfin(collectionId, elfinId)
 DELETE   /api/melfin/:collectionId/:elfinId                      ch.bsisa.hyperbird.controllers.Api.deleteElfin(collectionId, elfinId)
