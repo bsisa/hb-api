@@ -127,16 +127,26 @@ object ElfinUtil {
 
   /**
    * Replaces the elfin.IDENTIFIANT value by an IDENTIFIANT containing the provided user
-   * specific values instead.
+   * specific values instead. 
    */
   def replaceElfinUserPasswordInfo(
     elfinUser: ELFIN, userPwdInfo: String)(implicit collectionsConfig: CollectionsConfig) = {
 
     val userIdentifiant = IDENTIFIANT(
+      AUT = elfinUser.IDENTIFIANT.get.AUT,
+      GER = elfinUser.IDENTIFIANT.get.GER,
+      RES = elfinUser.IDENTIFIANT.get.RES,
       NOM = elfinUser.IDENTIFIANT.get.NOM,
       ALIAS = Option(userPwdInfo),
+      ORIGINE = elfinUser.IDENTIFIANT.get.ORIGINE,
+      OBJECTIF = elfinUser.IDENTIFIANT.get.OBJECTIF,
+      QUALITE = elfinUser.IDENTIFIANT.get.QUALITE,
+      COMPTE = elfinUser.IDENTIFIANT.get.COMPTE,
       DE = elfinUser.IDENTIFIANT.get.DE,
-      A = elfinUser.IDENTIFIANT.get.A)
+      A = elfinUser.IDENTIFIANT.get.A,
+      PAR = elfinUser.IDENTIFIANT.get.PAR,
+      VALEUR_A_NEUF = elfinUser.IDENTIFIANT.get.VALEUR_A_NEUF,
+      VALEUR = elfinUser.IDENTIFIANT.get.VALEUR)
 
     ELFIN(
       MUTATIONS = elfinUser.MUTATIONS, GEOSELECTION = elfinUser.GEOSELECTION,
