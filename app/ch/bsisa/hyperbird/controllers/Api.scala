@@ -377,11 +377,8 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
   /**
    * Returns the list of elfins contained in the specified collection matching the xpath filter expression with defined format
-   *
-   * TODO: make use of format parameter value, currently returns JSON format only. (format=(json|xml|pdf|xls|...)
    */
-  def filteredCollection(collectionId: String, xpath: String, format: String) = SecuredAction(ajaxCall = true).async {
-    Logger.warn(s"TODO: make use of format parameter value ${format}")
+  def filteredCollection(collectionId: String, xpath: String) = SecuredAction(ajaxCall = true).async {
     XQueryWSHelper.query(WSQueries.filteredCollectionQuery(collectionId, xpath))
   }
 

@@ -12,12 +12,10 @@ GET      /                                                       ch.bsisa.hyperb
 #######################################################################
 #                     hb-api API routes                               #
 #######################################################################
-# TODO: suppress
-# GET           /api/elfin/:elfinId                       ch.bsisa.hyperbird.controllers.Api.elfin(elfinId)
 # Latest proposal
 # GET           /api/melfin/                              ch.bsisa.hyperbird.controllers.Api.collections
-# GET           /api/melfin/:collectionId                 ch.bsisa.hyperbird.controllers.Api.filteredCollection(collectionId, xpath ?= "//ELFIN", format ?= "json")
-# GET           /api/melfin/:collectionId/:elfinId        ch.bsisa.hyperbird.controllers.Api.getElfin(collectionId, elfinId) # format=(json|xml|pdf|xls|...)
+# GET           /api/melfin/:collectionId                 ch.bsisa.hyperbird.controllers.Api.filteredCollection(collectionId, xpath ?= "//ELFIN")
+# GET           /api/melfin/:collectionId/:elfinId        ch.bsisa.hyperbird.controllers.Api.getElfin(collectionId, elfinId)
 
 # Dynamically provides initialisation configuration information useful to hb-ui geoxml service
 GET      /conf.js                                                ch.bsisa.hyperbird.controllers.Application.conf
@@ -71,8 +69,8 @@ GET      /api/melfin/collections/:elfinId                      ch.bsisa.hyperbir
 # Trigger patient flux simulation
 GET		/api/melfin/simulate									ch.bsisa.hyperbird.patman.simulations.controllers.SimulationApi.simulate(dateFrom ?= "2015-01-01", dateTo ?= "2099-01-01")
 
-# Returns the list of elfins contained in the specified collection matching the xpath filter expression with defined format 
-GET      /api/melfin/:collectionId                               ch.bsisa.hyperbird.controllers.Api.filteredCollection(collectionId, xpath ?= "//ELFIN", format ?= "json")
+# Returns the list of elfins contained in the specified collection matching the xpath filter expression 
+GET      /api/melfin/:collectionId                               ch.bsisa.hyperbird.controllers.Api.filteredCollection(collectionId, xpath ?= "//ELFIN")
 
 # Elfin - Obtain new elfin from catalogue. Not stored in the database until Api.createElfin applied to it. 
 #GET      /api/melfin/catalogue/:className     ch.bsisa.hyperbird.controllers.Api.getNewElfin(className)
