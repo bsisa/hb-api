@@ -552,6 +552,9 @@ object Api extends Controller with securesocial.core.SecureSocial {
         ExceptionsManager.manageFutureException(errorMsg = Option(errorMsg))
       }
     } catch {
+      case e: WithManagerEditRightException =>
+        val errorMsg = s"Failed to create Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
+        manageFutureWithManagerEditRightException(exception = e, errorMsg = Option(errorMsg))
       case e: WithClasseEditRightException =>
         val errorMsg = s"Failed to create Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
         manageFutureWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))
@@ -646,6 +649,9 @@ object Api extends Controller with securesocial.core.SecureSocial {
           // provided the REST client does something with it unlike restangular
           Ok(ElfinFormat.toJson(elfin)).as(JSON)
         } catch {
+          case e: WithManagerEditRightException =>
+            val errorMsg = s"Failed to delete Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
+            manageWithManagerEditRightException(exception = e, errorMsg = Option(errorMsg))          
           case e: WithClasseEditRightException =>
             val errorMsg = s"Failed to delete Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
             manageWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))
@@ -758,6 +764,14 @@ object Api extends Controller with securesocial.core.SecureSocial {
   def manageFutureWithClasseEditRightException(exception: WithClasseEditRightException, errorMsg: Option[String] = None): Future[SimpleResult] =
     scala.concurrent.Future { manageWithClasseEditRightException(exception, errorMsg) }
 
+
+  /**
+   * Encapsulate `manageWithManagerEditRightException` in a asynchronous call for use in Action.async context.
+   * @see manageWithManagerEditRightException
+   */
+  def manageFutureWithManagerEditRightException(exception: WithManagerEditRightException, errorMsg: Option[String] = None): Future[SimpleResult] =
+    scala.concurrent.Future { manageWithManagerEditRightException(exception, errorMsg) }  
+  
   /**
    * Encapsulate `manageException` in a asynchronous call for use in Action.async context.
    * @see manageException
