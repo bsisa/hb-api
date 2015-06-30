@@ -615,7 +615,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
   /**
    * Deletes an ELFIN within the specified collectionId with Id elfinId.
-   * RFC are not cristal clear regarding HTTP DELETE body usage or not but REST
+   * RFC are not crystal clear regarding HTTP DELETE body usage or not but REST
    * principles states that URL information should uniquely identify a resource
    * to GET or DELETE.
    *
