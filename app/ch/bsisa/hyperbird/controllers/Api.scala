@@ -378,7 +378,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
   /**
    * Returns the list of elfins contained in the specified collection matching the xpath filter expression with defined format
    */
-  def filteredCollection(collectionId: String, xpath: String) = SecuredAction(ajaxCall = true).async {
+  def getFilteredCollection(collectionId: String, xpath: String) = SecuredAction(ajaxCall = true).async {
     XQueryWSHelper.query(WSQueries.filteredCollectionQuery(collectionId, xpath))
   }
 
@@ -613,6 +613,60 @@ object Api extends Controller with securesocial.core.SecureSocial {
     }
   }
 
+  
+  /**
+   * Delete the list of elfins contained in the specified collection matching the xpath filter expression with defined format
+   */
+  def deleteFilteredCollection(collectionId: String, xpath: String) = SecuredAction(ajaxCall = true).async { request =>
+
+    try {
+      // Match our custom User type Identity implementation  
+      val user = request.user match { case user: User => user }    
+    
+      val futureElfins = XQueryWSHelper.queryElfins(WSQueries.filteredCollectionQuery(collectionId, xpath))
+      futureElfins.map { elfins => 
+      
+        elfins.map { elfin =>  
+        
+          try {
+            // Application data based access right
+            WithClasseEditRight.isAuthorized(user = user, elfinClasse = elfin.CLASSE)
+  
+            WithManagerEditRight.isAuthorizedAny(elfin, request)
+            // Delete elfin from database
+            ElfinDAO.delete(elfin)
+  
+            // Send deleted elfin back to give a chance for cancellation (re-creation) 
+            // provided the REST client does something with it unlike restangular
+            //ElfinFormat.toJson(elfin).as(JSON)
+            
+          } catch {
+            case e: WithManagerEditRightException =>
+              val errorMsg = s"Failed to delete Elfins for collectionId: ${collectionId}, xpath: ${xpath}: ${e}"
+              manageWithManagerEditRightException(exception = e, errorMsg = Option(errorMsg))          
+            case e: WithClasseEditRightException =>
+              val errorMsg = s"Failed to delete Elfins for collectionId: ${collectionId}, xpath: ${xpath}: ${e}"
+              manageWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))
+            case e: Throwable =>
+              val errorMsg = s"Api.deleteFilteredCollection() - Failed for collectionId: ${collectionId}, xpath: ${xpath}: ${e}"
+              ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(errorMsg))
+          }        
+          
+        }
+        val deletedElfinsMsg = s"""{ "message" :  "Api.deleteFilteredCollection() - success for collectionId: ${collectionId}, xpath: ${xpath}"  }"""
+        Ok(deletedElfinsMsg).as(JSON)
+      }
+    
+    } catch {
+      case e: Throwable =>
+        val errorMsg = s"Api.deleteFilteredCollection() - Failed for collectionId: ${collectionId}, xpath: ${xpath}: ${e}"
+        ExceptionsManager.manageFutureException(exception = Option(e), errorMsg = Option(errorMsg))
+    }    
+    
+  }  
+  
+  
+  
   /**
    * Deletes an ELFIN within the specified collectionId with Id elfinId.
    * RFC are not crystal clear regarding HTTP DELETE body usage or not but REST
