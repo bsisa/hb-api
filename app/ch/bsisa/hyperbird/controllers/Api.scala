@@ -626,19 +626,18 @@ object Api extends Controller with securesocial.core.SecureSocial {
       val futureElfins = XQueryWSHelper.queryElfins(WSQueries.filteredCollectionQuery(collectionId, xpath))
       futureElfins.map { elfins => 
       
-        elfins.map { elfin =>  
+        val simpleResults = elfins.map { elfin =>  
         
           try {
             // Application data based access right
             WithClasseEditRight.isAuthorized(user = user, elfinClasse = elfin.CLASSE)
-  
             WithManagerEditRight.isAuthorizedAny(elfin, request)
+
             // Delete elfin from database
             ElfinDAO.delete(elfin)
   
-            // Send deleted elfin back to give a chance for cancellation (re-creation) 
-            // provided the REST client does something with it unlike restangular
-            //ElfinFormat.toJson(elfin).as(JSON)
+            val okMsg = Json.obj("DESCRIPTION" -> s"elfin.Id = ${elfin.Id}")
+            Ok(okMsg)
             
           } catch {
             case e: WithManagerEditRightException =>
@@ -653,8 +652,14 @@ object Api extends Controller with securesocial.core.SecureSocial {
           }        
           
         }
-        val deletedElfinsMsg = s"""{ "message" :  "Api.deleteFilteredCollection() - success for collectionId: ${collectionId}, xpath: ${xpath}"  }"""
-        Ok(deletedElfinsMsg).as(JSON)
+        val deletedElfinsStatus = simpleResults.find { s => s.header.status != Ok }
+        deletedElfinsStatus match {
+          case Some(simpleResultWithError) => simpleResultWithError
+          case None =>
+                    val deletedElfinsMsg = s"""{ "message" :  "Api.deleteFilteredCollection() - success for collectionId: ${collectionId}, xpath: ${xpath}"  }"""
+                    Ok(deletedElfinsMsg).as(JSON)
+        }
+
       }
     
     } catch {
@@ -691,8 +696,8 @@ object Api extends Controller with securesocial.core.SecureSocial {
         try {
           // Application data based access right
           WithClasseEditRight.isAuthorized(user = user, elfinClasse = elfin.CLASSE)
-
           WithManagerEditRight.isAuthorizedAny(elfin, request)
+
           // Delete elfin from database
           ElfinDAO.delete(elfin)
 
