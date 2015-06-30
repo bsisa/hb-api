@@ -145,6 +145,10 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
     val fileName = ElfinIdGenerator.getElfinFileName(elfin)
     val elfinResourceUrl = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}/${elfin.ID_G}/${fileName}"""
     Logger.debug("elfinResourceUrl for DELETE : " + elfinResourceUrl)
+
+    // Invalidate all cache entries related to this collectionId (All queries containing this elfin)
+    CacheHelper.removeEntriesContaining(elfin.ID_G)
+    
     // TODO: more investigation to catch basic authentication failures instead of silently failing.
     val responseFuture: Future[Response] = WS.url(elfinResourceUrl).
       withAuth(conf.userName, conf.password, AuthScheme.BASIC).delete

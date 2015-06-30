@@ -642,9 +642,6 @@ object Api extends Controller with securesocial.core.SecureSocial {
           // Delete elfin from database
           ElfinDAO.delete(elfin)
 
-          // Invalidate all cache entries related to this collectionId
-          CacheHelper.removeEntriesContaining(collectionId)
-
           // Send deleted elfin back to give a chance for cancellation (re-creation) 
           // provided the REST client does something with it unlike restangular
           Ok(ElfinFormat.toJson(elfin)).as(JSON)
