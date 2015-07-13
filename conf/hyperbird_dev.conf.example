@@ -41,7 +41,9 @@ hb {
 		# Enables server side queries caching
 		"queryCacheEnabled" : true,
 		# Enables data manager security if set to true (Relies on METIER and IDENTIFIANT/GER informations)
-		"dataManagerSecurityEnabled" : false		
+		"dataManagerSecurityEnabled" : false,
+		# Enables server side notification if set to an integer value for notification interval in seconds.
+		"serverSideNotificationEnabled" : 15		
 	},
 	report {
         wkhtmltopdf {
