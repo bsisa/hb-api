@@ -59,7 +59,13 @@ class ApiConfig {
     case Some(dataManagerSecurityEnabledValue) => dataManagerSecurityEnabledValue
     case None => false // This property is optional, fallback to false without requiring configuration.
   }  
+  
 
+  /**
+   * Used by Api service to enable or disable serverSideNotification service. Currently used to provide automatic offline detection feature.
+   */
+  val serverSideNotificationEnabled: Option[Int] = Play.current.configuration.getInt(ApiConfig.ServerSideNotificationEnabledUrlKey) 
+  
 }
 
 /**
@@ -78,7 +84,7 @@ object ApiConfig {
   private val ClientDebugEnabledUrlKey = "hb.api.clientDebugEnabled"
   private val QueryCacheEnabledUrlKey = "hb.api.queryCacheEnabled"
   private val DataManagerSecurityEnabledUrlKey = "hb.api.dataManagerSecurityEnabled"
-  
+  private val ServerSideNotificationEnabledUrlKey = "hb.api.serverSideNotificationEnabled"
   
 
 }

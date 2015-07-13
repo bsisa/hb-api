@@ -34,6 +34,9 @@ GET      /api/melfin/backup                                      ch.bsisa.hyperb
 
 GET      /api/melfin/clearcache                                  ch.bsisa.hyperbird.controllers.Api.clearCache
 
+GET      /api/melfin/online/:group                               ch.bsisa.hyperbird.sse.ServerSideNotification.notificationFeed(group: String)
+POST     /api/melfin/notify                                      ch.bsisa.hyperbird.sse.ServerSideNotification.postMessage
+
 # Serve Elfin ANNEX files.
 GET      /api/melfin/annex/:collectionId/:elfinId/:fileName      ch.bsisa.hyperbird.controllers.Api.getElfinAnnexFile(collectionId,elfinId,fileName)
 # Tells whether Elfin ANNEX file exist without including body.

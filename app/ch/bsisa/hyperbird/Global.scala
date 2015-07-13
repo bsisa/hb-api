@@ -15,6 +15,9 @@ import org.joda.time.DateTime
 import ch.bsisa.hyperbird.util.DateUtil
 import ch.bsisa.hyperbird.patman.simulations.SimulationScheduler
 
+import ch.bsisa.hyperbird.sse.ServerSideNotificationScheduler
+import play.api.libs.concurrent.Execution.Implicits._
+
 import ch.bsisa.hyperbird.Implicits._
 
 /**
@@ -28,17 +31,20 @@ import ch.bsisa.hyperbird.Implicits._
  */
 object Global extends GlobalSettings {
 
-
   /**
    *  Hook into application life-cycle start event.
    */
   override def onStart(app: Application) = {
     Logger.info(s"HyperBird application started at ${new Date()}")
-    
+
     OptionalConfigLogger.log()
-    
+
     // Optional. Will only be effective if the corresponding configuration is available.
-   	SimulationScheduler.trySchedulingSimulation() 
+    SimulationScheduler.trySchedulingSimulation()
+
+    // Optional. Will only be effective if the corresponding configuration is available.
+    ServerSideNotificationScheduler.trySchedulingNotification() 
+
   }
 
   /**

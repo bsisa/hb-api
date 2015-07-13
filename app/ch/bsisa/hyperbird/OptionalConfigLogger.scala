@@ -16,10 +16,12 @@ object OptionalConfigLogger {
     // Compute log friendly states
     val dataManagerSecurityState = if (apiConfig.dataManagerSecurityEnabled) { "on" } else { "off" }
     val queryCacheState = if (apiConfig.queryCacheEnabled) { "on" } else { "off" }
+    val serverSideNotification = if (apiConfig.serverSideNotificationEnabled.isDefined) { "on" } else { "off" }
     
     // Log optional configuration states
     Logger.info(s"Optional server side query cache is turned ${queryCacheState}")
     Logger.info(s"Optional data manager based security is turned ${dataManagerSecurityState}")
+    Logger.info(s"Optional server side notification is turned ${serverSideNotification}")
 
   }
   
