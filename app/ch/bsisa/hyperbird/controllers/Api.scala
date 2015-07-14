@@ -661,7 +661,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
           }        
           
         }
-        val deletedElfinsStatus = simpleResults.find { s => s.header.status != Ok }
+        val deletedElfinsStatus = simpleResults.find { s => s.header.status != Ok.header.status }
         deletedElfinsStatus match {
           case Some(simpleResultWithError) => simpleResultWithError
           case None =>
