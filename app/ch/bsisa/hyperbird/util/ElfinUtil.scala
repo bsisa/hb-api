@@ -6,13 +6,15 @@ import ch.bsisa.hyperbird.model.proto._
 import ch.bsisa.hyperbird.model.CARACTERISTIQUE
 import ch.bsisa.hyperbird.model.NOM
 import ch.bsisa.hyperbird.model.IDENTIFIANT
-import java.util.Date
+import ch.bsisa.hyperbird.model.MUTATION
+import ch.bsisa.hyperbird.model.MUTATIONS
 import ch.bsisa.hyperbird.model.PARTENAIRE
 import ch.bsisa.hyperbird.model.PERSONNEType
 import ch.bsisa.hyperbird.CollectionsConfig
 import ch.bsisa.hyperbird.model.MATRICEType
-import scala.concurrent.Future
 import play.api.libs.concurrent.Execution.Implicits._
+import scala.concurrent.Future
+import java.util.Date
 
 /**
  * Utility functions to deal with ELFIN immutable state replacement such as updating
@@ -28,8 +30,8 @@ object ElfinUtil {
    * other elfin information unchanged. The returned elfin is a new elfin instance.
    */
   def assignElfinId(elfin: ELFIN): Future[ELFIN] = {
-    val newElfinIdFuture : Future[String] = ElfinIdGenerator.getNewElfinId
-    val futureElfin : Future[ELFIN] = newElfinIdFuture.map { newElfinId =>
+    val newElfinIdFuture: Future[String] = ElfinIdGenerator.getNewElfinId
+    val futureElfin: Future[ELFIN] = newElfinIdFuture.map { newElfinId =>
       ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, elfin.CARACTERISTIQUE,
         elfin.PARTENAIRE, elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, newElfinId,
         elfin.ID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
@@ -49,6 +51,37 @@ object ElfinUtil {
   }
 
   /**
+   * Creates a `MUTATION` object with `DATE` attribute set to current date and `UTILISATEUR` attribute set to provided userId value.
+   * Attribute `ROLE` is set to empty string and `MOT_DE_PASSE` defaults to None.
+   */
+  def createMutationForUserId(userId: String): MUTATION = {
+    MUTATION(DATE = ch.bsisa.hyperbird.util.DateUtil.elfinIdentifiantDateFormat.format(new Date()), ROLE = "", MOT_DE_PASSE = None, UTILISATEUR = Some(userId))
+  }
+
+  /**
+   * Replaces ELFIN.MUTATIONS head MUTATION value of the provided elfin with newElfinMutation leaving all other elfin
+   * information unchanged. The returned elfin is a new elfin instance.
+   */
+  def replaceElfinMutationsHead(elfin: ELFIN, newElfinMutation: MUTATION): ELFIN = {
+
+    val newMutations = elfin.MUTATIONS match {
+      // Mutations exist
+      case Some(muts) => muts.MUTATION.headOption match {
+        // Mutations has at least one entry, preserve tail in case it is non empty.
+        case Some(mut) => MUTATIONS(MUTATION = (newElfinMutation :: muts.MUTATION.tail.toList): _*)
+        // Mutations was empty, create from scratch
+        case None      => MUTATIONS(MUTATION = newElfinMutation)
+      }
+      // No mutations create from scratch
+      case None => MUTATIONS(MUTATION = newElfinMutation)
+    }
+
+    ELFIN(Some(newMutations), elfin.GEOSELECTION, elfin.IDENTIFIANT, elfin.CARACTERISTIQUE,
+      elfin.PARTENAIRE, elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, elfin.Id,
+      elfin.ID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
+  }
+
+  /**
    * Replaces the values of elfin attributes NATURE, GROUPE, SOURCE of the provided elfin with
    * the new provided ones leaving all other elfin information unchanged.
    *
@@ -61,19 +94,17 @@ object ElfinUtil {
       ID_G = elfin.ID_G, CLASSE = elfin.CLASSE, GROUPE = newGroupe, TYPE = elfin.TYPE, NATURE = newNature, SOURCE = newSource)
   }
 
-  
   /**
-   * Replaces the value elfin.CARACTERISTIQUE by an new CARACTERISTIQUE. 
-   * The rest of the elfin information stays unchanged. 
+   * Replaces the value elfin.CARACTERISTIQUE by an new CARACTERISTIQUE.
+   * The rest of the elfin information stays unchanged.
    * The returned elfin is a new elfin instance.
    */
   def replaceElfinCaracteristique(elfin: ELFIN, newCaracteristique: ch.bsisa.hyperbird.model.CARACTERISTIQUE): ELFIN = {
     ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, Some(newCaracteristique),
       elfin.PARTENAIRE, elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, elfin.Id,
       elfin.ID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
-  }  
-  
-  
+  }
+
   /**
    * Replaces the value elfin.CARACTERISTIQUE by an new CARACTERISTIQUE only containing FRACTION made of
    * the provided `newLSeq`. Any other CARACTERISTIQUE element is lost. The rest of the elfin information
@@ -127,7 +158,7 @@ object ElfinUtil {
 
   /**
    * Replaces the elfin.IDENTIFIANT value by an IDENTIFIANT containing the provided user
-   * specific values instead. 
+   * specific values instead.
    */
   def replaceElfinUserPasswordInfo(
     elfinUser: ELFIN, userPwdInfo: String)(implicit collectionsConfig: CollectionsConfig) = {
