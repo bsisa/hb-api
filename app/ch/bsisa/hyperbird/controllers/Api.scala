@@ -535,8 +535,13 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
       // Test identifiers consistency between URL and JSON body
       if (elfin.Id.equals(elfinId)) {
-        // Update database with new elfin
-        ElfinDAO.create(elfin)
+        
+        // Manage MUTATIONS.MUTATION head update
+        val elfinWithUpdatedMutation = ElfinUtil.replaceElfinMutationsHead(elfin, ElfinUtil.createMutationForUserId(user.identityId.userId))        
+        
+        // Update database with new elfinWithUpdatedMutation
+        ElfinDAO.create(elfinWithUpdatedMutation)
+        
         // Invalidate all cache entries related to this collectionId
         CacheHelper.removeEntriesContaining(collectionId)
 
@@ -588,8 +593,12 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
       // Test identifiers consistency between URL and JSON body
       if (elfin.ID_G.equals(collectionId) && elfin.Id.equals(elfinId)) {
+        
+        // Manage MUTATIONS.MUTATION head update
+        val elfinWithUpdatedMutation = ElfinUtil.replaceElfinMutationsHead(elfin, ElfinUtil.createMutationForUserId(user.identityId.userId))
+        
         // Update database with new elfin
-        ElfinDAO.update(elfin)
+        ElfinDAO.update(elfinWithUpdatedMutation)
 
         // Invalidate all cache entries related to this collectionId
         CacheHelper.removeEntriesContaining(collectionId)
