@@ -40,9 +40,9 @@ Prerequisites are:
 Other dependencies should follow automatically (Play, Scala,...).
 
 
-
-Tested environment: Open JDK java version "1.7.0_25" et SBT
-version 0.13.0
+Tested environment: 
+* Open JDK java version "1.7.0_25"
+* SBT version 0.13.0
 
 If SBT is not yet installed check:
 
@@ -58,5 +58,5 @@ play
 run
 
 http://localhost:9000/
-should return a blank page with text:
-Welcome to HyperBird 5.0
+should direct you to the login page
+
