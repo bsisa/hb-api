@@ -36,6 +36,7 @@ package object mail {
   val smtpPort = Play.current.configuration.getString("smtp.port").get
   val smtpUser = Play.current.configuration.getString("smtp.user").get
   val smtpPassword = Play.current.configuration.getString("smtp.password").get
+  val smtpTls = Play.current.configuration.getBoolean("smtp.tls").get
 
   object Sender {
     def send(mail: Mail): String = {
@@ -65,8 +66,7 @@ package object mail {
       commonsMail.setHostName(smtpHostName)
       commonsMail.setSmtpPort(smtpPort.toInt)
       commonsMail.setAuthentication(smtpUser, smtpPassword)
-      commonsMail.setStartTLSEnabled(true)
-      //commonsMail.setTLS(true)
+      commonsMail.setStartTLSEnabled(smtpTls)
 
       mail.to foreach (commonsMail.addTo(_))
       mail.cc foreach (commonsMail.addCc(_))
