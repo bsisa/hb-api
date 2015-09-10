@@ -20,7 +20,7 @@ object ApplicationBuild extends Build {
     "org.jsoup" % "jsoup" % "1.7.3",
     "net.liftweb" %% "lift-json" % "2.5",
     "ws.securesocial" % "securesocial_2.10" % "2.1.3",
-    "org.apache.commons" % "commons-email" % "1.3.3"
+    "org.apache.commons" % "commons-email" % "1.4"
     )
     
 //     "org.scalatestplus" %% "play" % "1.0.0" % "test"    

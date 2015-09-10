@@ -65,6 +65,8 @@ package object mail {
       commonsMail.setHostName(smtpHostName)
       commonsMail.setSmtpPort(smtpPort.toInt)
       commonsMail.setAuthentication(smtpUser, smtpPassword)
+      commonsMail.setStartTLSEnabled(true)
+      //commonsMail.setTLS(true)
 
       mail.to foreach (commonsMail.addTo(_))
       mail.cc foreach (commonsMail.addCc(_))
