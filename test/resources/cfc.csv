@@ -1,0 +1,572 @@
+0 Terrain
+00 Etudes préliminaires
+000 Poste d'attente
+001 Etudes destinées à l'appréciation du terrain
+002 Arpentage, bornage
+003 Expéertise géotechniques
+004 Frais d'établissement polan quartier et plan directeur
+005 Gabarits provisoires
+006 Etude de l'impact sur l'environnement
+007 Etude de faisabilité
+008 Frais d'archéologie
+009 Divers
+01 Acquisition du terrain ou du droit de superficie
+010 Poste d'attente
+011 Acquisition du terrain
+012 Acquisition du droit de superficie
+013 Acquisition du droit de mitoyenneté
+018 Assainissement de sites contaminés
+019 Divers
+02 Frais accessoires acquisition terrain ou droit superficie
+020 Poste d'attente
+021 Droits de mutation
+022 Frais de notaire
+023 Inscription au registre foncier
+024 Frais de justice et d'avocat
+025 Commissions aux intermédiaires
+029 Divers
+03 Indemnisations, servitudes, participations
+030 Poste d'attente
+031 Indemnisation de locataire et de fermiers
+032 Dédommagements
+033 Constitution de servitude
+034 Radiation de servitude
+035 Patentes d'établissements publics
+036 Participation à l'amélioration foncière
+037 Participation au remembrement parcelllaire
+038 Participation des bordiers
+039 Divers
+04 Financement avant le début des travaux
+040 Poste d'attente
+041 Constitution d'hypothèques sur le terrain
+042 Intérêts hypothécaires
+043 Intérêts sur le droit de superficie
+044 Intérêts bancaires
+045 Intérêts sur fonds propres
+046 Impôts fonciers
+048 Assurances avant le début des travaux
+049 Divers
+05 Conduites de raccordement aux réseaux (hors de la parcelle)
+050 Poste d'attente
+051 Terrassements
+052 Canalisations (raccordement au réseau)
+053 Electricité (raccordement au réseau)
+054 Chauffage, ventilation, conditionnement d'air, réfrigération (raccordement au réseau)
+055 Eau et gaz (raccordement au réseau)
+056 Travaux accessoires
+057 Câbles de télécommunication
+059 Divers
+06 Voies d'accès (hors de la parcelle)
+060 Poste d'attente
+061 Routes
+062 Voie ferrée
+063 Voie navigable
+069 Divers
+07 Réserve
+08 Réserve
+09 Honoraires
+090 Poste d'attente
+091 Architecte
+092 Ingénieur civil
+093 Ingénieur électricien
+094 Ingénieur CVCR
+095 Ingénieur en installations sanitaires
+096 Spécialistes
+099 Divers
+1 Travaux préparatoires
+10 Relevés, études géotechniques
+100 Poste d'attente
+101 Relevés
+102 Etudes géotechniques
+103 Etudes des eaux souterraines
+104 Pose de témoins, contrôle
+105 Investigations archéologiques
+106 Sondage de bâtiments
+107 Expertises
+109 Divers
+11 Déblaiement, préparation du terrain
+110 Poste d'attente
+111 Défrichage
+112 Démolitions
+113 Démontages
+114 Déplacement de terre
+115 Forages et coupes dans béton et maçonnerie
+119 Divers
+12 Protections, aménagements provisoires
+120 Poste d'attente
+121 Protection d'ouvrages existants
+122 Aménagements provisoires
+123 Reprises en sous-œuvres
+124 Travaux d'entretien
+125 Protection des voies d'accès existantes
+126 Protection des plantations existantes
+127 Locaux provisoires
+129 Divers
+13 Installation du chantier en commun
+130 Poste d'attente
+131 Clôtures
+132 Accès, places
+133 Bureau de la direction des travaux
+134 Cantonnement, réfectoires, cuisines
+135 Installations provisoires
+136 Frais d'énergie et d'eau, etc.
+137 Fermetures et couvertures provisoires
+138 Tri des déchets de chantier
+139 Divers
+14 Adaptation des bâtiments
+140 Poste d'attente
+141 Mise en forme du terrain, gros oeuvre 1
+142 Gros œuvre 2
+143 Installations électriques
+144 CVCR
+145 Installations sanitaires
+146 Installations de transport
+147 Aménagements intérieurs 1
+148 Aménagements intérieurs 2
+149 Divers
+15 Adaptation du réseau de conduites existant
+150 Poste d'attente
+151 Terrassement
+152 Canalisations (adaptation du réseau)
+153 Electricité (adaptation du réseau)
+154 CVCR (adaptation du réseau)
+155 Eau et gaz (adaptation du réseau)
+156 Travaux accessoires
+159 Divers
+16 Adaptation des voies de circulation existantes
+160 Poste d'attente
+161 Routes
+162 Voie ferrée
+163 Voie navigable
+169 Divers
+17 Fondations spéciales, protection de fouilles, étanchement des ouvrages enterrés
+170 Poste d'attente
+171 Pieux
+172 Enceintes de fouille
+173 Etayages
+174 Ancrages
+175 Etanchement des ouvrages enterrés
+176 Epuisement des eaux
+177 Amélioration des solés de fondation
+178 Travaux accessoires
+179 Divers
+18 Réserve
+19 Honoraires
+190 Poste d'attente
+191 Architecte
+192 Ingénieur civil
+193 Ingénieur électricien
+194 Ingénieur CVCR
+195 Ingénieur en installations sanitaires
+196 Spécialistes
+197 Experts
+199 Divers
+2 Bâtiment
+20 Excavation
+200 Poste d'attente
+201 Fouilles en pleine masse
+202 Apport de matériaux
+209 Divers
+21 Gros oeuvre 1
+210 Poste d'attente
+211 Travaux de l'entreprise de maçonnerie
+212 Construction préfabriquée en béton et en maçonnerie
+213 Construction en acier
+214 Construction en bois
+215 Construction légère préfabriquée
+216 Travaux en pierre naturelle et en pierre artificielle
+217 Eléments préconfectionnés pour abris PC
+219 Divers
+22 Gros oeuvre 2
+220 Poste d'attente
+221 Fenêtres, portes extérieures
+222 Ferblanterie
+223 Protection contre la foudre
+224 Couverture
+225 Etanchéités et isolations spéciales
+226 Crépissage de façade
+227 Traitement des surfaces extérieures
+228 Fermetures extérieures, protection contre le soleil
+229 Divers
+23 Installations électriques
+230 Poste d'attente
+231 Appareils à courant fort
+232 Installations de courant fort
+233 Lustrerie
+234 Appareils consommateurs d'énergie
+235 Appareils à courant faible
+236 Installations à courant faible
+237 Gestion technique du bâtiment
+238 Installations provisoires
+239 Divers
+24 Chauffage, ventilation, conditionnement d'air
+240 Poste d'attente
+241 Fourniture de porteurs d'énergie, stockage
+242 Production de chaleur
+243 Distribution de chaleur
+244 Installations de ventilation
+245 Installations de conditionnement d'air
+246 Installations de réfrigération
+247 Installations spéciales
+248 Isolation de tuyauterie, gaines, appareils, installation CVCF
+249 Divers
+25 Installations sanitaires
+250 Poste d'attente
+251 Appareils sanitaires courants
+252 Appareils sanitaires spéciaux
+253 Appareils sanitaires d'alimentation et d'évacuation
+254 Tuyauterie sanitaire
+255 Isolations d'installations sanitaires
+256 Unités avec installations sanitaires incorporées
+257 Tableaux électriques et pneumatiques
+258 Agencements de cuisine
+259 Divers
+26 Installations de transport
+260 Poste d'attente
+261 Ascenseurs, monte-charge
+262 Escaliers roulants, trottoirs roulants
+263 Installations de nettoyage de façade
+264 Installations de manutention diverses
+265 Dispositif de levage
+266 Système automatique de parcage
+269 Divers
+27 Aménagements intérieurs 1
+270 Poste d'attente
+271 Plâtrerie
+272 Ouvrages métalliques
+273 Menuiserie
+274 Vitrages intérieurs spéciaux
+275 Système de verouillage
+276 Dispositif intérieur de fermeture
+277 Cloisons en éléments
+279 Divers
+28 Aménagements intérieurs 2
+280 Poste d'attente
+281 Revêtements de sol
+282 Revêtements de paroi
+283 Faux-plafonds
+284 Fumisterie et poêlerie
+285 Traitement des surfaces intérieures
+286 Assèchement du bâtiment
+287 Nettoyage du bâtiment
+288 Jardinage (bâtiment)
+289 Divers
+29 Honoraires
+290 Poste d'attente
+291 Architecte
+292 Ingénieur civil
+293 Ingénieur électricien
+294 Ingénieur CVCR
+295 Ingénieur en installations sanitaires
+296 Spécialistes
+297 Experts
+299 Divers
+3 Equipements d'exploitation
+30 Excavation
+300 Poste d'attente
+301 Fouilles en pleine masse
+309 Divers
+31 Gros œuvre 1
+310 Poste d'attente
+311 Travaux de l'entreprise de maçonnerie
+312 Construction préfabriquée en béton et en maçonnerie
+313 Construction en acier
+314 Construction en bois
+315 Construction légère préfabriquée
+316 Travaux en pierre naturelle et en pierre artificielle
+317 Fermetures d'abris PC
+319 Divers
+32 Gros œuvre 2
+320 Poste d'attente
+321 Fenêtres, portes extérieures
+322 Ferblanterie
+323 Protection contre la foudre
+324 Couverture
+325 Etanchéités et isolations spéciales
+326 Crépissage des façades
+327 Traitement des surfaces extérieures
+328 Dispositifs de fermeture, protection contre le soleil
+329 Divers
+33 Installation électriques
+330 Poste d'attente
+331 Appareils à courant fort
+332 Installations de courant fort
+333 Lustrerie
+334 Appareils consommateurs d'énergie
+335 Appareils à courant faible
+336 Installations de courant faible
+337 Gestion technique du bâtiment
+338 Installation provisoire
+339 Divers
+34 CVCR (installations)
+340 Poste d'attente
+341 Fourniture de porteurs d'énergie, stockage
+342 Producteur de chaleur
+343 Distributeur de chaleur
+344 Installations de ventilation
+345 Installations de conditionnement d'air
+346 Installations de réfrigération
+347 Installations spéciales
+348 Isolation tuyauterie, gaînes, appareils, installations CVCR
+349 Divers
+35 Installation sanitaire
+350 Poste d'attente
+351 Appareils sanitaires courants
+352 Appareils sanitaires spéciaux
+353 Appareils d'alimentation et d'évacuation
+354 Tuyauterie sanitaire
+355 Isolation d'installations sanitaires
+356 Unités avec installations sanitaires incorporées
+357 Tableaux électriques et pneumatiques
+358 Agencement de cuisine
+359 Divers
+36 Installations de transport, installation de stockage
+360 Poste d'attente
+361 Ascenseurs et monte-charge
+362 Escaliers mécaniques, trottoirs roulants
+364 Installations de manutention diverses
+365 Dispositifs de levage
+366 Systèmes automatiques de parcage
+368 Installations de stockage diverses
+369 Divers
+37 Aménagements intérieurs 1
+370 Poste d'attente
+371 Plâtrerie
+372 Ouvrages métalliques
+373 Menuiserie
+374 Vitrages intérieurs spéciaux
+375 Système de verouillage
+376 Dispositifs intérieurs de fermeture
+377 Cloisons en éléments
+378 Equipements fixes
+379 Divers
+38 Aménagements intérieurs 2
+380 Poste d'attente
+381 Revêtements du sol
+382 Revêtements de paroi
+383 Faux-plafonds
+384 Fumisterie et poêlerie
+385 Traitement des surfaces intérieures
+386 Assèchement du bâtiment
+387 Nettoyage du bâtiment
+388 Jardinage (équipements d'exploitation)
+389 Divers
+39 Honoraires
+390 Poste d'attente
+391 Architecte
+392 Ingénieur civil
+393 Ingénieur électricien
+394 Ingénieur CVCR
+395 Ingénieur en installations sanitaires
+396 Spécialistes
+397 Experts
+398 Ingénieur en gestion technique du bâtiment
+399 Divers
+4 Aménagements extérieurs
+40 Mise en forme du terrain
+400 Poste d'attente
+401 Déplacements de terre
+402 Démolitions
+403 Etayages, encrages
+404 Pompage, évacuation des eaux
+405 Apports de matériaux
+409 Divers
+41 Constructions
+410 Poste d'attente
+411 Travaux de l'entreprise de maçonnerie
+413 Autres travaux relevant du gros œuvre 1
+414 Gros œuvre 2
+415 Aménagement intérieurs 1
+416 Aménagent intérieurs 2
+419 Divers
+42 Jardins
+420 Poste d'attente
+421 Jardinage
+422 Clôtures
+423 Equipements, engins
+424 Places de jeux et de sport
+425 Revêtements de sol
+429 Divers
+43 Réserves
+44 Installations
+440 Poste d'attente
+443 Installations électriques
+444 CVCR
+445 Installations sanitaires
+446 Installations de transport
+449 Divers
+45 Conduites de raccordement aux réseaux (intérieur parcelle)
+450 Poste d'attente
+451 Terrassements
+452 Canalisations (raccordement au réseau)
+453 Electricité (raccordement au réseau)
+454 Conduites CVCR
+455 Eau et gaz (raccordement au réseau)
+456 Travaux accessoires
+459 Divers
+46 Petits tracés
+460 Poste d'attente
+461 Terrassements
+462 Petits ouvrages en béton
+463 Superstructure
+464 Assainissements
+465 Conduites industrielles, canalisations
+466 Routes et parking
+468 Second œuvre
+469 Signalisation
+47 Petits ouvrages d'art
+470 Poste d'attente
+471 Excavation
+472 Structure porteuse
+473 Travaux de superstructures
+474 Assainissements
+475 Conduites industrielles, canalisations
+477 Installations de transport
+478 Second œuvre
+479 Divers
+48 Petits ouvrages souterrains
+480 Poste d'attente
+481 Travaux d'avancement
+482 Revêtements, voûtes
+483 Travaux de superstructures
+484 Dainage et alimentation en eau
+485 Conduites industrielles canalisations
+487 Installation de transport
+488 Second œuvre
+489 Divers
+49 Honoraires
+490 Poste d'attente
+491 Architecte
+492 Ingénieur civil
+493 Ingénieur électricien
+494 Ingénieur CVCR
+495 Ingénieur en installations sanitaires
+496 Spécialistes
+497 Experts
+498 Ingénieur en gestion technique du bâtiment
+499 Divers
+5 Frais secondaires et comptes d'attente
+50 Frais de concours
+500 Poste d'attente
+501 Concours d'architecture
+502 Concours de génie civil
+503 Concours d'aménagement extérieur
+504 Concours de création artistique
+505 Concours d'urbanisme
+506 Concours d'architecte d'intérieur
+509 Divers
+51 Autorisations, taxes
+510 Poste d'attente
+511 Autorisations, gabarits, taxes
+512 Taxes de raccordement
+513 Dispense de protection civile
+519 Divers
+52 Echantillons, maquettes, reproductions, documents
+520 Poste d'attente
+521 Echantillons, essais de matériaux
+522 Maquettes
+523 Photos
+524 Reproduction de documents, titrages, héliographies
+525 Documents promotionnels, plaquettes
+526 Rapport final
+527 Insertions et annonces
+529 Divers
+53 Assurances
+530 Poste d'attente
+531 Assurances pour travaux en cours
+532 Assurances spéciales
+533 Franchise en cas de sinistre pendant la durée des travaux
+534 Assurance incendie
+539 Divers
+54 Financement à partir du début des travaux
+540 Poste d'attente
+541 Constitution d'hypothèques sur l'immeubles
+542 Intérêts sur crédit de construction, frais bancaires
+543 Intérêts sur droit de superficie
+545 Intérêts sur fonds propres
+546 Impôt foncier pendant la durée des travaux
+548 Remboursement
+549 Divers
+55 Prestations du maître d'ouvrage
+550 Poste d'attente
+551 Programmation
+552 Frais d'ordinateur
+553 Frais de la direction supérieur des travaux
+554 Frais de la commission de construction
+555 Frais de déménagement
+556 Recensement des ressources
+557 Programme d'exploitation
+558 Conduite des travaux, surveillance des travaux
+559 Divers
+56 Autres frais secondaires
+560 Poste d'attente
+561 Frais de surveillance par des tiers
+562 Dédommagement de voisins et de locataires, frais d'utilisation
+563 Location de terrain appartenant à des tiers
+564 Expertises
+565 Frais de voyage
+566 Pose de la première pierre, bouquet, inauguration
+567 Frais de justice et d'avocat
+568 Panneaux publicitaires
+569 Divers
+57 Taxe sur la valeur ajoutée (TVA)
+570 Poste d'attente
+571 Terrain
+572 Travaux préparatoires
+573 Bâtiment
+574 Equipements d'exploitation
+575 Aménagements extérieurs
+576 Frais secondaires et comptes d'attentes
+579 Ameublement et décoration
+58 Comptes d'attente pour provisions et réserves
+580 Poste d'attente
+581 Provisions pour frais probables
+582 Réserves pour renchérissement
+583 Réserves pour imprévus
+589 Divers
+59 Comptes d'attente pour honoraires
+590 Poste d'attente
+591 Architecte
+592 Ingénieur civil
+593 Ingénieur électricien
+594 Ingénieur CVCR
+595 Ingénieur sanitaire
+596 Spécialistes
+598 Ingénieur en gestion technique du bâtiment
+599 Divers
+9 Equipement
+90 Meubles
+900 Poste d'attente
+901 Equipements de vestiaires et rayonnages
+902 Equipements de sport
+908 Equipements d'abris PC
+909 Divers
+91 Luminaires
+910 Poste d'attente
+919 Divers
+92 Textiles
+920 Poste d'attente
+921 Rideaux et accessoires
+929 Divers
+93 Apapreils, machines
+930 Poste d'attente
+939 Divers
+94 Petit inventaire
+940 Poste d'attente
+949 Divers
+95 Réserve
+96 Moyens de transport
+960 Poste d'attente
+969 Divers
+97 Matériel de consommation
+970 Poste d'attente
+979 Divers
+98 Œuvres d'art
+980 Poste d'attente
+989 Divers
+99 Honoraires
+990 Poste d'attente
+991 Architecte
+993 Ingénieur électricien
+996 Spécialistes
+999 Divers
