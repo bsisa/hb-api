@@ -39,10 +39,12 @@ class CfcConvert extends BaseSerialisationSpec {
   Source.fromFile(new File(cfcFilePath), "UTF8").getLines.foreach { line =>
     
     i = i+1
+    
     val tokens: Array[String] = line.split(" ")
 
     val code: String = tokens(0)
-    val id : String = "G20150915030000" + "%03d".format(i)  
+    val formattedIndex = "%03d".format(i)
+    val id : String = "G20150915030000" + formattedIndex  
     val comment: String = tokens.drop(1).toList.mkString(" ")
     
     val cfcCodeElfin = <ELFIN ID_G="G20150910130000002" Id={id} CLASSE="CODE" GROUPE="CFC" NATURE="Classification" TYPE="ACTIVITE" SOURCE="">
@@ -50,7 +52,7 @@ class CfcConvert extends BaseSerialisationSpec {
             <AUT>PRE</AUT><!-- Input by (automatic) -->
             <NOM>{code}</NOM><!-- Alphanumeric code -->
         </IDENTIFIANT>
-        <CARACTERISTIQUE/>
+        <CARACTERISTIQUE><CAR1 NOM="Position de tri" VALEUR={formattedIndex} /></CARACTERISTIQUE>
         <PARTENAIRE/>
         <ACTIVITE/>
         <DIVERS>
