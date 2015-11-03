@@ -64,7 +64,7 @@ object ReportBuilder {
     // ==============================================================
     // Extract parameters from reportElfin
     // ==============================================================    
-    val headerTemplateName = reportElfin.CARACTERISTIQUE.get.CAR1.get.VALEUR.get
+    val headerTemplateNameCar1Option = reportElfin.CARACTERISTIQUE.get.CAR1
     val contentTemplateName = reportElfin.CARACTERISTIQUE.get.CAR2.get.VALEUR.get
     val footerTemplateName = reportElfin.CARACTERISTIQUE.get.CAR3.get.VALEUR.get
     val queryFileName = reportElfin.CARACTERISTIQUE.get.CAR4.get.VALEUR.get
@@ -124,10 +124,16 @@ object ReportBuilder {
       // XML data unused at the moment.
       //val resultData = XML.loadString(respBody)
 
-      // Render report header to HTML and save it to disk
-      val reportHeaderHtmlTempFile = new TemporaryFile(java.io.File.createTempFile("hb5ReportHeader", ".html"))
-      play.api.libs.Files.writeFile(reportHeaderHtmlTempFile.file, renderTemplate(headerTemplateName, resultData, reportTitle))
-
+      // Extract CARSET.CAR[@NAME='pageOrientation']/@VALEUR and return whether orientation is portrait or landscape
+      val pageOrientation: PageOrientation = reportElfin.CARACTERISTIQUE.get.CARSET match {
+        case Some(carset) =>
+          carset.CAR.find(car => car.NOM.getOrElse(false) == "pageOrientation") match {
+            case Some(car) => if (car.VALEUR.getOrElse("not-defined") == "landscape") Landscape else Portrait
+            case None => Portrait
+          }
+        case None => Portrait
+      }      
+      
       // Render report footer to HTML and save it to disk
       val reportFooterHtmlTempFile = new TemporaryFile(java.io.File.createTempFile("hb5ReportFooter", ".html"))
       play.api.libs.Files.writeFile(reportFooterHtmlTempFile.file, renderTemplate(footerTemplateName, resultData, reportTitle))
@@ -138,25 +144,35 @@ object ReportBuilder {
       //val reportContentHtmlString = renderTemplate(contentTemplateName, resultData, reportTitle)
       play.api.libs.Files.writeFile(reportContentHtmlTempFile.file, renderTemplate(contentTemplateName, resultData, reportTitle))
 
-      // Extract CARSET.CAR[@NAME='pageOrientation']/@VALEUR and return whether orientation is portrait or landscape
-      val pageOrientation: PageOrientation = reportElfin.CARACTERISTIQUE.get.CARSET match {
-        case Some(carset) =>
-          carset.CAR.find(car => car.NOM.getOrElse(false) == "pageOrientation") match {
-            case Some(car) => if (car.VALEUR.getOrElse("not-defined") == "landscape") Landscape else Portrait
-            case None => Portrait
-          }
-        case None => Portrait
-      }
 
-      // Configure wkhtmltopdf 
-      val pdf = Pdf(
-        reportConfig.wkhtmltopdfPath,
-        new PdfConfig {
-          orientation := pageOrientation
-          pageSize := "A4"
-          headerHtml := reportHeaderHtmlTempFile.file.getAbsolutePath
-          footerHtml := reportFooterHtmlTempFile.file.getAbsolutePath
-        })
+      // If defined, render report header to HTML and save it to disk
+      val pdf = headerTemplateNameCar1Option match {
+        case Some(htn) =>       
+          // Render report header to HTML and save it to disk
+          val reportHeaderHtmlTempFile = new TemporaryFile(java.io.File.createTempFile("hb5ReportHeader", ".html"))
+          play.api.libs.Files.writeFile(reportHeaderHtmlTempFile.file, renderTemplate(htn.VALEUR.get, resultData, reportTitle))
+          // Configure wkhtmltopdf with header
+          Pdf(
+            reportConfig.wkhtmltopdfPath,
+            new PdfConfig {
+              orientation := pageOrientation
+              pageSize := "A4"
+              headerHtml := reportHeaderHtmlTempFile.file.getAbsolutePath
+              footerHtml := reportFooterHtmlTempFile.file.getAbsolutePath
+            }
+          )          
+        case None => 
+          // Configure wkhtmltopdf without header (useful to gain print space for drawing or stickers specific configurations)
+          Pdf(
+              reportConfig.wkhtmltopdfPath,
+              new PdfConfig {
+                orientation := pageOrientation
+                pageSize := "A4"
+                footerHtml := reportFooterHtmlTempFile.file.getAbsolutePath
+              }
+          )        
+      }
+        
       // Create empty temporary file for final PDF report outcome.
       val tempResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))
       // Process HTML temporary files to PDF using wkhtmltopdf
