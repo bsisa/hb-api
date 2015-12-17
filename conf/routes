@@ -87,6 +87,7 @@ DELETE   /api/melfin/:collectionId/:elfinId                      ch.bsisa.hyperb
 
 # Trigger data migration
 GET      /hb4tohb5                                               ch.bsisa.hyperbird.controllers.DbMigration.migrate()
+GET      /api/melfin/create/prestation/:referenceYear/:createYear       ch.bsisa.hyperbird.controllers.DbMigration.newPrestations(referenceYear, createYear)
 
 #GET           /api/melfin/:collectionId/:elfinId/:filename        ch.bsisa.hyperbird.controllers.Api.getElfinAttachment(collectionId, elfinId)
 #POST           /api/melfin/:collectionId/:elfinId/:filename        ch.bsisa.hyperbird.controllers.Api.createElfinAttachment(collectionId, elfinId)
