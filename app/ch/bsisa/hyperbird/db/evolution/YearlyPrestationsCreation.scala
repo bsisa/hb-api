@@ -1,5 +1,6 @@
 package ch.bsisa.hyperbird.db.evolution
 
+import java.net.ConnectException
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.ws.Response
@@ -7,12 +8,27 @@ import play.api.libs.ws.WS
 import scala.concurrent.Future
 import ch.bsisa.hyperbird.dao.ws.WSQueries
 import ch.bsisa.hyperbird.Implicits._
+import ch.bsisa.hyperbird.model.ELFIN
+import ch.bsisa.hyperbird.model.IDENTIFIANT
 import ch.bsisa.hyperbird.model.format.ElfinFormat
 import ch.bsisa.hyperbird.dao.ElfinDAO
 import ch.bsisa.hyperbird.dao.ws.XQueryWSHelper
 
+import ch.bsisa.hyperbird.dao.ResultNotFoundException
+
+import ch.bsisa.hyperbird.util.ElfinUtil
+
+//import ch.bsisa.hyperbird.security.social.WithRole
+//import ch.bsisa.hyperbird.security.social.WithClasseEditRight
+import ch.bsisa.hyperbird.security.social.WithClasseEditRightException
+//import ch.bsisa.hyperbird.security.social.WithManagerEditRight
+//import ch.bsisa.hyperbird.security.social.WithManagerEditRightException
+
+
 object YearlyPrestationsCreation {
 
+  val SPLIT_REGEXP = "\\."
+  
   def createPrestations(referenceYear: String, createYear: String) : Unit = {
 
     val xqueryFileName = "get_PRESTATION_list_for_year.xq"
@@ -20,89 +36,101 @@ object YearlyPrestationsCreation {
     // TODO: add xqueryParameter for reference year as 
     val xqueryParameters = Some(s"?ANNEE=${referenceYear}")
     val refPrestations = XQueryWSHelper.runXQueryFile(xqueryFileName, None).map { response =>
-
       Logger.debug(s"response.ahcResponse.getContentType() = ${response.ahcResponse.getContentType()}")
       val melfinWrappedBody = "<MELFIN>" + response.body.mkString + "</MELFIN>"
       ElfinFormat.elfinsFromXml(scala.xml.XML.loadString(melfinWrappedBody))
     }
 
     refPrestations.map { prestations =>
-      
-      // First pass
-      val prestationIndexesPerBuilding : Map[String,String] = 
-        (for { prestation <- prestations } yield { ( prestation.IDENTIFIANT.get.OBJECTIF.get.split(".")(0) -> prestation.IDENTIFIANT.get.OBJECTIF.get.split(".")(1) ) }).toMap
-      
 
-      // Second pass
+      val prestationMutableIndexesPerBuilding : scala.collection.mutable.HashMap[String,Int] = scala.collection.mutable.HashMap()
+      
+      for (prestation <- prestations ) {
+        val prestationIndexTokensOpt = prestation.IDENTIFIANT.flatMap { i => i.OBJECTIF.map { o => o.split(SPLIT_REGEXP) } }
+        val prestationIndexEntry = prestationIndexTokensOpt map { prestationIndexTokens =>
+          // Condition reached if prestation index is of the expected format: "195.23" 
+            if (prestationIndexTokens.size == 2) {
+              val buildingObjNb = prestationIndexTokens(0) 
+              val prestationIdx = prestationIndexTokens(1).toInt
+              val currentIdx = prestationMutableIndexesPerBuilding get buildingObjNb
+              currentIdx match {
+                case Some(i) => 
+                  // Keep greatest idx value
+                  if (i < prestationIdx) {
+                    prestationMutableIndexesPerBuilding += (buildingObjNb -> prestationIdx)
+                  }
+                case None => prestationMutableIndexesPerBuilding += (buildingObjNb -> prestationIdx)
+              }
+            } 
+            //Logger.error(s"""PRESTATION Id $prestation.Id WITH STRANGE OBJECTIF = $prestation.IDENTIFIANT.get.OBJECTIF.getOrElse("NO OBJECTIF")""")
+        }
+      }
+      
+      Logger.debug(s"prestationMutableIndexesPerBuilding.keySet.size = ${prestationMutableIndexesPerBuilding.keySet.size}")
+      
+      // Second pass - Make use of the prestations indexes Map and indent it while creating new prestation entries.
       val newPrestations = 
         for { prestation <- prestations } 
         yield { 
-          // TODO: we need mutable Map... to update index.
-          val newId = prestationIndexesPerBuilding(prestation.IDENTIFIANT.get.OBJECTIF.get.split(".")(0))
-          s"PRESTATION/IDENTIFIANT/OBJECTIF = {$newId}" 
+         
+          val futureElfinWithId: Future[ELFIN] = ElfinDAO.getNewFromCatalogue(prestation.CLASSE)
+
+          // Send cloned catalogue elfin in JSON format 
+          futureElfinWithId.map { elfin =>
+            val newObjectifBuildingPart = prestation.IDENTIFIANT.get.OBJECTIF.get.split(SPLIT_REGEXP)(0)
+            // TODO: Must update MUTABLE Map... counter
+            val newObjectifIndexPart = (prestationMutableIndexesPerBuilding getOrElse (newObjectifBuildingPart, 98)) + 1
+            // Update Map value for key `newObjectifBuildingPart`
+            prestationMutableIndexesPerBuilding(newObjectifBuildingPart) = newObjectifIndexPart
+            val newObjectif = Option(s"""$newObjectifBuildingPart.$newObjectifIndexPart""")
+            val identifiantWithUpdatedYearAndObjectif = IDENTIFIANT(
+              AUT = prestation.IDENTIFIANT.get.AUT,
+              GER = prestation.IDENTIFIANT.get.GER,
+              RES = prestation.IDENTIFIANT.get.RES,
+              NOM = prestation.IDENTIFIANT.get.NOM,
+              ALIAS = prestation.IDENTIFIANT.get.ALIAS,
+              ORIGINE = prestation.IDENTIFIANT.get.ORIGINE,
+              OBJECTIF = newObjectif,
+              QUALITE = prestation.IDENTIFIANT.get.QUALITE,
+              COMPTE = prestation.IDENTIFIANT.get.COMPTE,
+              DE = Option(createYear),
+              A = prestation.IDENTIFIANT.get.A,
+              PAR = prestation.IDENTIFIANT.get.PAR,
+              VALEUR_A_NEUF = prestation.IDENTIFIANT.get.VALEUR_A_NEUF,
+              VALEUR = prestation.IDENTIFIANT.get.VALEUR)
+            
+            
+            val newPrestationWithoutMutations = ELFIN(None, prestation.GEOSELECTION, Option(identifiantWithUpdatedYearAndObjectif), prestation.CARACTERISTIQUE,
+            prestation.PARTENAIRE, prestation.ACTIVITE, prestation.FORME, prestation.ANNEXE, prestation.DIVERS, elfin.Id,
+            elfin.ID_G, elfin.CLASSE, prestation.GROUPE, prestation.TYPE, prestation.NATURE, prestation.SOURCE) 
+          
+            val newPrestation = ElfinUtil.replaceElfinMutationsHead(newPrestationWithoutMutations,ElfinUtil.createMutationForUserId("PRE"))
+            Logger.debug(s"newPrestation.Id = ${newPrestation.Id}")
+            Logger.debug(s"newPrestation.Id = ${newPrestation.IDENTIFIANT}")
+
+            // Create in database
+            // TODO: add check for existing entry based upon building sai nb. + year + groupe + remark ?
+            ElfinDAO.create(newPrestation)
+          }
+          .recover {
+            case e: WithClasseEditRightException =>
+              val errorMsg = s"Failed to obtain Elfin with CLASSE: ${prestation.CLASSE} from catalogue: ${e}"
+              Logger.error(errorMsg)
+            case resNotFound: ResultNotFoundException => {
+              val errorMsg = s"Failed to obtain new ELFIN from catalogue for classeName: ${prestation.CLASSE}: ${resNotFound}"
+              Logger.error(errorMsg)
+            }
+            case connectException: ConnectException => {
+              val errorMsg = s"No database connection could be established."
+              Logger.error(errorMsg)
+            }
+            case e: Throwable => {
+              val errorMsg = s"Failed to obtain new ELFIN from catalogue for classeName: ${prestation.CLASSE}: ${e}"
+              Logger.error(errorMsg)
+            }
+          }          
+          
         }
-        
-        
-        
-//      for {
-//        prestation <- prestations
-//        prestation.IDENTIFIANT.get.OBJECTIF.get
-//        
-//      }
-//      
-//      yield {
-//        // So
-//
-//      }
     }
-
-    // asynchronous call
-//    responseFuture.map { resp =>
-//      // We expect to receive XML content
-//      Logger.debug(s"Result of type ${resp.ahcResponse.getContentType} received")
-//      // Parse XML (Need to wrap the list of XML elements received to obtain valid XML.)
-//      val melfinElem = scala.xml.XML.loadString("<MELFIN>" + resp.body.mkString + "</MELFIN>")
-//      // elfinsFromXml unwraps ELFINS from the MELFIN element to return a Seq[ELFIN]
-//      // Unwrap wrap tag (should be MELFIN)
-//      val elfinNodeSeq = melfinElem \\ "ELFIN"
-//
-//      // TODO: Perform conversion: copy all enforcing top elements order
-//      val elfins = for { elfinNode <- elfinNodeSeq } yield {
-//        /*
-//                <xs:element ref="MUTATIONS" minOccurs="0" maxOccurs="1"></xs:element>
-//                <xs:element ref="GEOSELECTION" minOccurs="0" maxOccurs="1"/>
-//                <xs:element ref="IDENTIFIANT" minOccurs="0" maxOccurs="1"/>
-//                <xs:element ref="CARACTERISTIQUE" minOccurs="0" maxOccurs="1"/>
-//                <xs:element ref="PARTENAIRE" minOccurs="0" maxOccurs="1"/>
-//                <xs:element ref="ACTIVITE" minOccurs="0" maxOccurs="1"/>
-//                <xs:element ref="FORME" minOccurs="0" maxOccurs="1"/>
-//                <xs:element ref="ANNEXE" minOccurs="0" maxOccurs="1"/>
-//                <xs:element ref="DIVERS" minOccurs="0" maxOccurs="1"/>
-//         */
-//        val newElfinNode =
-//          <ELFIN>
-//            { elfinNode \ "MUTATIONS" }
-//            { elfinNode \ "GEOSELECTION" }
-//            { elfinNode \ "IDENTIFIANT" }
-//            { elfinNode \ "CARACTERISTIQUE" }
-//            { elfinNode \ "PARTENAIRE" }
-//            { elfinNode \ "ACTIVITE" }
-//            { elfinNode \ "FORME" }
-//            { elfinNode \ "ANNEXE" }
-//            { elfinNode \ "DIVERS" }
-//          </ELFIN>.%(elfinNode.attributes)
-//        //val newElfinNode = <ELFIN Id={elfinNode \ "@Id"} ID_G={elfinNode \ "@ID_G"} CLASSE={elfinNode \ "@CLASSE"}></ELFIN>
-//        newElfinNode
-//
-//      }
-//
-//      Logger.debug(s"Found ${elfins.size} FONTAINES...")
-//      for (elfin <- elfins) {
-//        ElfinDAO.update(elfin)
-//        Logger.debug(s"elfin: ${elfin}")
-//      }
-//    }
-
   }
-
 }
