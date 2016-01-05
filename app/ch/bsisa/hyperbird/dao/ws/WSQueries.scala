@@ -94,6 +94,7 @@ object WSQueries extends Queries {
   
   /**
    * Returns a query to execute a given xquery file by name
+   * TODO: Add additional optional `wrapResult` parameter set to `false` by default and deprecate or delete runWrappedXQueryFile noise
    */
   def runXQueryFile(xqueryFileName: String, queryString: Option[String])(implicit dbConf: DbConfig, collectionsConf: CollectionsConfig): String = {
     val baseQuery = s"""${dbConf.protocol}${dbConf.hostName}:${dbConf.port}${dbConf.restPrefix}${dbConf.databaseName}/${collectionsConf.xqueriesCollectionId}/${xqueryFileName}?_howmany=${highPagingLimit}&_wrap=${wrap}"""
@@ -108,6 +109,7 @@ object WSQueries extends Queries {
 
   /**
    * Returns a query to execute a given xquery file by name
+   * TODO: Deprecate or delete in favour of runXQueryFile with additional `wrapResult` parameter
    */
   def runWrappedXQueryFile(xqueryFileName: String, queryString: Option[String])(implicit dbConf: DbConfig, collectionsConf: CollectionsConfig): String = {
     val baseQuery = s"""${dbConf.protocol}${dbConf.hostName}:${dbConf.port}${dbConf.restPrefix}${dbConf.databaseName}/${collectionsConf.xqueriesCollectionId}/${xqueryFileName}?_howmany=${highPagingLimit}&_wrap=yes"""

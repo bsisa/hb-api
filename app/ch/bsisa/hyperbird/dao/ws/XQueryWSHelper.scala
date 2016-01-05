@@ -194,6 +194,7 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
 
   /**
    * Build query given `xqueryFileName` and executes it returning a future response.
+   * TODO: Review explicit specification of implicit parameters (unnecessary, see runWrappedXQueryFile)
    */
   def runXQueryFile(xqueryFileName: String, queryString: Option[String])(implicit dbConf: DbConfig, collectionsConf: CollectionsConfig): Future[Response] = {
      val query = WSQueries.runXQueryFile(xqueryFileName, queryString)(dbConf, collectionsConf)
@@ -204,6 +205,7 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
 
   /**
    * Build query given `xqueryFileName` and executes it returning a future response.
+   * TODO: Should call runXQueryFile with additional optional `wrapResult` parameter set to `true`
    */
   def runWrappedXQueryFile(xqueryFileName: String, queryString: Option[String]): Future[Response] = {
     val query = WSQueries.runWrappedXQueryFile(xqueryFileName, queryString)
