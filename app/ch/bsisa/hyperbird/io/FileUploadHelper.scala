@@ -73,7 +73,7 @@ object FileUploadHelper {
 
     val files = for { i <- 1 to totalChunks } yield { getChunkFile(chunksSourceDirectory, fileIdentifier, chunkNb = i) }
     val sizes = for { file <- files } yield { file.length() }
-    val totalFilesSize = sizes.sum
+    val totalFilesSize = sizes.sum // One liner: val totalFilesSize = files.map{ file => file.length() }.sum
     if (totalSize == totalFilesSize) {
       true
     } else {
