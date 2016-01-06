@@ -54,11 +54,11 @@ object DbMigration extends Controller with securesocial.core.SecureSocial {
   }
 
   
-  def newPrestations(referenceYear:String, createYear: String) = SecuredAction(WithRole("admin")) {
+  def newPrestations(referenceYear:String, createYear: String, owner: String) = SecuredAction(WithRole("admin")) {
    
     Logger.debug("Running db migration...")
-    ch.bsisa.hyperbird.db.evolution.YearlyPrestationsCreation.createPrestations(referenceYear, createYear)
-    Ok(views.html.index("HyperBird 5.0", s"Creates PRESTATION for year ${createYear} using year ${referenceYear} as example. Check YearlyPrestationsCreation.scala for details"))    
+    ch.bsisa.hyperbird.db.evolution.YearlyPrestationsCreation.createPrestations(referenceYear, createYear, owner)
+    Ok(views.html.index("HyperBird 5.0", s"Creates PRESTATION restricted to owner ${owner} for year ${createYear} using year ${referenceYear} as example. Check YearlyPrestationsCreation.scala for details"))
     
   }
   

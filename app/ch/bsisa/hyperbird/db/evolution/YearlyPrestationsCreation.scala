@@ -15,36 +15,37 @@ import ch.bsisa.hyperbird.dao.ElfinDAO
 import ch.bsisa.hyperbird.dao.ws.XQueryWSHelper
 
 import ch.bsisa.hyperbird.dao.ResultNotFoundException
-
 import ch.bsisa.hyperbird.util.ElfinUtil
-
-//import ch.bsisa.hyperbird.security.social.WithRole
-//import ch.bsisa.hyperbird.security.social.WithClasseEditRight
 import ch.bsisa.hyperbird.security.social.WithClasseEditRightException
-//import ch.bsisa.hyperbird.security.social.WithManagerEditRight
-//import ch.bsisa.hyperbird.security.social.WithManagerEditRightException
 
 
+/**
+ * Review get_PRESTATION_list_for_year.xq script logic before changing 
+ * the following code.
+ */
 object YearlyPrestationsCreation {
 
   val SPLIT_REGEXP = "\\."
   
-  def createPrestations(referenceYear: String, createYear: String) : Unit = {
+  def createPrestations(referenceYear: String, createYear: String, owner: String) : Unit = {
 
     val xqueryFileName = "get_PRESTATION_list_for_year.xq"
     
-    // TODO: add xqueryParameter for reference year as 
-    val xqueryParameters = Some(s"?ANNEE=${referenceYear}")
-    val refPrestations = XQueryWSHelper.runXQueryFile(xqueryFileName, None).map { response =>
+    // Create HTTP URL parameters from function parameters
+    val xqueryParameters = Some(s"refYear=${referenceYear}&owner=${owner}")
+    // Query PRESTATIONS for reference year and owner
+    val refPrestations = XQueryWSHelper.runXQueryFile(xqueryFileName, xqueryParameters).map { response =>
       Logger.debug(s"response.ahcResponse.getContentType() = ${response.ahcResponse.getContentType()}")
       val melfinWrappedBody = "<MELFIN>" + response.body.mkString + "</MELFIN>"
       ElfinFormat.elfinsFromXml(scala.xml.XML.loadString(melfinWrappedBody))
     }
 
+ 
     refPrestations.map { prestations =>
 
       val prestationMutableIndexesPerBuilding : scala.collection.mutable.HashMap[String,Int] = scala.collection.mutable.HashMap()
-      
+
+      // First pass - Loop on each PRESTATION to obtain the highest index per building across every owner
       for (prestation <- prestations ) {
         val prestationIndexTokensOpt = prestation.IDENTIFIANT.flatMap { i => i.OBJECTIF.map { o => o.split(SPLIT_REGEXP) } }
         val prestationIndexEntry = prestationIndexTokensOpt map { prestationIndexTokens =>
@@ -68,19 +69,18 @@ object YearlyPrestationsCreation {
       
       Logger.debug(s"prestationMutableIndexesPerBuilding.keySet.size = ${prestationMutableIndexesPerBuilding.keySet.size}")
       
-      // Second pass - Make use of the prestations indexes Map and indent it while creating new prestation entries.
+      // Second pass - Make use of the prestations indexes Map and indent it while creating new prestation entries restricted to defined owner.
       val newPrestations = 
-        for { prestation <- prestations } 
+        for { prestation <- prestations.filter { prestation => prestation.PARTENAIRE.get.PROPRIETAIRE.get.NOM.get == owner } }
         yield { 
          
           val futureElfinWithId: Future[ELFIN] = ElfinDAO.getNewFromCatalogue(prestation.CLASSE)
 
-          // Send cloned catalogue elfin in JSON format 
+          // Send cloned catalog elfin in JSON format 
           futureElfinWithId.map { elfin =>
             val newObjectifBuildingPart = prestation.IDENTIFIANT.get.OBJECTIF.get.split(SPLIT_REGEXP)(0)
-            // TODO: Must update MUTABLE Map... counter
             val newObjectifIndexPart = (prestationMutableIndexesPerBuilding getOrElse (newObjectifBuildingPart, 98)) + 1
-            // Update Map value for key `newObjectifBuildingPart`
+            // Update mutable Map value for key `newObjectifBuildingPart`
             prestationMutableIndexesPerBuilding(newObjectifBuildingPart) = newObjectifIndexPart
             val newObjectif = Option(s"""$newObjectifBuildingPart.$newObjectifIndexPart""")
             val identifiantWithUpdatedYearAndObjectif = IDENTIFIANT(
@@ -108,8 +108,10 @@ object YearlyPrestationsCreation {
             Logger.debug(s"newPrestation.Id = ${newPrestation.Id}")
             Logger.debug(s"newPrestation.Id = ${newPrestation.IDENTIFIANT}")
 
+            // TODO: Evaluate possible improvement making database entry creation conditional to 
+            // no existing entry with identical {IDENTIFIANT/0BJECTIF building part, year, groupe, remark}
+            
             // Create in database
-            // TODO: add check for existing entry based upon building sai nb. + year + groupe + remark ?
             ElfinDAO.create(newPrestation)
           }
           .recover {
