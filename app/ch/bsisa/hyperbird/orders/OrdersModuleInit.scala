@@ -19,6 +19,8 @@ import scala.concurrent.duration._
 
 /**
  * Contains logic used to initialise orders statistics module.
+ * 
+ * @author Patrick Refondini
  */
 object OrdersModuleInit {
 

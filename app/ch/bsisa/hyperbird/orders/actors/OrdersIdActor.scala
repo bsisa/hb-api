@@ -10,6 +10,8 @@ import akka.actor.actorRef2Scala
 
 /**
  * Orders id service providing fast thread safe unique id number. 
+ * 
+ * @author Patrick Refondini
  */
 class OrdersIdActor extends Actor with ActorLogging {
 

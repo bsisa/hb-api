@@ -13,6 +13,8 @@ import play.api.Play
  *  Note: Quick fix to wrong format usage leading to email with attachment never 
  *  being displayed in HTML. HtmlEmail inherits from MultiPartEmail so the original
  *  format logic is broken.
+ *  
+ *  @author Patrick Refondini
  */
 package object mail {
 
