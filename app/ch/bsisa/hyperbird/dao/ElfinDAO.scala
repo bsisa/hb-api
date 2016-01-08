@@ -70,14 +70,14 @@ object ElfinDAO {
   }
 
   /**
-   * Gets new ELFIN instance from catalogue for provided CLASSE and assign a new ELFIN.Id to it.
+   * Gets new ELFIN instance from catalog for provided CLASSE and assign a new ELFIN.Id to it.
    * Note that this instance does not exist in database.
    * To persist a new ELFIN instance to database use `ElfinDAO.create`.
    */
   def getNewFromCatalogue(classeName: String)(implicit dbConfig: DbConfig, collectionsConfig: CollectionsConfig): Future[ELFIN] = {
-    // Use generic find query with catalogue collection id and ELFIN@CLASSE parameter 
+    // Use generic find query with catalog collection id and ELFIN@CLASSE parameter 
     val futureElfin = XQueryWSHelper.find(
-      WSQueries.filteredCollectionQuery(collectionsConfig.catalogueCollectionId, s"//ELFIN[@CLASSE='${classeName}']"))
+      WSQueries.filteredCollectionQuery(collectionsConfig.catalogCollectionId, s"//ELFIN[@CLASSE='${classeName}']"))
 
     // Clone futureElfin[ELFIN] and assign a new generated ELFIN.Id to it
     val futureElfinWithId: Future[ELFIN] = for {

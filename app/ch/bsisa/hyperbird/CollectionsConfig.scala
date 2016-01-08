@@ -18,9 +18,9 @@ class CollectionsConfig {
   }
 
   /**
-   * Catalogue collection
+   * Catalog collection
    */
-  val catalogueCollectionId: String = Play.current.configuration.getString(CollectionsConfig.CatalogueCollectionKey) match {
+  val catalogCollectionId: String = Play.current.configuration.getString(CollectionsConfig.CatalogueCollectionKey) match {
     case Some(catalogueCollectionId) => catalogueCollectionId
     case None => throw CollectionsConfigException(s"Catalogue collection identifier information ${CollectionsConfig.CatalogueCollectionKey} missing")
   }

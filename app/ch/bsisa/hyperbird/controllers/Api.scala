@@ -383,32 +383,32 @@ object Api extends Controller with securesocial.core.SecureSocial {
   }
 
   /**
-   * Gets new ELFIN instance from catalogue for provided CLASSE. This instance does not exist in database yet.
+   * Gets new ELFIN instance from catalog for provided CLASSE. This instance does not exist in database yet.
    */
   def getNewElfin(classeName: String) = SecuredAction(ajaxCall = true).async { request =>
 
     val futureElfinWithId: Future[ELFIN] = ElfinDAO.getNewFromCatalogue(classeName)
 
-    // Send cloned catalogue elfin in JSON format 
+    // Send cloned catalog elfin in JSON format 
     futureElfinWithId.map { elfin =>
-      // Intended no access right checks for reading entities from catalogue 
+      // Intended no access right checks for reading entities from catalog 
       // These entities are read not only for creating new entities but also to 
       // obtain sensible defaults       
       val elfinJson = ElfinFormat.toJson(elfin)
       Ok(elfinJson).as(JSON)
     }.recover {
       case e: WithClasseEditRightException =>
-        val errorMsg = s"Failed to obtain Elfin with CLASSE: ${classeName} from catalogue: ${e}"
+        val errorMsg = s"Failed to obtain Elfin with CLASSE: ${classeName} from catalog: ${e}"
         manageWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))
 
       case resNotFound: ResultNotFoundException => {
-        manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"Failed to obtain new ELFIN from catalogue for classeName: ${classeName}: ${resNotFound}"))
+        manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"Failed to obtain new ELFIN from catalog for classeName: ${classeName}: ${resNotFound}"))
       }
       case connectException: ConnectException => {
         manageConnectException(exception = connectException, errorMsg = Option(s"No database connection could be established."))
       }
       case e: Throwable => {
-        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to obtain new ELFIN from catalogue for classeName: ${classeName}: ${e}"))
+        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to obtain new ELFIN from catalog for classeName: ${classeName}: ${e}"))
       }
     }
   }
