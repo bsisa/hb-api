@@ -80,12 +80,15 @@ object ElfinDAO {
       WSQueries.filteredCollectionQuery(collectionsConfig.catalogCollectionId, s"//ELFIN[@CLASSE='${classeName}']"))
 
     // Clone futureElfin[ELFIN] and assign a new generated ELFIN.Id to it
+    val futureElfinWithId: Future[ELFIN]  = futureElfin.flatMap { elfin => ElfinUtil.assignElfinId(elfin) }
+    /* for comprehension equivalent to above one liner.    
     val futureElfinWithId: Future[ELFIN] = for {
       elfin <- futureElfin
       elfinWithId <- ElfinUtil.assignElfinId(elfin)
     } yield {
       elfinWithId
     }
+    */
     futureElfinWithId
   }
 
