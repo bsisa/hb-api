@@ -23,10 +23,10 @@ object OptionalConfigLogger {
     }
 
     // Log optional configuration states
-    Logger.info(s"Optional server side query cache is turned ${queryCacheState}")
-    Logger.info(s"Optional data manager based security is turned ${dataManagerSecurityState}")
-    Logger.info(s"Optional server side notification is turned ${serverSideNotification}")
-    Logger.info(s"Optional orders statistics module is turned ${ordersStatisticsModule}")
+    Logger.info(s"HyperBird optional server side query cache is turned ${queryCacheState}")
+    Logger.info(s"HyperBird optional data manager based security is turned ${dataManagerSecurityState}")
+    Logger.info(s"HyperBird optional server side notification is turned ${serverSideNotification}")
+    Logger.info(s"HyperBird optional orders statistics module is turned ${ordersStatisticsModule}")
 
   }
 
