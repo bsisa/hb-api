@@ -20,9 +20,9 @@ class CollectionsConfig {
   /**
    * Catalog collection
    */
-  val catalogCollectionId: String = Play.current.configuration.getString(CollectionsConfig.CatalogueCollectionKey) match {
+  val catalogCollectionId: String = Play.current.configuration.getString(CollectionsConfig.CatalogCollectionKey) match {
     case Some(catalogueCollectionId) => catalogueCollectionId
-    case None => throw CollectionsConfigException(s"Catalogue collection identifier information ${CollectionsConfig.CatalogueCollectionKey} missing")
+    case None => throw CollectionsConfigException(s"Catalogue collection identifier information ${CollectionsConfig.CatalogCollectionKey} missing")
   }
 
   /**
@@ -46,7 +46,7 @@ case class CollectionsConfigException(message: String = null, cause: Throwable =
 object CollectionsConfig {
 
   private val ConfigurationCollectionKey = "hb.collection.configuration"
-  private val CatalogueCollectionKey = "hb.collection.catalogue"
+  private val CatalogCollectionKey = "hb.collection.catalogue"
   private val XQueriesCollectionKey = "hb.collection.xqueries"
 
 }
