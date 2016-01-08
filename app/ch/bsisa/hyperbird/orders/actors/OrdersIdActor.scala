@@ -20,6 +20,7 @@ class OrdersIdActor extends Actor with ActorLogging {
   
 	def receive = {
 	  case req : OrderIdRequest =>
+      log.debug("OrdersIdActor received OrderIdRequest message")
       if (initialised) {
         val newMaxValue = maxValue+1
         maxValue = newMaxValue

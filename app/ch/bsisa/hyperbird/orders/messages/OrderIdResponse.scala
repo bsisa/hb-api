@@ -10,6 +10,6 @@ package ch.bsisa.hyperbird.orders.messages
  * 
  * @author Patrick Refondini
  */
-case class OrderIdResponse(id : Option[Integer]) {
+case class OrderIdResponse(id : Option[Int]) {
 
 }

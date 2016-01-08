@@ -51,6 +51,9 @@ GET      /api/melfin/security/hash/:plainTextPassword            ch.bsisa.hyperb
 # Elfin - Obtain new elfin from catalogue. Not stored in the database until Api.createElfin applied to it. 
 GET      /api/melfin/catalogue/:className                        ch.bsisa.hyperbird.controllers.Api.getNewElfin(className)
 
+# Orders statistics - Get new order number
+GET		/api/melfin/orders/new/order-number 					ch.bsisa.hyperbird.controllers.Api.getNewOrderNumber
+
 # Returns the result of the named xquery file execution in its original format. 
 # If the xquery result format is MELFIN then specifying ?format=json will convert the original XML format to JSON.
 GET      /api/melfin/xquery/:xqueryFileName                      ch.bsisa.hyperbird.controllers.Api.runXQueryFile(xqueryFileName, format ?= "original")

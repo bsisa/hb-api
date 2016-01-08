@@ -417,6 +417,30 @@ object Api extends Controller with securesocial.core.SecureSocial {
       }
     }
   }
+  
+  /**
+   * Gets new ELFIN instance from catalog for provided CLASSE. This instance does not exist in database yet.
+   */
+  def getNewOrderNumber() = SecuredAction(ajaxCall = true).async { request =>
+
+    
+    val futureOrderNumber = ch.bsisa.hyperbird.orders.OrderNumberGenerator.getNewOrderNumber
+
+    // Send cloned catalog elfin in JSON format 
+    futureOrderNumber.map { orderNumberOpt => 
+      orderNumberOpt match {
+        case Some(orderNumber) => Ok(s"${orderNumber}").as(JSON)
+        case None => Ok("hello").as(JSON)
+      }
+    }.recover {
+      case connectException: ConnectException => {
+        manageConnectException(exception = connectException, errorMsg = Option(s"No database connection could be established."))
+      }
+      case e: Throwable => {
+        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to obtain new order number from order ids service: ${e}"))
+      }
+    }
+  }  
 
   /**
    * Finds 0 or 1 ELFIN by `collectionId`, `elfinId` and returns it within a SimpleResult

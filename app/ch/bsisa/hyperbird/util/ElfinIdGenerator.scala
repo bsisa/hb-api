@@ -19,6 +19,8 @@ import java.util.Date
 /**
  * Basic generator
  * Uses actor for thread safe counter
+ * 
+ * @author Patrick Refondini
  */
 object ElfinIdGenerator {
 

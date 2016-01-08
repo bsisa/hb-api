@@ -7,6 +7,6 @@ package ch.bsisa.hyperbird.orders.messages
  * 
  * @author Patrick Refondini
  */
-case class OrdersMaxValueInit(maxValue : Integer) {
+case class OrdersMaxValueInit(maxValue : Int) {
 
 }
