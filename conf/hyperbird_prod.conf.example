@@ -46,6 +46,12 @@ hb {
 		# Enables server side notification if set to an integer value for notification interval in seconds.
 		"serverSideNotificationEnabled" : 15		
 	},
+	modules {
+		ordersStatistics {
+			# Enables orders_statistics related services
+			"enabled" : true
+		}
+	},
 	report {
         wkhtmltopdf {
           "path": "/usr/local/bin/wkhtmltopdf"

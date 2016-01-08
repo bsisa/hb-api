@@ -16,6 +16,10 @@ import ch.bsisa.hyperbird.util.DateUtil
 import ch.bsisa.hyperbird.patman.simulations.SimulationScheduler
 
 import ch.bsisa.hyperbird.sse.ServerSideNotificationScheduler
+
+import ch.bsisa.hyperbird.orders.OrdersModuleInit
+
+
 import play.api.libs.concurrent.Execution.Implicits._
 
 import ch.bsisa.hyperbird.Implicits._
@@ -44,6 +48,9 @@ object Global extends GlobalSettings {
 
     // Optional. Will only be effective if the corresponding configuration is available.
     ServerSideNotificationScheduler.trySchedulingNotification() 
+    
+    // Optional. Will initialise services necessary to orders statistics if corresponding configuration is available.
+    OrdersModuleInit.tryInitialisingOrdersModule()
 
   }
 

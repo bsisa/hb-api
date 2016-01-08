@@ -66,6 +66,12 @@ class ApiConfig {
    */
   val serverSideNotificationEnabled: Option[Int] = Play.current.configuration.getInt(ApiConfig.ServerSideNotificationEnabledUrlKey) 
   
+  
+  /**
+   * Used by Api service to enable or disable services related to orders statistics module, such as orders id service (`OrdersIdActor`).
+   */
+  val ordersStatiticsModuleEnabled: Option[Boolean] = Play.current.configuration.getBoolean(ApiConfig.OrdersStatiticsModuleEnabledKey) 
+  
 }
 
 /**
@@ -85,6 +91,7 @@ object ApiConfig {
   private val QueryCacheEnabledUrlKey = "hb.api.queryCacheEnabled"
   private val DataManagerSecurityEnabledUrlKey = "hb.api.dataManagerSecurityEnabled"
   private val ServerSideNotificationEnabledUrlKey = "hb.api.serverSideNotificationEnabled"
+  private val OrdersStatiticsModuleEnabledKey = "hb.modules.ordersStatistics.enabled"
   
 
 }

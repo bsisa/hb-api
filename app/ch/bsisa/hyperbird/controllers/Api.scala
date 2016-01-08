@@ -167,6 +167,11 @@ object Api extends Controller with securesocial.core.SecureSocial {
    * Returns the result of executing the specified XQuery file by name.
    *
    * Supported `format` parameter value are `{original|json}`
+   * 
+   * Warning: The API is ELFIN centered. Selecting json means the native query results in XML 
+   * format will be converted to ELFIN in JSON format. 
+   * If the XML returned is not an ELFIN format then use `original` format instead in proceed to whatever 
+   * conversion afterward.  
    */
   def runXQueryFile(xqueryFileName: String, format: String) = SecuredAction(ajaxCall = true).async { request =>
     val queryString = if (request.rawQueryString != null && request.rawQueryString.nonEmpty) Option(request.rawQueryString) else None
