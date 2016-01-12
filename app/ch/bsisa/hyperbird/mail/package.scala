@@ -60,7 +60,7 @@ package object mail {
           if (mail.richMessage.isDefined) {
             new HtmlEmail().setHtmlMsg(mail.richMessage.get).setTextMsg(mail.message).attach(attachment)
           } else {
-        	new MultiPartEmail().attach(attachment).setMsg(mail.message)  
+        	  new MultiPartEmail().attach(attachment).setMsg(mail.message)  
           }
         }
       }
