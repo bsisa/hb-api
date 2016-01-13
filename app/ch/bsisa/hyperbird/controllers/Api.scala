@@ -441,6 +441,39 @@ object Api extends Controller with securesocial.core.SecureSocial {
       }
     }
   }  
+  
+  
+  /**
+   * Updates an ELFIN.CARACTERISTIQUE.FRACTION.L block expecting a data structure designed for order figures. 
+   * 
+   * See COMMANDE catalog description for format details.
+   */
+  def computeOrderFigures() = SecuredAction(ajaxCall = true).async(parse.json) { request =>
+
+    Logger.debug(s"computeOrderFigures called by user: ${request.user}")
+
+    try {
+      // Match our custom User type Identity implementation  
+      val user = request.user match { case user: User => user }
+
+      // Convert elfin JsValue to ELFIN.CARACTERISTIQUE.FRACTION 
+      val caracteristique = ElfinFormat.caracteristiqueFromJson(request.body)
+      
+      val updatedCaracteristique = ch.bsisa.hyperbird.orders.OrderUtil.computeOrderFigures(carP = caracteristique)
+      val updatedCaracteristiqueJson = ElfinFormat.caracteristiqueToJson(updatedCaracteristique)
+      scala.concurrent.Future(Ok(updatedCaracteristiqueJson).as(JSON))
+
+    } catch {
+      case e: Throwable =>
+        val errorMsg = s"Failed to compute order figures: ${e}"
+        ExceptionsManager.manageFutureException(exception = Option(e), errorMsg = Option(errorMsg))
+    }
+
+  }  
+  
+  
+  
+  
 
   /**
    * Finds 0 or 1 ELFIN by `collectionId`, `elfinId` and returns it within a SimpleResult

@@ -46,6 +46,19 @@ object ElfinFormat {
 
   def caracteristiqueFromXml(caracteristiqueXmlElem: scala.xml.Elem): CARACTERISTIQUE = scalaxb.fromXML[CARACTERISTIQUE](caracteristiqueXmlElem)
   def lFromXml(lXmlElem: scala.xml.Elem): L = scalaxb.fromXML[L](lXmlElem)
+
+  
+  def caracteristiqueFromJson(caracteristiqueJson: JsValue): CARACTERISTIQUE = caracteristiqueJson.as[CARACTERISTIQUE]
+  def caracteristiqueToJson(caracteristique: CARACTERISTIQUE): JsValue = {
+    try {
+      Json.toJson(caracteristique)
+    } catch { // Encapsulate all exception within our own adding specific info regarding failing ELFIN conversion.
+      case exception: Throwable =>
+        Logger.error(s"${exception} ELFIN CARACTERISTIQUE failed to serialise to JSON")
+        throw ElfinFormatException(s"ELFIN CARACTERISTIQUE failed to serialise to JSON", exception)
+    }    
+  }
+  
   
   def toJson(elfin: ELFIN): JsValue = {
     try {
@@ -56,7 +69,7 @@ object ElfinFormat {
         throw ElfinFormatException(s"ELFIN with ID_G: ${elfin.ID_G} and Id: ${elfin.Id} failed to serialise ELFIN Scala object to JSON", exception, elfin.Id, elfin.ID_G)
     }
   }
-
+  
   def fromJson(elfinJson: JsValue): ELFIN = elfinJson.as[ELFIN]
 
   /**

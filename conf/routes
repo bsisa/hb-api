@@ -4,7 +4,7 @@
 
 # Home page
 #GET      /                                      ch.bsisa.hyperbird.controllers.Application.index
-GET      /                                                       ch.bsisa.hyperbird.controllers.Application.angularJsIndex(any = "none")
+GET      /                                                                 ch.bsisa.hyperbird.controllers.Application.angularJsIndex(any = "none")
 # Map static resources from the /public folder to the /assets URL path
 #GET      /assets/*file                          controllers.Assets.at(path="/public", file)
 
@@ -18,79 +18,81 @@ GET      /                                                       ch.bsisa.hyperb
 # GET           /api/melfin/:collectionId/:elfinId        ch.bsisa.hyperbird.controllers.Api.getElfin(collectionId, elfinId)
 
 # Dynamically provides initialisation configuration information useful to hb-ui geoxml service
-GET      /conf.js                                                ch.bsisa.hyperbird.controllers.Application.conf
+GET      /conf.js                                                          ch.bsisa.hyperbird.controllers.Application.conf
 
 # Used for dev. acceleration
 #GET      /footer.html                                             ch.bsisa.hyperbird.controllers.Application.footer
 
 # Provides current logged in user details 
-GET      /api/melfin/whoami                                      ch.bsisa.hyperbird.controllers.Application.whoAmI
+GET      /api/melfin/whoami                                                ch.bsisa.hyperbird.controllers.Application.whoAmI
 
 # Dynamically provides initialisation configuration information useful to hb-ui 
-GET      /api/melfin/config                                      ch.bsisa.hyperbird.controllers.Api.config
+GET      /api/melfin/config                                                ch.bsisa.hyperbird.controllers.Api.config
 
 # Triggers database backup 
-GET      /api/melfin/backup                                      ch.bsisa.hyperbird.controllers.Api.runBackup
+GET      /api/melfin/backup                                                ch.bsisa.hyperbird.controllers.Api.runBackup
 
-GET      /api/melfin/clearcache                                  ch.bsisa.hyperbird.controllers.Api.clearCache
+GET      /api/melfin/clearcache                                            ch.bsisa.hyperbird.controllers.Api.clearCache
 
-GET      /api/melfin/online/:group                               ch.bsisa.hyperbird.sse.ServerSideNotification.notificationFeed(group: String)
-POST     /api/melfin/notify                                      ch.bsisa.hyperbird.sse.ServerSideNotification.postMessage
+GET      /api/melfin/online/:group                                         ch.bsisa.hyperbird.sse.ServerSideNotification.notificationFeed(group: String)
+POST     /api/melfin/notify                                                ch.bsisa.hyperbird.sse.ServerSideNotification.postMessage
 
 # Serve Elfin ANNEX files.
-GET      /api/melfin/annex/:collectionId/:elfinId/:fileName      ch.bsisa.hyperbird.controllers.Api.getElfinAnnexFile(collectionId,elfinId,fileName)
+GET      /api/melfin/annex/:collectionId/:elfinId/:fileName                ch.bsisa.hyperbird.controllers.Api.getElfinAnnexFile(collectionId,elfinId,fileName)
 # Tells whether Elfin ANNEX file exist without including body.
 # TODO: Check HEAD support for existing GET when upgrading. Play 2.3.1 should be fine: CSRF check supports HEAD method #3064   
-HEAD     /api/melfin/annex/:collectionId/:elfinId/:fileName      ch.bsisa.hyperbird.controllers.Api.cĥeckForElfinAnnexFile(collectionId,elfinId,fileName)
-POST     /api/melfin/annex/upload                                ch.bsisa.hyperbird.controllers.Api.createElfinAnnexFile()
+HEAD     /api/melfin/annex/:collectionId/:elfinId/:fileName                ch.bsisa.hyperbird.controllers.Api.cĥeckForElfinAnnexFile(collectionId,elfinId,fileName)
+POST     /api/melfin/annex/upload                                          ch.bsisa.hyperbird.controllers.Api.createElfinAnnexFile()
 # REST upload is not practical given current upload library constraints. CollectionId, elfinId, fileName informations are provided as POST parameters.
 # POST     /api/melfin/annex/:collectionId/:elfinId/:fileName   ch.bsisa.hyperbird.controllers.Api.createElfinAnnexFile(collectionId,elfinId,fileName)
 
-GET      /api/melfin/security/hash/:plainTextPassword            ch.bsisa.hyperbird.controllers.Api.getPasswordHash(plainTextPassword) 
+GET      /api/melfin/security/hash/:plainTextPassword                      ch.bsisa.hyperbird.controllers.Api.getPasswordHash(plainTextPassword) 
 
 # Elfin - Obtain new elfin from catalogue. Not stored in the database until Api.createElfin applied to it. 
-GET      /api/melfin/catalogue/:className                        ch.bsisa.hyperbird.controllers.Api.getNewElfin(className)
+GET      /api/melfin/catalogue/:className                                  ch.bsisa.hyperbird.controllers.Api.getNewElfin(className)
 
 # Orders statistics - Get new order number
-GET		/api/melfin/orders/new/order-number 					ch.bsisa.hyperbird.controllers.Api.getNewOrderNumber
+GET      /api/melfin/orders/new/order-number                               ch.bsisa.hyperbird.controllers.Api.getNewOrderNumber
+# Orders statistics - Updates with creation and computations an order figures block
+POST     /api/melfin/orders/compute/order-lines                                ch.bsisa.hyperbird.controllers.Api.computeOrderFigures
 
 # Returns the result of the named xquery file execution in its original format. 
 # If the xquery result format is MELFIN then specifying ?format=json will convert the original XML format to JSON.
-GET      /api/melfin/xquery/:xqueryFileName                      ch.bsisa.hyperbird.controllers.Api.runXQueryFile(xqueryFileName, format ?= "original")
+GET      /api/melfin/xquery/:xqueryFileName                                ch.bsisa.hyperbird.controllers.Api.runXQueryFile(xqueryFileName, format ?= "original")
 
 # Returns the spreadsheet file corresponding to the file name in binary format. 
-GET      /api/melfin/spreadsheet/:fileName                       ch.bsisa.hyperbird.controllers.Api.getSpreadsheetReport(fileName)
+GET      /api/melfin/spreadsheet/:fileName                                 ch.bsisa.hyperbird.controllers.Api.getSpreadsheetReport(fileName)
 
 
 # Generates and return reports based on the definition
-GET      /api/melfin/report/:reportCollectionId/:reportElfinId   ch.bsisa.hyperbird.controllers.Api.getReport(reportCollectionId, reportElfinId)
+GET      /api/melfin/report/:reportCollectionId/:reportElfinId             ch.bsisa.hyperbird.controllers.Api.getReport(reportCollectionId, reportElfinId)
 
 # Allow searching an ELFIN per Id accross all collections
-GET      /api/melfin/collections/:elfinId                        ch.bsisa.hyperbird.controllers.Api.getElfinById(elfinId)
+GET      /api/melfin/collections/:elfinId                                  ch.bsisa.hyperbird.controllers.Api.getElfinById(elfinId)
 
 # TODO: define expected result format before re-enabling this route
 # GET      /api/melfin/                         ch.bsisa.hyperbird.controllers.Api.collections
 
 # ========== Patient Management module ================================
 # Trigger patient flux simulation
-GET      /api/melfin/simulate                                    ch.bsisa.hyperbird.patman.simulations.controllers.SimulationApi.simulate(dateFrom ?= "2015-01-01", dateTo ?= "2099-01-01")
+GET      /api/melfin/simulate                                              ch.bsisa.hyperbird.patman.simulations.controllers.SimulationApi.simulate(dateFrom ?= "2015-01-01", dateTo ?= "2099-01-01")
 
 # Returns the list of elfins contained in the specified collection matching the xpath filter expression 
-GET      /api/melfin/:collectionId                               ch.bsisa.hyperbird.controllers.Api.getFilteredCollection(collectionId, xpath ?= "//ELFIN")
-DELETE   /api/melfin/:collectionId                               ch.bsisa.hyperbird.controllers.Api.deleteFilteredCollection(collectionId, xpath ?= "//ELFIN")
+GET      /api/melfin/:collectionId                                         ch.bsisa.hyperbird.controllers.Api.getFilteredCollection(collectionId, xpath ?= "//ELFIN")
+DELETE   /api/melfin/:collectionId                                         ch.bsisa.hyperbird.controllers.Api.deleteFilteredCollection(collectionId, xpath ?= "//ELFIN")
 
 # Elfin - Obtain new elfin from catalogue. Not stored in the database until Api.createElfin applied to it. 
 #GET      /api/melfin/catalogue/:className     ch.bsisa.hyperbird.controllers.Api.getNewElfin(className)
 
 # Elfin CRUD operations
-GET      /api/melfin/:collectionId/:elfinId                      ch.bsisa.hyperbird.controllers.Api.getElfin(collectionId, elfinId, format ?= "json") 
-POST     /api/melfin/:collectionId/:elfinId                      ch.bsisa.hyperbird.controllers.Api.createElfin(collectionId, elfinId)
-PUT      /api/melfin/:collectionId/:elfinId                      ch.bsisa.hyperbird.controllers.Api.updateElfin(collectionId, elfinId)
-DELETE   /api/melfin/:collectionId/:elfinId                      ch.bsisa.hyperbird.controllers.Api.deleteElfin(collectionId, elfinId)
+GET      /api/melfin/:collectionId/:elfinId                                ch.bsisa.hyperbird.controllers.Api.getElfin(collectionId, elfinId, format ?= "json") 
+POST     /api/melfin/:collectionId/:elfinId                                ch.bsisa.hyperbird.controllers.Api.createElfin(collectionId, elfinId)
+PUT      /api/melfin/:collectionId/:elfinId                                ch.bsisa.hyperbird.controllers.Api.updateElfin(collectionId, elfinId)
+DELETE   /api/melfin/:collectionId/:elfinId                                ch.bsisa.hyperbird.controllers.Api.deleteElfin(collectionId, elfinId)
 
 # Trigger data migration
-GET      /hb4tohb5                                               ch.bsisa.hyperbird.controllers.DbMigration.migrate()
-GET      /api/melfin/create/prestation/:referenceYear/:createYear/:owner       ch.bsisa.hyperbird.controllers.DbMigration.newPrestations(referenceYear, createYear, owner)
+GET      /hb4tohb5                                                         ch.bsisa.hyperbird.controllers.DbMigration.migrate()
+GET      /api/melfin/create/prestation/:referenceYear/:createYear/:owner   ch.bsisa.hyperbird.controllers.DbMigration.newPrestations(referenceYear, createYear, owner)
 
 #GET           /api/melfin/:collectionId/:elfinId/:filename        ch.bsisa.hyperbird.controllers.Api.getElfinAttachment(collectionId, elfinId)
 #POST           /api/melfin/:collectionId/:elfinId/:filename        ch.bsisa.hyperbird.controllers.Api.createElfinAttachment(collectionId, elfinId)
@@ -101,32 +103,32 @@ GET      /api/melfin/create/prestation/:referenceYear/:createYear/:owner       c
 #                     SecureSocial Routes                             #
 #######################################################################
 # Login page
-GET      /login                                                  securesocial.controllers.LoginPage.login
-GET      /logout                                                 securesocial.controllers.LoginPage.logout
+GET      /login                                                            securesocial.controllers.LoginPage.login
+GET      /logout                                                           securesocial.controllers.LoginPage.logout
 
 # User Registration and password handling 
-GET      /signup                                                 securesocial.controllers.Registration.startSignUp
-POST     /signup                                                 securesocial.controllers.Registration.handleStartSignUp
-GET      /signup/:token                                          securesocial.controllers.Registration.signUp(token)
-POST     /signup/:token                                          securesocial.controllers.Registration.handleSignUp(token)
-GET      /reset                                                  securesocial.controllers.Registration.startResetPassword
-POST     /reset                                                  securesocial.controllers.Registration.handleStartResetPassword
-GET      /reset/:token                                           securesocial.controllers.Registration.resetPassword(token)
-POST     /reset/:token                                           securesocial.controllers.Registration.handleResetPassword(token)
-GET      /password                                               securesocial.controllers.PasswordChange.page
-POST     /password                                               securesocial.controllers.PasswordChange.handlePasswordChange
+GET      /signup                                                           securesocial.controllers.Registration.startSignUp
+POST     /signup                                                           securesocial.controllers.Registration.handleStartSignUp
+GET      /signup/:token                                                    securesocial.controllers.Registration.signUp(token)
+POST     /signup/:token                                                    securesocial.controllers.Registration.handleSignUp(token)
+GET      /reset                                                            securesocial.controllers.Registration.startResetPassword
+POST     /reset                                                            securesocial.controllers.Registration.handleStartResetPassword
+GET      /reset/:token                                                     securesocial.controllers.Registration.resetPassword(token)
+POST     /reset/:token                                                     securesocial.controllers.Registration.handleResetPassword(token)
+GET      /password                                                         securesocial.controllers.PasswordChange.page
+POST     /password                                                         securesocial.controllers.PasswordChange.handlePasswordChange
 
 # Providers entry points
-GET      /authenticate/:provider                                 securesocial.controllers.ProviderController.authenticate(provider)
-POST     /authenticate/:provider                                 securesocial.controllers.ProviderController.authenticateByPost(provider)
-GET      /not-authorized                                         securesocial.controllers.ProviderController.notAuthorized
+GET      /authenticate/:provider                                           securesocial.controllers.ProviderController.authenticate(provider)
+POST     /authenticate/:provider                                           securesocial.controllers.ProviderController.authenticateByPost(provider)
+GET      /not-authorized                                                   securesocial.controllers.ProviderController.notAuthorized
 
 
 # Static resource from hb-ui project 
-GET      /assets/*file                                           controllers.Assets.at(path="/public", file)
+GET      /assets/*file                                                     controllers.Assets.at(path="/public", file)
 # Deep URL Single page AngularJS application redirect
 # Required for HTML5 mode support for AngularJS
-GET      /*any                                                   ch.bsisa.hyperbird.controllers.Application.angularJsIndex(any)
+GET      /*any                                                             ch.bsisa.hyperbird.controllers.Application.angularJsIndex(any)
 
 
 
