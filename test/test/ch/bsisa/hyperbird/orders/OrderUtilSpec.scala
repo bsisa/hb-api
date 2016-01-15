@@ -47,7 +47,7 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
       <C POS="5">94.75</C>
       <C POS="6">false</C>
     </L>
-    <L POS="2">
+    <L POS="3">
       <C POS="1">TOTAL_GROSS</C>
       <C POS="2">Total brut</C>
       <C POS="3"/>
@@ -55,7 +55,7 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
       <C POS="5">9999.00</C>
       <C POS="6">false</C>
     </L>
-    <L POS="3">
+    <L POS="4">
       <C POS="1">REDUCTION_RATE</C>
       <C POS="2">Rabais</C>
       <C POS="3">1.0</C>
@@ -63,7 +63,7 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
       <C POS="5">0.00</C>
       <C POS="6">true</C>
     </L>
-    <L POS="4">
+    <L POS="5">
       <C POS="1">DISCOUNT_RATE</C>
       <C POS="2">Escompte</C>
       <C POS="3">2.0</C>
@@ -71,7 +71,7 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
       <C POS="5">0.00</C>
       <C POS="6">true</C>
     </L>
-    <L POS="5">
+    <L POS="6">
       <C POS="1">ROUNDING_AMOUNT</C>
       <C POS="2">Arrondi</C>
       <C POS="3"/>
@@ -79,7 +79,7 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
       <C POS="5">5.00</C>
       <C POS="6">true</C>
     </L>
-    <L POS="6">
+    <L POS="7">
       <C POS="1">VAT_RATE</C>
       <C POS="2">TVA</C>
       <C POS="3">8.0</C>
@@ -87,7 +87,7 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
       <C POS="5">0.00</C>
       <C POS="6">true</C>
     </L>
-    <L POS="7">
+    <L POS="8">
       <C POS="1">TOTAL_NET</C>
       <C POS="2">Total net</C>
       <C POS="3"/>
@@ -103,15 +103,17 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
 
 
   s"The number of carIn.FRACTION.L " should {
-    s"equals 7" in {
+    s"equals 8" in {
      val nbLinesOpt = carIn.FRACTION.map { fractionMat => 
        fractionMat.L.foldLeft(0)( (acc, l) => acc + 1) 
      } 
-     val success = nbLinesOpt match {
-       case Some(nbLines) => nbLines == 7 
-       case None => false
-     }
-     success
+//     val success = nbLinesOpt match {
+//       case Some(nbLines) => nbLines == 7 
+//       case None => false
+//     }
+//     success
+     
+     nbLinesOpt.get mustEqual 8
     }
   }
   
@@ -120,11 +122,12 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
      val nbLinesOpt = carOut.FRACTION.map { fractionMat => 
        fractionMat.L.foldLeft(0)( (acc, l) => acc + 1) 
      } 
-     val success = nbLinesOpt match {
-       case Some(nbLines) => nbLines == 8 
-       case None => false
-     }
-     success
+//     val success = nbLinesOpt match {
+//       case Some(nbLines) => nbLines == 8 
+//       case None => false
+//     }
+//     success
+     nbLinesOpt.get mustEqual 8
     }
   }  
 
