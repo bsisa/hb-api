@@ -89,10 +89,8 @@ object OrderUtil {
           }         
         resSeq.flatten
   }
-//    for ( (l,i) <- linesWithoutGrossTotal.zipWithIndex) yield {
-//            if (i!=grossTotalLineIndex) Seq(l) else Seq(newComputedGrossTotalLine,l)
-//          }         
 
+  
   /**
    * Computes percentages, gross and net amounts given provided order details.
    */
