@@ -38,7 +38,7 @@ object OrderUtil {
 
   /**
    * Compute the total gross amount from entered MANUAL_AMOUNT lines
-   * if any. Returns None otherwise. 
+   * if any. Returns None otherwise.
    */
   def getTotalGrossAmount(fraction: MATRICETypable): Option[Double] = {
 
@@ -52,23 +52,25 @@ object OrderUtil {
       }.seq.size == 1
     }
     //println(s"userEnteredOrderLines => \n${userEnteredOrderLines}")
-    
-    // Compute total for user entries
+
+    // Build a sequence of Double values to compute total from
     val grossTotal = userEnteredOrderLines.map { l =>
       // Get cell containing amount (Position 5)
       val amountCellSeq = l.C.filter { c => c.POS == 5 }
       // Make sure we have a single match
       if (amountCellSeq.size == 1) {
         val amountCellString = getMixedContent(amountCellSeq(0).mixed)
-        val amountCellDoubleValue = amountCellString.toDouble
+        val amountCellDoubleValue = amountCellString match {
+          case "" => 0d
+          case s => s.toDouble
+        }
         Option(amountCellDoubleValue)
-        //amountCellDoubleValue
       } else {
         None
       }
     }
-    //}.sum
 
+    // Compute total for Some double value return None otherwise.
     if (grossTotal.exists { x => x match { case Some(y) => true } }) {
       val grossTotalOpt = grossTotal.foldLeft(0d) { (acc, el) =>
         el match {
@@ -81,89 +83,156 @@ object OrderUtil {
       None
     }
   }
-  
-  
-  def insertAt(elementToInsert : L, sequenceToUpdate : Seq[L], index : Int) : Seq[L] = {
-        val resSeq = for ( (el,i) <- sequenceToUpdate.zipWithIndex) yield {
-            if (i!=index) Seq(el) else Seq(elementToInsert,el)
-          }         
-        resSeq.flatten
+
+  /**
+   * Update gross amount total line
+   */
+  def updateGrossAmountLine(fract: MATRICETypable): (MATRICETypable, Option[Double]) = {
+    // 1. Compute gross amount
+    val grossTotalAmntOpt = getTotalGrossAmount(fract)
+    println(s"1. grossTotalAmntOpt = ${grossTotalAmntOpt}")
+    // 2. Prepare gross amount line if some gross amount returned 
+    val newComputedGrossTotalLineOpt = grossTotalAmntOpt match {
+      case Some(grossTotalAmnt) =>
+        // Create gross total entry using computed total
+        val newGrossTotalComputedLine = getTotalGrossLine(grossTotalAmnt)
+        Option(newGrossTotalComputedLine)
+      case None =>
+        // Make sure there was a total gross line with user entered amount and keept it
+        val grossAmtLines = fract.L.filter { l => l.C.exists { c => c.POS == 1 && getMixedContent(c.mixed) == GROSS_AMOUNT_TOTAL } }
+        if (grossAmtLines.size == 1) {
+          // Ok - do nothing
+        } else if (grossAmtLines.size > 1) {
+          // Only one GROSS_AMOUNT_TOTAL line allowed: Data integrity problem - TODO: provide some end-user feedback            
+        } else {
+          // No gross amount line is unexpected: Data integrity problem - TODO: provide some end-user feedback  
+        }
+        //fract.L.exists { l => l.C.exists { c => c.POS == 1 && getMixedContent(c.mixed) == GROSS_AMOUNT_TOTAL } }
+        None
+    }
+    println(s"2. newComputedGrossTotalLineOpt = ${newComputedGrossTotalLineOpt}")
+
+    // 3. Replace gross amount line if available
+    val fractionUpdatedWithGrossTotal = newComputedGrossTotalLineOpt match {
+      case Some(newComputedGrossTotalLine) =>
+        // Find current gross total line
+        val grossTotalLineIndex = fract.L.indexWhere { l =>
+          l.C.exists { c => (c.POS == 1 && getMixedContent(c.mixed) == GROSS_AMOUNT_TOTAL) }
+        }
+        println(s"3. grossTotalLineIndex = ${grossTotalLineIndex}")
+        // Remove existing gross total line
+        val linesWithoutGrossTotal = fract.L.filterNot { l =>
+          l.C.exists { c => (c.POS == 1 && getMixedContent(c.mixed) == GROSS_AMOUNT_TOTAL) }
+        }
+
+        println(s"3. linesWithoutGrossTotal.size = ${linesWithoutGrossTotal.size}")
+
+        // Insert newGrossTotalComputedLine to original FRACTION lines
+        val newLines = insertAt(newComputedGrossTotalLine, linesWithoutGrossTotal, grossTotalLineIndex)
+        println(s"3. newLines.size = ${newLines.size}")
+
+        val updatedFraction = MATRICEType(newLines: _*)
+        // Insert newGrossTotalComputedLine to original FRACTION lines
+        //val updatedSeqL = fract.L :+ newComputedGrossTotalLine
+        // Create a new FRACTION 
+        //val updatedFraction = MATRICEType(updatedSeqL: _*)
+        println(s"3. updatedFraction = ${updatedFraction}")
+        updatedFraction
+      case None =>
+        // Preserve fraction
+        println(s"3. Preserved fraction = ${fract}")
+        fract
+    }
+    (fractionUpdatedWithGrossTotal, grossTotalAmntOpt)
   }
 
-  
+  /**
+   * Update reduction rate line
+   */
+  def updateReductionRateLine(grossValue: Double, fract: MATRICETypable): MATRICETypable = {
+
+    // Get rate lines
+    //val rateLines = fract.L.filter { l => l.C.exists { c => c.POS == 1 && getMixedContent(c.mixed) == REDUCTION_RATE } }
+
+    val rateLinesWithIndex = fract.L.zipWithIndex.filter { case (l, i) => l.C.exists { c => c.POS == 1 && getMixedContent(c.mixed) == REDUCTION_RATE } }
+
+    //foldLeft(List[L]())((acc,l) => l :: acc )
+    val updatedRateLinesWithIndex =
+      for { (rateLine, i) <- rateLinesWithIndex } yield {
+
+        val rateValue = getMixedContent(rateLine.C.find { c => c.POS == 3 }.get.mixed) match {
+          case "" => 0d
+          case s => s.toDouble / 100d
+        }
+        val rateAmount = BigDecimal(rateValue * grossValue).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+        val updateCPos5 = C(setMixedContent(f"$rateAmount%2.2f"), POS = 5)
+
+        val updatedCSeq = Seq(
+          rateLine.C.find { c => c.POS == 1 }.get,
+          rateLine.C.find { c => c.POS == 2 }.get,
+          rateLine.C.find { c => c.POS == 3 }.get,
+          rateLine.C.find { c => c.POS == 4 }.get,
+          updateCPos5);
+        // Return a new line L with computed C position 5 and leaving rest unchanged
+        (L(C = updatedCSeq, POS = rateLine.POS), i)
+      }
+
+    val updatedFractionL = replaceAt(linesToUpdateAtIndex = updatedRateLinesWithIndex, sequenceToUpdate = fract.L)
+
+    val updatedFraction = MATRICEType(updatedFractionL: _*)
+    updatedFraction
+
+  }
+
+  /**
+   * Generic insertion of line element `L` in a sequence of lines `Seq[L]` at `index` position.
+   */
+  def insertAt(elementToInsert: L, sequenceToUpdate: Seq[L], index: Int): Seq[L] = {
+    val resSeq = for ((el, i) <- sequenceToUpdate.zipWithIndex) yield {
+      if (i != index) Seq(el) else Seq(elementToInsert, el)
+    }
+    resSeq.flatten
+  }
+
+  /**
+   * Generic update of lines element `L` ain a sequence of lines `Seq[L]` at `index` position.
+   */
+  def replaceAt(linesToUpdateAtIndex: Seq[(L, Int)], sequenceToUpdate: Seq[L]): Seq[L] = {
+    val resSeq = for ((currentLine, i) <- sequenceToUpdate.zipWithIndex) yield {
+      val elToUpdateOpt = linesToUpdateAtIndex.find { case (l, j) => j == i }
+      elToUpdateOpt match {
+        case Some(elToUpdateWithIdx) => elToUpdateWithIdx._1
+        case None                    => currentLine
+      }
+    }
+    resSeq
+  }
+
   /**
    * Computes percentages, gross and net amounts given provided order details.
    */
   def computeOrderFigures(carP: CARACTERISTIQUE): CARACTERISTIQUE = {
-    
+
     // Extract FRACTION if available create a new FRACTION creating, updating, copying original FRACTION data as necessary.
     val updatedFractionOpt = carP.FRACTION.map { fract =>
 
-      // 1. Compute gross amount
-      val grossTotalAmntOpt = getTotalGrossAmount(fract)
-      println(s"1. grossTotalAmntOpt = ${grossTotalAmntOpt}")
-      // 2. Prepare gross amount line if some gross amount returned 
-      val newComputedGrossTotalLineOpt = grossTotalAmntOpt match {
-        case Some(grossTotalAmnt) =>
-          // Create gross total entry using computed total
-          val newGrossTotalComputedLine = getTotalGrossLine(grossTotalAmnt)
-          Option(newGrossTotalComputedLine)
-        case None =>
-          // Make sure there was a total gross line with user entered amount and keept it
-          val grossAmtLines = fract.L.filter { l => l.C.exists { c => c.POS == 1 && getMixedContent(c.mixed) == GROSS_AMOUNT_TOTAL } }
-          if (grossAmtLines.size == 1) {
-            // Ok - do nothing
-          } else if (grossAmtLines.size > 1) {
-            // Only one GROSS_AMOUNT_TOTAL line allowed: Data integrity problem - TODO: provide some end-user feedback            
-          } else {
-            // No gross amount line is unexpected: Data integrity problem - TODO: provide some end-user feedback  
-          }
-          //fract.L.exists { l => l.C.exists { c => c.POS == 1 && getMixedContent(c.mixed) == GROSS_AMOUNT_TOTAL } }
-          None
-      }
-      println(s"2. newComputedGrossTotalLineOpt = ${newComputedGrossTotalLineOpt}")
-      
-      // 3. Replace gross amount line if available
-      val fractionUpdatedWithGrossTotal = newComputedGrossTotalLineOpt match {
-        case Some(newComputedGrossTotalLine) =>
-          // Find current gross total line
-          val grossTotalLineIndex = fract.L.indexWhere { l =>
-            l.C.exists { c => (c.POS == 1 && getMixedContent(c.mixed) == GROSS_AMOUNT_TOTAL) }
-          }
-          println(s"3. grossTotalLineIndex = ${grossTotalLineIndex}")
-          // Remove existing gross total line
-          val linesWithoutGrossTotal = fract.L.filterNot {l =>
-            l.C.exists { c => (c.POS == 1 && getMixedContent(c.mixed) == GROSS_AMOUNT_TOTAL) }
-          }
-
-          println(s"3. linesWithoutGrossTotal.size = ${linesWithoutGrossTotal.size}")
-          
-          // Insert newGrossTotalComputedLine to original FRACTION lines
-          val newLines = insertAt(newComputedGrossTotalLine,linesWithoutGrossTotal,grossTotalLineIndex)
-          println(s"3. newLines.size = ${newLines.size}")
-          
-          
-          val updatedFraction = MATRICEType(newLines: _*)
-          // Insert newGrossTotalComputedLine to original FRACTION lines
-          //val updatedSeqL = fract.L :+ newComputedGrossTotalLine
-          // Create a new FRACTION 
-          //val updatedFraction = MATRICEType(updatedSeqL: _*)
-          println(s"3. updatedFraction = ${updatedFraction}")
-          updatedFraction
-        case None =>
-          // Preserve fraction
-          println(s"3. Preserved fraction = ${fract}")
-          fract
-      }
+      // 1. Proceed with MANUAL_AMOUNT / GROSS_TOTAL
+      val (fractionWithGrossTotalUpdated, grossTotalOpt) = updateGrossAmountLine(fract)
 
       // 4. Find and update REDUCTION_RATE
+      val fractionUpdated = grossTotalOpt match {
+        case Some(grossTotal) =>
+          val fractionWithRatesUpdated = updateReductionRateLine(grossTotal, fractionWithGrossTotalUpdated)
+          fractionWithRatesUpdated
+        case None => fractionWithGrossTotalUpdated
+      }
+
       // 5. Find and update DISCOUNT_RATE 
       // 6. Find and do nothing ROUNDING_AMOUNT
       // 7. Find and update VAT_RATE     
       // 8. Compute and replace NET_AMOUNT_TOTAL      
-      
-      fractionUpdatedWithGrossTotal
-      
+
+      fractionUpdated
     }
 
     // Create new CARACTERISTIQUE 
