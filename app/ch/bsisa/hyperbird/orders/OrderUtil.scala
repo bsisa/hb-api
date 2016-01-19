@@ -33,7 +33,42 @@ object OrderUtil {
                         </L>
 
     ElfinFormat.lFromXml(totalGrossXml)
+  }
 
+  def getTotalNetLine(total: Double): L = {
+
+    val totalNetXml = <L POS="2">
+                        <C POS="1">TOTAL_NET</C>
+                        <C POS="2">Total net</C>
+                        <C POS="3"/>
+                        <C POS="4"/>
+                        <C POS="5">{ f"$total%2.2f" }</C>
+                        <C POS="6">false</C>
+                      </L>
+
+    ElfinFormat.lFromXml(totalNetXml)
+  }
+
+  /**
+   * Return the amount found at cell C position 5 for a given line L
+   * if available.
+   * Remark: An empty string is considered as value 0.0
+   */
+  def getLineAmount(l: L): Option[Double] = {
+
+    // Get cell containing amount (Position 5)
+    val amountCellSeq = l.C.filter { c => c.POS == 5 }
+    // Make sure we have a single match
+    if (amountCellSeq.size == 1) {
+      val amountCellString = getMixedContent(amountCellSeq(0).mixed)
+      val amountCellDoubleValue = amountCellString match {
+        case "" => 0d
+        case s  => s.toDouble
+      }
+      Option(amountCellDoubleValue)
+    } else {
+      None
+    }
   }
 
   /**
@@ -56,22 +91,28 @@ object OrderUtil {
     // Build a sequence of Double values to compute total from
     val grossTotal = userEnteredOrderLines.map { l =>
       // Get cell containing amount (Position 5)
-      val amountCellSeq = l.C.filter { c => c.POS == 5 }
-      // Make sure we have a single match
-      if (amountCellSeq.size == 1) {
-        val amountCellString = getMixedContent(amountCellSeq(0).mixed)
-        val amountCellDoubleValue = amountCellString match {
-          case "" => 0d
-          case s => s.toDouble
-        }
-        Option(amountCellDoubleValue)
-      } else {
-        None
-      }
+      getLineAmount(l)
+      //      val amountCellSeq = l.C.filter { c => c.POS == 5 }
+      //      // Make sure we have a single match
+      //      if (amountCellSeq.size == 1) {
+      //        val amountCellString = getMixedContent(amountCellSeq(0).mixed)
+      //        val amountCellDoubleValue = amountCellString match {
+      //          case "" => 0d
+      //          case s => s.toDouble
+      //        }
+      //        Option(amountCellDoubleValue)
+      //      } else {
+      //        None
+      //      }
     }
 
     // Compute total for Some double value return None otherwise.
-    if (grossTotal.exists { x => x match { case Some(y) => true } }) {
+    if (grossTotal.exists { x =>
+      x match {
+        case Some(y) => true
+        case None    => false
+      }
+    }) {
       val grossTotalOpt = grossTotal.foldLeft(0d) { (acc, el) =>
         el match {
           case Some(nb) => acc + nb
@@ -128,7 +169,7 @@ object OrderUtil {
         println(s"3. linesWithoutGrossTotal.size = ${linesWithoutGrossTotal.size}")
 
         // Insert newGrossTotalComputedLine to original FRACTION lines
-        val newLines = insertAt(newComputedGrossTotalLine, linesWithoutGrossTotal, grossTotalLineIndex)
+        val newLines = replaceAt(newComputedGrossTotalLine, linesWithoutGrossTotal, grossTotalLineIndex)
         println(s"3. newLines.size = ${newLines.size}")
 
         val updatedFraction = MATRICEType(newLines: _*)
@@ -152,12 +193,15 @@ object OrderUtil {
   def updateRateLines(grossValue: Double, fract: MATRICETypable): MATRICETypable = {
 
     // Get rate lines
-    val rateLinesWithIndex = fract.L.zipWithIndex.filter { case (l, i) => l.C.exists { 
-      c => (c.POS == 1 && (
-          getMixedContent(c.mixed) == REDUCTION_RATE || 
-          getMixedContent(c.mixed) == DISCOUNT_RATE || 
-          getMixedContent(c.mixed) == VAT_RATE))
-      } }
+    val rateLinesWithIndex = fract.L.zipWithIndex.filter {
+      case (l, i) => l.C.exists {
+        c =>
+          (c.POS == 1 && (
+            getMixedContent(c.mixed) == REDUCTION_RATE ||
+            getMixedContent(c.mixed) == DISCOUNT_RATE ||
+            getMixedContent(c.mixed) == VAT_RATE))
+      }
+    }
 
     //foldLeft(List[L]())((acc,l) => l :: acc )
     val updatedRateLinesWithIndex =
@@ -165,7 +209,7 @@ object OrderUtil {
 
         val rateValue = getMixedContent(rateLine.C.find { c => c.POS == 3 }.get.mixed) match {
           case "" => 0d
-          case s => s.toDouble / 100d
+          case s  => s.toDouble / 100d
         }
         val rateAmount = BigDecimal(rateValue * grossValue).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
         val updateCPos5 = C(setMixedContent(f"$rateAmount%2.2f"), POS = 5)
@@ -188,9 +232,40 @@ object OrderUtil {
   }
 
   /**
+   * Update net total line
+   */
+  def updateNetTotalLine(fract: MATRICETypable): MATRICETypable = {
+
+    // Get all lines amount to sum
+    val amountLines = fract.L.filterNot { l =>
+      l.C.exists {
+        c =>
+          (c.POS == 1 && (
+            getMixedContent(c.mixed) == MANUAL_AMOUNT ||
+            getMixedContent(c.mixed) == NET_AMOUNT_TOTAL))
+      }
+    }
+
+    val netAmountSum = amountLines.foldLeft(0d) {
+      (acc, l) =>
+        getLineAmount(l) match {
+          case Some(amount) => acc + amount
+          case None         => acc
+        }
+    }
+
+    val updatedNetAmountLine = getTotalNetLine(netAmountSum)
+    val currentNetAmountLineIndex = fract.L.indexWhere { l => l.C.exists { c => (c.POS == 1 && getMixedContent(c.mixed) == NET_AMOUNT_TOTAL) } }
+    val updatedOrderLines = replaceAt(elementToInsert = updatedNetAmountLine, sequenceToUpdate = fract.L, index = currentNetAmountLineIndex)
+    val updatedFraction = MATRICEType(updatedOrderLines: _*)
+    updatedFraction
+
+  }
+
+  /**
    * Generic insertion of line element `L` in a sequence of lines `Seq[L]` at `index` position.
    */
-  def insertAt(elementToInsert: L, sequenceToUpdate: Seq[L], index: Int): Seq[L] = {
+  def replaceAt(elementToInsert: L, sequenceToUpdate: Seq[L], index: Int): Seq[L] = {
     val resSeq = for ((el, i) <- sequenceToUpdate.zipWithIndex) yield {
       if (i != index) Seq(el) else Seq(elementToInsert, el)
     }
@@ -225,14 +300,11 @@ object OrderUtil {
       // 4. Find and update REDUCTION_RATE
       val fractionUpdated = grossTotalOpt match {
         case Some(grossTotal) =>
-          val fractionWithRatesUpdated = updateReductionRateLine(grossTotal, fractionWithGrossTotalUpdated)
+          val fractionWithRatesUpdated = updateRateLines(grossTotal, fractionWithGrossTotalUpdated)
           fractionWithRatesUpdated
         case None => fractionWithGrossTotalUpdated
       }
 
-      // 5. Find and update DISCOUNT_RATE 
-      // 6. Find and do nothing ROUNDING_AMOUNT
-      // 7. Find and update VAT_RATE     
       // 8. Compute and replace NET_AMOUNT_TOTAL      
 
       fractionUpdated
