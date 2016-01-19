@@ -107,12 +107,7 @@ object OrderUtil {
     }
 
     // Compute total for Some double value return None otherwise.
-    if (grossTotal.exists { x =>
-      x match {
-        case Some(y) => true
-        case None    => false
-      }
-    }) {
+    if (grossTotal.exists { x => x.isDefined }) {
       val grossTotalOpt = grossTotal.foldLeft(0d) { (acc, el) =>
         el match {
           case Some(nb) => acc + nb
