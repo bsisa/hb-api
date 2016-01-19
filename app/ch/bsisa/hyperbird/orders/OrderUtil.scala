@@ -89,22 +89,7 @@ object OrderUtil {
     //println(s"userEnteredOrderLines => \n${userEnteredOrderLines}")
 
     // Build a sequence of Double values to compute total from
-    val grossTotal = userEnteredOrderLines.map { l =>
-      // Get cell containing amount (Position 5)
-      getLineAmount(l)
-      //      val amountCellSeq = l.C.filter { c => c.POS == 5 }
-      //      // Make sure we have a single match
-      //      if (amountCellSeq.size == 1) {
-      //        val amountCellString = getMixedContent(amountCellSeq(0).mixed)
-      //        val amountCellDoubleValue = amountCellString match {
-      //          case "" => 0d
-      //          case s => s.toDouble
-      //        }
-      //        Option(amountCellDoubleValue)
-      //      } else {
-      //        None
-      //      }
-    }
+    val grossTotal = userEnteredOrderLines.map { l => getLineAmount(l) }
 
     // Compute total for Some double value return None otherwise.
     if (grossTotal.exists { x => x.isDefined }) {
@@ -168,10 +153,6 @@ object OrderUtil {
         println(s"3. newLines.size = ${newLines.size}")
 
         val updatedFraction = MATRICEType(newLines: _*)
-        // Insert newGrossTotalComputedLine to original FRACTION lines
-        //val updatedSeqL = fract.L :+ newComputedGrossTotalLine
-        // Create a new FRACTION 
-        //val updatedFraction = MATRICEType(updatedSeqL: _*)
         println(s"3. updatedFraction = ${updatedFraction}")
         updatedFraction
       case None =>
@@ -198,7 +179,6 @@ object OrderUtil {
       }
     }
 
-    //foldLeft(List[L]())((acc,l) => l :: acc )
     val updatedRateLinesWithIndex =
       for { (rateLine, i) <- rateLinesWithIndex } yield {
 
@@ -241,6 +221,8 @@ object OrderUtil {
       }
     }
 
+    println(s">>>> amountLines: \n${amountLines}")
+    
     val netAmountSum = amountLines.foldLeft(0d) {
       (acc, l) =>
         getLineAmount(l) match {
@@ -293,16 +275,18 @@ object OrderUtil {
       val (fractionWithGrossTotalUpdated, grossTotalOpt) = updateGrossAmountLine(fract)
 
       // 4. Find and update REDUCTION_RATE
-      val fractionUpdated = grossTotalOpt match {
+      val fractionWithRates = grossTotalOpt match {
         case Some(grossTotal) =>
           val fractionWithRatesUpdated = updateRateLines(grossTotal, fractionWithGrossTotalUpdated)
           fractionWithRatesUpdated
         case None => fractionWithGrossTotalUpdated
       }
 
+      val fractionWithNetTotal = updateNetTotalLine(fractionWithRates)
+      
       // 8. Compute and replace NET_AMOUNT_TOTAL      
 
-      fractionUpdated
+      fractionWithNetTotal
     }
 
     // Create new CARACTERISTIQUE 
