@@ -147,14 +147,17 @@ object OrderUtil {
   }
 
   /**
-   * Update reduction rate line
+   * Update rate lines
    */
-  def updateReductionRateLine(grossValue: Double, fract: MATRICETypable): MATRICETypable = {
+  def updateRateLines(grossValue: Double, fract: MATRICETypable): MATRICETypable = {
 
     // Get rate lines
-    //val rateLines = fract.L.filter { l => l.C.exists { c => c.POS == 1 && getMixedContent(c.mixed) == REDUCTION_RATE } }
-
-    val rateLinesWithIndex = fract.L.zipWithIndex.filter { case (l, i) => l.C.exists { c => c.POS == 1 && getMixedContent(c.mixed) == REDUCTION_RATE } }
+    val rateLinesWithIndex = fract.L.zipWithIndex.filter { case (l, i) => l.C.exists { 
+      c => (c.POS == 1 && (
+          getMixedContent(c.mixed) == REDUCTION_RATE || 
+          getMixedContent(c.mixed) == DISCOUNT_RATE || 
+          getMixedContent(c.mixed) == VAT_RATE))
+      } }
 
     //foldLeft(List[L]())((acc,l) => l :: acc )
     val updatedRateLinesWithIndex =
