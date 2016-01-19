@@ -149,7 +149,7 @@ object OrderUtil {
         println(s"3. linesWithoutGrossTotal.size = ${linesWithoutGrossTotal.size}")
 
         // Insert newGrossTotalComputedLine to original FRACTION lines
-        val newLines = replaceAt(newComputedGrossTotalLine, linesWithoutGrossTotal, grossTotalLineIndex)
+        val newLines = insertAt(newComputedGrossTotalLine, linesWithoutGrossTotal, grossTotalLineIndex)
         println(s"3. newLines.size = ${newLines.size}")
 
         val updatedFraction = MATRICEType(newLines: _*)
@@ -242,12 +242,22 @@ object OrderUtil {
   /**
    * Generic insertion of line element `L` in a sequence of lines `Seq[L]` at `index` position.
    */
-  def replaceAt(elementToInsert: L, sequenceToUpdate: Seq[L], index: Int): Seq[L] = {
+  def insertAt(elementToInsert: L, sequenceToUpdate: Seq[L], index: Int): Seq[L] = {
     val resSeq = for ((el, i) <- sequenceToUpdate.zipWithIndex) yield {
       if (i != index) Seq(el) else Seq(elementToInsert, el)
     }
     resSeq.flatten
   }
+  
+  /**
+   * Generic replacement of line element `L` in a sequence of lines `Seq[L]` at `index` position.
+   */
+  def replaceAt(elementToInsert: L, sequenceToUpdate: Seq[L], index: Int): Seq[L] = {
+    val resSeq = for ((el, i) <- sequenceToUpdate.zipWithIndex) yield {
+      if (i != index) el else elementToInsert
+    }
+    resSeq
+  }  
 
   /**
    * Generic update of lines element `L` ain a sequence of lines `Seq[L]` at `index` position.
