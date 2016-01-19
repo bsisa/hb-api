@@ -104,12 +104,13 @@ object JsonXmlConverter {
   }
 
   /**
-   * @deprecated - do not use, has issues loosing data structure and data.
+   * @deprecated - Do not use, has issues loosing data structure and data.
+   * Note: Currently use in a single test: elfinTest001JsValueBackToXmlString in JsonXmlConverterSpec
    * Converts a JSON string to XML.
    */
-//  def jsonStringToXml(jsonStr: String) = {
-//    Xml.toXml(parse(jsonStr))
-//  }
+  def jsonStringToXml(jsonStr: String) = {
+    Xml.toXml(parse(jsonStr))
+  }
 
   /**
    * Dumps a JsValue to file.
