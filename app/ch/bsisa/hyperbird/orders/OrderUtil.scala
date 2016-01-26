@@ -72,6 +72,24 @@ object OrderUtil {
   }
 
   /**
+   * Return single gross amount line amount value as Some(Double).
+   * If None is returned it can be considered a data integrity problem.
+   */
+  def getGrossAmount(fract: MATRICETypable): Option[Double] = {
+    // Filter fraction preserving only gross amount line
+    val grossAmtLines = fract.L.filter { l => l.C.exists { c => c.POS == 1 && getMixedContent(c.mixed) == GROSS_AMOUNT_TOTAL } }
+    if (grossAmtLines.size == 1) {
+      getLineAmount(grossAmtLines(0))
+    } else if (grossAmtLines.size > 1) {
+      // Only one GROSS_AMOUNT_TOTAL line allowed: Data integrity problem
+      None
+    } else {
+      // The MUST be one gross amount line: Data integrity problem
+      None
+    }
+  }
+
+  /**
    * Compute the total gross amount from entered MANUAL_AMOUNT lines
    * if any. Returns None otherwise.
    */
@@ -101,6 +119,7 @@ object OrderUtil {
       }
       Some(grossTotalOpt)
     } else {
+      // Check there is a single 
       None
     }
   }
@@ -122,7 +141,7 @@ object OrderUtil {
         // Make sure there was a total gross line with user entered amount and keept it
         val grossAmtLines = fract.L.filter { l => l.C.exists { c => c.POS == 1 && getMixedContent(c.mixed) == GROSS_AMOUNT_TOTAL } }
         if (grossAmtLines.size == 1) {
-          // Ok - do nothing
+          // Ok
         } else if (grossAmtLines.size > 1) {
           // Only one GROSS_AMOUNT_TOTAL line allowed: Data integrity problem - TODO: provide some end-user feedback            
         } else {
@@ -134,7 +153,8 @@ object OrderUtil {
     println(s"2. newComputedGrossTotalLineOpt = ${newComputedGrossTotalLineOpt}")
 
     // 3. Replace gross amount line if available
-    val fractionUpdatedWithGrossTotal = newComputedGrossTotalLineOpt match {
+    //val fractionUpdatedWithGrossTotal = newComputedGrossTotalLineOpt match {
+    val fractionAndGrossTotal = newComputedGrossTotalLineOpt match {
       case Some(newComputedGrossTotalLine) =>
         // Find current gross total line
         val grossTotalLineIndex = fract.L.indexWhere { l =>
@@ -154,13 +174,14 @@ object OrderUtil {
 
         val updatedFraction = MATRICEType(newLines: _*)
         println(s"3. updatedFraction = ${updatedFraction}")
-        updatedFraction
+        (updatedFraction,grossTotalAmntOpt)
       case None =>
         // Preserve fraction
         println(s"3. Preserved fraction = ${fract}")
-        fract
+        (fract, getGrossAmount(fract))
     }
-    (fractionUpdatedWithGrossTotal, grossTotalAmntOpt)
+    //(fractionUpdatedWithGrossTotal, grossTotalAmntOpt)
+    fractionAndGrossTotal
   }
 
   /**
@@ -222,7 +243,7 @@ object OrderUtil {
     }
 
     println(s">>>> amountLines: \n${amountLines}")
-    
+
     val netAmountSum = amountLines.foldLeft(0d) {
       (acc, l) =>
         getLineAmount(l) match {
@@ -248,7 +269,7 @@ object OrderUtil {
     }
     resSeq.flatten
   }
-  
+
   /**
    * Generic replacement of line element `L` in a sequence of lines `Seq[L]` at `index` position.
    */
@@ -257,7 +278,7 @@ object OrderUtil {
       if (i != index) el else elementToInsert
     }
     resSeq
-  }  
+  }
 
   /**
    * Generic update of lines element `L` ain a sequence of lines `Seq[L]` at `index` position.
@@ -293,7 +314,7 @@ object OrderUtil {
       }
 
       val fractionWithNetTotal = updateNetTotalLine(fractionWithRates)
-      
+
       // 8. Compute and replace NET_AMOUNT_TOTAL      
 
       fractionWithNetTotal
