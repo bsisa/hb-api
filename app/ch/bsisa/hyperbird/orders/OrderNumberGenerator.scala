@@ -37,7 +37,7 @@ object OrderNumberGenerator {
       response.id match {
         case Some(number) => response.id  
         case None => 
-          Logger.warn("Orders number generator service not available.")
+          Logger.error("Orders number generator service not available.")
           response.id
       } 
       
