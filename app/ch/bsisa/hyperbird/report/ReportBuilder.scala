@@ -68,6 +68,19 @@ object ReportBuilder {
     val contentTemplateName = reportElfin.CARACTERISTIQUE.get.CAR2.get.VALEUR.get
     val footerTemplateName = reportElfin.CARACTERISTIQUE.get.CAR3.get.VALEUR.get
     val queryFileName = reportElfin.CARACTERISTIQUE.get.CAR4.get.VALEUR.get
+    // Extract CARSET.CAR[@NAME='headerMessage']/@VALEUR and return the configured message as string
+//    val headerMessageOption: Option[String] = reportElfin.CARACTERISTIQUE.get.CARSET match {
+//        case Some(carset) =>
+//          carset.CAR.find(car => car.NOM.getOrElse(false) == "headerMessage") match {
+//            case Some(car) => car.VALEUR
+//            case None => None
+//          }
+//        case None => None
+//      }
+    
+    val headerMessageOption: Option[String] = reportElfin.CARACTERISTIQUE.get.CARSET.flatMap{ carset =>
+      carset.CAR.find{ car => car.NOM.getOrElse(false) == "headerMessage" }.flatMap { car => car.VALEUR }
+    }        
 
     // Get reportTitle, reportFileNamePrefix information from query parameters if available 
     // fallback to default from ELFIN report configuration otherwise.
@@ -150,17 +163,36 @@ object ReportBuilder {
         case Some(htn) =>       
           // Render report header to HTML and save it to disk
           val reportHeaderHtmlTempFile = new TemporaryFile(java.io.File.createTempFile("hb5ReportHeader", ".html"))
-          play.api.libs.Files.writeFile(reportHeaderHtmlTempFile.file, renderTemplate(htn.VALEUR.get, resultData, reportTitle))
-          // Configure wkhtmltopdf with header
-          Pdf(
-            reportConfig.wkhtmltopdfPath,
-            new PdfConfig {
-              orientation := pageOrientation
-              pageSize := "A4"
-              headerHtml := reportHeaderHtmlTempFile.file.getAbsolutePath
-              footerHtml := reportFooterHtmlTempFile.file.getAbsolutePath
+          // If defined, pass header message to template
+          headerMessageOption match {
+            case Some(headerMessage) => 
+              play.api.libs.Files.writeFile(reportHeaderHtmlTempFile.file, renderTemplate(htn.VALEUR.get, headerMessage, reportTitle))
+              // Configure wkhtmltopdf with header
+              Pdf(
+                reportConfig.wkhtmltopdfPath,
+                new PdfConfig {
+                  orientation := pageOrientation
+                  pageSize := "A4"
+                  headerHtml := reportHeaderHtmlTempFile.file.getAbsolutePath
+                  footerHtml := reportFooterHtmlTempFile.file.getAbsolutePath
+                }
+              )  
+            case None =>
+              play.api.libs.Files.writeFile(reportHeaderHtmlTempFile.file, renderTemplate(htn.VALEUR.get, resultData, reportTitle))
+              // Configure wkhtmltopdf with header
+              Pdf(
+                reportConfig.wkhtmltopdfPath,
+                new PdfConfig {
+                  orientation := pageOrientation
+                  pageSize := "A4"
+                  headerHtml := reportHeaderHtmlTempFile.file.getAbsolutePath
+                  footerHtml := reportFooterHtmlTempFile.file.getAbsolutePath
+                }
+              )  
             }
-          )          
+          
+          
+        
         case None => 
           // Configure wkhtmltopdf without header (useful to gain print space for drawing or stickers specific configurations)
           Pdf(
