@@ -53,8 +53,13 @@ hb {
 		}
 	},
 	report {
+		# Used to produce PDF from HTML reports
         wkhtmltopdf {
-          "path": "/usr/local/bin/wkhtmltopdf"
+			"path": "/usr/local/bin/wkhtmltopdf"
+        },
+        # Used to merge several PDF files to a single one
+        pdfmerging {
+        	"path": "/usr/bin/pdftk"
         }
     }	
 }
