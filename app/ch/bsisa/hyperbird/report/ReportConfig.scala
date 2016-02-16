@@ -20,15 +20,6 @@ class ReportConfig {
     case None => throw ReportConfigException(s"Report PDF merging tool path configuration information ${ReportConfig.PdfMergingPathKey} missing")
   }  
   
-  /**
-   * PDF merging binary command name
-   */
-  lazy val pdfMergingCommand: String = Play.current.configuration.getString(ReportConfig.PdfMergingCommandKey) match {
-    case Some(command) => command
-    case None => throw ReportConfigException(s"Report PDF merging tool command name configuration information ${ReportConfig.PdfMergingCommandKey} missing")
-  }    
-  
-  
 }
 
 /**
@@ -41,6 +32,5 @@ object ReportConfig {
 
   private val WkhtmltopdfPathKey = "hb.report.wkhtmltopdf.path"
   private val PdfMergingPathKey = "hb.report.pdfmerging.path"
-  private val PdfMergingCommandKey = "hb.report.pdfmerging.command"
 
 }
