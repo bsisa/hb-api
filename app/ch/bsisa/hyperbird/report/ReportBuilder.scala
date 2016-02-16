@@ -68,16 +68,8 @@ object ReportBuilder {
     val contentTemplateName = reportElfin.CARACTERISTIQUE.get.CAR2.get.VALEUR.get
     val footerTemplateName = reportElfin.CARACTERISTIQUE.get.CAR3.get.VALEUR.get
     val queryFileName = reportElfin.CARACTERISTIQUE.get.CAR4.get.VALEUR.get
-    // Extract CARSET.CAR[@NAME='headerMessage']/@VALEUR and return the configured message as string
-//    val headerMessageOption: Option[String] = reportElfin.CARACTERISTIQUE.get.CARSET match {
-//        case Some(carset) =>
-//          carset.CAR.find(car => car.NOM.getOrElse(false) == "headerMessage") match {
-//            case Some(car) => car.VALEUR
-//            case None => None
-//          }
-//        case None => None
-//      }
-    
+    // Extract optional CARSET.CAR[@NAME='headerMessage']/@VALEUR and if available 
+    // return the configured message as Some(string)
     val headerMessageOption: Option[String] = reportElfin.CARACTERISTIQUE.get.CARSET.flatMap{ carset =>
       carset.CAR.find{ car => car.NOM.getOrElse(false) == "headerMessage" }.flatMap { car => car.VALEUR }
     }        
