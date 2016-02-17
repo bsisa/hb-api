@@ -1,0 +1,42 @@
+<ELFIN Id="G20160210190000000" ID_G="G20050101000012345" CLASSE="RAPPORT"
+	GROUPE="" TYPE="ACTIVITE" NATURE="Flux">
+	<MUTATIONS>
+	</MUTATIONS>
+	<IDENTIFIANT>
+		<AUT>PRE</AUT>
+		<GER>SECU</GER>
+		<RES>PRE</RES>
+		<NOM>Purchase order</NOM>
+		<ALIAS>Purchase order</ALIAS>
+		<ORIGINE />
+		<OBJECTIF />
+		<QUALITE />
+	</IDENTIFIANT>
+	<CARACTERISTIQUE>
+		<!-- As of HB 5.1.10 (hb-api) CAR1 is now optional to allow report to reclaim 
+			header space for specific printing uses -->
+		<CAR1 NOM="header" UNITE="reference" VALEUR="views.html.reports.purchaseOrderHeader" />
+		<CAR2 NOM="content" UNITE="reference" VALEUR="views.html.reports.defaultBody" />
+		<CAR3 NOM="footer" UNITE="reference" VALEUR="views.html.reports.defaultFooter" />
+		<CAR4 NOM="query" UNITE="reference" VALEUR="rapportBonDeCommandeLocataire.xq" />
+		<CAR5 NOM="filename" UNITE="name" VALEUR="Bon_de_commande_locataire" />
+		<CAR6 NOM="reportTitle" UNITE="name" VALEUR="Bon de commande locataire" />
+		<CARSET>
+			<CAR POS="1" NOM="headerMessage" UNITE="" VALEUR="TENANT COPY" />
+			<CAR POS="2" NOM="pdfIncludeLast" UNITE=""
+				VALEUR="G20050101000012345/DOCUMENT/20160216174700999" />
+			<CAR POS="3" NOM="pdfIncludeFirst" UNITE=""
+				VALEUR="G20050101000012345/FLYING_SAUCER/20160216174700999" />
+			<CAR POS="4" NOM="pageOrientation" UNITE="" VALEUR="landscape" />
+		</CARSET>
+		<CALCUL />
+	</CARACTERISTIQUE>
+	<PARTENAIRE>
+		<FOURNISSEUR />
+	</PARTENAIRE>
+	<ACTIVITE />
+	<DIVERS>
+		<REMARQUE />
+		<METHODE />
+	</DIVERS>
+</ELFIN>

@@ -196,4 +196,13 @@ object ElfinUtil {
       SOURCE = elfinUser.SOURCE)
   }
 
+  /**
+   * Helper returning Option[CARSET_CARType] for Scala find equivalent to XPath: 
+   * CARACTERISTIQUE/CARSET/CAR[@NOM = `name`] applied to `elfin`. 
+   */
+  def getElfinCarByName(elfin : ELFIN, name: String) = {
+    val carForNameOption = elfin.CARACTERISTIQUE.flatMap{ _.CARSET.flatMap { _.CAR.find { _.NOM.getOrElse(false) == name  }}}
+    carForNameOption
+  }
+  
 }
