@@ -4,6 +4,9 @@ import org.specs2.mutable._
 import ch.bsisa.hyperbird.util.ElfinIdGenerator
 import ch.bsisa.hyperbird.util.ElfinIdGenerator.ElfinUniqueIdValidationException
 
+import play.api.test._
+import play.api.test.Helpers._
+
 /**
  * Tests ElfinIdGenerator Id generation and validation.
  *
@@ -35,7 +38,7 @@ import ch.bsisa.hyperbird.util.ElfinIdGenerator.ElfinUniqueIdValidationException
  *
  * @author Patrick Refondini
  */
-class ElfinIdGeneratorSpec extends BaseSerialisationSpec {
+class ElfinIdGeneratorSpec extends BaseSerialisationSpec with PlaySpecification {
 
   val validUniqueIdentifierTest1 = "G20140210140946909"
   val validUniqueIdentifierTest2 = "G20040930101030005"
@@ -46,41 +49,43 @@ class ElfinIdGeneratorSpec extends BaseSerialisationSpec {
   val invalidUniqueIdentifierTest5 = validUniqueIdentifierTest3
   val invalidUniqueIdentifierTest6 = "G20140210140946909G20140210140946909"
 
-    
-  override def is = s2"""
-
- This specification re-implementation is PENDING.
-  
-  Indeed the new ElfinIdGenerator.getNewElfinId(): Future[String] signature has changed 
-  from `String` to `Future[String]` 
-  and the underlying infrastructure is now Akka Actor based to deliver threadsafe access
-  to a counter.
-  
-  The current specification will have to startup an Akka system with IdActor to re-enable
-  tests to run.
-                                                                 """
-   
+// DONE - Keep this as reminder spec override.
 //    
-//  s"The ElfinIdGenerator.validateElfinUniqueIdentifier" should {
-//    s"validate ${validUniqueIdentifierTest1}" in {
-//      ElfinIdGenerator.validateElfinUniqueIdentifier(validUniqueIdentifierTest1) must not(throwA[ElfinUniqueIdValidationException])
-//    }
-//    s"validate ${validUniqueIdentifierTest2}" in {
-//      ElfinIdGenerator.validateElfinUniqueIdentifier(validUniqueIdentifierTest2) must not(throwA[ElfinUniqueIdValidationException])
-//    }
-//    s"validate ${validUniqueIdentifierTest3}" in {
-//      ElfinIdGenerator.validateElfinUniqueIdentifier(validUniqueIdentifierTest3) must not(throwA[ElfinUniqueIdValidationException])
-//    }
+//  override def is = s2"""
 //
-//    s"throw an ElfinUniqueIdValidationException with value ${invalidUniqueIdentifierTest4} missing leading 'G' character" in {
-//      ElfinIdGenerator.validateElfinUniqueIdentifier(invalidUniqueIdentifierTest4) must throwA[ElfinUniqueIdValidationException]
+// This specification re-implementation is PENDING.
+//  
+//  Indeed the new ElfinIdGenerator.getNewElfinId(): Future[String] signature has changed 
+//  from `String` to `Future[String]` 
+//  and the underlying infrastructure is now Akka Actor based to deliver threadsafe access
+//  to a counter.
+//  
+//  The current specification will have to startup an Akka system with IdActor to re-enable
+//  tests to run.
+//                                                                 """
+   
+    
+  s"The ElfinIdGenerator.validateElfinUniqueIdentifier" should {
+    s"validate ${validUniqueIdentifierTest1}" in new WithApplication {
+      ElfinIdGenerator.validateElfinUniqueIdentifier(validUniqueIdentifierTest1) must not(throwA[ElfinUniqueIdValidationException])
+    }
+    s"validate ${validUniqueIdentifierTest2}" in new WithApplication {
+      ElfinIdGenerator.validateElfinUniqueIdentifier(validUniqueIdentifierTest2) must not(throwA[ElfinUniqueIdValidationException])
+    }
+    s"validate ${validUniqueIdentifierTest3}" in new WithApplication {
+      ElfinIdGenerator.validateElfinUniqueIdentifier(validUniqueIdentifierTest3) must not(throwA[ElfinUniqueIdValidationException])
+    }
+
+    s"throw an ElfinUniqueIdValidationException with value ${invalidUniqueIdentifierTest4} missing leading 'G' character" in new WithApplication {
+      ElfinIdGenerator.validateElfinUniqueIdentifier(invalidUniqueIdentifierTest4) must throwA[ElfinUniqueIdValidationException]
+    }
+// Constraint dropped due to legacy non-compliant data 
+//    s"throw an ElfinUniqueIdValidationException with value ${invalidUniqueIdentifierTest5} date part contains invalid time 94 seconds value" in new WithApplication {
+//      ElfinIdGenerator.validateElfinUniqueIdentifier(invalidUniqueIdentifierTest5) must throwA[ElfinUniqueIdValidationException]
 //    }
-////    s"throw an ElfinUniqueIdValidationException with value ${invalidUniqueIdentifierTest5} date part contains invalid time 94 seconds value" in {
-////      ElfinIdGenerator.validateElfinUniqueIdentifier(invalidUniqueIdentifierTest5) must throwA[ElfinUniqueIdValidationException]
-////    }
-//    s"throw an ElfinUniqueIdValidationException with value ${invalidUniqueIdentifierTest6} contains twice the same value" in {
-//      ElfinIdGenerator.validateElfinUniqueIdentifier(invalidUniqueIdentifierTest6) must throwA[ElfinUniqueIdValidationException]
-//    }
-//  }
+    s"throw an ElfinUniqueIdValidationException with value ${invalidUniqueIdentifierTest6} contains twice the same value" in new WithApplication {
+      ElfinIdGenerator.validateElfinUniqueIdentifier(invalidUniqueIdentifierTest6) must throwA[ElfinUniqueIdValidationException]
+    }
+  }
 
 }
