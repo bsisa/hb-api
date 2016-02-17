@@ -10,8 +10,6 @@ import play.api.test._
 
 import play.api.test.Helpers._
 
-import play.api.GlobalSettings
-//import play.api.WithDefaultConfiguration
 
 /**
  * Tests ch.bsisa.hyperbird.io.PdfFileMergingHelper.mergePdfFiles() method
@@ -27,41 +25,45 @@ import play.api.GlobalSettings
  *
  * @author Patrick Refondini
  */
-//class PdfFileMergingHelperSpec extends BaseSerialisationSpec with PlaySpecification {
-class PdfFileMergingHelperSpec extends BaseSerialisationSpec  with PlaySpecification {
+class PdfFileMergingHelperSpec extends BaseSerialisationSpec with PlaySpecification {
 
   val sourceDirectory = new File(TestResourcesDir)
   val targetDirectory = new File(TestResultsDir)
 
   val outputFileName = "MergedFileFromPdfFileMerging.pdf"
-  val outputFile = new File(new File(TestResultsDir), outputFileName)
-  val outputFileAbsPathName = outputFile.getCanonicalPath
   
   val sourceFileName1 = "pdfFilesMergingInput1.pdf"
   val sourceFileName2 = "pdfFilesMergingInput2.pdf"
   val sourceFileName3 = "pdfFilesMergingInput3.pdf"
   
+  // Quick helper to build abs path sequence
   def buildInputFilesAbsolutePathNameList (names : Seq[String]) : Seq[String] = {
-    val absPath = for ( name <- names) yield { new File(sourceDirectory, name).getCanonicalPath }
-    absPath
+    val absPathSeq = for ( name <- names) yield { new File(sourceDirectory, name).getCanonicalPath }
+    absPathSeq
   } 
   
+  // Quick helper to compute several files size
   def getSumOfFileSize(filesAbsPath : Seq[String]) : Long = {
     val sizes = for (fileAbsPath <- filesAbsPath) yield {
       new File(fileAbsPath).length()
     }
     sizes.sum
   }
+
   
+  // Create output file to contain merged PDF input files
+  val outputFile = new File(new File(TestResultsDir), outputFileName)
+  
+  // Clean up previous test result data if any
+  if (outputFile.exists()) outputFile.delete()  
+  
+  
+  // Build input files abs path sequence 
   val inputFilesAbsPathNameList = buildInputFilesAbsolutePathNameList(Seq(sourceFileName1, sourceFileName2, sourceFileName3))
-  Console println s">>>>> INPUTs: ${inputFilesAbsPathNameList}"
-  Console println s">>>>> OUTPUT: ${outputFileAbsPathName}"
-  
-  // Clean up result test data if any
-  if (outputFile.exists()) outputFile.delete()
+  // Get output file abs path
+  val outputFileAbsPathName = outputFile.getCanonicalPath  
 
   // Perform merge operation
-  
   "Test PDF files merging" should {
     s"return process exitValue 0" in new WithApplication {
       val exitValue = PdfFileMergingHelper.mergePdfFiles(inputFilesAbsPathNameList, outputFileAbsPathName)
@@ -69,13 +71,9 @@ class PdfFileMergingHelperSpec extends BaseSerialisationSpec  with PlaySpecifica
     }
   }
   
-//  s"The merge PDF file process exitValue" should {
-//   "equal 0" in {
-//     exitValue == 0
-//   }
-//  }
-  
-  // Heuristic value observed on two distinct tests. Change it as needed.
+  // Heuristic value observed from two distinct tests. 
+  // No particular meaning, only makes test a bit less
+  // sensitive to input files modification. Update it as needed.
   val mergerSizeGain = 1772
   val expectedMergedFileSize = getSumOfFileSize(inputFilesAbsPathNameList) - mergerSizeGain
   
