@@ -3,6 +3,7 @@ package ch.bsisa.hyperbird.report
 import ch.bsisa.hyperbird.Implicits._
 import ch.bsisa.hyperbird.dao.ws.{ WSQueries, XQueryWSHelper }
 import ch.bsisa.hyperbird.model.ELFIN
+import ch.bsisa.hyperbird.util.ElfinUtil
 import io.github.cloudify.scala.spdf.{ Landscape, PageOrientation, Portrait, PdfConfig, Pdf }
 import org.apache.commons.codec.binary.Base64
 import play.api.Logger
@@ -29,7 +30,7 @@ object ReportBuilder {
   val REPORT_FILENAME_PREFIX_QUERY_PARAM_NAME = "reportFileNamePrefix"
 
   /**
-   * Renders template by name to String for wkhtmltopdf to process
+   * Renders template with two parameters by name to String for wkhtmltopdf to process
    */
   def renderTemplate[A](templateName: String, data: A, reportTitle: String): String = {
     val ru = scala.reflect.runtime.universe
@@ -37,6 +38,16 @@ object ReportBuilder {
     val template = m.reflectModule(m.staticModule(templateName + "$")).instance.asInstanceOf[Template2[A, String, Result]]
     template.render(data, reportTitle).toString
   }
+  
+  /**
+   * Renders template with a single parameter by name to String for wkhtmltopdf to process
+   */
+  def renderTemplate(templateName: String, reportTitle: String): String = {
+    val ru = scala.reflect.runtime.universe
+    val m = ru.runtimeMirror(getClass.getClassLoader)
+    val template = m.reflectModule(m.staticModule(templateName + "$")).instance.asInstanceOf[Template1[String, Result]]
+    template.render(reportTitle).toString
+  }  
 
   /**
    * Produces a PDF report given a report description `reportElfin`in geoXml ELFIN format
@@ -68,11 +79,8 @@ object ReportBuilder {
     val contentTemplateName = reportElfin.CARACTERISTIQUE.get.CAR2.get.VALEUR.get
     val footerTemplateName = reportElfin.CARACTERISTIQUE.get.CAR3.get.VALEUR.get
     val queryFileName = reportElfin.CARACTERISTIQUE.get.CAR4.get.VALEUR.get
-    // Extract optional CARSET.CAR[@NAME='headerMessage']/@VALEUR and if available 
-    // return the configured message as Some(string)
-    val headerMessageOption: Option[String] = reportElfin.CARACTERISTIQUE.get.CARSET.flatMap{ carset =>
-      carset.CAR.find{ car => car.NOM.getOrElse(false) == "headerMessage" }.flatMap { car => car.VALEUR }
-    }        
+    // Extract optional CARSET.CAR[@NAME='headerMessage']/@VALEUR configured message as Option[String]
+    val headerMessageOption = ElfinUtil.getElfinCarByName(reportElfin, ReportConfig.CAR_NAME_HEADER_MESSAGE).flatMap(_.VALEUR)
 
     // Get reportTitle, reportFileNamePrefix information from query parameters if available 
     // fallback to default from ELFIN report configuration otherwise.
@@ -126,27 +134,23 @@ object ReportBuilder {
 
       // Work with String expected to contain HTML.
       val resultData = response.body
+
       // XML data unused at the moment.
       //val resultData = XML.loadString(respBody)
 
       // Extract CARSET.CAR[@NAME='pageOrientation']/@VALEUR and return whether orientation is portrait or landscape
-      val pageOrientation: PageOrientation = reportElfin.CARACTERISTIQUE.get.CARSET match {
-        case Some(carset) =>
-          carset.CAR.find(car => car.NOM.getOrElse(false) == "pageOrientation") match {
-            case Some(car) => if (car.VALEUR.getOrElse("not-defined") == "landscape") Landscape else Portrait
-            case None => Portrait
-          }
+      val pageOrientationValueOption = ElfinUtil.getElfinCarByName( reportElfin, ReportConfig.CAR_NAME_PAGE_ORIENTATION ).flatMap( _.VALEUR )
+      val pageOrientation = pageOrientationValueOption match {
+        case Some(pageOrientationValue) => if (pageOrientationValue == ReportConfig.CAR_VALUE_PAGE_ORIENTATION_LANDSCAPE) Landscape else Portrait
         case None => Portrait
-      }      
+      }
       
       // Render report footer to HTML and save it to disk
       val reportFooterHtmlTempFile = new TemporaryFile(java.io.File.createTempFile("hb5ReportFooter", ".html"))
-      play.api.libs.Files.writeFile(reportFooterHtmlTempFile.file, renderTemplate(footerTemplateName, resultData, reportTitle))
+      play.api.libs.Files.writeFile(reportFooterHtmlTempFile.file, renderTemplate(footerTemplateName, reportTitle))
 
       // Render report body to HTML and save it to disk
       val reportContentHtmlTempFile = new TemporaryFile(java.io.File.createTempFile("hb5ReportContent", ".html"))
-      
-      //val reportContentHtmlString = renderTemplate(contentTemplateName, resultData, reportTitle)
       play.api.libs.Files.writeFile(reportContentHtmlTempFile.file, renderTemplate(contentTemplateName, resultData, reportTitle))
 
 
@@ -170,7 +174,7 @@ object ReportBuilder {
                 }
               )  
             case None =>
-              play.api.libs.Files.writeFile(reportHeaderHtmlTempFile.file, renderTemplate(htn.VALEUR.get, resultData, reportTitle))
+              play.api.libs.Files.writeFile(reportHeaderHtmlTempFile.file, renderTemplate(htn.VALEUR.get, reportTitle))
               // Configure wkhtmltopdf with header
               Pdf(
                 reportConfig.wkhtmltopdfPath,
@@ -182,9 +186,7 @@ object ReportBuilder {
                 }
               )  
             }
-          
-          
-        
+
         case None => 
           // Configure wkhtmltopdf without header (useful to gain print space for drawing or stickers specific configurations)
           Pdf(
@@ -200,8 +202,10 @@ object ReportBuilder {
       // Create empty temporary file for final PDF report outcome.
       val tempResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))
       // Process HTML temporary files to PDF using wkhtmltopdf
-      pdf.run(reportContentHtmlTempFile.file, tempResult.file)
-
+      val exitCode = pdf.run(reportContentHtmlTempFile.file, tempResult.file)
+      if (exitCode != 0) {
+         Logger.error(s"ReportBuilder.writeReport: Failure while generating PDF file: pdf.run exitCode = ${exitCode}") 
+      }
       tempResult
     }
   }
