@@ -16,14 +16,21 @@ object PdfFileMergingHelper {
   private val CmdInstruction = "output"
 
   /**
-   * Merges the list of files identified by `inputFilesPath` to a single file identified by `outputFilePath`.
-   * The file paths must be a fully qualified path to file.  
+   * Merges the list of files identified by `inputFilesPath` to a single file 
+   * identified by `outputFilePath`.
+   * 
+   * The file paths must be a fully qualified path to file.
+   *   
+   * This function blocks until the merge process has completed thus guaranteeing
+   * access to generated output file found at `outputFilePath`.
    */
   def mergePdfFiles(inputFilesPath: Seq[String], outputFilePath: String)(implicit reportConfig: ReportConfig) : Int = {
 
     val cmdSeq = reportConfig.pdfMergingPath +: inputFilesPath :+ CmdInstruction :+ outputFilePath
 
-    // .! is a blocking call, we may use .run instead if performance is a concern
+    // Using .! blocking call is deliberate. Using non blocking .run here 
+    // would break this function contract which guarantees output file 
+    // is accessible upon successful function completion (exitCode == 0). 
     val exitCode = Process(cmdSeq).!
     exitCode
   }
