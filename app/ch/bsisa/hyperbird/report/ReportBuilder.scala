@@ -4,6 +4,7 @@ import ch.bsisa.hyperbird.Implicits._
 import ch.bsisa.hyperbird.dao.ws.{ WSQueries, XQueryWSHelper }
 import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.util.ElfinUtil
+import ch.bsisa.hyperbird.report.dao.ReportDAO
 import io.github.cloudify.scala.spdf.{ Landscape, PageOrientation, Portrait, PdfConfig, Pdf }
 import org.apache.commons.codec.binary.Base64
 import play.api.Logger
@@ -15,6 +16,7 @@ import play.api.templates.Template2
 import java.io.{ InputStream }
 import java.net.URLEncoder
 import java.text.DecimalFormat
+import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.xml.{ Elem, XML }
@@ -199,14 +201,48 @@ object ReportBuilder {
           )        
       }
         
-      // Create empty temporary file for final PDF report outcome.
+      // Create empty temporary file for PDF report outcome.
       val tempResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))
+      
       // Process HTML temporary files to PDF using wkhtmltopdf
       val exitCode = pdf.run(reportContentHtmlTempFile.file, tempResult.file)
-      if (exitCode != 0) {
-         Logger.error(s"ReportBuilder.writeReport: Failure while generating PDF file: pdf.run exitCode = ${exitCode}") 
+      
+      // If PDF creation succeeded
+      if (exitCode == 0) {
+
+    	  // Perform static merging if configuration is available and referred document contains the expected PDF annex to merge with.
+
+    	  // Extract optional 'pdfIncludeLast' configuration as Option[String]
+    	  val pdfIncludeLastTripletIdentifierOption = ElfinUtil.getElfinCarByName(reportElfin, ReportConfig.CAR_NAME_PDF_INCLUDE_LAST).flatMap(_.VALEUR)
+
+ 			  // Proceed with merge if necessary document and annex are available
+ 			  val mergedWithPdfIncludeLastFileOpt = pdfIncludeLastTripletIdentifierOption flatMap { triplet => 
+   			  val futureTmpRes = ReportDAO.getFirstPdfAnnexe(triplet) map { fileOpt => 
+    			  fileOpt.map { file =>  
+      			  // Merge file at end
+      			  val inputFilesAbsPathNameList = Seq(tempResult.file.getCanonicalPath, file.getCanonicalPath)
+      			  val tempMergedResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))        
+      			  PdfFileMergingHelper.mergePdfFiles(inputFilesAbsPathNameList, tempMergedResult.file.getCanonicalPath)
+      			  tempMergedResult            
+    			  }
+    			}
+  			  import scala.concurrent.duration._
+  			  val tempRes = Await.result(futureTmpRes, 1 minutes)
+  			  tempRes
+    	  }
+
+    	  // Return merged documents if applicable and available otherwise return first generated PDF unchanged
+    	  mergedWithPdfIncludeLastFileOpt match {
+      	  case Some(mergedWithPdfIncludeLastFile) => mergedWithPdfIncludeLastFile
+      	  case None => tempResult
+    	  }
+
+      } else {
+    	  // If exitCode for PDF generation is not equal to zero it failed. Do not perform any extra process.
+    	  Logger.error(s"ReportBuilder.writeReport: Failure while generating PDF file: pdf.run exitCode = ${exitCode}")
+    	  tempResult
       }
-      tempResult
+      
     }
   }
 
