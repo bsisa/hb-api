@@ -30,6 +30,8 @@ object ReportBuilder {
 
   val REPORT_TITLE_QUERY_PARAM_NAME = "reportTitle"
   val REPORT_FILENAME_PREFIX_QUERY_PARAM_NAME = "reportFileNamePrefix"
+  val REPORT_CALLER_ELFIN_ID = "id"
+  val REPORT_CALLER_ELFIN_ID_G = "col"
 
   /**
    * Renders template with two parameters by name to String for wkhtmltopdf to process
@@ -106,6 +108,10 @@ object ReportBuilder {
         val reportTitle = reportElfin.CARACTERISTIQUE.get.CAR6.get.VALEUR.get
         (reportTitle, reportFileNamePrefix)
     }
+    
+    val callerId = queryStringMapOption.flatMap(_.get(REPORT_CALLER_ELFIN_ID))
+    val callerID_G = queryStringMapOption.flatMap(_.get(REPORT_CALLER_ELFIN_ID_G))
+
 
     // URL encoding is necessary for query content but not for file name
     //val queryFileName = URLEncoder.encode(reportElfin.DIVERS.get.METHODE.get, "UTF-8")
@@ -201,15 +207,45 @@ object ReportBuilder {
           )        
       }
         
-      // Create empty temporary file for PDF report outcome.
-      val tempResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))
+      // Create empty temporary file for PDF report content outcome.
+      val reportContentTempResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))
       
       // Process HTML temporary files to PDF using wkhtmltopdf
-      val exitCode = pdf.run(reportContentHtmlTempFile.file, tempResult.file)
+      val exitCode = pdf.run(reportContentHtmlTempFile.file, reportContentTempResult.file)
       
       // If PDF creation succeeded
       if (exitCode == 0) {
 
+        // TODO : Adapt workflow to merge dynamic and static and return the expected result
+        // Easily achieved using the Option nature of dyn res.
+        // Perform dynamic merging if caller Id, ID_G are available.
+        val reportWithDynTempResultOpt = if (callerId.isDefined && callerID_G.isDefined) {
+          Logger.debug(s">>>> CALLER: ID_G/Id = ${callerId}/${callerID_G}" );
+          val futureFilepathsOptToMerge = ReportDAO.getPdfAnnexPathsToMerge(elfinId = callerId.get, elfinID_G = callerID_G.get)
+          val res = 
+            futureFilepathsOptToMerge map { _.map { filepathsToMerge => 
+              val filepathsToMergeBefore = filepathsToMerge._1
+              val filepathsToMergeAfter = filepathsToMerge._2
+              
+              // Merge files 
+              val inputFilesAbsPathNameList = filepathsToMergeBefore ++ Seq(reportContentTempResult.file.getCanonicalPath) ++ filepathsToMergeAfter
+              // Create empty temporary file for PDF report content including dynamic outcome.
+              val reportWithDynTempResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))        
+              val mergeExitCode = PdfFileMergingHelper.mergePdfFiles(inputFilesAbsPathNameList, reportWithDynTempResult.file.getCanonicalPath)
+              if (mergeExitCode != 0) {
+                Logger.error(s"ReportBuilder.writeReport: Failure while merging PDF file: mergePdfFiles exit code = ${mergeExitCode}")
+              }
+              Logger.debug(s">>>> reportWithDynTempResult at ${reportWithDynTempResult.file.getCanonicalPath}")
+              reportWithDynTempResult              
+            }
+          }
+          Some(res)
+        } else {
+          Logger.debug(s">>>> NO reportWithDynTempResult")
+          None
+        }
+        
+        
     	  // Perform static merging if configuration is available and referred document contains the expected PDF annex to merge with.
 
     	  // Extract optional 'pdfIncludeLast' configuration as Option[String]
@@ -220,7 +256,7 @@ object ReportBuilder {
    			  val futureTmpRes = ReportDAO.getFirstPdfAnnexe(triplet) map { fileOpt => 
     			  fileOpt.map { file =>  
       			  // Merge file at end
-      			  val inputFilesAbsPathNameList = Seq(tempResult.file.getCanonicalPath, file.getCanonicalPath)
+      			  val inputFilesAbsPathNameList = Seq(reportContentTempResult.file.getCanonicalPath, file.getCanonicalPath)
       			  val tempMergedResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))        
       			  val mergeExitCode = PdfFileMergingHelper.mergePdfFiles(inputFilesAbsPathNameList, tempMergedResult.file.getCanonicalPath)
               if (mergeExitCode != 0) {
@@ -237,13 +273,13 @@ object ReportBuilder {
     	  // Return merged documents if applicable and available otherwise return first generated PDF unchanged
     	  mergedWithPdfIncludeLastFileOpt match {
       	  case Some(mergedWithPdfIncludeLastFile) => mergedWithPdfIncludeLastFile
-      	  case None => tempResult
+      	  case None => reportContentTempResult
     	  }
 
       } else {
     	  // If exitCode for PDF generation is not equal to zero it failed. Do not perform any extra process.
     	  Logger.error(s"ReportBuilder.writeReport: Failure while generating PDF file: pdf.run exit code = ${exitCode}")
-    	  tempResult
+    	  reportContentTempResult
       }
       
     }
