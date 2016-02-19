@@ -239,9 +239,10 @@ object ReportBuilder {
               reportWithDynTempResult              
             }
           }
-          Some(res)
+          import scala.concurrent.duration._
+          val tempRes = Await.result(res, 1 minutes)
+          tempRes
         } else {
-          Logger.debug(s">>>> NO reportWithDynTempResult")
           None
         }
         
@@ -256,7 +257,11 @@ object ReportBuilder {
    			  val futureTmpRes = ReportDAO.getFirstPdfAnnexe(triplet) map { fileOpt => 
     			  fileOpt.map { file =>  
       			  // Merge file at end
-      			  val inputFilesAbsPathNameList = Seq(reportContentTempResult.file.getCanonicalPath, file.getCanonicalPath)
+      			  val inputFilesAbsPathNameList = 
+               reportWithDynTempResultOpt match {
+                case Some(reportWithDynTempResult) =>  Seq(reportWithDynTempResult.file.getCanonicalPath, file.getCanonicalPath)
+                case None => Seq(reportContentTempResult.file.getCanonicalPath, file.getCanonicalPath)
+              }
       			  val tempMergedResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))        
       			  val mergeExitCode = PdfFileMergingHelper.mergePdfFiles(inputFilesAbsPathNameList, tempMergedResult.file.getCanonicalPath)
               if (mergeExitCode != 0) {
@@ -273,7 +278,12 @@ object ReportBuilder {
     	  // Return merged documents if applicable and available otherwise return first generated PDF unchanged
     	  mergedWithPdfIncludeLastFileOpt match {
       	  case Some(mergedWithPdfIncludeLastFile) => mergedWithPdfIncludeLastFile
-      	  case None => reportContentTempResult
+      	  case None => { 
+            reportWithDynTempResultOpt match {
+                case Some(reportWithDynTempResult) => reportWithDynTempResult
+                case None => reportContentTempResult
+            }
+          }
     	  }
 
       } else {
