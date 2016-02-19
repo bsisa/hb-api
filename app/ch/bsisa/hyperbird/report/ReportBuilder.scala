@@ -222,7 +222,10 @@ object ReportBuilder {
       			  // Merge file at end
       			  val inputFilesAbsPathNameList = Seq(tempResult.file.getCanonicalPath, file.getCanonicalPath)
       			  val tempMergedResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))        
-      			  PdfFileMergingHelper.mergePdfFiles(inputFilesAbsPathNameList, tempMergedResult.file.getCanonicalPath)
+      			  val mergeExitCode = PdfFileMergingHelper.mergePdfFiles(inputFilesAbsPathNameList, tempMergedResult.file.getCanonicalPath)
+              if (mergeExitCode != 0) {
+                Logger.error(s"ReportBuilder.writeReport: Failure while merging PDF file: mergePdfFiles exit code = ${mergeExitCode}")
+              }
       			  tempMergedResult            
     			  }
     			}
@@ -239,7 +242,7 @@ object ReportBuilder {
 
       } else {
     	  // If exitCode for PDF generation is not equal to zero it failed. Do not perform any extra process.
-    	  Logger.error(s"ReportBuilder.writeReport: Failure while generating PDF file: pdf.run exitCode = ${exitCode}")
+    	  Logger.error(s"ReportBuilder.writeReport: Failure while generating PDF file: pdf.run exit code = ${exitCode}")
     	  tempResult
       }
       
