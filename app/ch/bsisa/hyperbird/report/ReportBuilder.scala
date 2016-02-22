@@ -275,17 +275,53 @@ object ReportBuilder {
   			  tempRes
     	  }
 
-    	  // Return merged documents if applicable and available otherwise return first generated PDF unchanged
-    	  mergedWithPdfIncludeLastFileOpt match {
-      	  case Some(mergedWithPdfIncludeLastFile) => mergedWithPdfIncludeLastFile
-      	  case None => { 
-            reportWithDynTempResultOpt match {
-                case Some(reportWithDynTempResult) => reportWithDynTempResult
-                case None => reportContentTempResult
+        
+        // Extract optional 'pdfIncludeFirst' configuration as Option[String]
+        val pdfIncludeFirstTripletIdentifierOption = ElfinUtil.getElfinCarByName(reportElfin, ReportConfig.CAR_NAME_PDF_INCLUDE_FIRST).flatMap(_.VALEUR)        
+        
+        // Proceed with merge if necessary document and annex are available
+        val mergedWithPdfIncludeFirstFileOpt = pdfIncludeFirstTripletIdentifierOption flatMap { triplet => 
+          val futureTmpRes = ReportDAO.getFirstPdfAnnexe(triplet) map { fileOpt => 
+            fileOpt.map { file =>  
+              // Merge file at beginning
+              val inputFilesAbsPathNameList = 
+                mergedWithPdfIncludeLastFileOpt match {
+                case Some(mergedWithPdfIncludeLastFile) => Seq(file.getCanonicalPath, mergedWithPdfIncludeLastFile.file.getCanonicalPath)
+                case None => {
+                  reportWithDynTempResultOpt match {
+                    case Some(reportWithDynTempResult) =>  Seq(file.getCanonicalPath, reportWithDynTempResult.file.getCanonicalPath)
+                    case None => Seq(file.getCanonicalPath, reportContentTempResult.file.getCanonicalPath)
+                  }
+                }
+              }
+              val tempMergedResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))        
+              val mergeExitCode = PdfFileMergingHelper.mergePdfFiles(inputFilesAbsPathNameList, tempMergedResult.file.getCanonicalPath)
+              if (mergeExitCode != 0) {
+                Logger.error(s"ReportBuilder.writeReport: Failure while merging PDF file: mergePdfFiles exit code = ${mergeExitCode}")
+              }
+              tempMergedResult            
             }
           }
-    	  }
-
+          import scala.concurrent.duration._
+          val tempRes = Await.result(futureTmpRes, 1 minutes)
+          tempRes
+        }        
+        
+    	  // Return merged documents if applicable and available otherwise return first generated PDF unchanged
+        mergedWithPdfIncludeFirstFileOpt match {
+          case Some(mergedWithPdfIncludeFirstFile) => mergedWithPdfIncludeFirstFile // Built last it contains report content, dynamic includes and both static includes depending on their availability.
+          case None => {
+            mergedWithPdfIncludeLastFileOpt match {
+              case Some(mergedWithPdfIncludeLastFile) => mergedWithPdfIncludeLastFile
+              case None => { 
+                reportWithDynTempResultOpt match {
+                    case Some(reportWithDynTempResult) => reportWithDynTempResult
+                    case None => reportContentTempResult
+                }
+              }
+            }            
+          }
+        }
       } else {
     	  // If exitCode for PDF generation is not equal to zero it failed. Do not perform any extra process.
     	  Logger.error(s"ReportBuilder.writeReport: Failure while generating PDF file: pdf.run exit code = ${exitCode}")
