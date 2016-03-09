@@ -11,6 +11,10 @@ import org.specs2.mutable._
 class BaseSerialisationSpec extends Specification {
 
   val TestResourcesDir = "./test/resources/"
-  val TestResultsDir = "./test/results/"
+  val TestResultsDir = "./target/test/results/"
+
+  // Check whether TestResultsDir exists and creates it otherwise
+  val testResultDir = new java.io.File(TestResultsDir)
+  if (!testResultDir.exists()) { testResultDir.mkdirs() }
 
 }
