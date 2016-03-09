@@ -30,8 +30,8 @@ case class ReportConfigException(message: String = null, cause: Throwable = null
 
 object ReportConfig {
 
-  private val WkhtmltopdfPathKey = "hb.report.wkhtmltopdf.path"
-  private val PdfMergingPathKey = "hb.report.pdfmerging.path"
+  val WkhtmltopdfPathKey = "hb.report.wkhtmltopdf.path"
+  val PdfMergingPathKey = "hb.report.pdfmerging.path"
 
   /**
    * Header message is an optional string message configured on a report configuration basis (static). 

@@ -28,6 +28,8 @@ object PdfFileMergingHelper {
 
     val cmdSeq = reportConfig.pdfMergingPath +: inputFilesPath :+ CmdInstruction :+ outputFilePath
 
+    println(s">>>> cmdSeq = " + cmdSeq.toString().substring(5).replaceAll(",", " "))
+    
     // Using .! blocking call is deliberate. Using non blocking .run here 
     // would break this function contract which guarantees output file 
     // is accessible upon successful function completion (exitCode == 0). 
