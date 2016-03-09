@@ -41,7 +41,7 @@ class PdfFileMergingHelperSpec extends BaseSerialisationSpec with PlaySpecificat
     
   val fakeAppWithPdfMergeConfig = pdfmergingpathEnv match {
     case Some(value) => FakeApplication(
-      additionalConfiguration = Map("hb.report.pdfmerging.path" -> value)
+      additionalConfiguration = Map(ch.bsisa.hyperbird.report.ReportConfig.PdfMergingPathKey -> value)
       )
     case None => FakeApplication()
   }
