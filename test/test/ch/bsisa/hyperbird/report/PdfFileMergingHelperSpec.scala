@@ -6,6 +6,8 @@ import ch.bsisa.hyperbird.report.PdfFileMergingHelper
 import java.io.File
 import org.specs2.mutable._
 
+import play.api.Configuration
+
 import play.api.test._
 import play.api.test.Helpers._
 
@@ -18,7 +20,7 @@ import play.api.test.Helpers._
  *
  * Tip: from sbt play console run:
  * {{{
- * test-only test.ch.bsisa.hyperbird.io.PdfFileMergingHelperSpec
+ * test-only test.ch.bsisa.hyperbird.report.PdfFileMergingHelperSpec
  * }}}
  * to have only the current test run.
  *
@@ -26,6 +28,25 @@ import play.api.test.Helpers._
  */
 class PdfFileMergingHelperSpec extends BaseSerialisationSpec with PlaySpecification {
 
+  import scala.collection.JavaConversions._
+  
+  /**
+   * Obtain "hb.report.pdfmerging.path" configuration from system environment 
+   * variable `"HB_REPORT_PDFMERGING_PATH"` and use it for fake application.
+   * 
+   * This allow easy configuration in CI environment such as Jenkins.  
+   */
+  val pdfmergingpathEnv = Option(System.getenv("HB_REPORT_PDFMERGING_PATH")) 
+  println(s"HB_REPORT_PDFMERGING_PATH = ${pdfmergingpathEnv}")
+    
+  val fakeAppWithPdfMergeConfig = pdfmergingpathEnv match {
+    case Some(value) => FakeApplication(
+      additionalConfiguration = Map("hb.report.pdfmerging.path" -> value)
+      )
+    case None => FakeApplication()
+  }
+
+  
   val sourceDirectory = new File(TestResourcesDir)
   val targetDirectory = new File(TestResultsDir)
 
@@ -64,7 +85,7 @@ class PdfFileMergingHelperSpec extends BaseSerialisationSpec with PlaySpecificat
 
   // Perform merge operation
   "Test PDF files merging" should {
-    s"return process exitValue 0" in new WithApplication {
+    s"return process exitValue 0" in new WithApplication(fakeAppWithPdfMergeConfig) {
       val exitValue = PdfFileMergingHelper.mergePdfFiles(inputFilesAbsPathNameList, outputFileAbsPathName)
       exitValue == 0
     }
