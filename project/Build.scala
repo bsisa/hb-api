@@ -38,6 +38,8 @@ object ApplicationBuild extends Build {
         
       // Making test output logs
       javaOptions in Test += "-Dlogger.file=conf/test-logger.xml",
+      
+      testOptions in Test += sbt.Tests.Exclude(Seq("test.ch.bsisa.hyperbird.mail.SendMailSpec","test.ch.bsisa.hyperbird.report.PdfFileMergingHelperSpec")),
       // ========================================================================        
       // Repositories settings for: 
       //  * sbt-plugins
