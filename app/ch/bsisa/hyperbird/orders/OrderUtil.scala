@@ -16,16 +16,7 @@ object OrderUtil {
   val MANUAL_AMOUNT = "MANUAL_AMOUNT"
   
   val APPLIED_RATE = "APPLIED_RATE"  
-  
-  val REDUCTION_RATE = "REDUCTION_RATE"
-  val DISCOUNT_RATE = "DISCOUNT_RATE"
-  val VAT_RATE = "VAT_RATE"
-  
-  val APPLIED_AMOUNT = "APPLIED_AMOUNT"
 
-  val ROUNDING_AMOUNT = "ROUNDING_AMOUNT"
-  
-  
   val NET_AMOUNT_TOTAL = "TOTAL_NET"
   val GROSS_AMOUNT_TOTAL = "TOTAL_GROSS"
 
@@ -70,7 +61,8 @@ object OrderUtil {
     if (amountCellSeq.size == 1) {
       val amountCellString = getMixedContent(amountCellSeq(0).mixed)
       val amountCellDoubleValue = amountCellString match {
-        case "" => 0d
+        case "" => 0d // Consider empty string as zero
+        case "." => 0d // Consider a single point a zero
         case s  => s.toDouble
       }
       Option(amountCellDoubleValue)
@@ -201,11 +193,7 @@ object OrderUtil {
     val rateLinesWithIndex = fract.L.zipWithIndex.filter {
       case (l, i) => l.C.exists {
         c =>
-          (c.POS == 1 && (
-            getMixedContent(c.mixed) == APPLIED_RATE ||
-            getMixedContent(c.mixed) == REDUCTION_RATE ||
-            getMixedContent(c.mixed) == DISCOUNT_RATE ||
-            getMixedContent(c.mixed) == VAT_RATE))
+          (c.POS == 1 && getMixedContent(c.mixed) == APPLIED_RATE)
       }
     }
 
