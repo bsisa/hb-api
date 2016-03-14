@@ -14,10 +14,18 @@ import ch.bsisa.hyperbird.model.format.Implicits._
 object OrderUtil {
 
   val MANUAL_AMOUNT = "MANUAL_AMOUNT"
+  
+  val APPLIED_RATE = "APPLIED_RATE"  
+  
   val REDUCTION_RATE = "REDUCTION_RATE"
   val DISCOUNT_RATE = "DISCOUNT_RATE"
-  val ROUNDING_AMOUNT = "ROUNDING_AMOUNT"
   val VAT_RATE = "VAT_RATE"
+  
+  val APPLIED_AMOUNT = "APPLIED_AMOUNT"
+
+  val ROUNDING_AMOUNT = "ROUNDING_AMOUNT"
+  
+  
   val NET_AMOUNT_TOTAL = "TOTAL_NET"
   val GROSS_AMOUNT_TOTAL = "TOTAL_GROSS"
 
@@ -194,6 +202,7 @@ object OrderUtil {
       case (l, i) => l.C.exists {
         c =>
           (c.POS == 1 && (
+            getMixedContent(c.mixed) == APPLIED_RATE ||
             getMixedContent(c.mixed) == REDUCTION_RATE ||
             getMixedContent(c.mixed) == DISCOUNT_RATE ||
             getMixedContent(c.mixed) == VAT_RATE))

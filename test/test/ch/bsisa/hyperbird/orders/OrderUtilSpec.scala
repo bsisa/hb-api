@@ -56,7 +56,7 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
       <C POS="6">false</C>
     </L>
     <L POS="4">
-      <C POS="1">REDUCTION_RATE</C>
+      <C POS="1">APPLIED_RATE</C>
       <C POS="2">Rabais</C>
       <C POS="3">1.0</C>
       <C POS="4">%</C>
@@ -64,7 +64,7 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
       <C POS="6">true</C>
     </L>
     <L POS="5">
-      <C POS="1">DISCOUNT_RATE</C>
+      <C POS="1">APPLIED_RATE</C>
       <C POS="2">Escompte</C>
       <C POS="3">2.0</C>
       <C POS="4">%</C>
@@ -80,7 +80,7 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
       <C POS="6">true</C>
     </L>
     <L POS="7">
-      <C POS="1">VAT_RATE</C>
+      <C POS="1">APPLIED_RATE</C>
       <C POS="2">TVA</C>
       <C POS="3">8.0</C>
       <C POS="4">%</C>
@@ -211,7 +211,7 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
       <C POS="6">false</C>
     </L>
     <L POS="2">
-      <C POS="1">REDUCTION_RATE</C>
+      <C POS="1">APPLIED_RATE</C>
       <C POS="2">Rabais</C>
       <C POS="3">1.0</C>
       <C POS="4">%</C>
@@ -219,7 +219,7 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
       <C POS="6">true</C>
     </L>
     <L POS="3">
-      <C POS="1">DISCOUNT_RATE</C>
+      <C POS="1">APPLIED_RATE</C>
       <C POS="2">Escompte</C>
       <C POS="3">2.0</C>
       <C POS="4">%</C>
@@ -227,7 +227,7 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
       <C POS="6">true</C>
     </L>
     <L POS="4">
-      <C POS="1">ROUNDING_AMOUNT</C>
+      <C POS="1">APPLIED_AMOUNT</C>
       <C POS="2">Arrondi</C>
       <C POS="3"/>
       <C POS="4"/>
@@ -235,7 +235,7 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
       <C POS="6">true</C>
     </L>
     <L POS="5">
-      <C POS="1">VAT_RATE</C>
+      <C POS="1">APPLIED_RATE</C>
       <C POS="2">TVA</C>
       <C POS="3">8.0</C>
       <C POS="4">%</C>
