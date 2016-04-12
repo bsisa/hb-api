@@ -61,11 +61,16 @@ class SimulatorActor(id: String, dateFrom: Date, dateTo: Date, cdfBedsNb: Int = 
 
     // hospitalStatesSelection.xq returns a list of XML ELFIN elements within a single MELFIN element.
     // ELFINs are sorted by schedule (IDENTIFIANT.DE), hospital code (CARACTERISTIQUE/FRACTION/L[POS='1']/C[POS='1']/string()) ascending
+    // 
+    // /!\ Optimisation /!\
+    // For very large size simulation we could either stream the response or page the query result 
+    // to instantiate a cluster of datasetActor. Over engineered for current requirements.
     val melfinWrappedBody = response.body.mkString
     // Convert ELFIN XML to ELFIN objects 
     val elfins: Seq[ELFIN] = ElfinFormat.elfinsFromXml(scala.xml.XML.loadString(melfinWrappedBody))
 
     // Create datasetActor with dataset iterator for the current simulation. 
+    // /!\ Optimisation /!\
     // Note: DataSetActor abstraction could scale to a cluster of actors if necessary
     val datasetActor = actorOf(Props(new DataSetActor(elfins.iterator)), name = "dataSetActor")
 
