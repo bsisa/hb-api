@@ -13,7 +13,7 @@ import ch.bsisa.hyperbird.patman.simulations.model.HospitalSimulationSummary
 class HospitalActorCdf(name: String, bedsNb: Int, simulatedHospitalStateReportActor: ActorRef) extends Actor with ActorLogging {
 
   /**
-   * Messages stack lifecycle
+   * Messages stack life cycle
    *
    * 1) Empty
    * 2) Filled in any order with:
