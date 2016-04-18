@@ -131,6 +131,7 @@ object ReportBuilder {
         (reportTitle, reportFileNamePrefix)
     }
     
+    // Optional identity of the ELFIN data source calling the report
     val callerId = queryStringMapOption.flatMap(_.get(REPORT_CALLER_ELFIN_ID))
     val callerID_G = queryStringMapOption.flatMap(_.get(REPORT_CALLER_ELFIN_ID_G))
 
