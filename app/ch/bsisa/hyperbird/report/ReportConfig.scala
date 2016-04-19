@@ -65,5 +65,13 @@ object ReportConfig {
    * This object first ANNEX document in PDF format will be used for PDF merging at last position. 
    */
   val CAR_NAME_PDF_INCLUDE_LAST = "pdfIncludeLast"
+  
+  /**
+   * Watermark Elfin is a string containing a HB triplet uniquely identifying an ELFIN object (IDG/CLASS/Id)
+   * This object first ANNEX document in HTML supported image format (SVG preferred) is meant to be used 
+   * as image background in PDF reports.
+   * Common usage are: 'This is a draft', 'Not validated', 'Confidential',...
+   */
+  val CAR_NAME_WATERMARK_ELFIN_REF = "watermarkElfin"
  
 }
