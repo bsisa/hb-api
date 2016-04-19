@@ -138,22 +138,62 @@ object ReportBuilder {
     // URL encoding is necessary for query content but not for file name
     //val queryFileName = URLEncoder.encode(reportElfin.DIVERS.get.METHODE.get, "UTF-8")
 
+    
     // ==============================================================
-    // Run XQuery by file name
+    // Prepare `Augmented` Query string 
     // ==============================================================
     
-    // Add annexesRootFolderPath information if available in apiConfig
-    // Note: First introduced to add print support to Gespatri IMMEUBLE latests 'photo' from ANNEXE
-    val augmentedQueryString = if (apiConfig.annexesRootFolder.trim().size > 0) {
-        val annexesRootFolderPath = apiConfig.annexesRootFolder
-        val queryStringWithAnnexesRootFolderPath = queryString match {
-          case Some(qs) => qs + s"&annexesRootFolderPath=${annexesRootFolderPath}"
-          case None => s"?annexesRootFolderPath=${annexesRootFolderPath}"
-        }       
-        Some(queryStringWithAnnexesRootFolderPath)
-    } else {
-      queryString
-    }
+    // Additional parameter values
+    val annexesRootFolderPathOpt = if (apiConfig.annexesRootFolder.trim().size > 0) Some(apiConfig.annexesRootFolder) else None 
+    val reportWaterMarkElfinRefOpt = ElfinUtil.getElfinCarByName( reportElfin, ReportConfig.CAR_NAME_WATERMARK_ELFIN_REF ).flatMap( _.VALEUR )
+    
+    // Additional parameter key to value map
+    val optionalParamsToQuery = Map(
+    "annexesRootFolderPath" -> annexesRootFolderPathOpt,
+    ReportConfig.CAR_NAME_WATERMARK_ELFIN_REF -> reportWaterMarkElfinRefOpt
+    )
+    
+//    // Remove any key -> value where no value has been provided to
+//    val paramsToQuery = optionalParamsToQuery.filter( { case(key,value) => value.isDefined } ).map( { case(key,value) => (key,value.get) } );
+//
+//    // Create augmentedQueryString merging additional parameters to 
+//    // existing query string as necessary
+//    // Remark: parameters come from controlled configurations and do not require encoding.
+//    val augmentedQueryString = 
+//      // Additional parameters are available
+//      if (paramsToQuery.size > 0) {
+//        val queryStringWithNewParams = queryString match {
+//            // An existing query need to be `augmented`
+//            case Some(qs) => 
+//              val nextParams = for { 
+//                (k,v) <- paramsToQuery 
+//              } yield {
+//                  s"&${k}=${v}"
+//              }
+//              val finalQueryString = qs + nextParams.mkString
+//              finalQueryString
+//            // No existing query, build one.
+//            case None => 
+//              val params = for { 
+//                ((k,v),i) <- paramsToQuery.view.zipWithIndex 
+//              } yield {
+//                val paramSep = if (i!=0) {"&"} else {"?"}
+//                paramSep+s"${k}=${v}"
+//              }
+//              params.mkString
+//          }
+//        Some(queryStringWithNewParams)
+//    } else { // No additional parameters are available, return queryString unchanged.
+//      queryString
+//    }
+
+   
+    val augmentedQueryString = buildOrAugmentQueryString( queryString , optionalParamsToQuery )
+    
+    
+    // ==============================================================
+    // Run XQuery by file name
+    // ==============================================================    
     
     val responseFuture = XQueryWSHelper.runXQueryFile(queryFileName.trim, augmentedQueryString)
 
@@ -409,5 +449,51 @@ object ReportBuilder {
     }
   }
 
+  
+  /**
+   * Builds a new query string from `parameterValueMap` if queryString is empty. 
+   * Returns `queryString` unchanged if parameterValueMap is empty.
+   * Returns `queryString` merged with `parameterValueMap` if both contain values.
+   * Returns None if neither `queryString` nor `parameterValueMap` contain value.
+   */
+  def buildOrAugmentQueryString( queryString : Option[String], parameterValueMap : Map[String,Option[String]] ) : Option[String] = {
+    
+    // Remove any key -> value where no value has been provided to
+    val paramsToQuery = parameterValueMap.filter( { case(key,value) => value.isDefined } ).map( { case(key,value) => (key,value.get) } );
+
+    // Create augmentedQueryString merging additional parameters to 
+    // existing query string as necessary
+    // Remark: parameters come from controlled configurations and do not require encoding.
+    val augmentedQueryString = 
+      // Additional parameters are available
+      if (paramsToQuery.size > 0) {
+        val queryStringWithNewParams = queryString match {
+            // An existing query need to be `augmented`
+            case Some(qs) => 
+              val nextParams = for { 
+                (k,v) <- paramsToQuery 
+              } yield {
+                  s"&${k}=${v}"
+              }
+              val finalQueryString = qs + nextParams.mkString
+              finalQueryString
+            // No existing query, build one.
+            case None => 
+              val params = for { 
+                ((k,v),i) <- paramsToQuery.view.zipWithIndex 
+              } yield {
+                val paramSep = if (i!=0) {"&"} else {"?"}
+                paramSep+s"${k}=${v}"
+              }
+              params.mkString
+          }
+        Some(queryStringWithNewParams)
+    } else { // No additional parameters are available, return queryString unchanged.
+      queryString
+    }    
+    augmentedQueryString
+  }
+  
+  
 }
 
