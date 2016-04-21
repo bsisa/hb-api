@@ -13,14 +13,13 @@ import ch.bsisa.hyperbird.model.format.Implicits._
  */
 object OrderUtil {
 
-  val MANUAL_AMOUNT = "MANUAL_AMOUNT"
-  
   val APPLIED_RATE = "APPLIED_RATE"  
-  val TAX_RATE = "TAX_RATE"
-
+  val APPLIED_AMOUNT = "APPLIED_AMOUNT"
+  val GROSS_AMOUNT_TOTAL = "TOTAL_GROSS"
+  val MANUAL_AMOUNT = "MANUAL_AMOUNT"
   val NET_AMOUNT_TOTAL = "TOTAL_NET"
   val NET_AMOUNT_TOTAL_INCL_TAX = "TOTAL_NET_INCL_TAX"
-  val GROSS_AMOUNT_TOTAL = "TOTAL_GROSS"
+  val TAX_RATE = "TAX_RATE"
 
   def getTotalNetInclTaxLine(total: Double): L = {
 
@@ -40,7 +39,7 @@ object OrderUtil {
   def getTotalGrossLine(total: Double): L = {
 
     val totalGrossXml = <L POS="2">
-                          <C POS="1">TOTAL_GROSS</C>
+                          <C POS="1">{ s"$GROSS_AMOUNT_TOTAL" }</C>
                           <C POS="2">Total brut</C>
                           <C POS="3"/>
                           <C POS="4"/>
@@ -54,7 +53,7 @@ object OrderUtil {
   def getTotalNetLine(total: Double): L = {
 
     val totalNetXml = <L POS="2">
-                        <C POS="1">TOTAL_NET</C>
+                        <C POS="1">{ s"$NET_AMOUNT_TOTAL" }</C>
                         <C POS="2">Total net</C>
                         <C POS="3"/>
                         <C POS="4"/>
