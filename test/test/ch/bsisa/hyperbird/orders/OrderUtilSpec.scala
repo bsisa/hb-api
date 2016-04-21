@@ -21,6 +21,13 @@ import play.api.test.Helpers._
  */
 class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
 
+  /**
+   * TOTAL_GROSS = 1050 + 94.75 = 1144.75
+   * TOTAL_NET = TOTAL_GROSS + ( TOTAL_GROSS * -0.01 ) + ( TOTAL_GROSS * -0.02 ) + 5 = 1144.75 - 11.45 - 22.90 + 5 = 1115.40
+   * TAX_RATE computed amount =  TOTAL_NET * TAX_RATE = 1115.40 * 0.08 = 89.23
+   * TOTAL_NET_INCL_TAX = TOTAL_NET + ( TOTAL_NET * TAX_RATE ) = 1115.40 + 89.23 = 1204.63
+   */
+  
   val carInXml =
 <CARACTERISTIQUE>
   <CAR1 NOM="Surface au sol" UNITE="Ligne" VALEUR="100"/>
@@ -58,7 +65,7 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
     <L POS="4">
       <C POS="1">APPLIED_RATE</C>
       <C POS="2">Rabais</C>
-      <C POS="3">1.0</C>
+      <C POS="3">-1.0</C>
       <C POS="4">%</C>
       <C POS="5">0.00</C>
       <C POS="6">true</C>
@@ -66,7 +73,7 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
     <L POS="5">
       <C POS="1">APPLIED_RATE</C>
       <C POS="2">Escompte</C>
-      <C POS="3">2.0</C>
+      <C POS="3">-2.0</C>
       <C POS="4">%</C>
       <C POS="5">0.00</C>
       <C POS="6">true</C>
@@ -80,16 +87,24 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
       <C POS="6">true</C>
     </L>
     <L POS="7">
-      <C POS="1">APPLIED_RATE</C>
+      <C POS="1">TOTAL_NET</C>
+      <C POS="2">Total net</C>
+      <C POS="3"/>
+      <C POS="4"/>
+      <C POS="5">9999.00</C>
+      <C POS="6">false</C>
+    </L>
+    <L POS="8">
+      <C POS="1">TAX_RATE</C>
       <C POS="2">TVA</C>
       <C POS="3">8.0</C>
       <C POS="4">%</C>
       <C POS="5">0.00</C>
       <C POS="6">true</C>
     </L>
-    <L POS="8">
-      <C POS="1">TOTAL_NET</C>
-      <C POS="2">Total net</C>
+    <L POS="9">
+      <C POS="1">TOTAL_NET_INCL_TAX</C>
+      <C POS="2">Total net TTC</C>
       <C POS="3"/>
       <C POS="4"/>
       <C POS="5">9999.00</C>
@@ -101,22 +116,23 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
   val carIn = ElfinFormat caracteristiqueFromXml carInXml
   val carOut = OrderUtil computeOrderFigures carIn
 
+  println ( ">>>>> \n" + ElfinFormat.caracteristiqueToJson(carOut) + "\n")
 
   s"The number of carIn.FRACTION.L " should {
-    s"equal 8" in {
+    s"equal 9" in {
      val nbLinesOpt = carIn.FRACTION.map { fractionMat => 
        fractionMat.L.foldLeft(0)( (acc, l) => acc + 1) 
      } 
-     nbLinesOpt.get mustEqual 8
+     nbLinesOpt.get mustEqual 9
     }
   }
   
   s"The number of carOut.FRACTION.L " should {
-    s"equal 8" in {
+    s"equal 9" in {
      val nbLinesOpt = carOut.FRACTION.map { fractionMat => 
        fractionMat.L.foldLeft(0)( (acc, l) => acc + 1) 
      } 
-     nbLinesOpt.get mustEqual 8
+     nbLinesOpt.get mustEqual 9
     }
   }  
   
@@ -145,13 +161,17 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
       val lPos6 = carIn.FRACTION.map ( f => f.L(5)).get
       OrderUtil getLineAmount lPos6  mustEqual Some(5.00)
     }
-    "equal 0.0 for L POS='7' not yet computed VAT amount " in {
+    "equal 9999.0 for L POS='7' not yet computed net total amount " in {
       val lPos7 = carIn.FRACTION.map ( f => f.L(6)).get
-      OrderUtil getLineAmount lPos7  mustEqual Some(0.0)
+      OrderUtil getLineAmount lPos7  mustEqual Some(9999.0)
     }
-    "equal 9999.0 for L POS='8' not yet computed net total " in {
+    "equal 0.0 for L POS='8' not yet computed VAT amount " in {
       val lPos8 = carIn.FRACTION.map ( f => f.L(7)).get
-      OrderUtil getLineAmount lPos8  mustEqual Some(9999.00)
+      OrderUtil getLineAmount lPos8  mustEqual Some(0.0)
+    }
+    "equal 9999.0 for L POS='9' not yet computed net total " in {
+      val lPos9 = carIn.FRACTION.map ( f => f.L(8)).get
+      OrderUtil getLineAmount lPos9  mustEqual Some(9999.00)
     }
   }
   
@@ -169,25 +189,29 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
       val lPos3 = carOut.FRACTION.map ( f => f.L(2)).get
       OrderUtil getLineAmount lPos3  mustEqual Some(1144.75)
     }
-    "equal 11.45 (1.0%) for L POS='4' computed reduction amount " in {
+    "equal -11.45 (-1.0%) for L POS='4' computed reduction amount " in {
       val lPos4 = carOut.FRACTION.map ( f => f.L(3)).get
-      OrderUtil getLineAmount lPos4  mustEqual Some(11.45)
+      OrderUtil getLineAmount lPos4  mustEqual Some(-11.45)
     }
-    "equal 22.90 (2.0%) for L POS='5' computed discount amount " in {
+    "equal -22.90 (-2.0%) for L POS='5' computed discount amount " in {
       val lPos5 = carOut.FRACTION.map ( f => f.L(4)).get
-      OrderUtil getLineAmount lPos5  mustEqual Some(22.90)
+      OrderUtil getLineAmount lPos5  mustEqual Some(-22.90)
     }
     "equal 5.00 for L POS='6' rounding amount " in {
       val lPos6 = carOut.FRACTION.map ( f => f.L(5)).get
       OrderUtil getLineAmount lPos6  mustEqual Some(5.00)
     }
-    "equal 91.58 (8.0%) for L POS='7' computed VAT amount " in {
+    "equal 1115.40 for L POS='7' total net amount " in {
       val lPos7 = carOut.FRACTION.map ( f => f.L(6)).get
-      OrderUtil getLineAmount lPos7  mustEqual Some(91.58)
+      OrderUtil getLineAmount lPos7  mustEqual Some(1115.40)
     }
-    "equal 1275.68 (rounded 1267.6725) for L POS='8' computed net total " in {
+    "equal 89.23 (8.0%) (rounded 89.232) for L POS='8' computed VAT amount " in {
       val lPos8 = carOut.FRACTION.map ( f => f.L(7)).get
-      OrderUtil getLineAmount lPos8  mustEqual Some(1275.68)
+      OrderUtil getLineAmount lPos8  mustEqual Some(89.23)
+    }
+    "equal 1204.63 for L POS='8' computed net total " in {
+      val lPos9 = carOut.FRACTION.map ( f => f.L(8)).get
+      OrderUtil getLineAmount lPos9  mustEqual Some(1204.63)
     }
   }  
   
