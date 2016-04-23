@@ -41,11 +41,11 @@ object OrdersModuleInit {
           
           XQueryWSHelper.runXQueryFile(GET_ORDERS_NUMBER_MAX_VALUE_XQUERY_FILENAME, None).map { response =>
             val jsonString = response.body.mkString
-            Logger.debug(s">>>> OrdersModuleInit: Result of type ${response.ahcResponse.getContentType} received. Expected JSON value: " + jsonString)
+            Logger.info(s"OrdersModuleInit: Result of type ${response.ahcResponse.getContentType} received. Expected JSON value: " + jsonString)
             val jsonObj = play.api.libs.json.Json.parse(jsonString)
             val maxValueJs = jsonObj.\("max-value")
             val maxValue = maxValueJs.as[Int]
-            Logger.debug(s"maxValue obtained is = ${maxValue}")
+            Logger.info(s"OrdersModuleInit: maxValue obtained is = ${maxValue}")
             ordersIdActor ! OrdersMaxValueInit(maxValue)
           }
           
