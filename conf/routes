@@ -20,6 +20,12 @@ GET      /                                                                 ch.bs
 # Dynamically provides initialisation configuration information useful to hb-ui geoxml service
 GET      /conf.js                                                          ch.bsisa.hyperbird.controllers.Application.conf
 
+#                     hb-api `actor view` routes                      #
+GET      /api/actview/launch ch.bsisa.hyperbird.actview.controllers.ActviewApi.launchFleet(name, colour ?= "blue")
+GET      /api/actview/shutdown ch.bsisa.hyperbird.actview.controllers.ActviewApi.shutdownFleet(name)
+
+#######################################################################
+
 # Used for dev. acceleration
 #GET      /footer.html                                             ch.bsisa.hyperbird.controllers.Application.footer
 
