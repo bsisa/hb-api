@@ -13,7 +13,8 @@ import akka.actor.{ Actor, ActorLogging }
  */
 class ObjectActor(objectId:String) extends Actor with ActorLogging {
 
-  var currentPosition : Option[POINT] = None  
+  var position : Option[POINT] = None  
+  var destination : Option[POINT] = None
   
   def receive = {
     case message:String => 

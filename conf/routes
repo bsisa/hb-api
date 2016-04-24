@@ -21,8 +21,9 @@ GET      /                                                                 ch.bs
 GET      /conf.js                                                          ch.bsisa.hyperbird.controllers.Application.conf
 
 #                     hb-api `actor view` routes                      #
-GET      /api/actview/launch ch.bsisa.hyperbird.actview.controllers.ActviewApi.launchFleet(name, colour ?= "blue")
-GET      /api/actview/shutdown ch.bsisa.hyperbird.actview.controllers.ActviewApi.shutdownFleet(name)
+GET      /api/actview/launch                                               ch.bsisa.hyperbird.actview.controllers.ActviewApi.launchFleet(name, colour ?= "blue")
+GET      /api/actview/shutdown                                             ch.bsisa.hyperbird.actview.controllers.ActviewApi.shutdownFleet(name)
+GET      /api/actview/broadcast                                            ch.bsisa.hyperbird.actview.controllers.ActviewApi.broadcastFleet(name, message) 
 
 #######################################################################
 
@@ -60,7 +61,7 @@ GET      /api/melfin/catalogue/:className                                  ch.bs
 # Orders statistics - Get new order number
 GET      /api/melfin/orders/new/order-number                               ch.bsisa.hyperbird.controllers.Api.getNewOrderNumber
 # Orders statistics - Updates with creation and computations an order figures block
-POST     /api/melfin/orders/compute/order-lines                                ch.bsisa.hyperbird.controllers.Api.computeOrderFigures
+POST     /api/melfin/orders/compute/order-lines                            ch.bsisa.hyperbird.controllers.Api.computeOrderFigures
 
 # Returns the result of the named xquery file execution in its original format. 
 # If the xquery result format is MELFIN then specifying ?format=json will convert the original XML format to JSON.

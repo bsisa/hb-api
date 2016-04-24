@@ -3,67 +3,108 @@
  */
 package ch.bsisa.hyperbird.actview.controllers
 
+import akka.ConfigurationException
+import akka.actor.ActorSelection
+import akka.actor.InvalidActorNameException
+import akka.actor.Props
+
 import ch.bsisa.hyperbird.actview.actors.FleetActor
 import controllers.Assets
 import java.util.Date
 import play.api.mvc.Controller
 import play.api.libs.concurrent.Execution.Implicits._
 
-
-//import play.api.Logger
+import play.api.Logger
 import play.api.Play.current
 import play.api.libs.concurrent.Akka
-import akka.actor.Props
 
+import scala.concurrent.Future
 
 /**
  * @author Patrick Refondini
  *
  */
-object ActviewApi  extends Controller with securesocial.core.SecureSocial {
+object ActviewApi extends Controller with securesocial.core.SecureSocial {
 
-   /**
+  // Make use of Play actor system
+  val actorSystem = Akka.system
+
+  /**
+   * Returns a fleet reference by fleet `name`
+   */
+  def getFleetSelection(name: String): ActorSelection = {
+    val feetSelectionPath = s"/user/fleet-$name"
+    Logger.info(s"selectionPath = ${feetSelectionPath}")
+    actorSystem.actorSelection(feetSelectionPath)
+  }
+
+  /**
+   * Returns a fleet json string message filled with provided `fleetName` and `statusMessage` informations.
+   */
+  def getJsonFleetMessage(fleetName: String, statusMessage: String) = s"""
+    {
+      "fleet": {
+            "name" : "$fleetName",
+            "status": "$statusMessage",
+            "time": "${new Date()}"
+        }
+    }
+    """
+
+  /**
    * Creates a new fleet with `name` and optional `colour` for display.
    */
-  def launchFleet(name:String, colour:String) = SecuredAction(ajaxCall = true).async { request =>
-    
-    
+  def launchFleet(name: String, colour: String) = SecuredAction(ajaxCall = true).async { request =>
+
+    val currentDate = new Date()
+
     // Launch fleet
-    val fleetActor = Akka.system.actorOf( Props(new FleetActor(name,colour)), s"fleet-$name" )
-    fleetActor ! "start"
-    
-    val currentDate = new Date()
-    val fleetLaunchedMsg = s"""
-    {
-      "fleet": {
-            "name" : "$name",
-            "status": "launched",
-            "time": "${currentDate}"
-        }
+    val fleetLaunchedStatus = try {
+      
+      val fleetActor = actorSystem.actorOf(Props(new FleetActor(name, colour)), s"fleet-$name")
+      // TODO: make Start message a case obj message
+      fleetActor ! "start"
+
+      s"SUCCESS: ${name} fleet has been launched at path: ${fleetActor.path}"
+
+    } catch {
+      case e: ConfigurationException    => s"FAILURE: ${name} fleet could not be launched a configuration took place: ${e}"
+      case e: InvalidActorNameException => s"FAILURE: ${name} fleet could not be launched: ${e.message}"
+      case e: Throwable                 => s"FAILURE: ${name} fleet could not be launched due to unexpected exception: ${e}"
     }
-    """
-    scala.concurrent.Future(Ok(fleetLaunchedMsg).as(JSON))
+
+    val fleetLaunchedMsg = getJsonFleetMessage(name, fleetLaunchedStatus)
+
+    // Note: Use of Ok even in case of failure is intended for current POC design.  
+    Future(Ok(fleetLaunchedMsg).as(JSON))
 
   }
-  
-  
-  def shutdownFleet(name:String) = SecuredAction(ajaxCall = true).async { request =>
-    
+
+  /**
+   * Shuts down a fleet by `name`.
+   */  
+  def shutdownFleet(fleetName: String) = SecuredAction(ajaxCall = true).async { request =>
+
     // Shutdown fleet
-    Akka.system.actorSelection(s"fleet-$name") ! "stop"
-    
-    val currentDate = new Date()
-    val fleetShutdownMsg = s"""
-    {
-      "fleet": {
-            "name" : "$name",
-            "status": "shutdown",
-            "time": "${currentDate}"
-        }
-    }
-    """
-    scala.concurrent.Future(Ok(fleetShutdownMsg).as(JSON))
+    val fleetSelection = getFleetSelection(fleetName)
+    // TODO: make Stop message a case obj message
+    fleetSelection ! "stop"
+
+    val fleetShutdownMsg = getJsonFleetMessage(fleetName, "shutdown")
+    Future(Ok(fleetShutdownMsg).as(JSON))
 
   }
-  
+
+  /**
+   * Creates a new fleet with `name` and optional `colour` for display.
+   */
+  def broadcastFleet(fleetName: String, message: String) = SecuredAction(ajaxCall = true).async { request =>
+
+    val fleet = getFleetSelection(fleetName)
+    //fleet.router
+    fleet ! message
+    Future(Ok)
+
+  }
+
 }
