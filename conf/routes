@@ -23,7 +23,9 @@ GET      /conf.js                                                          ch.bs
 #                     hb-api `actor view` routes                      #
 GET      /api/actview/launch                                               ch.bsisa.hyperbird.actview.controllers.ActviewApi.launchFleet(name, colour ?= "blue")
 GET      /api/actview/shutdown                                             ch.bsisa.hyperbird.actview.controllers.ActviewApi.shutdownFleet(name)
-GET      /api/actview/broadcast                                            ch.bsisa.hyperbird.actview.controllers.ActviewApi.broadcastFleet(name, message) 
+GET      /api/actview/broadcast                                            ch.bsisa.hyperbird.actview.controllers.ActviewApi.broadcastFleet(name, message)
+GET      /api/actview/destination/:fleetName/:objectId                     ch.bsisa.hyperbird.actview.controllers.ActviewApi.getObjDestination(fleetName, objectId) 
+GET      /api/actview/position/:fleetName/:objectId                        ch.bsisa.hyperbird.actview.controllers.ActviewApi.getObjPosition(fleetName, objectId)
 
 #######################################################################
 

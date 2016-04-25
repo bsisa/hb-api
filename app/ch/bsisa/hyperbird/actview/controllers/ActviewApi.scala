@@ -13,6 +13,8 @@ import ch.bsisa.hyperbird.actview.ActviewMessage
 import ch.bsisa.hyperbird.actview.BroadcastFleet
 import ch.bsisa.hyperbird.actview.DeleteFleet
 import ch.bsisa.hyperbird.actview.LoadFleet
+import ch.bsisa.hyperbird.actview.GetDestination
+import ch.bsisa.hyperbird.actview.GetPosition
 import controllers.Assets
 import java.util.Date
 import play.api.mvc.Controller
@@ -38,10 +40,29 @@ object ActviewApi extends Controller with securesocial.core.SecureSocial {
    */
   def getFleetSelection(name: String): ActorSelection = {
     val feetSelectionPath = s"/user/fleet-$name"
-    Logger.info(s"selectionPath = ${feetSelectionPath}")
+    Logger.info(s"feetSelectionPath = ${feetSelectionPath}")
     actorSystem.actorSelection(feetSelectionPath)
   }
+  
+  /**
+   * Returns a fleet reference by fleet `name`
+   */
+  def getObjectSelection(fleetName: String, objectId : String): ActorSelection = {
+    val objectSelectionPath = s"/user/fleet-$fleetName/$objectId"
+    Logger.info(s"objectSelectionPath = ${objectSelectionPath}")
+    actorSystem.actorSelection(objectSelectionPath)
+  }  
 
+  /**
+   * Returns a server notification actor reference 
+   */
+  def getServerNotification(): ActorSelection = {
+    val serverSideNotificationPath = s"/user/serverSideNotificationActor"
+    Logger.info(s"serverSideNotificationPath = ${serverSideNotificationPath}")
+    actorSystem.actorSelection(serverSideNotificationPath)
+  }  
+  
+  
   /**
    * Returns a fleet json string message filled with provided `fleetName` and `statusMessage` informations.
    */
@@ -115,5 +136,30 @@ object ActviewApi extends Controller with securesocial.core.SecureSocial {
     Future(Ok)
 
   }
+  
+  /**
+   * Creates a new fleet with `name` and optional `colour` for display.
+   */
+  def getObjDestination(fleetName: String, objectId: String) = SecuredAction(ajaxCall = true).async { request =>
 
+    val objectRef = getObjectSelection(fleetName, objectId)
+    Logger.info("getObjDestination sending message: objectRef ! GetDestination")
+    objectRef ! GetDestination
+    Future(Ok)
+
+  }  
+
+  
+  /**
+   * Creates a new fleet with `name` and optional `colour` for display.
+   */
+  def getObjPosition(fleetName: String, objectId: String) = SecuredAction(ajaxCall = true).async { request =>
+
+    val objectRef = getObjectSelection(fleetName, objectId)
+    Logger.info("getObjPosition sending message: objectRef ! GetPosition")
+    objectRef ! GetPosition
+    Future(Ok)
+
+  }  
+  
 }

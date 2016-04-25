@@ -1,6 +1,6 @@
 package ch.bsisa.hyperbird.actview.actors
 
-import akka.actor.{ Actor, ActorRef, ActorLogging, Props }
+import akka.actor.{ Actor, ActorRef, ActorLogging, ActorSelection, Props }
 import akka.routing.BroadcastRouter
 import akka.routing.RoundRobinRouter
 
@@ -29,7 +29,6 @@ class FleetActor(name: String, colour: String) extends Actor with ActorLogging {
    * This mutable Option reference is only set once upon LoadFleet event.
    */
   var fleetOpt: Option[Seq[ActorRef]] = None
-
 
   /**
    * Process fleet events
@@ -101,5 +100,7 @@ class FleetActor(name: String, colour: String) extends Actor with ActorLogging {
     }
     actorRefSeqFut
   }  
+  
+ 
   
 }
