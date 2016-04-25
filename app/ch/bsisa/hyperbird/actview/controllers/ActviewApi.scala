@@ -9,6 +9,10 @@ import akka.actor.InvalidActorNameException
 import akka.actor.Props
 
 import ch.bsisa.hyperbird.actview.actors.FleetActor
+import ch.bsisa.hyperbird.actview.ActviewMessage
+import ch.bsisa.hyperbird.actview.BroadcastFleet
+import ch.bsisa.hyperbird.actview.DeleteFleet
+import ch.bsisa.hyperbird.actview.LoadFleet
 import controllers.Assets
 import java.util.Date
 import play.api.mvc.Controller
@@ -58,13 +62,18 @@ object ActviewApi extends Controller with securesocial.core.SecureSocial {
 
     val currentDate = new Date()
 
+    // Hard coded Test values
+    val fountainsConfig = ("G20040930101030004", "FONTAINE" )
+    val buildingsConfig = ("G20040930101030005", "IMMEUBLE")
+    
     // Launch fleet
     val fleetLaunchedStatus = try {
-      
-      val fleetActor = actorSystem.actorOf(Props(new FleetActor(name, colour)), s"fleet-$name")
-      // TODO: make Start message a case obj message
-      fleetActor ! "start"
 
+      // Create fleet actor
+      val fleetActor = actorSystem.actorOf(Props(new FleetActor(name, colour)), s"fleet-$name")
+      // Initialize fleet actor
+      fleetActor ! LoadFleet(objCollection = buildingsConfig._1, objClass = buildingsConfig._2)
+      //fleetActor ! LoadFleet(objCollection = fountainsConfig._1, objClass = fountainsConfig._2)
       s"SUCCESS: ${name} fleet has been launched at path: ${fleetActor.path}"
 
     } catch {
@@ -75,7 +84,7 @@ object ActviewApi extends Controller with securesocial.core.SecureSocial {
 
     val fleetLaunchedMsg = getJsonFleetMessage(name, fleetLaunchedStatus)
 
-    // Note: Use of Ok even in case of failure is intended for current POC design.  
+    // Note: Use of Ok even in case of failure is intended for current POC design.
     Future(Ok(fleetLaunchedMsg).as(JSON))
 
   }
@@ -88,7 +97,7 @@ object ActviewApi extends Controller with securesocial.core.SecureSocial {
     // Shutdown fleet
     val fleetSelection = getFleetSelection(fleetName)
     // TODO: make Stop message a case obj message
-    fleetSelection ! "stop"
+    fleetSelection ! DeleteFleet
 
     val fleetShutdownMsg = getJsonFleetMessage(fleetName, "shutdown")
     Future(Ok(fleetShutdownMsg).as(JSON))
@@ -102,7 +111,7 @@ object ActviewApi extends Controller with securesocial.core.SecureSocial {
 
     val fleet = getFleetSelection(fleetName)
     //fleet.router
-    fleet ! message
+    fleet ! BroadcastFleet(message)
     Future(Ok)
 
   }

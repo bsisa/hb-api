@@ -8,6 +8,9 @@ import akka.routing.BroadcastRouter
 import akka.routing.RoundRobinRouter
 
 import ch.bsisa.hyperbird.model._
+import ch.bsisa.hyperbird.actview.LoadFleet
+import ch.bsisa.hyperbird.actview.DeleteFleet
+import ch.bsisa.hyperbird.actview.BroadcastFleet
 
 import play.api.Play.current
 import play.api.libs.concurrent.Akka
@@ -24,36 +27,19 @@ class FleetActor(name: String, colour: String) extends Actor with ActorLogging {
   var fleetOpt: Option[Seq[ActorRef]] = None
 
   // TODO: load obj info from database 
-  def createFleet(): Future[Seq[ActorRef]] = {
-
-    // Hardcoded Test values
-    val buildingColId = "G20040930101030005"
-    val fountainColId = "G20040930101030004"
-    val buildingClass = "IMMEUBLE"
-    val fountainClass = "FONTAINE"    
-    
-    val fountainsConfig = (fountainColId, fountainClass)
-    val buildingsConfig = (buildingColId, buildingClass)
-    
-    // Parameter
-    val configPair = buildingsConfig
-
-    val objColId = configPair._1
-    val objClass = configPair._2
-
+  def createFleet(objCollection: String, objClass: String): Future[Seq[ActorRef]] = {
     /*
      * Example of produced XPath
      * "//ELFIN[@CLASSE='IMMEUBLE' and IDENTIFIANT/OBJECTIF='195']" // //ELFIN[@CLASSE='IMMEUBLE' and FORME/POINT[@FONCTION='BASE']]
      */
     val xPath = s"//ELFIN[@CLASSE='$objClass' and FORME/POINT[@FONCTION='BASE']]"
-    
-    
+
     // Make use of database API to obtain a set of objects with a start position 
     import ch.bsisa.hyperbird.dao.ws.XQueryWSHelper
     import ch.bsisa.hyperbird.dao.ws.WSQueries
     import ch.bsisa.hyperbird.Implicits._
 
-    val elfinsFuture = XQueryWSHelper.queryElfins(WSQueries.filteredCollectionQuery(objColId, xPath))
+    val elfinsFuture = XQueryWSHelper.queryElfins(WSQueries.filteredCollectionQuery(objCollection, xPath))
 
     val objectsIdPositionFut: Future[Seq[(String, POINT)]] = elfinsFuture.map { elfins =>
       for (elfin <- elfins) yield ((elfin.Id, elfin.FORME.get.POINT(0)))
@@ -70,17 +56,16 @@ class FleetActor(name: String, colour: String) extends Actor with ActorLogging {
   }
 
   def receive = {
-    case "start" =>
-      log.info(s"Start $colour $name fleet")
-      createFleet().map { objActRefs =>
+
+    case LoadFleet(objCollection, objClass) =>
+      log.info(s"Start $colour $name fleet with $objClass")
+      createFleet(objCollection, objClass).map { objActRefs =>
         fleetOpt = Some(objActRefs)
       }
-
-    case "stop" =>
+    case DeleteFleet =>
       log.info(s"Stop $colour $name fleet")
       stop(self)
-
-    case "notify" =>
+    case BroadcastFleet(message) =>
       fleetOpt match {
         case Some(fleet) =>
           for (obj <- fleet) {
@@ -90,7 +75,6 @@ class FleetActor(name: String, colour: String) extends Actor with ActorLogging {
         case None =>
           log.info(s"$colour $name fleet not available not notified")
       }
-
     case "robin" =>
       //roundRobinRouter ! "robin"
       fleetOpt match {
