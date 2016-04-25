@@ -1,6 +1,3 @@
-/**
- *
- */
 package ch.bsisa.hyperbird.actview.actors
 
 import akka.actor.{ Actor, ActorRef, ActorLogging, Props }
@@ -17,6 +14,9 @@ import play.api.libs.concurrent.Akka
 import scala.concurrent.Future
 
 /**
+ * 
+ * `FleetActor` models a fleet of objects themself modelled as `ObjectActor`
+ * 
  * @author Patrick Refondini
  *
  */
@@ -24,9 +24,56 @@ class FleetActor(name: String, colour: String) extends Actor with ActorLogging {
 
   import context._
 
+  /**
+   * Sequence of references to fleet objects. 
+   * This mutable Option reference is only set once upon LoadFleet event.
+   */
   var fleetOpt: Option[Seq[ActorRef]] = None
 
-  // TODO: load obj info from database 
+
+  /**
+   * Process fleet events
+   */
+  def receive = {
+
+    case LoadFleet(objCollection, objClass) =>
+      fleetOpt match {
+        case Some(fleet) =>
+          log.info(s"$colour $name fleet with $objClass already loaded. No further load action performed.")
+        case None =>
+          log.info(s"Start $colour $name fleet with $objClass")
+          createFleet(objCollection, objClass).map { objActRefs =>
+            fleetOpt = Some(objActRefs)
+          }
+      }
+      
+    case DeleteFleet =>
+      log.info(s"Stop $colour $name fleet")
+      stop(self)
+      
+    case BroadcastFleet(message) =>
+      fleetOpt match {
+        case Some(fleet) =>
+          for (obj <- fleet) {
+            obj ! "notified..."
+          }
+          log.info(s"$colour $name fleet notified")
+        case None =>
+          log.info(s"$colour $name fleet not available not notified")
+      }
+
+    case message: String =>
+      log.info(s"FleetActor for $colour $name fleet received: $message")
+
+    case _ =>
+      log.warning(s"FleetActor for $colour $name fleet received neither start nor stop nor any other string message !")
+
+  }
+
+
+  /**
+   * Loads a fleet of object info from database and creates corresponding ObjectActor.
+   */
   def createFleet(objCollection: String, objClass: String): Future[Seq[ActorRef]] = {
     /*
      * Example of produced XPath
@@ -53,40 +100,6 @@ class FleetActor(name: String, colour: String) extends Actor with ActorLogging {
       actorRefSeq
     }
     actorRefSeqFut
-  }
-
-  def receive = {
-
-    case LoadFleet(objCollection, objClass) =>
-      log.info(s"Start $colour $name fleet with $objClass")
-      createFleet(objCollection, objClass).map { objActRefs =>
-        fleetOpt = Some(objActRefs)
-      }
-    case DeleteFleet =>
-      log.info(s"Stop $colour $name fleet")
-      stop(self)
-    case BroadcastFleet(message) =>
-      fleetOpt match {
-        case Some(fleet) =>
-          for (obj <- fleet) {
-            obj ! "notified..."
-          }
-          log.info(s"$colour $name fleet notified")
-        case None =>
-          log.info(s"$colour $name fleet not available not notified")
-      }
-    case "robin" =>
-      //roundRobinRouter ! "robin"
-      fleetOpt match {
-        case Some(fleet) => fleet(2) ! "robin"
-        case None =>
-          log.info(s"$colour $name fleet not available not notified")
-      }
-
-    case message: String => log.info(s"FleetActor for $colour $name fleet received: $message")
-
-    case _               => log.warning(s"FleetActor for $colour $name fleet received neither start nor stop nor any other string message !")
-
-  }
-
+  }  
+  
 }
