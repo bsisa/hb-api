@@ -205,4 +205,27 @@ object ElfinUtil {
     carForNameOption
   }
   
+  /**
+   * Streamline ELFIN information to preserve only information relevant to map usage. (Actview POC)
+   */
+  def getElfinForMap(elfinFull : ELFIN) : ELFIN = {
+    val elfinForMap = ELFIN(
+      MUTATIONS = None, GEOSELECTION = elfinFull.GEOSELECTION,
+      IDENTIFIANT = elfinFull.IDENTIFIANT, CARACTERISTIQUE = None,
+      PARTENAIRE = None, //PARTENAIRE = elfinFull.PARTENAIRE
+      ACTIVITE = elfinFull.ACTIVITE,
+      FORME = elfinFull.FORME,
+      ANNEXE = None, //ANNEXE = elfinFull.ANNEXE,
+      DIVERS = None, //DIVERS = elfinFull.DIVERS,
+      Id = elfinFull.Id,
+      ID_G = elfinFull.ID_G,
+      CLASSE = elfinFull.CLASSE,
+      GROUPE = elfinFull.GROUPE,
+      TYPE = elfinFull.TYPE,
+      NATURE = elfinFull.NATURE,
+      SOURCE = elfinFull.SOURCE) 
+      
+     elfinForMap
+  }
+  
 }
