@@ -58,7 +58,6 @@ object ActviewApi extends Controller with securesocial.core.SecureSocial {
    */
   def getServerNotification(): ActorSelection = {
     val serverSideNotificationPath = s"/user/serverSideNotificationActor"
-    Logger.info(s"serverSideNotificationPath = ${serverSideNotificationPath}")
     actorSystem.actorSelection(serverSideNotificationPath)
   }  
   
