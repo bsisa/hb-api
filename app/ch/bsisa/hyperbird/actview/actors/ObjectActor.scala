@@ -13,7 +13,7 @@ import akka.actor.{ Actor, ActorLogging }
  * @author Patrick Refondini
  *
  */
-class ObjectActor(objectId: String, startPosition: POINT) extends Actor with ActorLogging {
+class ObjectActor(objectId: String, startPosition: POINT, elfin: ELFIN) extends Actor with ActorLogging {
 
   //import context.parent
 
@@ -48,7 +48,11 @@ class ObjectActor(objectId: String, startPosition: POINT) extends Actor with Act
         case POINT(pos, Some(x), Some(y), z, ksi, angle, alpha, xs, ys, zs, ksis, angles, alphas, id, id_g, _, objClass, group, remark) =>
           s"ObjectActor objectId=$objectId has (x,y,z) position ($x, $y, $z)."
       }
-      log.info(s"ObjectActor sending : $message to serverNotification")
+      val elfinJs = ch.bsisa.hyperbird.model.format.ElfinFormat.toJson(elfin)
+      log.info(s"ObjectActor sending : $message to serverNotification: elfinJs.toString() = $elfinJs.toString() ")
+      
+      
+      
       serverNotification ! message
     //sender ! Position(objectId, position)
   }

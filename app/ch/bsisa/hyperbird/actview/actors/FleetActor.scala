@@ -4,10 +4,11 @@ import akka.actor.{ Actor, ActorRef, ActorLogging, ActorSelection, Props }
 import akka.routing.BroadcastRouter
 import akka.routing.RoundRobinRouter
 
-import ch.bsisa.hyperbird.model._
 import ch.bsisa.hyperbird.actview.LoadFleet
 import ch.bsisa.hyperbird.actview.DeleteFleet
 import ch.bsisa.hyperbird.actview.BroadcastFleet
+import ch.bsisa.hyperbird.model._
+import ch.bsisa.hyperbird.util.ElfinUtil
 
 import play.api.Play.current
 import play.api.libs.concurrent.Akka
@@ -87,13 +88,13 @@ class FleetActor(name: String, colour: String) extends Actor with ActorLogging {
 
     val elfinsFuture = XQueryWSHelper.queryElfins(WSQueries.filteredCollectionQuery(objCollection, xPath))
 
-    val objectsIdPositionFut: Future[Seq[(String, POINT)]] = elfinsFuture.map { elfins =>
-      for (elfin <- elfins) yield ((elfin.Id, elfin.FORME.get.POINT(0)))
+    val objectsIdPositionFut: Future[Seq[(String, POINT, ELFIN)]] = elfinsFuture.map { elfins =>
+      for (elfin <- elfins) yield ((elfin.Id, elfin.FORME.get.POINT(0), ElfinUtil.getElfinForMap(elfin)))
     }
 
     val actorRefSeqFut = objectsIdPositionFut.map { objectsIdPosition =>
       val actorRefSeq = for (objectIdPosition <- objectsIdPosition) yield {
-        val objAct = actorOf(Props(new ObjectActor(objectId = objectIdPosition._1, startPosition = objectIdPosition._2)), name = objectIdPosition._1)
+        val objAct = actorOf(Props(new ObjectActor(objectId = objectIdPosition._1, startPosition = objectIdPosition._2, elfin = objectIdPosition._3)), name = objectIdPosition._1)
         objAct
       }
       actorRefSeq
