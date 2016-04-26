@@ -8,6 +8,7 @@ import ch.bsisa.hyperbird.actview.controllers.ActviewApi
 import ch.bsisa.hyperbird.model._
 
 import akka.actor.{ Actor, ActorLogging }
+import play.api.libs.json.Json
 
 /**
  * @author Patrick Refondini
@@ -50,10 +51,9 @@ class ObjectActor(objectId: String, startPosition: POINT, elfin: ELFIN) extends 
       }
       val elfinJs = ch.bsisa.hyperbird.model.format.ElfinFormat.toJson(elfin)
       log.info(s"ObjectActor sending : $message to serverNotification: elfinJs.toString() = $elfinJs.toString() ")
-      
-      
-      
-      serverNotification ! message
+      context.parent.path
+      val messageToSend = Json.obj("group" -> context.parent.path.toString, "text" -> "position", "user" ->  "server", "time" -> new java.util.Date(), "elfin" -> elfinJs )
+      serverNotification ! messageToSend
     //sender ! Position(objectId, position)
   }
 
