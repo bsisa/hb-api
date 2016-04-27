@@ -44,7 +44,7 @@ object ActviewApi extends Controller with securesocial.core.SecureSocial {
    * Returns a fleet reference by fleet `name`
    */
   def getFleetSelection(name: String): ActorSelection = {
-    val feetSelectionPath = s"/user/fleet-$name"
+    val feetSelectionPath = s"/user/$name"
     Logger.info(s"feetSelectionPath = ${feetSelectionPath}")
     actorSystem.actorSelection(feetSelectionPath)
   }
@@ -53,7 +53,7 @@ object ActviewApi extends Controller with securesocial.core.SecureSocial {
    * Returns a fleet reference by fleet `name`
    */
   def getObjectSelection(fleetName: String, objectId: String): ActorSelection = {
-    val objectSelectionPath = s"/user/fleet-$fleetName/$objectId"
+    val objectSelectionPath = s"/user/$fleetName/$objectId"
     Logger.info(s"objectSelectionPath = ${objectSelectionPath}")
     actorSystem.actorSelection(objectSelectionPath)
   }
@@ -94,7 +94,7 @@ object ActviewApi extends Controller with securesocial.core.SecureSocial {
     val fleetLaunchedStatus = try {
 
       // Create fleet actor
-      val fleetActor = actorSystem.actorOf(Props(new FleetActor(name, colour)), s"fleet-$name")
+      val fleetActor = actorSystem.actorOf(Props(new FleetActor(name, colour)), name)
       // Initialize fleet actor
       fleetActor ! LoadFleet(objCollection = buildingsConfig._1, objClass = buildingsConfig._2)
       //fleetActor ! LoadFleet(objCollection = fountainsConfig._1, objClass = fountainsConfig._2)
@@ -139,10 +139,13 @@ object ActviewApi extends Controller with securesocial.core.SecureSocial {
 
     message match {
       case "go" =>
+        Logger.debug(s"broadcastFleet go")
         fleet ! BroadcastFleetDestination(Some(testDestinationPosition))
       case "stop" =>
-        fleet ! BroadcastFleetDestination(Some(testDestinationPosition))
+        Logger.debug(s"broadcastFleet stop")        
+        fleet ! BroadcastFleetDestination(None)
       case msg: String =>
+        Logger.debug(s"broadcastFleet msg = $msg")
         fleet ! BroadcastFleet(message)
     }
     Future(Ok)

@@ -21,11 +21,11 @@ GET      /                                                                 ch.bs
 GET      /conf.js                                                          ch.bsisa.hyperbird.controllers.Application.conf
 
 #                     hb-api `actor view` routes                      #
-GET      /api/melfin/actview/launch                                               ch.bsisa.hyperbird.actview.controllers.ActviewApi.launchFleet(name, colour ?= "blue")
-GET      /api/melfin/actview/shutdown                                             ch.bsisa.hyperbird.actview.controllers.ActviewApi.shutdownFleet(name)
-GET      /api/melfin/actview/broadcast/:fleetName                                            ch.bsisa.hyperbird.actview.controllers.ActviewApi.broadcastFleet(fleetName, message)
-GET      /api/melfin/actview/destination/:fleetName/:objectId                     ch.bsisa.hyperbird.actview.controllers.ActviewApi.getObjDestination(fleetName, objectId) 
-GET      /api/melfin/actview/position/:fleetName/:objectId                        ch.bsisa.hyperbird.actview.controllers.ActviewApi.getObjPosition(fleetName, objectId)
+GET      /api/melfin/actview/launch                                        ch.bsisa.hyperbird.actview.controllers.ActviewApi.launchFleet(name, colour ?= "blue")
+GET      /api/melfin/actview/shutdown                                      ch.bsisa.hyperbird.actview.controllers.ActviewApi.shutdownFleet(name)
+GET      /api/melfin/actview/broadcast/:fleetName                          ch.bsisa.hyperbird.actview.controllers.ActviewApi.broadcastFleet(fleetName, message)
+GET      /api/melfin/actview/destination/:fleetName/:objectId              ch.bsisa.hyperbird.actview.controllers.ActviewApi.getObjDestination(fleetName, objectId) 
+GET      /api/melfin/actview/position/:fleetName/:objectId                 ch.bsisa.hyperbird.actview.controllers.ActviewApi.getObjPosition(fleetName, objectId)
 
 #######################################################################
 

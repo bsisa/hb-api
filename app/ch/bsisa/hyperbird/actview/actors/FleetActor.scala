@@ -71,7 +71,7 @@ class FleetActor(name: String, colour: String) extends Actor with ActorLogging {
           for (obj <- fleet) {
             obj ! SetDestination(destination)
           }
-          log.info(s"$colour $name fleet notified")
+          log.info(s"$colour $name fleet notified for single destination")
         case None =>
           log.info(s"$colour $name fleet not available not notified")
       }
