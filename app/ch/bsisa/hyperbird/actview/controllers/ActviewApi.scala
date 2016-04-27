@@ -16,6 +16,8 @@ import ch.bsisa.hyperbird.actview.DeleteFleet
 import ch.bsisa.hyperbird.actview.LoadFleet
 import ch.bsisa.hyperbird.actview.GetDestination
 import ch.bsisa.hyperbird.actview.GetPosition
+import ch.bsisa.hyperbird.actview.SetDestination
+
 import ch.bsisa.hyperbird.model.BASE
 import ch.bsisa.hyperbird.model.POINT
 import controllers.Assets
@@ -153,8 +155,14 @@ object ActviewApi extends Controller with securesocial.core.SecureSocial {
   def getObjDestination(fleetName: String, objectId: String) = SecuredAction(ajaxCall = true).async { request =>
 
     val objectRef = getObjectSelection(fleetName, objectId)
-    Logger.info("getObjDestination sending message: objectRef ! GetDestination")
-    objectRef ! GetDestination
+
+    if (objectId equals "G20040203114947000") {
+      Logger.info("getObjDestination sending message: objectRef ! SetDestination(Some(getTestDestination()))")
+      objectRef ! SetDestination(Some(getTestDestination()))
+    } else {
+      Logger.info("getObjDestination sending message: objectRef ! GetDestination")
+      objectRef ! GetDestination
+    }
     Future(Ok)
 
   }

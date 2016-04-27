@@ -18,21 +18,29 @@ class DriverActor extends Actor with ActorLogging {
 
   // Moves 
   val step = 10
-  
+
   def receive = {
     case GetPositionToDestination(position, destination) =>
       val newPosition = computeNextPosition(position, destination)
       // Avoid driver speeding!
-      Thread.sleep(2000)
+      Thread.sleep(2500)
       sender ! Position("na", newPosition)
   }
 
+  /**
+   * Compute next position given current, destination position and step.
+   */
   def computeNextPosition(currPosition: POINT, destination: POINT): POINT = {
-    
+
     // TODO: Basic test. Compute
-    val newX : Double = currPosition.X.get - step
-    val newY : Double = currPosition.Y.get + step
-    
+    val currX: Double = currPosition.X.get
+    val currY: Double = currPosition.Y.get
+    val destX: Double = destination.X.get
+    val destY: Double = destination.Y.get
+
+    val newX = computeNewCoord(curr = currX, dest = destX)
+    val newY = computeNewCoord(curr = currY, dest = destY)
+
     val newPosition = POINT(currPosition.POS,
       X = Some(newX), // Update
       Y = Some(newY), // Update
@@ -54,6 +62,17 @@ class DriverActor extends Actor with ActorLogging {
       REMARQUE = currPosition.REMARQUE)
 
     newPosition
+  }
+  
+  /**
+   * Basic move algo.
+   */
+  def computeNewCoord(curr:Double,dest:Double) = {
+    if ((dest - curr).abs < 2 * step) {
+      dest
+    } else if (dest > curr) {
+      curr - step
+    } else { curr + step }
   }
 
 }
