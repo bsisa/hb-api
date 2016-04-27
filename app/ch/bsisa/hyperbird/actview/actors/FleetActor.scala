@@ -7,6 +7,9 @@ import akka.routing.RoundRobinRouter
 import ch.bsisa.hyperbird.actview.LoadFleet
 import ch.bsisa.hyperbird.actview.DeleteFleet
 import ch.bsisa.hyperbird.actview.BroadcastFleet
+import ch.bsisa.hyperbird.actview.BroadcastFleetDestination
+import ch.bsisa.hyperbird.actview.SetDestination
+
 import ch.bsisa.hyperbird.model._
 import ch.bsisa.hyperbird.util.ElfinUtil
 
@@ -42,7 +45,7 @@ class FleetActor(name: String, colour: String) extends Actor with ActorLogging {
           log.info(s"$colour $name fleet with $objClass already loaded. No further load action performed.")
         case None =>
           log.info(s"Start $colour $name fleet with $objClass")
-          createFleet(objCollection, objClass).map { objActRefs =>
+          createFleet(name, objCollection, objClass).map { objActRefs =>
             fleetOpt = Some(objActRefs)
           }
       }
@@ -55,7 +58,18 @@ class FleetActor(name: String, colour: String) extends Actor with ActorLogging {
       fleetOpt match {
         case Some(fleet) =>
           for (obj <- fleet) {
-            obj ! "notified..."
+            obj ! message
+          }
+          log.info(s"$colour $name fleet notified")
+        case None =>
+          log.info(s"$colour $name fleet not available not notified")
+      }
+      
+    case BroadcastFleetDestination(destination) => 
+        fleetOpt match {
+        case Some(fleet) =>
+          for (obj <- fleet) {
+            obj ! SetDestination(destination)
           }
           log.info(s"$colour $name fleet notified")
         case None =>
@@ -74,7 +88,7 @@ class FleetActor(name: String, colour: String) extends Actor with ActorLogging {
   /**
    * Loads a fleet of object info from database and creates corresponding ObjectActor.
    */
-  def createFleet(objCollection: String, objClass: String): Future[Seq[ActorRef]] = {
+  def createFleet(fleetName: String, objCollection: String, objClass: String): Future[Seq[ActorRef]] = {
     /*
      * Example of produced XPath
      * "//ELFIN[@CLASSE='IMMEUBLE' and IDENTIFIANT/OBJECTIF='195']" // //ELFIN[@CLASSE='IMMEUBLE' and FORME/POINT[@FONCTION='BASE']]
@@ -94,7 +108,7 @@ class FleetActor(name: String, colour: String) extends Actor with ActorLogging {
 
     val actorRefSeqFut = objectsIdPositionFut.map { objectsIdPosition =>
       val actorRefSeq = for (objectIdPosition <- objectsIdPosition) yield {
-        val objAct = actorOf(Props(new ObjectActor(objectId = objectIdPosition._1, startPosition = objectIdPosition._2, elfin = objectIdPosition._3)), name = objectIdPosition._1)
+        val objAct = actorOf(Props(new ObjectActor(objectId = objectIdPosition._1, fleetName = fleetName, startPosition = objectIdPosition._2, elfin = objectIdPosition._3)), name = objectIdPosition._1)
         objAct
       }
       actorRefSeq

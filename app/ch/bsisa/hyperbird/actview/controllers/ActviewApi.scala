@@ -11,10 +11,13 @@ import akka.actor.Props
 import ch.bsisa.hyperbird.actview.actors.FleetActor
 import ch.bsisa.hyperbird.actview.ActviewMessage
 import ch.bsisa.hyperbird.actview.BroadcastFleet
+import ch.bsisa.hyperbird.actview.BroadcastFleetDestination
 import ch.bsisa.hyperbird.actview.DeleteFleet
 import ch.bsisa.hyperbird.actview.LoadFleet
 import ch.bsisa.hyperbird.actview.GetDestination
 import ch.bsisa.hyperbird.actview.GetPosition
+import ch.bsisa.hyperbird.model.BASE
+import ch.bsisa.hyperbird.model.POINT
 import controllers.Assets
 import java.util.Date
 import play.api.mvc.Controller
@@ -43,25 +46,24 @@ object ActviewApi extends Controller with securesocial.core.SecureSocial {
     Logger.info(s"feetSelectionPath = ${feetSelectionPath}")
     actorSystem.actorSelection(feetSelectionPath)
   }
-  
+
   /**
    * Returns a fleet reference by fleet `name`
    */
-  def getObjectSelection(fleetName: String, objectId : String): ActorSelection = {
+  def getObjectSelection(fleetName: String, objectId: String): ActorSelection = {
     val objectSelectionPath = s"/user/fleet-$fleetName/$objectId"
     Logger.info(s"objectSelectionPath = ${objectSelectionPath}")
     actorSystem.actorSelection(objectSelectionPath)
-  }  
+  }
 
   /**
-   * Returns a server notification actor reference 
+   * Returns a server notification actor reference
    */
   def getServerNotification(): ActorSelection = {
     val serverSideNotificationPath = s"/user/serverSideNotificationActor"
     actorSystem.actorSelection(serverSideNotificationPath)
-  }  
-  
-  
+  }
+
   /**
    * Returns a fleet json string message filled with provided `fleetName` and `statusMessage` informations.
    */
@@ -83,9 +85,9 @@ object ActviewApi extends Controller with securesocial.core.SecureSocial {
     val currentDate = new Date()
 
     // Hard coded Test values
-    val fountainsConfig = ("G20040930101030004", "FONTAINE" )
+    val fountainsConfig = ("G20040930101030004", "FONTAINE")
     val buildingsConfig = ("G20040930101030005", "IMMEUBLE")
-    
+
     // Launch fleet
     val fleetLaunchedStatus = try {
 
@@ -111,7 +113,7 @@ object ActviewApi extends Controller with securesocial.core.SecureSocial {
 
   /**
    * Shuts down a fleet by `name`.
-   */  
+   */
   def shutdownFleet(fleetName: String) = SecuredAction(ajaxCall = true).async { request =>
 
     // Shutdown fleet
@@ -130,12 +132,21 @@ object ActviewApi extends Controller with securesocial.core.SecureSocial {
   def broadcastFleet(fleetName: String, message: String) = SecuredAction(ajaxCall = true).async { request =>
 
     val fleet = getFleetSelection(fleetName)
-    //fleet.router
-    fleet ! BroadcastFleet(message)
+
+    val testDestinationPosition = getTestDestination()
+
+    message match {
+      case "go" =>
+        fleet ! BroadcastFleetDestination(Some(testDestinationPosition))
+      case "stop" =>
+        fleet ! BroadcastFleetDestination(Some(testDestinationPosition))
+      case msg: String =>
+        fleet ! BroadcastFleet(message)
+    }
     Future(Ok)
 
   }
-  
+
   /**
    * Creates a new fleet with `name` and optional `colour` for display.
    */
@@ -146,9 +157,8 @@ object ActviewApi extends Controller with securesocial.core.SecureSocial {
     objectRef ! GetDestination
     Future(Ok)
 
-  }  
+  }
 
-  
   /**
    * Creates a new fleet with `name` and optional `colour` for display.
    */
@@ -159,6 +169,33 @@ object ActviewApi extends Controller with securesocial.core.SecureSocial {
     objectRef ! GetPosition
     Future(Ok)
 
-  }  
+  }
+
   
+  def getTestDestination(): POINT = {
+    // G20040930101030004/FONTAINE/G19970110104656000
+    // <POINT POS="1" X="561183.92" Y="204704.9" Z="0.0" KSI="0.0" ANGLE="0.0" ZS="0.0" KSIS="0.0" ANGLES="0.0" FONCTION="BASE"/>
+    val testDestinationPosition = POINT(1,
+      X = Some(561183.92d), // Update
+      Y = Some(204704.9d), // Update
+      Z = 0d,
+      KSI = 0d,
+      ANGLE = 0d,
+      ALPHA = "",
+      XS = None,
+      YS = None,
+      ZS = 0d,
+      KSIS = 0d,
+      ANGLES = 0d,
+      ALPHAS = "",
+      Id = None,
+      ID_G = None,
+      FONCTION = BASE,
+      CLASSE = None,
+      GROUPE = None,
+      REMARQUE = Some("Test destination."))
+
+    testDestinationPosition
+  }
+
 }

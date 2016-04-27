@@ -4,6 +4,7 @@ import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.model.format.Implicits._
 import ch.bsisa.hyperbird.model.proto._
 import ch.bsisa.hyperbird.model.CARACTERISTIQUE
+import ch.bsisa.hyperbird.model.FORME
 import ch.bsisa.hyperbird.model.NOM
 import ch.bsisa.hyperbird.model.IDENTIFIANT
 import ch.bsisa.hyperbird.model.MUTATION
@@ -224,6 +225,26 @@ object ElfinUtil {
       TYPE = elfinFull.TYPE,
       NATURE = elfinFull.NATURE,
       SOURCE = elfinFull.SOURCE) 
+      
+     elfinForMap
+  }
+  
+    def updateElfinForme(elfin : ELFIN, forme: FORME) : ELFIN = {
+    val elfinForMap = ELFIN(
+      MUTATIONS = None, GEOSELECTION = elfin.GEOSELECTION,
+      IDENTIFIANT = elfin.IDENTIFIANT, CARACTERISTIQUE = None,
+      PARTENAIRE = None, //PARTENAIRE = elfin.PARTENAIRE
+      ACTIVITE = elfin.ACTIVITE,
+      FORME = Some(forme),
+      ANNEXE = None, //ANNEXE = elfin.ANNEXE,
+      DIVERS = None, //DIVERS = elfin.DIVERS,
+      Id = elfin.Id,
+      ID_G = elfin.ID_G,
+      CLASSE = elfin.CLASSE,
+      GROUPE = elfin.GROUPE,
+      TYPE = elfin.TYPE,
+      NATURE = elfin.NATURE,
+      SOURCE = elfin.SOURCE) 
       
      elfinForMap
   }
