@@ -44,16 +44,16 @@ object ActviewApi extends Controller with securesocial.core.SecureSocial {
    * Returns a fleet reference by fleet `name`
    */
   def getFleetSelection(name: String): ActorSelection = {
-    val feetSelectionPath = s"/user/$name"
-    Logger.info(s"feetSelectionPath = ${feetSelectionPath}")
-    actorSystem.actorSelection(feetSelectionPath)
+    val fleetSelectionPath = s"user/$name"
+    Logger.info(s"feetSelectionPath = ${fleetSelectionPath}")
+    actorSystem.actorSelection(fleetSelectionPath)
   }
 
   /**
    * Returns a fleet reference by fleet `name`
    */
   def getObjectSelection(fleetName: String, objectId: String): ActorSelection = {
-    val objectSelectionPath = s"/user/$fleetName/$objectId"
+    val objectSelectionPath = s"user/$fleetName/$objectId"
     Logger.info(s"objectSelectionPath = ${objectSelectionPath}")
     actorSystem.actorSelection(objectSelectionPath)
   }
