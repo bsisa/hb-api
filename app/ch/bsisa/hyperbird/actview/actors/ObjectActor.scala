@@ -68,7 +68,7 @@ class ObjectActor(objectId: String, fleetName: String, startPosition: POINT, elf
       // Consider destination reached given x, y coordinates
       if (objectPosition.X.get == destination.X.get && objectPosition.Y.get == destination.Y.get) {
         objectDestination = None
-        log.info(s"Object $objectId reached destination");
+        log.info(s">>>>    Object $objectId reached destination <<<<");
       } else {
         driverActor ! GetPositionToDestination(objectPosition, destination)
       }
@@ -83,7 +83,6 @@ class ObjectActor(objectId: String, fleetName: String, startPosition: POINT, elf
     val elfinWithUpdatedPosition = ElfinUtil.updateElfinForme( elfin, FORME(Seq(objectPosition), Seq(), Seq(), Seq()))
     val elfinJs = ch.bsisa.hyperbird.model.format.ElfinFormat.toJson(elfinWithUpdatedPosition)
     val messageToSend = Json.obj("group" -> fleetName, "text" -> "position", "user" -> "server", "time" -> new java.util.Date(), "elfin" -> elfinJs)
-    log.info(s"ObjectActor sending : $messageToSend to serverNotification")
     serverNotification ! messageToSend
   }
 
