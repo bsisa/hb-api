@@ -18,12 +18,14 @@ class DriverActor extends Actor with ActorLogging {
 
   // Moves 
   val step = 10
-
+  val rdm = new java.util.Random
   def receive = {
     case GetPositionToDestination(position, destination) =>
       val newPosition = computeNextPosition(position, destination)
       // Avoid driver speeding!
-      Thread.sleep(2500)
+      val sleepMillis = rdm.nextInt(5) * 50
+      log.debug(s"GetPositionToDestination sleeps for $sleepMillis")
+      Thread.sleep(sleepMillis)
       sender ! Position("na", newPosition)
   }
 
@@ -70,7 +72,7 @@ class DriverActor extends Actor with ActorLogging {
   def computeNewCoord(curr:Double,dest:Double) = {
     if ((dest - curr).abs < 2 * step) {
       dest
-    } else if (dest > curr) {
+    } else if (dest < curr) {
       curr - step
     } else { curr + step }
   }
