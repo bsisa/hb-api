@@ -34,7 +34,6 @@ class ObjectActor(objectId: String, startPosition: POINT, elfin: ELFIN) extends 
           }
       }
     case GetDestination =>
-      //serverNotification ! Destination(objectId, destination)
       val message = destination match {
         case Some(POINT(pos, Some(x), Some(y), z, ksi, angle, alpha, xs, ys, zs, ksis, angles, alphas, id, id_g, _, objClass, group, remark)) =>
           s"ObjectActor objectId=$objectId has (x,y,z) destination ($x, $y, $z)."
@@ -45,11 +44,10 @@ class ObjectActor(objectId: String, startPosition: POINT, elfin: ELFIN) extends 
       serverNotification ! message
     case SetDestination(position) => destination = Some(position)
     case GetPosition =>
-//      val message = position match {
-//        case POINT(pos, Some(x), Some(y), z, ksi, angle, alpha, xs, ys, zs, ksis, angles, alphas, id, id_g, _, objClass, group, remark) =>
-//          s"ObjectActor objectId=$objectId has (x,y,z) position ($x, $y, $z)."
-//      }
-//      log.info(s"ObjectActor sending : $message to serverNotification: elfinJs.toString() = $elfinJs.toString() ")
+      val message = position match {
+        case POINT(pos, Some(x), Some(y), z, ksi, angle, alpha, xs, ys, zs, ksis, angles, alphas, id, id_g, _, objClass, group, remark) =>
+          s"ObjectActor objectId=$objectId has (x,y,z) position ($x, $y, $z)."
+      }
       val elfinJs = ch.bsisa.hyperbird.model.format.ElfinFormat.toJson(elfin)
       val messageToSend = Json.obj("group" -> "Fleet1", "text" -> "position", "user" ->  "server", "time" -> new java.util.Date(), "elfin" -> elfinJs )
       log.info(s"ObjectActor sending : $messageToSend to serverNotification")
