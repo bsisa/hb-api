@@ -23,8 +23,8 @@ class DriverActor extends Actor with ActorLogging {
     case GetPositionToDestination(position, destination) =>
       val newPosition = computeNextPosition(position, destination)
       // Avoid driver speeding!
-      val sleepMillis = rdm.nextInt(5) * 50
-      log.debug(s"GetPositionToDestination sleeps for $sleepMillis")
+      val sleepMillis = rdm.nextInt(5) * 250
+      log.debug("GetPositionToDestination sleeps for {}", sleepMillis)
       Thread.sleep(sleepMillis)
       sender ! Position("na", newPosition)
   }
