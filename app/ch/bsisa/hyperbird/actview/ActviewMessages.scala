@@ -1,11 +1,11 @@
-/**
- *
- */
 package ch.bsisa.hyperbird.actview
 
 import ch.bsisa.hyperbird.model.POINT
 
 /**
+ * `ActviewMessage` sealed trait contains all messages used by 
+ * `Actor`s contained in package [[ch.bsisa.hyperbird.actview.actors]]  
+ *
  * @author Patrick Refondini
  *
  */
