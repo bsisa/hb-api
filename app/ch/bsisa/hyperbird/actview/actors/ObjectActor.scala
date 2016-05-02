@@ -1,6 +1,3 @@
-/**
- *
- */
 package ch.bsisa.hyperbird.actview.actors
 
 import ch.bsisa.hyperbird.actview.{ Destination, GetDestination, GetPosition, GetPositionToDestination, Position, SetDestination }
@@ -48,32 +45,31 @@ class ObjectActor(objectId: String, fleetName: String, startPosition: POINT, elf
 
     case SetDestination(newDestination) =>
       objectDestination = newDestination
-      driveToDestination(objectPosition, objectDestination)
+      driveToDestination(objectDestination)
 
     // Position computed from DriverActor
     case Position(objectId, newPosition) =>
       objectPosition = newPosition
-      driveToDestination(objectPosition, objectDestination)
-      notifyCurrentPosition()
+      driveToDestination(objectDestination)
 
     case GetPosition =>
       notifyCurrentPosition()
 
   }
 
-  def driveToDestination(currentPosition: POINT, destinationOpt: Option[POINT]) = {
+  def driveToDestination(destinationOpt: Option[POINT]) = {
 
     // Only proceed a destination exist
     destinationOpt.foreach { destination =>
       // Consider destination reached given x, y coordinates
-      if (objectPosition.X.get == destination.X.get && objectPosition.Y.get == destination.Y.get) {
+      if ( (objectPosition.X.get == destination.X.get) && (objectPosition.Y.get == destination.Y.get)) {
         objectDestination = None
         log.info(s">>>>    Object $objectId reached destination <<<<");
       } else {
         driverActor ! GetPositionToDestination(objectPosition, destination)
       }
-
     }
+    notifyCurrentPosition()
   }
 
   /**
@@ -82,7 +78,12 @@ class ObjectActor(objectId: String, fleetName: String, startPosition: POINT, elf
   def notifyCurrentPosition() = {
     val elfinWithUpdatedPosition = ElfinUtil.updateElfinForme( elfin, FORME(Seq(objectPosition), Seq(), Seq(), Seq()))
     val elfinJs = ch.bsisa.hyperbird.model.format.ElfinFormat.toJson(elfinWithUpdatedPosition)
-    val messageToSend = Json.obj("group" -> fleetName, "text" -> "position", "user" -> "server", "time" -> new java.util.Date(), "elfin" -> elfinJs)
+    val stateJs = objectDestination match {
+      case Some(d) => "moving"
+      case None => "still"
+    } 
+    
+    val messageToSend = Json.obj("group" -> fleetName, "text" -> "position", "user" -> "server", "time" -> new java.util.Date(), "elfin" -> elfinJs, "state" -> stateJs)
     serverNotification ! messageToSend
   }
 
