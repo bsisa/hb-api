@@ -43,7 +43,7 @@ object ServerSideNotification extends Controller with securesocial.core.SecureSo
     Logger.info(s"${req.remoteAddress} - SSE connected")
     Ok.feed(notificationOut
       &> filter(group)
-      &> Concurrent.buffer(50)
+      &> Concurrent.buffer(1500)
       &> connDeathWatch(req.remoteAddress)
       &> EventSource()).as("text/event-stream")
   }
