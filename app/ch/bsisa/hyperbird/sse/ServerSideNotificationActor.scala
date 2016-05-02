@@ -15,9 +15,9 @@ import play.api.libs.json.Json.toJsFieldJsValueWrapper
 class ServerSideNotificationActor extends Actor with ActorLogging {
 
   def receive = {
-
+    
     case messageReceived:JsValue =>  
-      log.debug("ServerSideNotificationActor reveived JsValue");
+      log.debug("ServerSideNotificationActor reveived JsValue for ELFIN.Id {}" , messageReceived.\("elfin").\("Id"));
       ServerSideNotification.notificationChannel.push(messageReceived)
     
     case messageReceived:String =>
@@ -27,7 +27,7 @@ class ServerSideNotificationActor extends Actor with ActorLogging {
       ServerSideNotification.notificationChannel.push(messageToSend)
 
     case _ =>
-      log.warning(s"Received unexpected message at ${new Date()}")
+      log.warning("Actor controller received unexpected message at {}", new Date())
   }
 
 
