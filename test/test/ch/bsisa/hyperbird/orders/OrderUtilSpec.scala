@@ -193,9 +193,9 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
       val lPos4 = carOut.FRACTION.map ( f => f.L(3)).get
       OrderUtil getLineAmount lPos4  mustEqual Some(-11.45)
     }
-    "equal -22.90 (-2.0%) for L POS='5' computed discount amount " in {
+    "equal -22.65 (-2.0%) for L POS='5' computed discount amount " in {
       val lPos5 = carOut.FRACTION.map ( f => f.L(4)).get
-      OrderUtil getLineAmount lPos5  mustEqual Some(-22.90)
+      OrderUtil getLineAmount lPos5  mustEqual Some(-22.65)
     }
     "equal 5.00 for L POS='6' rounding amount " in {
       val lPos6 = carOut.FRACTION.map ( f => f.L(5)).get
