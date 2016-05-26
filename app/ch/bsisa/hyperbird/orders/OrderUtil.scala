@@ -13,7 +13,9 @@ import ch.bsisa.hyperbird.model.format.Implicits._
  */
 object OrderUtil {
 
-  val APPLIED_RATE = "APPLIED_RATE"  
+  val ROUNDING_PRECISION = BigDecimal(0.05)
+  
+  val APPLIED_RATE = "APPLIED_RATE"
   val APPLIED_AMOUNT = "APPLIED_AMOUNT"
   val GROSS_AMOUNT_TOTAL = "TOTAL_GROSS"
   val MANUAL_AMOUNT = "MANUAL_AMOUNT"
@@ -21,21 +23,38 @@ object OrderUtil {
   val NET_AMOUNT_TOTAL_INCL_TAX = "TOTAL_NET_INCL_TAX"
   val TAX_RATE = "TAX_RATE"
 
+  /**
+   * Rounding helper useful for currency rounding
+   * 
+   * Examples:  
+   * assert(round(BigDecimal(1000.1367478), BigDecimal(0.05)) ==  BigDecimal(1000.15))
+   * assert(round(BigDecimal(1000.16), BigDecimal(0.05)) ==  BigDecimal(1000.15))
+   * assert(round(BigDecimal(1000.1749), BigDecimal(0.05)) ==  BigDecimal(1000.15))
+   * assert(round(BigDecimal(1000.175), BigDecimal(0.05)) ==  BigDecimal(1000.20))
+   * assert(round(BigDecimal(1000.19), BigDecimal(0.05)) ==  BigDecimal(1000.20))
+   */
+  def round(number: BigDecimal, precision: BigDecimal): BigDecimal = {
+    val roundedNumber = number.setScale(precision.scale, BigDecimal.RoundingMode.HALF_UP)
+    val division = (roundedNumber / precision)
+    val truncated = division.setScale(0, BigDecimal.RoundingMode.HALF_UP)
+    val result = truncated * precision
+    result
+  }
+
   def getTotalNetInclTaxLine(total: Double): L = {
 
     val totalNetInclTaxXml = <L POS="2">
-                          <C POS="1">{ s"$NET_AMOUNT_TOTAL_INCL_TAX" }</C>
-                          <C POS="2">Total brut</C>
-                          <C POS="3"/>
-                          <C POS="4"/>
-                          <C POS="5">{ f"$total%2.2f" }</C>
-                          <C POS="6">false</C>
-                        </L>
+                               <C POS="1">{ s"$NET_AMOUNT_TOTAL_INCL_TAX" }</C>
+                               <C POS="2">Total brut</C>
+                               <C POS="3"/>
+                               <C POS="4"/>
+                               <C POS="5">{ f"$total%2.2f" }</C>
+                               <C POS="6">false</C>
+                             </L>
 
     ElfinFormat.lFromXml(totalNetInclTaxXml)
-  }  
-  
-  
+  }
+
   def getTotalGrossLine(total: Double): L = {
 
     val totalGrossXml = <L POS="2">
@@ -77,16 +96,16 @@ object OrderUtil {
     if (amountCellSeq.size == 1) {
       val amountCellString = getMixedContent(amountCellSeq(0).mixed)
       val amountCellDoubleValue = amountCellString match {
-        case "" => 0d // Consider empty string as zero
+        case ""  => 0d // Consider empty string as zero
         case "." => 0d // Consider a single point a zero
-        case s  => s.toDouble
+        case s   => s.toDouble
       }
       Option(amountCellDoubleValue)
     } else {
       None
     }
   }
-  
+
   /**
    * Return the rate found at cell C position 3 for a given line L
    * if available.
@@ -100,21 +119,21 @@ object OrderUtil {
     if (rateCellSeq.size == 1) {
       val rateCellString = getMixedContent(rateCellSeq(0).mixed)
       val rateCellDoubleValue = rateCellString match {
-        case "" => 0d // Consider empty string as zero
+        case ""  => 0d // Consider empty string as zero
         case "." => 0d // Consider a single point a zero
-        case s  => s.toDouble / 100d
+        case s   => s.toDouble / 100d
       }
       Option(rateCellDoubleValue)
     } else {
       None
     }
-  }  
-  
+  }
+
   /**
    * Returns the line type found at cell position 1.
    * If no or several cells are found with POS attribute 1 None is return.
    */
-  def getLineType(l:L): Option[String] = {
+  def getLineType(l: L): Option[String] = {
     val lineTypeCellSeq = l.C.filter { c => c.POS == 1 }
     // Make sure we have a single match
     if (lineTypeCellSeq.size == 1) {
@@ -122,20 +141,19 @@ object OrderUtil {
       Option(lineType)
     } else {
       None
-    }    
+    }
   }
 
   /**
    * Compute amount from: `rateValue` * `amountTarget` with defined rounding rule.
    */
-  def computeAmount( rateValue : Double, amountTarget : Double) : Double = BigDecimal(rateValue * amountTarget).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
-  
-  
+  def computeAmount(rateValue: Double, amountTarget: Double): Double = BigDecimal(rateValue * amountTarget).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+
   /**
-   * Return a new line entry only updating original line entry amount cell with value `amount`  
+   * Return a new line entry only updating original line entry amount cell with value `amount`
    */
-  def updateLineAmount( line : L, amount : Double) : L = {
-    
+  def updateLineAmount(line: L, amount: Double): L = {
+
     val newCPos5 = C(setMixedContent(f"$amount%2.2f"), POS = 5)
 
     val newCSeq = Seq(
@@ -148,8 +166,7 @@ object OrderUtil {
     // Return a new line L with updated C position 5 and leaving other cells unchanged
     L(C = newCSeq, POS = line.POS)
   }
-  
-  
+
   /**
    * Return single gross amount line amount value as Some(Double).
    * If None is returned it can be considered a data integrity problem.
@@ -210,7 +227,7 @@ object OrderUtil {
   def replaceFirstLineMatchingLineType(fract: MATRICETypable, line: L): MATRICETypable = {
 
     val lineTypeOpt = getLineType(line);
-    
+
     lineTypeOpt match {
       case Some(lineType) =>
         // Find line index for lineType
@@ -231,8 +248,7 @@ object OrderUtil {
       case None => fract
     }
   }
-  
-  
+
   /**
    * Update gross amount total line
    */
@@ -283,7 +299,7 @@ object OrderUtil {
 
         val updatedFraction = MATRICEType(newLines: _*)
         println(s"3. updatedFraction = ${updatedFraction}")
-        (updatedFraction,grossTotalAmntOpt)
+        (updatedFraction, grossTotalAmntOpt)
       case None =>
         // Preserve fraction
         println(s"3. Preserved fraction = ${fract}")
@@ -316,9 +332,9 @@ object OrderUtil {
         }
         // TODO: refactor using computeAmount
         val rateAmount = BigDecimal(rateValue * grossValue).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
-        
+
         // TODO: refactor using updateLineAmount
-        
+
         val updateCPos5 = C(setMixedContent(f"$rateAmount%2.2f"), POS = 5)
 
         val updatedCSeq = Seq(
@@ -340,9 +356,9 @@ object OrderUtil {
 
   /**
    * Takes a sequence of L and computes the sum of each L amount.
-   * If no amount are available returns 0. 
+   * If no amount are available returns 0.
    */
-  def computeSumForAmountLines( amountLines : Seq[L]) : Double = {
+  def computeSumForAmountLines(amountLines: Seq[L]): Double = {
     val sum = amountLines.foldLeft(0d) {
       (acc, l) =>
         getLineAmount(l) match {
@@ -351,34 +367,34 @@ object OrderUtil {
         }
     }
     sum
-  } 
-  
+  }
+
   /**
    * Computes tax amount from NET_AMOUNT_TOTAL and TAX_RATE lines.
    * We expect a single NET_AMOUNT_TOTAL line.
    * We expect a single TAX_RATE line.
    * If the above constraints are not matched the update is cancelled
    * but no notification, exception or message are currently triggered,
-   * Only an error log will be output.  
+   * Only an error log will be output.
    */
   def updateTaxRateLine(fract: MATRICETypable): MATRICETypable = {
-    
+
     // We expect a single net amount line but support several
     val netAmountLines = fract.L.filter { l =>
       l.C.exists {
         c =>
-          (c.POS == 1 && (getMixedContent(c.mixed) == NET_AMOUNT_TOTAL ))
+          (c.POS == 1 && (getMixedContent(c.mixed) == NET_AMOUNT_TOTAL))
       }
     }
-    
+
     val taxRateLines = fract.L.filter { l =>
       l.C.exists {
         c =>
-          (c.POS == 1 && (getMixedContent(c.mixed) == TAX_RATE ))
+          (c.POS == 1 && (getMixedContent(c.mixed) == TAX_RATE))
       }
-    } 
-    
-    if ( netAmountLines.size == 1 && taxRateLines.size == 1) {
+    }
+
+    if (netAmountLines.size == 1 && taxRateLines.size == 1) {
       // Get lines
       val netAmountLine = netAmountLines(0)
       val taxRateLine = taxRateLines(0)
@@ -389,15 +405,15 @@ object OrderUtil {
       val taxAmount = computeAmount(rateValue = taxRate.getOrElse(0d), amountTarget = netAmount.getOrElse(0d))
       // Update matrix
       val newTaxRateLine = updateLineAmount(taxRateLine, taxAmount)
-      
+
       val updatedFraction = replaceFirstLineMatchingLineType(fract, newTaxRateLine)
       updatedFraction
 
     } else {
-      fract  
+      fract
     }
   }
-  
+
   /**
    * Update net total line
    */
@@ -410,8 +426,8 @@ object OrderUtil {
           (c.POS == 1 && (
             getMixedContent(c.mixed) == MANUAL_AMOUNT ||
             getMixedContent(c.mixed) == NET_AMOUNT_TOTAL ||
-            getMixedContent(c.mixed) == TAX_RATE || 
-            getMixedContent(c.mixed) == NET_AMOUNT_TOTAL_INCL_TAX ))
+            getMixedContent(c.mixed) == TAX_RATE ||
+            getMixedContent(c.mixed) == NET_AMOUNT_TOTAL_INCL_TAX))
       }
     }
 
@@ -420,53 +436,52 @@ object OrderUtil {
     val netAmountSum = computeSumForAmountLines(amountLines)
 
     val updatedNetAmountLine = getTotalNetLine(netAmountSum)
-    
+
     // TODO: Check refactoring with replaceFirstLineMatchingLineType
     //val currentNetAmountLineIndex = fract.L.indexWhere { l => l.C.exists { c => (c.POS == 1 && getMixedContent(c.mixed) == NET_AMOUNT_TOTAL) } }
     //val updatedOrderLines = replaceAt(elementToInsert = updatedNetAmountLine, sequenceToUpdate = fract.L, index = currentNetAmountLineIndex)
     //val updatedFraction = MATRICEType(updatedOrderLines: _*)
-    
+
     val updatedFraction = replaceFirstLineMatchingLineType(fract, updatedNetAmountLine)
     updatedFraction
   }
 
-  
   def updateNetInclTaxTotalLine(fract: MATRICETypable): MATRICETypable = {
 
     // We expect a single net amount line but support several
     val netAmountLines = fract.L.filter { l =>
       l.C.exists {
         c =>
-          (c.POS == 1 && (getMixedContent(c.mixed) == NET_AMOUNT_TOTAL ))
+          (c.POS == 1 && (getMixedContent(c.mixed) == NET_AMOUNT_TOTAL))
       }
     }
-    
+
     val taxRateLines = fract.L.filter { l =>
       l.C.exists {
         c =>
-          (c.POS == 1 && (getMixedContent(c.mixed) == TAX_RATE ))
+          (c.POS == 1 && (getMixedContent(c.mixed) == TAX_RATE))
       }
-    } 
-    
-    if ( netAmountLines.size == 1 && taxRateLines.size == 1) {
+    }
+
+    if (netAmountLines.size == 1 && taxRateLines.size == 1) {
       // Get lines
       val netAmountLine = netAmountLines(0)
       val taxRateLine = taxRateLines(0)
       // Get amount and rate
       val netAmount = getLineAmount(netAmountLine)
       val taxAmount = getLineAmount(taxRateLine)
-      
+
       val netAmountInclTax = netAmount.getOrElse(0d) + taxAmount.getOrElse(0d);
       val netAmountInclTaxLine = getTotalNetInclTaxLine(netAmountInclTax)
-      
+
       val updatedFraction = replaceFirstLineMatchingLineType(fract, netAmountInclTaxLine)
       updatedFraction
 
     } else {
-      fract  
+      fract
     }
   }
-  
+
   /**
    * Generic insertion of line element `L` in a sequence of lines `Seq[L]` at `index` position.
    */
@@ -525,10 +540,10 @@ object OrderUtil {
 
       // 3. Compute net total (NET_AMOUNT_TOTAL)
       val fractionWithNetTotal = updateNetTotalLine(fractionWithRates)
-      
+
       // 4. Compute tax amount (NET_AMOUNT_TOTAL * TAX_RATE)
       val fractionWithTaxAmount = updateTaxRateLine(fractionWithNetTotal)
-      
+
       // 5. Compute net total including tax (NET_AMOUNT_TOTAL + tax amount)
       val fractionWithNetInclTaxAmount = updateNetInclTaxTotalLine(fractionWithTaxAmount)
 
