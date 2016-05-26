@@ -180,7 +180,7 @@ object OrderUtil {
       // Only one GROSS_AMOUNT_TOTAL line allowed: Data integrity problem
       None
     } else {
-      // The MUST be one gross amount line: Data integrity problem
+      // There MUST be one gross amount line: Data integrity problem
       None
     }
   }
