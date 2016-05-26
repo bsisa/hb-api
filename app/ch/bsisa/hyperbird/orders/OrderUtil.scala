@@ -4,6 +4,8 @@ import ch.bsisa.hyperbird.model._
 import ch.bsisa.hyperbird.model.format.ElfinFormat
 import ch.bsisa.hyperbird.model.format.Implicits._
 
+import scala.math.BigDecimal
+
 /**
  * Object grouping simple functions dealing with Orders.
  *
@@ -151,7 +153,10 @@ object OrderUtil {
   /**
    * Compute amount from: `rateValue` * `amountTarget` with defined rounding rule.
    */
-  def computeAmount(rateValue: Double, amountTarget: Double): Double = BigDecimal(rateValue * amountTarget).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+  def computeAmount(rateValue: Double, amountTarget: Double): Double = {
+    val amount = BigDecimal(rateValue * amountTarget)
+    round(amount, ROUNDING_PRECISION).toDouble
+  }
 
   /**
    * Return a new line entry only updating original line entry amount cell with value `amount`
@@ -540,97 +545,108 @@ object OrderUtil {
 
       // New procedure must proceed line by line computing intermediary total at each computation step (line) 
 
-      val newImplResult = fractionWithGrossTotalUpdated.L.foldLeft((BigDecimal(0), List[L]())) { (currTotalAndUpdatedList, line) =>
-
-        val currTotal = currTotalAndUpdatedList._1
-        val currUpdatedList = currTotalAndUpdatedList._2
-        
-        val nextTotalAndUpdatedList : (scala.math.BigDecimal, List[L])= getLineType(line) match {
-          case Some(APPLIED_RATE) =>
-            // 1) update rate amount for the current line using current sub total and line rate
-            val rate = getLineRate(line)
+      def updateRateLine(line : L, currTotal : BigDecimal, currList : List[L]) : (BigDecimal, List[L]) = {
+          val rate = getLineRate(line)
             val lineAmount = computeAmount(rateValue = rate.getOrElse(0d), amountTarget = currTotal.toDouble)
             val updatedLine = updateLineAmount(line, lineAmount)
-            val newUpdatedList = updatedLine :: currUpdatedList
-          // 2) update current sub total adding this line rate amount
+            val newUpdatedList = updatedLine :: currList
+            // 2) update current sub total adding this line rate amount
             val newTotal = currTotal + lineAmount
             (newTotal, newUpdatedList)
-          case Some(APPLIED_AMOUNT)            =>
-          // 1) update current sub total adding applied amount
-            val lineAmount = getLineAmount(line).getOrElse(0d)
-            val newTotal = currTotal + lineAmount 
-            val newUpdatedList = line :: currUpdatedList
-            (newTotal, newUpdatedList)
-          case Some(GROSS_AMOUNT_TOTAL)        =>
-          // 1) update current sub total adding gross amount 
-          // Please note the gross amount computation responsibility 
-          // is outside the scope of the current loop)
-            val lineAmount = getLineAmount(line).getOrElse(0d)
-            val newTotal = currTotal + lineAmount 
-            val newUpdatedList = line :: currUpdatedList
-            (newTotal, newUpdatedList)            
-          case Some(MANUAL_AMOUNT)             =>
-          // 1) Keep current sub total unchanged. Manual amount are included in mandatory GROSS AMOUNT TOTAL.
-            val newUpdatedList = line :: currUpdatedList
-            (currTotal, newUpdatedList)
-          case Some(NET_AMOUNT_TOTAL)          =>
-          // 1) Update NET AMOUNT TOTAL line amount with current sub total
-            val updatedLine = updateLineAmount(line, currTotal.toDouble)
-            val newUpdatedList = updatedLine :: currUpdatedList
-          // 2) Keep current sub total unchanged.
-            (currTotal, newUpdatedList)
-          case Some(NET_AMOUNT_TOTAL_INCL_TAX) =>
-          // 1) Update NET AMOUNT TOTAL INCL TAX line with current sub total
-            val updatedLine = updateLineAmount(line, currTotal.toDouble)
-            val newUpdatedList = updatedLine :: currUpdatedList
-          // 2) Keep current sub total unchanged.
-            (currTotal, newUpdatedList)
-          case Some(TAX_RATE)                  =>
-          // 1) update rate amount for the current line using current sub total and line rate
-            val rate = getLineRate(line)
-            val lineAmount = computeAmount(rateValue = rate.getOrElse(0d), amountTarget = currTotal.toDouble)
-            val updatedLine = updateLineAmount(line, lineAmount)
-            val newUpdatedList = updatedLine :: currUpdatedList
-          // 2) update current sub total adding this line rate amount
-            val newTotal = currTotal + lineAmount
-            (newTotal, newUpdatedList)
-          case Some(unexpectedType) =>
-            // TODO: unexpected line type !
-            println(">>>> computeOrderFigures unexpectedType = " + unexpectedType)
-            val newUpdatedList = line :: currUpdatedList
-            (currTotal, newUpdatedList)
-          case None =>
-            // TODO: Should notify of a data integrity problem 
-            println(">>>> computeOrderFigures data integrity problem with line type.")
-            val newUpdatedList = line :: currUpdatedList
-            (currTotal, newUpdatedList)
-        }
-
-        nextTotalAndUpdatedList        
       }
 
-//      // 2. Find and update APPLIED_RATE
-//      val fractionWithRates = grossTotalOpt match {
-//        case Some(grossTotal) =>
-//          val fractionWithRatesUpdated = updateRateLines(grossTotal, fractionWithGrossTotalUpdated)
-//          fractionWithRatesUpdated
-//        case None => fractionWithGrossTotalUpdated
-//      }
-//
-//      // 3. Compute net total (NET_AMOUNT_TOTAL)
-//      val fractionWithNetTotal = updateNetTotalLine(fractionWithRates)
-//
-//      // 4. Compute tax amount (NET_AMOUNT_TOTAL * TAX_RATE)
-//      val fractionWithTaxAmount = updateTaxRateLine(fractionWithNetTotal)
-//
-//      // 5. Compute net total including tax (NET_AMOUNT_TOTAL + tax amount)
-//      val fractionWithNetInclTaxAmount = updateNetInclTaxTotalLine(fractionWithTaxAmount)
+      val newImplResult = fractionWithGrossTotalUpdated.L.foldLeft((BigDecimal(0), List[L]())) { (currTotalAndUpdatedList, line) =>
+
+        val (currTotal, currUpdatedList) = currTotalAndUpdatedList
+
+        val nextTotalAndUpdatedList: (BigDecimal, List[L]) = getLineType(line) match {
+          case Some(APPLIED_RATE) =>
+//            // 1) update rate amount for the current line using current sub total and line rate
+//            val rate = getLineRate(line)
+//            val lineAmount = computeAmount(rateValue = rate.getOrElse(0d), amountTarget = currTotal.toDouble)
+//            val updatedLine = updateLineAmount(line, lineAmount)
+//            val newUpdatedList = updatedLine :: currUpdatedList
+//            // 2) update current sub total adding this line rate amount
+//            val newTotal = currTotal + lineAmount
+//            (newTotal, newUpdatedList)
+            updateRateLine(line, currTotal, currUpdatedList)
+          case Some(APPLIED_AMOUNT) =>
+            // 1) update current sub total adding applied amount
+            val lineAmount = getLineAmount(line).getOrElse(0d)
+            val newTotal = currTotal + lineAmount
+            val newUpdatedList = line :: currUpdatedList
+            (newTotal, newUpdatedList)
+          case Some(GROSS_AMOUNT_TOTAL) =>
+            // 1) update current sub total adding gross amount 
+            // Please note the gross amount computation responsibility 
+            // is outside the scope of the current loop)
+            val lineAmount = getLineAmount(line).getOrElse(0d)
+            val newTotal = currTotal + lineAmount
+            val newUpdatedList = line :: currUpdatedList
+            (newTotal, newUpdatedList)
+          case Some(MANUAL_AMOUNT) =>
+            // 1) Keep current sub total unchanged. Manual amount are included in mandatory GROSS AMOUNT TOTAL.
+            val newUpdatedList = line :: currUpdatedList
+            (currTotal, newUpdatedList)
+          case Some(NET_AMOUNT_TOTAL) =>
+            // 1) Update NET AMOUNT TOTAL line amount with current sub total
+            val updatedLine = updateLineAmount(line, currTotal.toDouble)
+            val newUpdatedList = updatedLine :: currUpdatedList
+            // 2) Keep current sub total unchanged.
+            (currTotal, newUpdatedList)
+          case Some(NET_AMOUNT_TOTAL_INCL_TAX) =>
+            // 1) Update NET AMOUNT TOTAL INCL TAX line with current sub total
+            val updatedLine = updateLineAmount(line, currTotal.toDouble)
+            val newUpdatedList = updatedLine :: currUpdatedList
+            // 2) Keep current sub total unchanged.
+            (currTotal, newUpdatedList)
+          case Some(TAX_RATE) =>
+//            // 1) update rate amount for the current line using current sub total and line rate
+//            val rate = getLineRate(line)
+//            val lineAmount = computeAmount(rateValue = rate.getOrElse(0d), amountTarget = currTotal.toDouble)
+//            val updatedLine = updateLineAmount(line, lineAmount)
+//            val newUpdatedList = updatedLine :: currUpdatedList
+//            // 2) update current sub total adding this line rate amount
+//            val newTotal = currTotal + lineAmount
+//            (newTotal, newUpdatedList)
+            updateRateLine(line, currTotal, currUpdatedList)
+          case Some(unexpectedType) =>
+            // TODO: Currently provide no feedback for unexpected line type. 
+            println("WARNING: >>>> computeOrderFigures unexpectedType = " + unexpectedType)
+            // Preserve line `as is`
+            (currTotal, line :: currUpdatedList)
+          case None =>
+            // TODO: Should notify of a data integrity problem 
+            println("WARNING: >>>> computeOrderFigures data integrity problem with line type.")
+            // Preserve line `as is`
+            (currTotal, line :: currUpdatedList)
+        }
+
+        nextTotalAndUpdatedList
+      }
+
+      //      // 2. Find and update APPLIED_RATE
+      //      val fractionWithRates = grossTotalOpt match {
+      //        case Some(grossTotal) =>
+      //          val fractionWithRatesUpdated = updateRateLines(grossTotal, fractionWithGrossTotalUpdated)
+      //          fractionWithRatesUpdated
+      //        case None => fractionWithGrossTotalUpdated
+      //      }
+      //
+      //      // 3. Compute net total (NET_AMOUNT_TOTAL)
+      //      val fractionWithNetTotal = updateNetTotalLine(fractionWithRates)
+      //
+      //      // 4. Compute tax amount (NET_AMOUNT_TOTAL * TAX_RATE)
+      //      val fractionWithTaxAmount = updateTaxRateLine(fractionWithNetTotal)
+      //
+      //      // 5. Compute net total including tax (NET_AMOUNT_TOTAL + tax amount)
+      //      val fractionWithNetInclTaxAmount = updateNetInclTaxTotalLine(fractionWithTaxAmount)
 
       //TODO: test new impl.
 
       // Build new List need to be reversed to preserve original List ordering.
       val updatedFraction = MATRICEType(newImplResult._2.reverse: _*)
-      
+
       //fractionWithNetInclTaxAmount
       updatedFraction
     }
