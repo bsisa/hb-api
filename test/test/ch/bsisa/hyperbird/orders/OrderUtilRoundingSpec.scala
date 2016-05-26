@@ -74,7 +74,7 @@ class OrderUtilRoundingSpec extends BaseSerialisationSpec with PlaySpecification
           <C POS="6">false</C>
         </L>
         <L POS="5">
-          <C POS="1">ROUNDING_AMOUNT</C>
+          <C POS="1">APPLIED_AMOUNT</C>
           <C POS="2">Arrondi</C>
           <C POS="3"/>
           <C POS="4"/>
