@@ -251,6 +251,14 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
       <C POS="6">true</C>
     </L>
     <L POS="4">
+      <C POS="1">TOTAL_NET</C>
+      <C POS="2">Total net</C>
+      <C POS="3"/>
+      <C POS="4"/>
+      <C POS="5">9999.00</C>
+      <C POS="6">false</C>
+    </L>
+    <L POS="5">
       <C POS="1">APPLIED_AMOUNT</C>
       <C POS="2">Arrondi</C>
       <C POS="3"/>
@@ -258,21 +266,13 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
       <C POS="5">0.00</C>
       <C POS="6">true</C>
     </L>
-    <L POS="5">
+    <L POS="6">
       <C POS="1">APPLIED_RATE</C>
       <C POS="2">TVA</C>
       <C POS="3">8.0</C>
       <C POS="4">%</C>
       <C POS="5">0.00</C>
       <C POS="6">true</C>
-    </L>
-    <L POS="6">
-      <C POS="1">TOTAL_NET</C>
-      <C POS="2">Total net</C>
-      <C POS="3"/>
-      <C POS="4"/>
-      <C POS="5">9999.00</C>
-      <C POS="6">false</C>
     </L>
   </FRACTION>
 </CARACTERISTIQUE>
@@ -303,25 +303,25 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
       val lPos1 = carInNoManualAmount.FRACTION.map ( f => f.L(0)).get
       OrderUtil getLineAmount lPos1  mustEqual Some(1000)
     }
-    "equal 0.0 for L POS='2' not yet computed discount rate " in {
+    "equal 0.0 for L POS='2' not yet computed reduction amount " in {
       val lPos2 = carInNoManualAmount.FRACTION.map ( f => f.L(1)).get
       OrderUtil getLineAmount lPos2  mustEqual Some(0.0)
     }
-    "equal 9999.00 for L POS='3' not yet computed gross total " in {
+    "equal 0.0 for L POS='3' not yet computed discount amount " in {
       val lPos3 = carInNoManualAmount.FRACTION.map ( f => f.L(2)).get
       OrderUtil getLineAmount lPos3  mustEqual Some(0.0)
     }
-    "equal 0.0 for L POS='4' not yet computed reduction amount " in {
+    "equal 9999.0 for L POS='4' not yet computed net amount " in {
       val lPos4 = carInNoManualAmount.FRACTION.map ( f => f.L(3)).get
-      OrderUtil getLineAmount lPos4  mustEqual Some(5.0)
+      OrderUtil getLineAmount lPos4  mustEqual Some(9999.0)
     }
-    "equal 0.0 for L POS='5' not yet computed discount amount " in {
+    "equal 0.0 for L POS='5' rounding amount " in {
       val lPos5 = carInNoManualAmount.FRACTION.map ( f => f.L(4)).get
       OrderUtil getLineAmount lPos5  mustEqual Some(0.0)
     }
-    "equal 5.00 for L POS='6' rounding amount " in {
+    "equal 0.0 for L POS='6' not yet computed VAT amount " in {
       val lPos6 = carInNoManualAmount.FRACTION.map ( f => f.L(5)).get
-      OrderUtil getLineAmount lPos6  mustEqual Some(9999.0)
+      OrderUtil getLineAmount lPos6  mustEqual Some(0.0)
     }
   }
   
@@ -331,21 +331,21 @@ class OrderUtilSpec extends BaseSerialisationSpec with PlaySpecification {
       val lPos1 = carOutNoManualAmount.FRACTION.map ( f => f.L(0)).get
       OrderUtil getLineAmount lPos1  mustEqual Some(1000)
     }
-    "equal 2% (20.0) for L POS='2' computed reduction rate " in {
+    "equal 2% (10.0) for L POS='2' computed reduction rate " in {
       val lPos2 = carOutNoManualAmount.FRACTION.map ( f => f.L(1)).get
       OrderUtil getLineAmount lPos2  mustEqual Some(10.0)
     }
-    "equal 1% (10.0) for L POS='3' computed discount rate " in {
+    "equal 1% (20.20) for L POS='3' computed discount rate " in {
       val lPos3 = carOutNoManualAmount.FRACTION.map ( f => f.L(2)).get
-      OrderUtil getLineAmount lPos3  mustEqual Some(20.0)
+      OrderUtil getLineAmount lPos3  mustEqual Some(20.20)
     }
-    "equal 11.45 (1.0%) for L POS='4' computed reduction amount " in {
+    "equal 1030.2 for L POS='4' computed net amount " in {
       val lPos4 = carOutNoManualAmount.FRACTION.map ( f => f.L(3)).get
-      OrderUtil getLineAmount lPos4  mustEqual Some(5d)
+      OrderUtil getLineAmount lPos4  mustEqual Some(1030.20)
     }
-    "equal 22.90 (2.0%) for L POS='5' computed discount amount " in {
+    "equal 82.40 (8.0% rounded 82.416) for L POS='5' computed VAT amount " in {
       val lPos5 = carOutNoManualAmount.FRACTION.map ( f => f.L(4)).get
-      OrderUtil getLineAmount lPos5  mustEqual Some(80d)
+      OrderUtil getLineAmount lPos5  mustEqual Some(82.40)
     }
     "equal 5.00 for L POS='6' rounding amount " in {
       val lPos6 = carOutNoManualAmount.FRACTION.map ( f => f.L(5)).get
