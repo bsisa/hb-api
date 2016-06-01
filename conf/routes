@@ -8,6 +8,12 @@ GET      /                                                                 ch.bs
 # Map static resources from the /public folder to the /assets URL path
 #GET      /assets/*file                          controllers.Assets.at(path="/public", file)
 
+#######################################################################
+#                     hbUi.geo hb-geo-api route                       #
+#######################################################################
+# hbUi.geo hb-geo-api CSRF configuration for hb-api 
+GET      /hbgeo/*requestUrl                                                ch.bsisa.hb.proxy.ProxyController.forwardTo(requestUrl, protocol ?= "http", host ?= "localhost", port)
+#######################################################################
 
 #######################################################################
 #                     hb-api API routes                               #
