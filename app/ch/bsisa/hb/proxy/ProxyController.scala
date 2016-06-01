@@ -21,15 +21,14 @@ object ProxyController extends Controller with securesocial.core.SecureSocial {
 
   /**
    * Returns result as JSON
+   * @param protocol - Protocol to use to dialog with remote Web Service
+   * @param host - Host to use to dialog with remote Web Service
+   * @param port - Port to use to dialog with remote Web Service
    */
   def forwardTo(requestUrl: String, protocol: String, host: String, port: String) = Action.async {
     Logger.debug(s"ProxyController.forwardTo(${requestUrl})")
-    val responseFuture: Future[Response] = WS.url(s"${protocol}://${host}:${port}/${requestUrl}").get()
-    responseFuture.map { wsResponse =>
-      val responseBodyJs = wsResponse.json
-      Ok(responseBodyJs) //.as(JSON)
-    }
-
+    val wsRespFuture: Future[Response] = WS.url(s"${protocol}://${host}:${port}/${requestUrl}").get()
+    wsRespFuture.map { wsResp => Ok( wsResp.json) }    
   }
 
 }
