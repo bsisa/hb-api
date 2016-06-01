@@ -1,13 +1,10 @@
 package ch.bsisa.hb.proxy
 
-import play.api._
 import play.api.Logger
-import play.api.mvc._
+import play.api.mvc.{Controller, Action}
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.ws.Response
 import play.api.libs.ws.WS
-import controllers.Assets
-import securesocial.core.AuthenticationMethod
 import scala.concurrent.Future
 
 /**
@@ -17,7 +14,7 @@ import scala.concurrent.Future
  *
  * @author Patrick Refondini
  */
-object ProxyController extends Controller with securesocial.core.SecureSocial {
+object ProxyController extends Controller {
 
   /**
    * Returns result as JSON
