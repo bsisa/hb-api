@@ -49,6 +49,12 @@ hb {
 		ordersStatistics {
 			# Enables orders_statistics related services
 			"enabled" : true
+		}, 
+		hbGeoApi {
+			"proxyBaseUrl" : "http://localhost:9000/hbgeo/",
+			"protocol" : "http",
+			"host" : "localhost",
+			"port" : "9001"
 		}
 	},
 	report {
