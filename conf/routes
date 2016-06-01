@@ -12,7 +12,7 @@ GET      /                                                                 ch.bs
 #                     hbUi.geo hb-geo-api route                       #
 #######################################################################
 # hbUi.geo hb-geo-api CSRF configuration for hb-api 
-GET      /hbgeo/*requestUrl                                                ch.bsisa.hb.proxy.ProxyController.forwardTo(requestUrl, protocol ?= "http", host ?= "localhost", port)
+GET      /hbgeo/*requestUrl                                                ch.bsisa.hb.proxy.HbGeoProxyController.forwardTo(requestUrl)
 #######################################################################
 
 #######################################################################
