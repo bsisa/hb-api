@@ -72,6 +72,23 @@ class ApiConfig {
    */
   val ordersStatiticsModuleEnabled: Option[Boolean] = Play.current.configuration.getBoolean(ApiConfig.OrdersStatiticsModuleEnabledKey) 
   
+  /**
+   * Used for configuring `hbGeoApiUrl` in conf.js to provide client side restangular dynamic configuration to access hb-geo-api service.
+   */
+  val HbGeoApiProxyUrl : Option[String] = Play.current.configuration.getString(ApiConfig.HbGeoApiProxyUrlKey)  
+  
+  /**
+   * Used for configuring `protocol` while forwarding requests to hb-geo-api service.
+   */
+  val hbGeoApiProtocol : Option[String] = Play.current.configuration.getString(ApiConfig.HbGeoApiProtocolKey)
+  /**
+   * Used for configuring `host` while forwarding requests to hb-geo-api service.
+   */
+  val hbGeoApiHost : Option[String] = Play.current.configuration.getString(ApiConfig.HbGeoApiHostKey)
+  /**
+   * Used for configuring `port` while forwarding requests to hb-geo-api service.
+   */
+  val hbGeoApiPort : Option[String] = Play.current.configuration.getString(ApiConfig.HbGeoApiPortKey)
 }
 
 /**
@@ -92,6 +109,12 @@ object ApiConfig {
   private val DataManagerSecurityEnabledUrlKey = "hb.api.dataManagerSecurityEnabled"
   private val ServerSideNotificationEnabledUrlKey = "hb.api.serverSideNotificationEnabled"
   private val OrdersStatiticsModuleEnabledKey = "hb.modules.ordersStatistics.enabled"
+  private val HbGeoApiProxyUrlKey = "hb.modules.hbGeoApi.proxyBaseUrl"
+  private val HbGeoApiProtocolKey = "hb.modules.hbGeoApi.protocol"
+  private val HbGeoApiHostKey = "hb.modules.hbGeoApi.host"
+  private val HbGeoApiPortKey = "hb.modules.hbGeoApi.port"
+
+  
   
 
 }

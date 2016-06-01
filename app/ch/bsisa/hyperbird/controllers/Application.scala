@@ -31,6 +31,7 @@ object Application extends Controller with securesocial.core.SecureSocial {
 
   def getApiBaseUrl()(implicit apiConfig: ApiConfig) = apiConfig.baseUrl
   def getClientDebugEnabled()(implicit apiConfig: ApiConfig) = apiConfig.clientDebugEnabled
+  def getHbGeoApiUrl()(implicit apiConfig: ApiConfig) = apiConfig.HbGeoApiProxyUrl.getOrElse("")
 
   /**
    * Added for HTML5 history API support, aka AngularJs html5mode.
@@ -49,7 +50,7 @@ object Application extends Controller with securesocial.core.SecureSocial {
    * SecuredAction(ajaxCall = true)
    */
   def conf = Action {
-    Ok(views.html.conf(getApiBaseUrl, getClientDebugEnabled)).as("application/javascript; charset=utf-8")
+    Ok(views.html.conf(getApiBaseUrl, getClientDebugEnabled, getHbGeoApiUrl)).as("application/javascript; charset=utf-8")
   }
   
   /**
