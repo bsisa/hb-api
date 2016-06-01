@@ -7,6 +7,7 @@ import play.api.libs.ws.Response
 import play.api.libs.ws.WS
 import scala.concurrent.Future
 
+import ch.bsisa.hyperbird.Implicits._
 import ch.bsisa.hyperbird.ApiConfig
 
 /**
@@ -37,11 +38,13 @@ trait ProxyController extends Controller {
  */
 object HbGeoProxyController extends ch.bsisa.hb.proxy.ProxyController {
 
-  def forwardToHbGeoService(requestUrl: String)(implicit apiConfig: ApiConfig) = {
+  def getApiConfig()(implicit apiConfig: ApiConfig) = apiConfig
+
+  def forwardToHbGeoService(requestUrl: String) = {
     forwardTo(requestUrl)(
-      protocol = apiConfig.hbGeoApiProtocol.getOrElse("http"),
-      host = apiConfig.hbGeoApiHost.getOrElse("localhost"),
-      port = apiConfig.hbGeoApiPort.getOrElse("9001"))
+      protocol = getApiConfig.hbGeoApiProtocol.getOrElse("http"),
+      host = getApiConfig.hbGeoApiHost.getOrElse("localhost"),
+      port = getApiConfig.hbGeoApiPort.getOrElse("9001"))
   }
 
 }
