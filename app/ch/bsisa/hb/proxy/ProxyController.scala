@@ -25,11 +25,23 @@ trait ProxyController extends Controller {
    * @param host - Host to use to dialog with remote Web Service
    * @param port - Port to use to dialog with remote Web Service
    */
-  def forwardTo(requestUrl: String)(protocol: String, host: String, port: String) = Action.async {
+  def forwardGetTo(requestUrl: String)(protocol: String, host: String, port: String) = Action.async {
     Logger.debug(s"ProxyController.forwardTo(${requestUrl})")
     val wsRespFuture: Future[Response] = WS.url(s"${protocol}://${host}:${port}/${requestUrl}").get()
     wsRespFuture.map { wsResp => Ok(wsResp.json) }
   }
+  
+  /**
+   * Returns result as JSON
+   * @param protocol - Protocol to use to dialog with remote Web Service
+   * @param host - Host to use to dialog with remote Web Service
+   * @param port - Port to use to dialog with remote Web Service
+   */
+  def forwardPostTo(requestUrl: String)(protocol: String, host: String, port: String) = Action.async(parse.json) { req => 
+    Logger.debug(s"ProxyController.forwardTo(${requestUrl})")
+    val wsRespFuture: Future[Response] = WS.url(s"${protocol}://${host}:${port}/${requestUrl}").post(req.body)
+    wsRespFuture.map { wsResp => Ok(wsResp.json) }
+  }  
 
 }
 
@@ -40,11 +52,18 @@ object HbGeoProxyController extends ch.bsisa.hb.proxy.ProxyController {
 
   def getApiConfig()(implicit apiConfig: ApiConfig) = apiConfig
 
-  def forwardToHbGeoService(requestUrl: String) = {
-    forwardTo(requestUrl)(
+  def forwardGetToHbGeoService(requestUrl: String) = {
+    forwardGetTo(requestUrl)(
       protocol = getApiConfig.hbGeoApiProtocol.getOrElse("http"),
       host = getApiConfig.hbGeoApiHost.getOrElse("localhost"),
       port = getApiConfig.hbGeoApiPort.getOrElse("9001"))
   }
+  
+  def forwardPostToHbGeoService(requestUrl: String) = {
+    forwardPostTo(requestUrl)(
+      protocol = getApiConfig.hbGeoApiProtocol.getOrElse("http"),
+      host = getApiConfig.hbGeoApiHost.getOrElse("localhost"),
+      port = getApiConfig.hbGeoApiPort.getOrElse("9001"))
+  }  
 
 }
