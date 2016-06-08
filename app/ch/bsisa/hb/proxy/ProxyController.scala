@@ -38,7 +38,7 @@ trait ProxyController extends Controller {
    * @param port - Port to use to dialog with remote Web Service
    */
   def forwardPostTo(requestUrl: String)(protocol: String, host: String, port: String) = Action.async(parse.json) { req => 
-    Logger.debug(s"ProxyController.forwardTo(${requestUrl})")
+    Logger.debug(s"ProxyController.forwardPostTo(${requestUrl}) req.body not shown.")
     val wsRespFuture: Future[Response] = WS.url(s"${protocol}://${host}:${port}/${requestUrl}").post(req.body)
     wsRespFuture.map { wsResp => Ok(wsResp.json) }
   }  
