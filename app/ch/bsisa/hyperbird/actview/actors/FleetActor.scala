@@ -108,7 +108,7 @@ class FleetActor(name: String, colour: String) extends Actor with ActorLogging {
 
     val actorRefSeqFut = objectsIdPositionFut.map { objectsIdPosition =>
       val actorRefSeq = for (objectIdPosition <- objectsIdPosition) yield {
-        val objAct = actorOf(Props(new ObjectActor(objectId = objectIdPosition._1, fleetName = fleetName, startPosition = objectIdPosition._2, elfin = objectIdPosition._3)), name = objectIdPosition._1)
+        val objAct = actorOf( ObjectActor.props(objectId = objectIdPosition._1, fleetName = fleetName, startPosition = objectIdPosition._2, elfin = objectIdPosition._3) , name = objectIdPosition._1)
         objAct
       }
       actorRefSeq

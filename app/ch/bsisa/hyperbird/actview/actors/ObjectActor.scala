@@ -88,3 +88,26 @@ class ObjectActor(objectId: String, fleetName: String, startPosition: POINT, elf
   }
 
 }
+
+
+/**
+ * Companion object providing ObjectActor factory methods. 
+ * 
+ * Recommended practices:
+ * http://doc.akka.io/docs/akka/snapshot/scala/actors.html#Recommended_Practices
+ */
+object ObjectActor {
+  
+  /**
+   * Create Props for ObjectActor.
+   *
+   * @param objectId - ELFIN.Id
+   * @param fleetName - A name uniquely identifying this fleet
+   * @param startPosition - A POINT identifying the start position of the geo located object
+   * @param elfin - The geo located object
+   * @return a Props for creating ObjectActor. Can be further configured calling 
+   */
+  def props(objectId: String, fleetName: String, startPosition: POINT, elfin: ELFIN): Props = Props(new ObjectActor(objectId, fleetName, startPosition, elfin))  
+  
+}
+
