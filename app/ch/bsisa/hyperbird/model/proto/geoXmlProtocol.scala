@@ -329,6 +329,9 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
         (node \ "@X").headOption map { scalaxb.fromXML[Double](_, scalaxb.ElemName(node) :: stack) },
         (node \ "@Y").headOption map { scalaxb.fromXML[Double](_, scalaxb.ElemName(node) :: stack) },
         (node \ "@Z").headOption map { scalaxb.fromXML[Double](_, scalaxb.ElemName(node) :: stack) } getOrElse { scalaxb.fromXML[Double](scala.xml.Text("0"), scalaxb.ElemName(node) :: stack) },
+        (node \ "@XG").headOption map { scalaxb.fromXML[Double](_, scalaxb.ElemName(node) :: stack) },
+        (node \ "@YG").headOption map { scalaxb.fromXML[Double](_, scalaxb.ElemName(node) :: stack) },
+        (node \ "@ZG").headOption map { scalaxb.fromXML[Double](_, scalaxb.ElemName(node) :: stack) },
         (node \ "@KSI").headOption map { scalaxb.fromXML[Double](_, scalaxb.ElemName(node) :: stack) } getOrElse { scalaxb.fromXML[Double](scala.xml.Text("0"), scalaxb.ElemName(node) :: stack) },
         (node \ "@ANGLE").headOption map { scalaxb.fromXML[Double](_, scalaxb.ElemName(node) :: stack) } getOrElse { scalaxb.fromXML[Double](scala.xml.Text("0"), scalaxb.ElemName(node) :: stack) },
         (node \ "@ALPHA").headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) } getOrElse { scalaxb.fromXML[String](scala.xml.Text("0"), scalaxb.ElemName(node) :: stack) },
@@ -342,8 +345,7 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
         (node \ "@ID_G").headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) },
         scalaxb.fromXML[ch.bsisa.hyperbird.model.FONCTION]((node \ "@FONCTION"), scalaxb.ElemName(node) :: stack),
         (node \ "@CLASSE").headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) },
-        (node \ "@GROUPE").headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) },
-        (node \ "@REMARQUE").headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }))
+        (node \ "@GROUPE").headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }))
       case _ => Left("reads failed: seq must be scala.xml.Node")
     }
     
@@ -353,6 +355,9 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
       __obj.X foreach { x => attr = scala.xml.Attribute(null, "X", x.toString, attr) }
       __obj.Y foreach { x => attr = scala.xml.Attribute(null, "Y", x.toString, attr) }
       if (__obj.Z.toString != "0") attr = scala.xml.Attribute(null, "Z", __obj.Z.toString, attr)
+      __obj.XG foreach { x => attr = scala.xml.Attribute(null, "XG", x.toString, attr) }
+      __obj.YG foreach { x => attr = scala.xml.Attribute(null, "YG", x.toString, attr) }
+      __obj.ZG foreach { x => attr = scala.xml.Attribute(null, "ZG", x.toString, attr) }
       if (__obj.KSI.toString != "0") attr = scala.xml.Attribute(null, "KSI", __obj.KSI.toString, attr)
       if (__obj.ANGLE.toString != "0") attr = scala.xml.Attribute(null, "ANGLE", __obj.ANGLE.toString, attr)
       if (__obj.ALPHA.toString != "0") attr = scala.xml.Attribute(null, "ALPHA", __obj.ALPHA.toString, attr)
@@ -367,7 +372,6 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
       attr = scala.xml.Attribute(null, "FONCTION", __obj.FONCTION.toString, attr)
       __obj.CLASSE foreach { x => attr = scala.xml.Attribute(null, "CLASSE", x.toString, attr) }
       __obj.GROUPE foreach { x => attr = scala.xml.Attribute(null, "GROUPE", x.toString, attr) }
-      __obj.REMARQUE foreach { x => attr = scala.xml.Attribute(null, "REMARQUE", x.toString, attr) }
       attr
     }
 
@@ -1393,6 +1397,9 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
       (node \ "@X").headOption map { scalaxb.fromXML[Double](_, scalaxb.ElemName(node) :: stack) },
       (node \ "@Y").headOption map { scalaxb.fromXML[Double](_, scalaxb.ElemName(node) :: stack) },
       (node \ "@Z").headOption map { scalaxb.fromXML[Double](_, scalaxb.ElemName(node) :: stack) } getOrElse { scalaxb.fromXML[Double](scala.xml.Text("0"), scalaxb.ElemName(node) :: stack) },
+      (node \ "@XG").headOption map { scalaxb.fromXML[Double](_, scalaxb.ElemName(node) :: stack) },
+      (node \ "@YG").headOption map { scalaxb.fromXML[Double](_, scalaxb.ElemName(node) :: stack) },
+      (node \ "@ZG").headOption map { scalaxb.fromXML[Double](_, scalaxb.ElemName(node) :: stack) },
       (node \ "@KSI").headOption map { scalaxb.fromXML[Double](_, scalaxb.ElemName(node) :: stack) } getOrElse { scalaxb.fromXML[Double](scala.xml.Text("0"), scalaxb.ElemName(node) :: stack) },
       (node \ "@ANGLE").headOption map { scalaxb.fromXML[Double](_, scalaxb.ElemName(node) :: stack) } getOrElse { scalaxb.fromXML[Double](scala.xml.Text("0"), scalaxb.ElemName(node) :: stack) },
       (node \ "@ALPHA").headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) } getOrElse { scalaxb.fromXML[String](scala.xml.Text("0"), scalaxb.ElemName(node) :: stack) },
@@ -1406,8 +1413,7 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
       (node \ "@ID_G").headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) },
       scalaxb.fromXML[ch.bsisa.hyperbird.model.FONCTION]((node \ "@FONCTION"), scalaxb.ElemName(node) :: stack),
       (node \ "@CLASSE").headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) },
-      (node \ "@GROUPE").headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) },
-      (node \ "@REMARQUE").headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }))
+      (node \ "@GROUPE").headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }))
       case _ => Left("reads failed: seq must be scala.xml.Node")
     }
     
@@ -1417,6 +1423,9 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
     __obj.X foreach { x => attr = scala.xml.Attribute(null, "X", x.toString, attr) }
     __obj.Y foreach { x => attr = scala.xml.Attribute(null, "Y", x.toString, attr) }
     if (__obj.Z.toString != "0") attr = scala.xml.Attribute(null, "Z", __obj.Z.toString, attr)
+    __obj.XG foreach { x => attr = scala.xml.Attribute(null, "XG", x.toString, attr) }
+    __obj.YG foreach { x => attr = scala.xml.Attribute(null, "YG", x.toString, attr) }
+    __obj.ZG foreach { x => attr = scala.xml.Attribute(null, "ZG", x.toString, attr) }
     if (__obj.KSI.toString != "0") attr = scala.xml.Attribute(null, "KSI", __obj.KSI.toString, attr)
     if (__obj.ANGLE.toString != "0") attr = scala.xml.Attribute(null, "ANGLE", __obj.ANGLE.toString, attr)
     if (__obj.ALPHA.toString != "0") attr = scala.xml.Attribute(null, "ALPHA", __obj.ALPHA.toString, attr)
@@ -1431,7 +1440,6 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
     attr = scala.xml.Attribute(null, "FONCTION", __obj.FONCTION.toString, attr)
     __obj.CLASSE foreach { x => attr = scala.xml.Attribute(null, "CLASSE", x.toString, attr) }
     __obj.GROUPE foreach { x => attr = scala.xml.Attribute(null, "GROUPE", x.toString, attr) }
-    __obj.REMARQUE foreach { x => attr = scala.xml.Attribute(null, "REMARQUE", x.toString, attr) }
       attr
     }
   }

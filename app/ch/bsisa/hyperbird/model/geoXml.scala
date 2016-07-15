@@ -103,6 +103,9 @@ case class POINT(POS: BigInt,
   X: Option[Double] = None,
   Y: Option[Double] = None,
   Z: Double,
+  XG: Option[Double] = None,
+  YG: Option[Double] = None,
+  ZG: Option[Double] = None,
   KSI: Double,
   ANGLE: Double,
   ALPHA: String,
@@ -116,8 +119,7 @@ case class POINT(POS: BigInt,
   ID_G: Option[String] = None,
   FONCTION: ch.bsisa.hyperbird.model.FONCTION,
   CLASSE: Option[String] = None,
-  GROUPE: Option[String] = None,
-  REMARQUE: Option[String] = None)
+  GROUPE: Option[String] = None)
       
 
 trait FONCTION
@@ -536,6 +538,9 @@ case class POINTu46attributeGroup(POS: BigInt,
   X: Option[Double] = None,
   Y: Option[Double] = None,
   Z: Double,
+  XG: Option[Double] = None,
+  YG: Option[Double] = None,
+  ZG: Option[Double] = None,
   KSI: Double,
   ANGLE: Double,
   ALPHA: String,
@@ -549,8 +554,7 @@ case class POINTu46attributeGroup(POS: BigInt,
   ID_G: Option[String] = None,
   FONCTION: ch.bsisa.hyperbird.model.FONCTION,
   CLASSE: Option[String] = None,
-  GROUPE: Option[String] = None,
-  REMARQUE: Option[String] = None)
+  GROUPE: Option[String] = None)
 
 
 case class MUTATIONu46attributeGroup(DATE: String,

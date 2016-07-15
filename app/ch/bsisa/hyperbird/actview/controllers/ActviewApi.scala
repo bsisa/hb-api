@@ -186,10 +186,13 @@ object ActviewApi extends Controller with securesocial.core.SecureSocial {
   def getTestDestination(): POINT = {
     // G20040930101030004/FONTAINE/G19970110104656000
     // <POINT POS="1" X="561183.92" Y="204704.9" Z="0.0" KSI="0.0" ANGLE="0.0" ZS="0.0" KSIS="0.0" ANGLES="0.0" FONCTION="BASE"/>
-    val testDestinationPosition = POINT(1,
+    val testDestinationPosition = POINT( POS = 1,
       X = Some(561183.92d), // Update
       Y = Some(204704.9d), // Update
       Z = 0d,
+      XG = None,
+      YG = None,
+      ZG = None,
       KSI = 0d,
       ANGLE = 0d,
       ALPHA = "",
@@ -203,8 +206,8 @@ object ActviewApi extends Controller with securesocial.core.SecureSocial {
       ID_G = None,
       FONCTION = BASE,
       CLASSE = None,
-      GROUPE = None,
-      REMARQUE = Some("Test destination."))
+      GROUPE = None)//,
+      //REMARQUE = Some("Test destination."))
 
     testDestinationPosition
   }

@@ -43,10 +43,14 @@ class DriverActor extends Actor with ActorLogging {
     val newX = computeNewCoord(curr = currX, dest = destX)
     val newY = computeNewCoord(curr = currY, dest = destY)
 
-    val newPosition = POINT(currPosition.POS,
+    val newPosition = POINT(
+      POS = currPosition.POS,
       X = Some(newX), // Update
       Y = Some(newY), // Update
       Z = currPosition.Z,
+      XG = currPosition.XG, 
+      YG = currPosition.YG, 
+      ZG = currPosition.ZG,      
       KSI = currPosition.KSI,
       ANGLE = currPosition.ANGLE,
       ALPHA = currPosition.ALPHA,
@@ -60,8 +64,8 @@ class DriverActor extends Actor with ActorLogging {
       ID_G = currPosition.ID_G,
       FONCTION = currPosition.FONCTION,
       CLASSE = currPosition.CLASSE,
-      GROUPE = currPosition.GROUPE,
-      REMARQUE = currPosition.REMARQUE)
+      GROUPE = currPosition.GROUPE)//,
+      //REMARQUE = currPosition.REMARQUE)
 
     newPosition
   }

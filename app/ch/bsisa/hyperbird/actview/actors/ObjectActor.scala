@@ -25,9 +25,9 @@ class ObjectActor(objectId: String, fleetName: String, startPosition: POINT, elf
   def receive = {
     case message: String =>
       objectPosition match {
-        case POINT(curr_oos, Some(curr_x), Some(curr_y), curr_z, curr_ksi, curr_angle, curr_alpha, curr_xs, curr_ys, curr_zs, curr_ksis, curr_angles, curr_alphas, curr_id, curr_id_g, _, curr_objClass, curr_group, curr_remark) =>
+        case POINT(curr_oos, Some(curr_x), Some(curr_y), curr_z, curr_xg, curr_yg, curr_zg, curr_ksi, curr_angle, curr_alpha, curr_xs, curr_ys, curr_zs, curr_ksis, curr_angles, curr_alphas, curr_id, curr_id_g, _, curr_objClass, curr_group) =>
           objectDestination match {
-            case Some(POINT(pos, Some(x), Some(y), z, ksi, angle, alpha, xs, ys, zs, ksis, angles, alphas, id, id_g, _, objClass, group, remark)) =>
+            case Some(POINT(pos, Some(x), Some(y), z, xg, yg, zg, ksi, angle, alpha, xs, ys, zs, ksis, angles, alphas, id, id_g, _, objClass, group)) =>
               log.info(s"ObjectActor objectId=$objectId has (x,y,z) position ($curr_x, $curr_y, $curr_z) and destination ($x, $y, $z). Message: $message")
             case None =>
               log.info(s"ObjectActor objectId=$objectId has (x,y,z) position ($curr_x, $curr_y, $curr_z) and NO destination. Message: $message")
@@ -35,7 +35,7 @@ class ObjectActor(objectId: String, fleetName: String, startPosition: POINT, elf
       }
     case GetDestination =>
       val message = objectDestination match {
-        case Some(POINT(pos, Some(x), Some(y), z, ksi, angle, alpha, xs, ys, zs, ksis, angles, alphas, id, id_g, _, objClass, group, remark)) =>
+        case Some(POINT(pos, Some(x), Some(y), z, xg, yg, zg, ksi, angle, alpha, xs, ys, zs, ksis, angles, alphas, id, id_g, _, objClass, group)) =>
           s"ObjectActor objectId=$objectId has (x,y,z) destination ($x, $y, $z)."
         case None =>
           s"ObjectActor objectId=$objectId has no destination."
