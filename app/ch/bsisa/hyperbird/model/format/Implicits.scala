@@ -119,7 +119,7 @@ object Implicits {
     def reads(json: JsValue): JsResult[MUTATIONS] = {
       val jsResult = (json \ "MUTATION").validate[List[MUTATION]]
       jsResult match {
-        case JsSuccess(mutationList, path) => JsSuccess(MUTATIONS(mutationList: _*))
+        case JsSuccess(mutationList, path) => JsSuccess(MUTATIONS(mutationList))
         case JsError(e) => JsError("Error reading MUTATIONS") ++ JsError(e)
       }
     }
@@ -158,7 +158,7 @@ object Implicits {
     def reads(json: JsValue): JsResult[GEOSELECTION] = {
       val centroideJsSeq = (json \ "CENTROIDE").validate[List[CENTROIDE]]
       centroideJsSeq match {
-        case JsSuccess(centroideList, path) => JsSuccess(GEOSELECTION(centroideList: _*))
+        case JsSuccess(centroideList, path) => JsSuccess(GEOSELECTION(centroideList))
         case JsError(e) => JsError("Error reading GEOSELECTION") ++ JsError(e)
       }
     }
@@ -345,7 +345,7 @@ object Implicits {
     def reads(json: JsValue): JsResult[CARSET] = {
       val carJsSeq = (json \ "CAR").validate[List[CARSET_CARType]]
       carJsSeq match {
-        case JsSuccess(carList, path) => JsSuccess(CARSET(carList: _*))
+        case JsSuccess(carList, path) => JsSuccess(CARSET(carList))
         case JsError(e) => JsError("Error reading CARSET") ++ JsError(e)
       }
     }
@@ -459,7 +459,7 @@ object Implicits {
     def reads(json: JsValue): JsResult[MATRICEType] = {
       val lineJsSeq = (json \ "L").validate[List[L]]
       lineJsSeq match {
-        case JsSuccess(lineList, path) => JsSuccess(MATRICEType(lineList: _*))
+        case JsSuccess(lineList, path) => JsSuccess(MATRICEType(lineList))
         case JsError(e) => JsError("Error reading MATRICETypable") ++ JsError(e)
       }
     }
@@ -533,7 +533,7 @@ object Implicits {
 
       val echeanceJsSeq = (json \ "ECHEANCE").validate[List[ECHEANCE]]
       echeanceJsSeq match {
-        case JsSuccess(echeanceList, path) => JsSuccess(EVENEMENT(echeanceList: _*))
+        case JsSuccess(echeanceList, path) => JsSuccess(EVENEMENT(echeanceList))
         case JsError(e) => JsError("Error reading EVENEMENT") ++ JsError(e)
       }
     }
@@ -685,7 +685,7 @@ object Implicits {
     def reads(json: JsValue): JsResult[ANNEXE] = {
       val jsResult = (json \ "RENVOI").validate[List[RENVOI]]
       jsResult match {
-        case JsSuccess(renvoiList, path) => JsSuccess(ANNEXE(renvoiList: _*))
+        case JsSuccess(renvoiList, path) => JsSuccess(ANNEXE(renvoiList))
         case JsError(e) => JsError("Error reading ANNEXE") ++ JsError(e)
       }
     }

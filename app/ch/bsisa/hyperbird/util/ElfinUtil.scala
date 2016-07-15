@@ -69,12 +69,12 @@ object ElfinUtil {
       // Mutations exist
       case Some(muts) => muts.MUTATION.headOption match {
         // Mutations has at least one entry, preserve tail in case it is non empty.
-        case Some(mut) => MUTATIONS(MUTATION = (newElfinMutation :: muts.MUTATION.tail.toList): _*)
+        case Some(mut) => MUTATIONS(MUTATION = (newElfinMutation :: muts.MUTATION.tail.toList))
         // Mutations was empty, create from scratch
-        case None      => MUTATIONS(MUTATION = newElfinMutation)
+        case None      => MUTATIONS(MUTATION = Seq(newElfinMutation))
       }
       // No mutations create from scratch
-      case None => MUTATIONS(MUTATION = newElfinMutation)
+      case None => MUTATIONS(MUTATION = Seq(newElfinMutation))
     }
 
     ELFIN(Some(newMutations), elfin.GEOSELECTION, elfin.IDENTIFIANT, elfin.CARACTERISTIQUE,
@@ -112,7 +112,7 @@ object ElfinUtil {
    * stays unchanged. The returned elfin is a new elfin instance.
    */
   def replaceElfinCaracteristiqueFractionL(elfin: ELFIN, newLSeq: Seq[ch.bsisa.hyperbird.model.L]): ELFIN = {
-    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, Some(CARACTERISTIQUE(FRACTION = Some(MATRICEType(newLSeq: _*)))),
+    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, Some(CARACTERISTIQUE(FRACTION = Some(MATRICEType(newLSeq)))),
       elfin.PARTENAIRE, elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, elfin.Id,
       elfin.ID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
   }

@@ -271,7 +271,7 @@ object OrderUtil {
         val newLines = insertAt(newComputedGrossTotalLine, linesWithoutGrossTotal, grossTotalLineIndex)
         println(s"3. newLines.size = ${newLines.size}")
 
-        val updatedFraction = MATRICEType(newLines: _*)
+        val updatedFraction = MATRICEType(newLines)
         println(s"3. updatedFraction = ${updatedFraction}")
         (updatedFraction, grossTotalAmntOpt)
       case None =>
@@ -420,7 +420,7 @@ object OrderUtil {
       }
 
       // Build new List need to be reversed to preserve original List ordering.
-      val updatedFraction = MATRICEType(updatedTotalAndOrderLines._2.reverse: _*)
+      val updatedFraction = MATRICEType(updatedTotalAndOrderLines._2.reverse)
       updatedFraction
     }
 

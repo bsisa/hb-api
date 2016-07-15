@@ -171,7 +171,7 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
     val elfinResourceUrl = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}/${elfin.ID_G}/${fileName}"""
     // Keep consistent with current database state where each 
     // ELFIN element is contained alone in a MELFIN element. 
-    val melfinXML = ElfinFormat.toXml(MELFIN(elfin))
+    val melfinXML = ElfinFormat.toXml(MELFIN(Seq(elfin)))
 
     //Logger.debug("elfinResourceUrl for PUT : " + elfinResourceUrl)
 
