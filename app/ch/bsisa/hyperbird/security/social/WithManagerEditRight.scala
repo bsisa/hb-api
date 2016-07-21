@@ -26,6 +26,7 @@ case object WithManagerEditRight {
    * Return true if the provided elfin has manager rights corresponding to HTTP header 
    * authorised data manager rights or if optional data manager rights in turn off. 
    * Otherwise throws as WithManagerEditRightException
+   * TODO: Refactor to hasAuthorizationLimits(...) : Option[AutorisationLimit] 
    */
   def isAuthorizedJs(elfin: ELFIN, request: securesocial.core.SecuredRequest[play.api.libs.json.JsValue])(implicit apiConfig: ApiConfig): Boolean = {
     
@@ -34,19 +35,23 @@ case object WithManagerEditRight {
     val authorised = if (apiConfig.dataManagerSecurityEnabled) {
       elfin.IDENTIFIANT match {
         case Some(identifiant) => identifiant.GER match {
-          case Some(ger) => ger.equals(dataManagerRight)
+          case Some(ger) => ger.equals(dataManagerRight) // Some(AutorisationLimit.INSUFFICIENT_ACCESS_RIGHTS) or None
           case None      => 
+            // Some(AutorisationLimit.MISSING_GER_INFO_ACCESS_RIGHTS)
             Logger.error(s"IDENTIFIANT/GER information missing for ELFIN IG_G/CLASSE/Id = ${elfin.ID_G}/${elfin.CLASSE}/${elfin.Id}") 
             false
         }
-        case None => 
+        case None =>
+          // Some(AutorisationLimit.MISSING_IDENTIFIANT_INFO_ACCESS_RIGHTS)
           Logger.error(s"IDENTIFIANT information missing for ELFIN IG_G/CLASSE/Id = ${elfin.ID_G}/${elfin.CLASSE}/${elfin.Id}")
           false
       }
     } else {
+      // None
       true
     }
 
+    // TODO: Remove that ugly piece of code
     if (authorised) {
       authorised
     } else {
@@ -59,6 +64,7 @@ case object WithManagerEditRight {
    * Return true if the provided elfin has manager rights corresponding to HTTP header 
    * authorised data manager rights or if optional data manager rights in turn off. 
    * Otherwise throws as WithManagerEditRightException
+   * TODO: Refactor to hasAuthorizationLimits(...) : Option[AutorisationLimit] check above function for implementation guidelines.
    */  
   def isAuthorizedAny(elfin: ELFIN, request: securesocial.core.SecuredRequest[play.api.mvc.AnyContent])(implicit apiConfig: ApiConfig): Boolean = {    
     
