@@ -198,18 +198,81 @@ object ElfinUtil {
   }
 
   /**
-   * Helper returning Option[CARSET_CARType] for Scala find equivalent to XPath: 
-   * CARACTERISTIQUE/CARSET/CAR[@NOM = `name`] applied to `elfin`. 
+   * Helper returning Option[CARSET_CARType] for Scala find equivalent to XPath:
+   * CARACTERISTIQUE/CARSET/CAR[@NOM = `name`] applied to `elfin`.
    */
-  def getElfinCarByName(elfin : ELFIN, name: String) = {
-    val carForNameOption = elfin.CARACTERISTIQUE.flatMap{ _.CARSET.flatMap { _.CAR.find { _.NOM.getOrElse(false) == name  }}}
+  def getElfinCarByName(elfin: ELFIN, name: String) = {
+    val carForNameOption = elfin.CARACTERISTIQUE.flatMap { _.CARSET.flatMap { _.CAR.find { _.NOM.getOrElse(false) == name } } }
     carForNameOption
   }
+
+
+  def updateElfinForme(elfin: ELFIN, forme: FORME): ELFIN = {
+    val elfinForMap = ELFIN(
+      MUTATIONS = elfin.MUTATIONS, GEOSELECTION = elfin.GEOSELECTION,
+      IDENTIFIANT = elfin.IDENTIFIANT, CARACTERISTIQUE = elfin.CARACTERISTIQUE,
+      PARTENAIRE = elfin.PARTENAIRE,
+      ACTIVITE = elfin.ACTIVITE,
+      FORME = Some(forme),
+      ANNEXE = elfin.ANNEXE,
+      DIVERS = elfin.DIVERS,
+      Id = elfin.Id,
+      ID_G = elfin.ID_G,
+      CLASSE = elfin.CLASSE,
+      GROUPE = elfin.GROUPE,
+      TYPE = elfin.TYPE,
+      NATURE = elfin.NATURE,
+      SOURCE = elfin.SOURCE)
+
+    elfinForMap
+  }
+
+  /**
+   * Replaces provided `forme` sequence of `POINT` by provided `points` sequence leaving LIGNE, ZONE, SYMBOLE unchanged.
+   */
+  private def replaceOrCreateFormePoints(formeOpt: Option[FORME], points: Seq[ch.bsisa.hyperbird.model.POINT]): FORME = {
+
+    val newForme = formeOpt match {
+      case Some(forme) => FORME(POINT = points,
+        LIGNE = forme.LIGNE,
+        ZONE = forme.ZONE,
+        SYMBOLE = forme.SYMBOLE)
+      case None => FORME(POINT = points)
+    }
+    newForme
+  }
+
+  /**
+   * Replaces provided `forme` sequence of `POINT` by provided `points` sequence leaving all other ELFIN properties unchanged.
+   */
+  def updateElfinPoints(elfin: ELFIN, points: Seq[ch.bsisa.hyperbird.model.POINT]): ELFIN = {
+     
+    val updatedElfin = ELFIN(
+      MUTATIONS = elfin.MUTATIONS, GEOSELECTION = elfin.GEOSELECTION,
+      IDENTIFIANT = elfin.IDENTIFIANT, CARACTERISTIQUE = elfin.CARACTERISTIQUE,
+      PARTENAIRE =  elfin.PARTENAIRE,
+      ACTIVITE = elfin.ACTIVITE,
+      FORME = Some(replaceOrCreateFormePoints(elfin.FORME, points)),
+      ANNEXE = elfin.ANNEXE,
+      DIVERS = elfin.DIVERS,
+      Id = elfin.Id,
+      ID_G = elfin.ID_G,
+      CLASSE = elfin.CLASSE,
+      GROUPE = elfin.GROUPE,
+      TYPE = elfin.TYPE,
+      NATURE = elfin.NATURE,
+      SOURCE = elfin.SOURCE)
+
+    updatedElfin
+  }
+
   
   /**
    * Streamline ELFIN information to preserve only information relevant to map usage. (Actview POC)
+   * 
+   * WARNING: Intended information loss.
    */
-  def getElfinForMap(elfinFull : ELFIN) : ELFIN = {
+  def getElfinForMap(elfinFull: ELFIN): ELFIN = {
     val elfinForMap = ELFIN(
       MUTATIONS = None, GEOSELECTION = elfinFull.GEOSELECTION,
       IDENTIFIANT = elfinFull.IDENTIFIANT, CARACTERISTIQUE = None,
@@ -224,29 +287,9 @@ object ElfinUtil {
       GROUPE = elfinFull.GROUPE,
       TYPE = elfinFull.TYPE,
       NATURE = elfinFull.NATURE,
-      SOURCE = elfinFull.SOURCE) 
-      
-     elfinForMap
-  }
-  
-    def updateElfinForme(elfin : ELFIN, forme: FORME) : ELFIN = {
-    val elfinForMap = ELFIN(
-      MUTATIONS = None, GEOSELECTION = elfin.GEOSELECTION,
-      IDENTIFIANT = elfin.IDENTIFIANT, CARACTERISTIQUE = None,
-      PARTENAIRE = None, //PARTENAIRE = elfin.PARTENAIRE
-      ACTIVITE = elfin.ACTIVITE,
-      FORME = Some(forme),
-      ANNEXE = None, //ANNEXE = elfin.ANNEXE,
-      DIVERS = None, //DIVERS = elfin.DIVERS,
-      Id = elfin.Id,
-      ID_G = elfin.ID_G,
-      CLASSE = elfin.CLASSE,
-      GROUPE = elfin.GROUPE,
-      TYPE = elfin.TYPE,
-      NATURE = elfin.NATURE,
-      SOURCE = elfin.SOURCE) 
-      
-     elfinForMap
-  }
+      SOURCE = elfinFull.SOURCE)
+
+    elfinForMap
+  }  
   
 }
