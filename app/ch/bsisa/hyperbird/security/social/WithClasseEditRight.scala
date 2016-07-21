@@ -17,6 +17,7 @@ case object WithClasseEditRight {
   /**
    * Return true if the provided user has edit rights for given ELFIN CLASSE
    * otherwise throws as WithClasseEditRightException
+   * TODO: check WithManagerEditRight comments.
    */
   def isAuthorized(user: User, elfinClasse: String) : Boolean = {
 
