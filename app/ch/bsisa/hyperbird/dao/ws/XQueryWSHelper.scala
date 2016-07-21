@@ -129,7 +129,7 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
    * WS specific implementation to query 0 to 1 ELFIN and return original XML format.
    * 
    * This is outside the 'QueriesProcessor' trait. 
-   * Indead the API is designed around Scala classes not specific JSON, XML,... formats.
+   * Indeed the API is designed around Scala classes not specific JSON, XML,... formats.
    * The purpose of the current function is to avoid XML to class back to XML conversions 
    * for performances considerations.   
    */
