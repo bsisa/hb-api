@@ -167,11 +167,11 @@ object Api extends Controller with securesocial.core.SecureSocial {
    * Returns the result of executing the specified XQuery file by name.
    *
    * Supported `format` parameter value are `{original|json}`
-   * 
-   * Warning: The API is ELFIN centered. Selecting json means the native query results in XML 
-   * format will be converted to ELFIN in JSON format. 
-   * If the XML returned is not an ELFIN format then use `original` format instead and proceed to whatever 
-   * conversion afterward.  
+   *
+   * Warning: The API is ELFIN centered. Selecting json means the native query results in XML
+   * format will be converted to ELFIN in JSON format.
+   * If the XML returned is not an ELFIN format then use `original` format instead and proceed to whatever
+   * conversion afterward.
    */
   def runXQueryFile(xqueryFileName: String, format: String) = SecuredAction(ajaxCall = true).async { request =>
     val queryString = if (request.rawQueryString != null && request.rawQueryString.nonEmpty) Option(request.rawQueryString) else None
@@ -417,20 +417,19 @@ object Api extends Controller with securesocial.core.SecureSocial {
       }
     }
   }
-  
+
   /**
    * Gets new ELFIN instance from catalog for provided CLASSE. This instance does not exist in database yet.
    */
   def getNewOrderNumber() = SecuredAction(ajaxCall = true).async { request =>
 
-    
     val futureOrderNumber = ch.bsisa.hyperbird.orders.OrderNumberGenerator.getNewOrderNumber
 
     // Send cloned catalog elfin in JSON format 
-    futureOrderNumber.map { orderNumberOpt => 
+    futureOrderNumber.map { orderNumberOpt =>
       orderNumberOpt match {
         case Some(orderNumber) => Ok(s"${orderNumber}").as(JSON)
-        case None => Ok("hello").as(JSON)
+        case None              => Ok("hello").as(JSON)
       }
     }.recover {
       case connectException: ConnectException => {
@@ -440,12 +439,11 @@ object Api extends Controller with securesocial.core.SecureSocial {
         ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to obtain new order number from order ids service: ${e}"))
       }
     }
-  }  
-  
-  
+  }
+
   /**
-   * Updates an ELFIN.CARACTERISTIQUE.FRACTION.L block expecting a data structure designed for order figures. 
-   * 
+   * Updates an ELFIN.CARACTERISTIQUE.FRACTION.L block expecting a data structure designed for order figures.
+   *
    * See COMMANDE catalog description for format details.
    */
   def computeOrderFigures() = SecuredAction(ajaxCall = true).async(parse.json) { request =>
@@ -458,7 +456,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
       // Convert elfin JsValue to ELFIN.CARACTERISTIQUE.FRACTION 
       val caracteristique = ElfinFormat.caracteristiqueFromJson(request.body)
-      
+
       val updatedCaracteristique = ch.bsisa.hyperbird.orders.OrderUtil.computeOrderFigures(carP = caracteristique)
       val updatedCaracteristiqueJson = ElfinFormat.caracteristiqueToJson(updatedCaracteristique)
       scala.concurrent.Future(Ok(updatedCaracteristiqueJson).as(JSON))
@@ -469,17 +467,13 @@ object Api extends Controller with securesocial.core.SecureSocial {
         ExceptionsManager.manageFutureException(exception = Option(e), errorMsg = Option(errorMsg))
     }
 
-  }  
-  
-  
-  
-  
+  }
 
   /**
    * Finds 0 or 1 ELFIN by `collectionId`, `elfinId` and returns it within a SimpleResult
-   * 
+   *
    * Supported `format` parameter value are `{xml,json-pretty}`. Any other value will lead to `json` format.
-   * 
+   *
    */
   private def getElfinSimpleResult(collectionId: String, elfinId: String, format: String = JSON_FORMAT) = {
 
@@ -597,13 +591,13 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
       // Test identifiers consistency between URL and JSON body
       if (elfin.Id.equals(elfinId)) {
-        
+
         // Manage MUTATIONS.MUTATION head update
-        val elfinWithUpdatedMutation = ElfinUtil.replaceElfinMutationsHead(elfin, ElfinUtil.createMutationForUserId(user.identityId.userId))        
-        
+        val elfinWithUpdatedMutation = ElfinUtil.replaceElfinMutationsHead(elfin, ElfinUtil.createMutationForUserId(user.identityId.userId))
+
         // Update database with new elfinWithUpdatedMutation
         ElfinDAO.create(elfinWithUpdatedMutation)
-        
+
         // Invalidate all cache entries related to this collectionId
         CacheHelper.removeEntriesContaining(collectionId)
 
@@ -655,10 +649,10 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
       // Test identifiers consistency between URL and JSON body
       if (elfin.ID_G.equals(collectionId) && elfin.Id.equals(elfinId)) {
-        
+
         // Manage MUTATIONS.MUTATION head update
         val elfinWithUpdatedMutation = ElfinUtil.replaceElfinMutationsHead(elfin, ElfinUtil.createMutationForUserId(user.identityId.userId))
-        
+
         // Update database with new elfin
         ElfinDAO.update(elfinWithUpdatedMutation)
 
@@ -684,7 +678,6 @@ object Api extends Controller with securesocial.core.SecureSocial {
     }
   }
 
-  
   /**
    * Delete the list of elfins contained in the specified collection matching the xpath filter expression with defined format
    */
@@ -692,13 +685,13 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
     try {
       // Match our custom User type Identity implementation  
-      val user = request.user match { case user: User => user }    
-    
+      val user = request.user match { case user: User => user }
+
       val futureElfins = XQueryWSHelper.queryElfins(WSQueries.filteredCollectionQuery(collectionId, xpath))
-      futureElfins.map { elfins => 
-      
-        val simpleResults = elfins.map { elfin =>  
-        
+      futureElfins.map { elfins =>
+
+        val simpleResults = elfins.map { elfin =>
+
           try {
             // Application data based access right
             WithClasseEditRight.isAuthorized(user = user, elfinClasse = elfin.CLASSE)
@@ -706,43 +699,41 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
             // Delete elfin from database
             ElfinDAO.delete(elfin)
-  
+
             val okMsg = Json.obj("DESCRIPTION" -> s"elfin.Id = ${elfin.Id}")
             Ok(okMsg)
-            
+
           } catch {
             case e: WithManagerEditRightException =>
               val errorMsg = s"Failed to delete Elfins for collectionId: ${collectionId}, xpath: ${xpath}: ${e}"
-              manageWithManagerEditRightException(exception = e, errorMsg = Option(errorMsg))          
+              manageWithManagerEditRightException(exception = e, errorMsg = Option(errorMsg))
             case e: WithClasseEditRightException =>
               val errorMsg = s"Failed to delete Elfins for collectionId: ${collectionId}, xpath: ${xpath}: ${e}"
               manageWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))
             case e: Throwable =>
               val errorMsg = s"Api.deleteFilteredCollection() - Failed for collectionId: ${collectionId}, xpath: ${xpath}: ${e}"
               ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(errorMsg))
-          }        
-          
+          }
+
         }
         val deletedElfinsStatus = simpleResults.find { s => s.header.status != Ok.header.status }
         deletedElfinsStatus match {
           case Some(simpleResultWithError) => simpleResultWithError
           case None =>
-                    val deletedElfinsMsg = s"""{ "message" :  "Api.deleteFilteredCollection() - success for collectionId: ${collectionId}, xpath: ${xpath}"  }"""
-                    Ok(deletedElfinsMsg).as(JSON)
+            val deletedElfinsMsg = s"""{ "message" :  "Api.deleteFilteredCollection() - success for collectionId: ${collectionId}, xpath: ${xpath}"  }"""
+            Ok(deletedElfinsMsg).as(JSON)
         }
 
       }
-    
+
     } catch {
       case e: Throwable =>
         val errorMsg = s"Api.deleteFilteredCollection() - Failed for collectionId: ${collectionId}, xpath: ${xpath}: ${e}"
         ExceptionsManager.manageFutureException(exception = Option(e), errorMsg = Option(errorMsg))
-    }    
-    
-  }  
-  
-  
-  
+    }
+
+  }
+
   /**
    * Deletes an ELFIN within the specified collectionId with Id elfinId.
    * RFC are not crystal clear regarding HTTP DELETE body usage or not but REST
@@ -778,7 +769,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
         } catch {
           case e: WithManagerEditRightException =>
             val errorMsg = s"Failed to delete Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
-            manageWithManagerEditRightException(exception = e, errorMsg = Option(errorMsg))          
+            manageWithManagerEditRightException(exception = e, errorMsg = Option(errorMsg))
           case e: WithClasseEditRightException =>
             val errorMsg = s"Failed to delete Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
             manageWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))
@@ -891,14 +882,13 @@ object Api extends Controller with securesocial.core.SecureSocial {
   def manageFutureWithClasseEditRightException(exception: WithClasseEditRightException, errorMsg: Option[String] = None): Future[SimpleResult] =
     scala.concurrent.Future { manageWithClasseEditRightException(exception, errorMsg) }
 
-
   /**
    * Encapsulate `manageWithManagerEditRightException` in a asynchronous call for use in Action.async context.
    * @see manageWithManagerEditRightException
    */
   def manageFutureWithManagerEditRightException(exception: WithManagerEditRightException, errorMsg: Option[String] = None): Future[SimpleResult] =
-    scala.concurrent.Future { manageWithManagerEditRightException(exception, errorMsg) }  
-  
+    scala.concurrent.Future { manageWithManagerEditRightException(exception, errorMsg) }
+
   /**
    * Encapsulate `manageException` in a asynchronous call for use in Action.async context.
    * @see manageException
