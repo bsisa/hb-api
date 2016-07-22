@@ -156,12 +156,9 @@ object GeoXmlDAO {
                         emptyRes
                     }
                     val updatedElfin = updateElfinPoints(elfin, coordinatesWithIdSeq)
-                    //Logger.debug(s"ELFIN before:\n${elfin.FORME.get.POINT.seq}\n")
-                    //Logger.debug(s"ELFIN after :\n${updatedElfin.FORME.get.POINT.seq}\n")
-                    // Persist updated elfin
-                    //TODO: uncomment after first successful tests
-                    //ElfinDAO.update(updatedElfin)
 
+                    // Persist updated elfin
+                    ElfinDAO.update(updatedElfin)
                   }
                   // Not Ok log exception
                   case _ => {
@@ -170,7 +167,7 @@ object GeoXmlDAO {
                 }
               }
 
-              wsRespFuture recover { case e => Logger.error(e.toString) }
+              wsRespFuture recover { case e => Logger.error(s"Problem calling hb-geo-api service: ${e.toString}") }
             }
           }
         } // for loop end
