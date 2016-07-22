@@ -50,6 +50,9 @@ GET      /api/melfin/backup                                                ch.bs
 
 GET      /api/melfin/clearcache                                            ch.bsisa.hyperbird.controllers.Api.clearCache
 
+# GeoXml maintenance function to compute all database swiss coordinates to GPS, updating POINT.XG,YG,ZG  
+GET      /api/melfin/geo/convert/all/swiss/to/gps                          ch.bsisa.hyperbird.controllers.Api.convertAllPointsToGps()
+
 GET      /api/melfin/online/:group                                         ch.bsisa.hyperbird.sse.ServerSideNotification.notificationFeed(group: String)
 POST     /api/melfin/notify                                                ch.bsisa.hyperbird.sse.ServerSideNotification.postMessage
 
