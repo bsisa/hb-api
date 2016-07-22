@@ -45,9 +45,9 @@ object WSQueries extends Queries {
   /**
    * Returns all database ELFIN matching `xpath` parameter, using paging defined by `startIndex` and `maxResults` parameters.
    */
-  def filteredGlobalQuery(xpath: String = "//ELFIN", startIndex: Int = 1, maxResult: Int = highPagingLimit)(implicit conf: DbConfig): String = {
+  def filteredGlobalQuery(xpath: String = "//ELFIN", startIndex: Int = 1, maxResults: Int = highPagingLimit)(implicit conf: DbConfig): String = {
     val encodedXpath = UrlEncode.encodeURLQueryParameter(queryParameter = xpath)
-    val query = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}?_query=${encodedXpath}&_howmany=${maxResult}&_start=${startIndex}&_wrap=${wrap}"""
+    val query = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}?_query=${encodedXpath}&_howmany=${maxResults}&_start=${startIndex}&_wrap=${wrap}"""
     Logger.debug(s"filteredCollectionQuery: ${query} built with provided xpath filter: ${xpath}")
     query
   }
