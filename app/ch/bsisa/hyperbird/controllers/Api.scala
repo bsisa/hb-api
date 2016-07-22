@@ -470,6 +470,15 @@ object Api extends Controller with securesocial.core.SecureSocial {
   }
 
   /**
+   * Triggers asynchronous all database POINTs swiss federal coordinates (LV03) to GPS computation.
+   */
+  def convertAllPointsToGps() = SecuredAction(ajaxCall = true).async { request =>
+    import ch.bsisa.hyperbird.dao.GeoXmlDAO
+    GeoXmlDAO.convertAllPointsToGps()
+    scala.concurrent.Future(Ok("""{message:"All database POINTs swiss federal coordinates (LV03) to GPS computation triggered."}""").as(JSON))
+  }
+
+  /**
    * Finds 0 or 1 ELFIN by `collectionId`, `elfinId` and returns it within a SimpleResult
    *
    * Supported `format` parameter value are `{xml,json-pretty}`. Any other value will lead to `json` format.
