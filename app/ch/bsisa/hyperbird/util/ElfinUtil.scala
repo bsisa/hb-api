@@ -11,6 +11,7 @@ import ch.bsisa.hyperbird.model.MUTATION
 import ch.bsisa.hyperbird.model.MUTATIONS
 import ch.bsisa.hyperbird.model.PARTENAIRE
 import ch.bsisa.hyperbird.model.PERSONNEType
+import ch.bsisa.hyperbird.model.POINT
 import ch.bsisa.hyperbird.CollectionsConfig
 import ch.bsisa.hyperbird.model.MATRICEType
 import play.api.libs.concurrent.Execution.Implicits._
@@ -206,7 +207,6 @@ object ElfinUtil {
     carForNameOption
   }
 
-
   def updateElfinForme(elfin: ELFIN, forme: FORME): ELFIN = {
     val elfinForMap = ELFIN(
       MUTATIONS = elfin.MUTATIONS, GEOSELECTION = elfin.GEOSELECTION,
@@ -246,11 +246,11 @@ object ElfinUtil {
    * Replaces provided `forme` sequence of `POINT` by provided `points` sequence leaving all other ELFIN properties unchanged.
    */
   def updateElfinPoints(elfin: ELFIN, points: Seq[ch.bsisa.hyperbird.model.POINT]): ELFIN = {
-     
+
     val updatedElfin = ELFIN(
       MUTATIONS = elfin.MUTATIONS, GEOSELECTION = elfin.GEOSELECTION,
       IDENTIFIANT = elfin.IDENTIFIANT, CARACTERISTIQUE = elfin.CARACTERISTIQUE,
-      PARTENAIRE =  elfin.PARTENAIRE,
+      PARTENAIRE = elfin.PARTENAIRE,
       ACTIVITE = elfin.ACTIVITE,
       FORME = Some(replaceOrCreateFormePoints(elfin.FORME, points)),
       ANNEXE = elfin.ANNEXE,
@@ -266,10 +266,36 @@ object ElfinUtil {
     updatedElfin
   }
 
-  
+  /**
+   * Replaces `XG`, `YG`, `ZG` `point` coordinates with provided `xg`, `yg`, `zg` coordinates.
+   */
+  def updatePointGpsCoordinates(point: POINT, xg: Option[Double], yg: Option[Double], zg: Option[Double]): POINT = {
+    POINT(POS = point.POS,
+      X = point.X,
+      Y = point.Y,
+      Z = point.Z,
+      XG = xg,
+      YG = yg,
+      ZG = zg,
+      KSI = point.KSI,
+      ANGLE = point.ANGLE,
+      ALPHA = point.ALPHA,
+      XS = point.XS,
+      YS = point.YS,
+      ZS = point.ZS,
+      KSIS = point.KSIS,
+      ANGLES = point.ANGLES,
+      ALPHAS = point.ALPHAS,
+      Id = point.Id,
+      ID_G = point.ID_G,
+      FONCTION = point.FONCTION,
+      CLASSE = point.CLASSE,
+      GROUPE = point.GROUPE)
+  }
+
   /**
    * Streamline ELFIN information to preserve only information relevant to map usage. (Actview POC)
-   * 
+   *
    * WARNING: Intended information loss.
    */
   def getElfinForMap(elfinFull: ELFIN): ELFIN = {
@@ -290,6 +316,6 @@ object ElfinUtil {
       SOURCE = elfinFull.SOURCE)
 
     elfinForMap
-  }  
-  
+  }
+
 }
