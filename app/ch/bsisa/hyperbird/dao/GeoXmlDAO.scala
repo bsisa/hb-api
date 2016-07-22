@@ -86,8 +86,6 @@ object GeoXmlDAO {
 
     // HbGeoController.getGpsForSwissCoordinatesList()
     val getGpsForSwissCoordinatesListUrlPart = "coordinates/gps/"
-
-    //val xpath = """//ELFIN[FORME/POINT]"""
     val path = dbConfig.databaseName + "/"
     val xpath = """[FORME/POINT]"""
     val orderBy = """@Id"""
@@ -98,24 +96,15 @@ object GeoXmlDAO {
 
     val countQueryString = s"""&isCount=true&startIndex=1&maxNbResults=1000000000&path=${path}&xpath=${xpath}&orderBy=${orderBy}"""
 
-    XQueryWSHelper.runXQueryFile("getAllPointsCountJson.xq", None).map { nbOfElfinsResp =>
-      //    XQueryWSHelper.runXQueryFile(xqueryFileName, Some(countQueryString)).map { nbOfElfinsResp =>
-      //      
-      //      import scala.util.{ Failure, Success, Try }
-      //
-      //      def parseCount(response: Response): Try[Int] = Try(response.xml.text.toInt)
-      //
-      //      val nbOfElfinsOpt = parseCount(nbOfElfinsResp) match {
-      //        case s: Success[Int] => Some(s.value)
-      //        case e: Failure[Int] =>
-      //          Logger.error("convertAllPointsToGps could not obtain nbOfElfins count: " + e.toString())
-      //          None
-      //      }
+    XQueryWSHelper.runXQueryFile(xqueryFileName, Some(countQueryString)).map { nbOfElfinsResp =>
 
-      val nbOfElfinsOpt = nbOfElfinsResp.json.validate[Int] match {
-        case s: JsSuccess[Int] =>
-          Some(s.value)
-        case e: JsError =>
+      import scala.util.{ Failure, Success, Try }
+
+      def parseCount(response: Response): Try[Int] = Try(response.xml.text.toInt)
+
+      val nbOfElfinsOpt = parseCount(nbOfElfinsResp) match {
+        case s: Success[Int] => Some(s.value)
+        case e: Failure[Int] =>
           Logger.error("convertAllPointsToGps could not obtain nbOfElfins count: " + e.toString())
           None
       }
@@ -135,12 +124,12 @@ object GeoXmlDAO {
 
           XQueryWSHelper.queryElfins(WSQueries.runXQueryFile(xqueryFileName, Some(queryString))).map { elfins =>
 
-            Logger.debug(s"Obtained ${elfins.size} elfins")
+            //Logger.debug(s"Obtained ${elfins.size} elfins")
 
             // For each elfin containing point
             elfins.foreach { elfin =>
 
-              Logger.debug(s">>>> Proceed with elfin.Id ${elfin.Id}")
+              //Logger.debug(s">>>> Proceed with elfin.Id ${elfin.Id}")
 
               val postBody = buildSwissToGpsPostBodyRequest(elfin)
               val postUrl = s"${hbGeoProtocol.get}://${hbGeoHost.get}:${hbGeoPort.get}/${getGpsForSwissCoordinatesListUrlPart}"
