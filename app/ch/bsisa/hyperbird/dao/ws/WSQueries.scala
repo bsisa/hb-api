@@ -98,7 +98,6 @@ object WSQueries extends Queries {
    */
   def runXQueryFile(xqueryFileName: String, queryString: Option[String])(implicit dbConf: DbConfig, collectionsConf: CollectionsConfig): String = {
     val baseQuery = s"""${dbConf.protocol}${dbConf.hostName}:${dbConf.port}${dbConf.restPrefix}${dbConf.databaseName}/${collectionsConf.xqueriesCollectionId}/${xqueryFileName}?_howmany=${highPagingLimit}&_wrap=${wrap}"""
-
     val query = queryString match {
       case Some(queryString) => baseQuery + s"&${queryString}"
       case None              => baseQuery
@@ -121,9 +120,5 @@ object WSQueries extends Queries {
     query
   }
 
-  def getFile(fileName: String)(implicit dbConf: DbConfig, collectionsConf: CollectionsConfig): String = {
-    val query = s"""${dbConf.protocol}${dbConf.hostName}:${dbConf.port}${dbConf.restPrefix}${dbConf.databaseName}/${collectionsConf.xqueriesCollectionId}/${fileName}?_howmany=${highPagingLimit}&_wrap=${wrap}"""
-    query
-  }
 
 }
