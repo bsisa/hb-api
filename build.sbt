@@ -7,6 +7,11 @@ libraryDependencies ++= Seq(
   cache,
   "io.github.cloudify" %% "spdf" % "1.0.0",
   "commons-codec" % "commons-codec" % "1.6"
+  // Cannot be used with current hb-api Play 2.2.1 (too old). 
+  // Transitive dependencies breaks   ch/bsisa/hyperbird/model/format/Implicits 
+  // with No Json deserializer found for type Option[String]
+  // Currently copied sources to app/ch/bsisa/hb/geo/model will be deleted soon.
+  //"ch.bsisa" % "hb-geo-model_2.10" % "1.0"    
 )     
 
 // Control which files are packaged with dist task.

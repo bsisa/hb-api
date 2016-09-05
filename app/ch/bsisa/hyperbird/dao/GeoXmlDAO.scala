@@ -6,7 +6,8 @@ import ch.bsisa.hyperbird.dao.ws.XQueryWSHelper
 import ch.bsisa.hyperbird.model.{ ELFIN, FORME, POINT }
 import ch.bsisa.hyperbird.util.ElfinUtil
 
-import ch.bsisa.hb.geo.json.HbGeoFormatImplicits._
+//import ch.bsisa.hb.geo.json.HbGeoFormatImplicits._
+import ch.bsisa.hb.geo.model.json.HbGeoFormatImplicits._
 
 import play.api.libs.concurrent.Execution.Implicits._ // Required by FUTURE
 
