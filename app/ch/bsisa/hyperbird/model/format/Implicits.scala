@@ -250,7 +250,37 @@ object Implicits {
         case JsError(errors) => JsError("Error reading MOTCLE") ++ JsError(errors)
       }
 
+//      val autReader = (JsPath \ "AUT").readNullable[String]
+//      val gerReader = (JsPath \ "GER").readNullable[String]
+//      val resReader = (JsPath \ "RES").readNullable[String]
+//      val nomReader = (JsPath \ "NOM").readNullable[String]
+//      val aliasReader = (JsPath \ "ALIAS").readNullable[String]
+//      val origineReader = (JsPath \ "ORIGINE").readNullable[String]
+//      val objectifReader = (JsPath \ "OBJECTIF").readNullable[String]
+//      val qualiteReader = (JsPath \ "QUALITE").readNullable[String]
+//      val compteReader = (JsPath \ "COMPTE").readNullable[String]
+//      val deReader = (JsPath \ "DE").readNullable[String]
+//      val aReader = (JsPath \ "A").readNullable[String]
+//      val parReader = (JsPath \ "PAR").readNullable[String]
+//      val valeur_a_neufReader = (JsPath \ "VALEUR_A_NEUF").readNullable[Double]
+//      val valeurReader = (JsPath \ "VALEUR").readNullable[Double]
+      
       val identifiantContent: JsResult[(Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[Double], Option[Double], Seq[String])] = for {
+//        aut <- (json \ "AUT").validate[Option[String]](autReader)
+//        ger <- (json \ "GER").validate[Option[String]](gerReader)
+//        res <- (json \ "RES").validate[Option[String]](resReader)
+//        nom <- (json \ "NOM").validate[Option[String]](nomReader)
+//        alias <- (json \ "ALIAS").validate[Option[String]](aliasReader)
+//        origine <- (json \ "ORIGINE").validate[Option[String]](origineReader)
+//        objectif <- (json \ "OBJECTIF").validate[Option[String]](objectifReader)
+//        qualite <- (json \ "QUALITE").validate[Option[String]](qualiteReader)
+//        compte <- (json \ "COMPTE").validate[Option[String]](compteReader)
+//        de <- (json \ "DE").validate[Option[String]](deReader)
+//        a <- (json \ "A").validate[Option[String]](aReader)
+//        par <- (json \ "PAR").validate[Option[String]](parReader)
+//        valeur_a_neuf <- (json \ "VALEUR_A_NEUF").validate[Option[Double]](valeur_a_neufReader)
+//        valeur <- (json \ "VALEUR").validate[Option[Double]](valeurReader)
+        
         aut <- (json \ "AUT").validate[Option[String]]
         ger <- (json \ "GER").validate[Option[String]]
         res <- (json \ "RES").validate[Option[String]]
@@ -264,7 +294,8 @@ object Implicits {
         a <- (json \ "A").validate[Option[String]]
         par <- (json \ "PAR").validate[Option[String]]
         valeur_a_neuf <- (json \ "VALEUR_A_NEUF").validate[Option[Double]]
-        valeur <- (json \ "VALEUR").validate[Option[Double]]
+        valeur <- (json \ "VALEUR").validate[Option[Double]]        
+        
         motscle <- motsCleJsResult
       } yield (aut, ger, res, nom, alias, origine, objectif, qualite, compte, de, a, par, valeur_a_neuf, valeur, motscle)
 
@@ -318,8 +349,16 @@ object Implicits {
 
   implicit object CARTypableFormat extends Format[CARTypable] {
 
+//     val nomReader = (JsPath \ "NOM").readNullable[String]
+//     val uniteReader = (JsPath \ "UNITE").readNullable[String]
+//     val valeurReader = (JsPath \ "VALEUR").readNullable[String]
+
+     
     def reads(json: JsValue): JsResult[CARType] = {
       val nomUniteValeur: JsResult[(Option[String], Option[String], Option[String])] = for {
+//        nom <- (json \ "NOM").validate[Option[String]](nomReader)
+//        unite <- (json \ "UNITE").validate[Option[String]](uniteReader)
+//        valeur <- (json \ "VALEUR").validate[Option[String]](valeurReader)
         nom <- (json \ "NOM").validate[Option[String]]
         unite <- (json \ "UNITE").validate[Option[String]]
         valeur <- (json \ "VALEUR").validate[Option[String]]
@@ -359,8 +398,13 @@ object Implicits {
 
   implicit object STATETypeFormat extends Format[STATEType] {
 
+//    val bReader = (JsPath \ "B").readNullable[String]
+//    val cReader = (JsPath \ "C").readNullable[String]
+    
     def reads(json: JsValue): JsResult[STATEType] = {
       val bAndCAndContent: JsResult[(Option[String], Option[String], String)] = for {
+//        b <- (json \ "B").validate[Option[String]](bReader)
+//        c <- (json \ "C").validate[Option[String]](cReader)
         b <- (json \ "B").validate[Option[String]]
         c <- (json \ "C").validate[Option[String]]
         content <- (json \ MixedContentJsonPropName).validate[String]
