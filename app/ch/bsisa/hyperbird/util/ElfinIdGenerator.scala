@@ -19,7 +19,7 @@ import java.util.Date
 /**
  * Basic generator
  * Uses actor for thread safe counter
- * 
+ *
  * @author Patrick Refondini
  */
 object ElfinIdGenerator {
@@ -43,13 +43,21 @@ object ElfinIdGenerator {
     futureId
   }
 
-  def getElfinFileName(elfin: ELFIN): String = {
+  /**
+   * Build file name used to uniquely identify an ELFIN entry in eXist XML database.
+   * Neither Id or ID_G are allowed to be empty to safeguard from potentially destructive
+   * delete. 
+   */
+  def getElfinFileName(elfin: ELFIN): Option[String] = {
 
-    validateElfinIdandID_G(elfin)
-
-    val elfinId = elfin.Id
-    val elfinCLASSE = elfin.CLASSE
-    elfinCLASSE + elfinId + ".xml"
+    if (elfin.Id.trim == "" || elfin.ID_G.trim == "") {
+      None
+    } else {
+      validateElfinIdandID_G(elfin)
+      val elfinId = elfin.Id
+      val elfinCLASSE = elfin.CLASSE
+      Some(elfinCLASSE + elfinId + ".xml")
+    }
   }
 
   /**
@@ -61,12 +69,12 @@ object ElfinIdGenerator {
     try { validateElfinUniqueIdentifier(elfin.Id) }
     catch {
       case pe: ParseException => throw new ElfinUniqueIdValidationException(s"ELFIN.Id ${elfin.Id} date part is not a valid date.")
-      case e: Throwable => throw new ElfinUniqueIdValidationException(s"ELFIN.Id ${elfin.Id} validation failed with cause: ${e.getMessage()}")
+      case e: Throwable       => throw new ElfinUniqueIdValidationException(s"ELFIN.Id ${elfin.Id} validation failed with cause: ${e.getMessage()}")
     }
     try { validateElfinUniqueIdentifier(elfin.ID_G) }
     catch {
       case pe: ParseException => throw new ElfinUniqueIdValidationException(s"ELFIN.ID_G ${elfin.ID_G} date part is not a valid date.")
-      case e: Throwable => throw new ElfinUniqueIdValidationException(s"ELFIN.ID_G ${elfin.ID_G} validation failed with cause: ${e.getMessage()}")
+      case e: Throwable       => throw new ElfinUniqueIdValidationException(s"ELFIN.ID_G ${elfin.ID_G} validation failed with cause: ${e.getMessage()}")
     }
   }
 
