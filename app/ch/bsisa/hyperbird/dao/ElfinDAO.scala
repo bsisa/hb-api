@@ -39,25 +39,40 @@ object ElfinDAO {
   /**
    * Updates XML database ELFIN representation corresponding to the provided ELFIN object.
    * <i>The database API do not provide any feedback on that operation.</i>
+   * Note: elfin.ID_G and elfin.Id are mandatory
    */
   def update(elfin: ELFIN)(implicit dbConfig: DbConfig) = {
-    logger.debug(s"ElfinDAO.update elfin.ID_G/Id: ${elfin.ID_G}/${elfin.Id}")
-    val elfinXml = ElfinFormat.toXml(elfin)
-    val updateStatetement =
-      s"update replace collection('${dbConfig.databaseName}/${elfin.ID_G}')//ELFIN[@Id='${elfin.Id}'] with ${elfinXml.mkString}"
-    executeStatement(updateStatetement)
+
+    if (elfin.ID_G != "" && elfin.Id != "") {
+      logger.debug(s"ElfinDAO.update elfin.ID_G/Id: ${elfin.ID_G}/${elfin.Id}")
+      val elfinXml = ElfinFormat.toXml(elfin)
+      val updateStatetement =
+        s"update replace collection('${dbConfig.databaseName}/${elfin.ID_G}')//ELFIN[@Id='${elfin.Id}'] with ${elfinXml.mkString}"
+      executeStatement(updateStatetement)
+    } else {
+      logger.error(s"ElfinDAO.update elfin.ID_G and elfin.Id are mandatory but: elfin.ID_G = ${elfin.ID_G}, elfin.Id = ${elfin.Id}")
+    }
   }
 
   /**
    * Updates XML database ELFIN representation corresponding to the provided ELFIN as scala.xml.Node
    * <i>The database API do not provide any feedback on that operation.</i>
+   * Note: elfin.ID_G and elfin.Id are mandatory
    */
   def update(elfin: scala.xml.Node)(implicit dbConfig: DbConfig) = {
-    logger.debug(s"ElfinDAO.update elfin.ID_G/Id: ${elfin \ "@ID_G"}/${elfin \ "@Id"}")
-    val elfinXml = elfin
-    val updateStatetement =
-      s"update replace collection('${dbConfig.databaseName}/${elfin \ "@ID_G"}')//ELFIN[@Id='${elfin \ "@Id"}'] with ${elfinXml.mkString}"
-    executeStatement(updateStatetement)
+
+    val idg: String = (elfin \ "@ID_G").mkString
+    val id: String = (elfin \ "@Id").mkString
+
+    if (idg != "" && id != "") {
+      logger.debug(s"ElfinDAO.update elfin.ID_G/Id: ${elfin \ "@ID_G"}/${elfin \ "@Id"}")
+      val elfinXml = elfin
+      val updateStatetement =
+        s"update replace collection('${dbConfig.databaseName}/${elfin \ "@ID_G"}')//ELFIN[@Id='${elfin \ "@Id"}'] with ${elfinXml.mkString}"
+      executeStatement(updateStatetement)
+    } else {
+      logger.error(s"ElfinDAO.update elfin.ID_G and elfin.Id are mandatory but: elfin.ID_G = ${idg}, elfin.Id = ${id}")
+    }
   }
 
   /**
@@ -80,7 +95,7 @@ object ElfinDAO {
       WSQueries.filteredCollectionQuery(collectionsConfig.catalogCollectionId, s"//ELFIN[@CLASSE='${classeName}']"))
 
     // Clone futureElfin[ELFIN] and assign a new generated ELFIN.Id to it
-    val futureElfinWithId: Future[ELFIN]  = futureElfin.flatMap { elfin => ElfinUtil.assignElfinId(elfin) }
+    val futureElfinWithId: Future[ELFIN] = futureElfin.flatMap { elfin => ElfinUtil.assignElfinId(elfin) }
     /* for comprehension equivalent to above one liner.    
     val futureElfinWithId: Future[ELFIN] = for {
       elfin <- futureElfin
