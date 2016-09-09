@@ -27,6 +27,20 @@
 		"langs": "en"                          // The application languages
 	}
 
+# Dealing with ws timeouts example	
+#	"ws" : {
+#		"timeout" : {
+#			// Connection timeout is wise
+#			"connection" : 3600000, // Time until connection established (Default 120 seconds)
+#			// Request timeout is wise for most requests, we override it programmatically when necessary. 
+#			"request" : 3600000, // Time until request is cancelled (Default 120 seconds)
+#			// Idle default prevents our request specific timeout to be greater than 120 seconds by default, let's change this:
+#			"idle" : 3600000 // Set to an hour four batch operations. withRequestTimeout() can then be set to 1..3600000. The maximum time the request can stay idle (connection is established but waiting for more data) (default is 120 seconds or 120000 ms). 
+#		}
+#
+	}	
+	
+
 }
 
 
