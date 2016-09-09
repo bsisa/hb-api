@@ -60,37 +60,36 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
     }
 
   }
-  
+
   /**
    * Perform query to database managing cache
    */
-  private def queryDb(query : String) = {
-	    // Keep asynchronous calls asynchronous to allow Play free threads
-	    val simpleResFuture: Future[SimpleResult] = queryElfins(query).map { elfinsResp =>
-	      
-	      val elfinsJsArray = ElfinFormat.elfinsToJsonArray(elfinsResp)
+  private def queryDb(query: String) = {
+    // Keep asynchronous calls asynchronous to allow Play free threads
+    val simpleResFuture: Future[SimpleResult] = queryElfins(query).map { elfinsResp =>
 
-	      // Manage query cache
-	      CacheHelper.setCache(key = query, value = elfinsJsArray)
+      val elfinsJsArray = ElfinFormat.elfinsToJsonArray(elfinsResp)
 
-	      Ok(elfinsJsArray)
-	    }.recover {
-	      case e: ElfinFormatException => Api.manageElfinFormatException(e, Some("ELFIN format conversion failed."))
-	      case e: NumberFormatException => 
-	        Logger.error(s">>>> NumberFormatException while proceeding with queryDb: query ${query} ")
-	        val jsonExceptionMsg = Json.obj(
-	          "ERROR" -> e.toString(),
-	          "DESCRIPTION" -> "Could not format number successfully.")
-	        InternalServerError(jsonExceptionMsg).as(JSON)
-	      case e: Throwable =>
-	        val jsonExceptionMsg = Json.obj(
-	          "ERROR" -> e.toString(),
-	          "DESCRIPTION" -> e.getMessage())
-	        InternalServerError(jsonExceptionMsg).as(JSON)
-	    }
-	    simpleResFuture    
+      // Manage query cache
+      CacheHelper.setCache(key = query, value = elfinsJsArray)
+
+      Ok(elfinsJsArray)
+    }.recover {
+      case e: ElfinFormatException => Api.manageElfinFormatException(e, Some("ELFIN format conversion failed."))
+      case e: NumberFormatException =>
+        Logger.error(s">>>> NumberFormatException while proceeding with queryDb: query ${query} ")
+        val jsonExceptionMsg = Json.obj(
+          "ERROR" -> e.toString(),
+          "DESCRIPTION" -> "Could not format number successfully.")
+        InternalServerError(jsonExceptionMsg).as(JSON)
+      case e: Throwable =>
+        val jsonExceptionMsg = Json.obj(
+          "ERROR" -> e.toString(),
+          "DESCRIPTION" -> e.getMessage())
+        InternalServerError(jsonExceptionMsg).as(JSON)
+    }
+    simpleResFuture
   }
-  
 
   /**
    * WS specific implementation to query 0 to n ELFIN
@@ -124,34 +123,39 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
 
     proceedWithSingleElfinResponseToElfinClass(responseFuture, query)
   }
-  
+
   /**
    * WS specific implementation to query 0 to 1 ELFIN and return original XML format.
-   * 
-   * This is outside the 'QueriesProcessor' trait. 
+   *
+   * This is outside the 'QueriesProcessor' trait.
    * Indeed the API is designed around Scala classes not specific JSON, XML,... formats.
-   * The purpose of the current function is to avoid XML to class back to XML conversions 
-   * for performances considerations.   
+   * The purpose of the current function is to avoid XML to class back to XML conversions
+   * for performances considerations.
    */
   def findXml(query: String): Future[scala.xml.Node] = {
     // Perform call to eXist REST service to get collections list
     val responseFuture: Future[Response] = WS.url(query).get()
 
     proceedWithSingleElfinResponseToXML(responseFuture, query)
-  }  
-  
+  }
 
   override def delete(elfin: ELFIN)(implicit conf: DbConfig): Unit = {
-    val fileName = ElfinIdGenerator.getElfinFileName(elfin)
-    val elfinResourceUrl = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}/${elfin.ID_G}/${fileName}"""
-    Logger.debug("elfinResourceUrl for DELETE : " + elfinResourceUrl)
+    val fileNameOpt = ElfinIdGenerator.getElfinFileName(elfin)
+    fileNameOpt match {
+      case Some(fileName) =>
+        val elfinResourceUrl = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}/${elfin.ID_G}/${fileName}"""
+        Logger.debug("elfinResourceUrl for DELETE : " + elfinResourceUrl)
 
-    // Invalidate all cache entries related to this collectionId (All queries containing this elfin)
-    CacheHelper.removeEntriesContaining(elfin.ID_G)
-    
-    // TODO: more investigation to catch basic authentication failures instead of silently failing.
-    val responseFuture: Future[Response] = WS.url(elfinResourceUrl).
-      withAuth(conf.userName, conf.password, AuthScheme.BASIC).delete
+        // Invalidate all cache entries related to this collectionId (All queries containing this elfin)
+        CacheHelper.removeEntriesContaining(elfin.ID_G)
+
+        // TODO: more investigation to catch basic authentication failures instead of silently failing.
+        val responseFuture: Future[Response] = WS.url(elfinResourceUrl).
+          withAuth(conf.userName, conf.password, AuthScheme.BASIC).delete
+      case None =>
+        Logger.error(s"Cannot delete ELFIN with Id, ID_G, CLASSE : ${elfin.Id} ${elfin.ID_G} ${elfin.CLASSE}")
+    }
+
   }
 
   /**
@@ -197,22 +201,21 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
    * TODO: Review explicit specification of implicit parameters (unnecessary, see runWrappedXQueryFile)
    */
   //def runXQueryFile(xqueryFileName: String, queryString: Option[String])(implicit dbConf: DbConfig, collectionsConf: CollectionsConfig): Future[Response] = {
-     //val query = WSQueries.runXQueryFile(xqueryFileName, queryString)(dbConf, collectionsConf)
-  def runXQueryFile(xqueryFileName: String, queryString: Option[String]): Future[Response] = {    
-     val query = WSQueries.runXQueryFile(xqueryFileName, queryString)
-     executeQuery(query)
-//     val responseFuture: Future[Response] = WS.url(query).withAuth(dbConf.userName, dbConf.password, AuthScheme.BASIC).withHeaders(("Content-Type", "application/xquery")).get
-//     responseFuture     
-  }
-  
-  /**
-   * Executes `query` using `userName` and `password` parameters provided by implicit DbConfig for authentication. 
-   */
-  private def executeQuery(query:String)(implicit dbConf: DbConfig): Future[Response] = {
-    val responseFuture: Future[Response] = WS.url(query).withAuth(dbConf.userName, dbConf.password, AuthScheme.BASIC).withHeaders(("Content-Type", "application/xquery")).get
-     responseFuture     
+  //val query = WSQueries.runXQueryFile(xqueryFileName, queryString)(dbConf, collectionsConf)
+  def runXQueryFile(xqueryFileName: String, queryString: Option[String]): Future[Response] = {
+    val query = WSQueries.runXQueryFile(xqueryFileName, queryString)
+    executeQuery(query)
+    //     val responseFuture: Future[Response] = WS.url(query).withAuth(dbConf.userName, dbConf.password, AuthScheme.BASIC).withHeaders(("Content-Type", "application/xquery")).get
+    //     responseFuture     
   }
 
+  /**
+   * Executes `query` using `userName` and `password` parameters provided by implicit DbConfig for authentication.
+   */
+  private def executeQuery(query: String)(implicit dbConf: DbConfig): Future[Response] = {
+    val responseFuture: Future[Response] = WS.url(query).withAuth(dbConf.userName, dbConf.password, AuthScheme.BASIC).withHeaders(("Content-Type", "application/xquery")).get
+    responseFuture
+  }
 
   /**
    * Build query given `xqueryFileName` and executes it returning a future response.
@@ -223,32 +226,30 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
     val responseFuture: Future[Response] = WS.url(query).withHeaders(("Content-Type", "application/xquery")).get
     responseFuture
   }
-  
+
   /**
    * Build query given `fileName` and executes it returning a future response.
-   * 
+   *
    * `fileName` must be an XQuery file located in `CollectionsConfig.xqueriesCollectionId` collection
    */
-  def getFile(fileName: String) : Future[Response] = {
-     val query = WSQueries.runXQueryFile(xqueryFileName = fileName, queryString = None)
-     val responseFuture: Future[Response] = WS.url(query).withHeaders(("Content-Type", "application/xquery")).get     
-     // Keep working with default. Kept as syntax reminder.
-     //val responseFuture: Future[Response] = WS.url(query).withHeaders(("Content-Type", "application/xquery"),("charset","UTF-8")).get
-     responseFuture     
+  def getFile(fileName: String): Future[Response] = {
+    val query = WSQueries.runXQueryFile(xqueryFileName = fileName, queryString = None)
+    val responseFuture: Future[Response] = WS.url(query).withHeaders(("Content-Type", "application/xquery")).get
+    // Keep working with default. Kept as syntax reminder.
+    //val responseFuture: Future[Response] = WS.url(query).withHeaders(("Content-Type", "application/xquery"),("charset","UTF-8")).get
+    responseFuture
   }
-  
 
-  
   /**
    * Proceeds validating response expected to contain a single result for ELFIN 'query'.
    * The response body must contain a single ELFIN in XML format.
-   * 
-   * Returns a 'Future[scala.xml.Node]' where Node is an ELFIN element if valid. 
+   *
+   * Returns a 'Future[scala.xml.Node]' where Node is an ELFIN element if valid.
    * Otherwise throws ResultNotFoundException, ExpectedSingleResultException
-   * 
+   *
    */
-  private def proceedWithSingleElfinResponseToXML(singleElfinResponseFuture: Future[Response], query : String) : Future[scala.xml.Node] = {
-  
+  private def proceedWithSingleElfinResponseToXML(singleElfinResponseFuture: Future[Response], query: String): Future[scala.xml.Node] = {
+
     // Keep asynchronous calls asynchronous to allow Play free threads
     val resultFuture: Future[scala.xml.Node] = singleElfinResponseFuture.map { resp =>
       // We expect to receive XML content
@@ -270,19 +271,18 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
         }
       }
     }
-    resultFuture  
-  }  
-  
+    resultFuture
+  }
+
   /**
    * Wraps 'proceedWithSingleElfinResponseToXML' to convert ELFIN in XML format to JSON format.
    */
-  private def proceedWithSingleElfinResponseToElfinClass(singleElfinResponseFuture: Future[Response], query : String) : Future[ELFIN] = {
-  
+  private def proceedWithSingleElfinResponseToElfinClass(singleElfinResponseFuture: Future[Response], query: String): Future[ELFIN] = {
+
     val elfinXmlElemFuture = proceedWithSingleElfinResponseToXML(singleElfinResponseFuture, query)
-    val elfinClassFuture = elfinXmlElemFuture.map { elfinElem =>  ElfinFormat.fromXml(elfinElem)}
+    val elfinClassFuture = elfinXmlElemFuture.map { elfinElem => ElfinFormat.fromXml(elfinElem) }
     elfinClassFuture
-  
-  }  
-  
-  
+
+  }
+
 }
