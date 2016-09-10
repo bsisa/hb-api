@@ -14,7 +14,11 @@ import play.api.libs.concurrent.Execution.Implicits._ // Required by FUTURE
 import play.api.libs.ws.Response
 import play.api.libs.ws.WS
 import play.api.Logger
+import scala.concurrent.Await
+import scala.concurrent.duration._
 import scala.concurrent.Future
+
+
 
 // TODO: import geo util...
 import play.api.libs.json.{ Reads, Writes, Format, JsPath }
@@ -123,7 +127,12 @@ object GeoXmlDAO {
 
           val queryString = s"""&startIndex=${from}&maxNbResults=${maxResults}&path=${path}&xpath=${xpath}&orderBy=${orderBy}"""
 
-          XQueryWSHelper.queryElfins(WSQueries.runXQueryFile(xqueryFileName, Some(queryString))).map { elfins =>
+          // Sequential blocking calls - slow throughput but may avoid database overflow when no back pressure is available
+          val futureElfins = XQueryWSHelper.queryElfins(WSQueries.runXQueryFile(xqueryFileName, Some(queryString)))
+          val elfins = Await.result(futureElfins, 1 minutes)
+
+          // Parallel non blocking high throughput - may overflow database when no back pressure is available
+          //XQueryWSHelper.queryElfins(WSQueries.runXQueryFile(xqueryFileName, Some(queryString))).map { elfins =>
 
             //Logger.debug(s"Obtained ${elfins.size} elfins")
 
@@ -141,8 +150,12 @@ object GeoXmlDAO {
 
               // Set a very long timeout in case no cache is available on coordinates service.
               val wsRespFuture: Future[Response] = WS.url(postUrl).withRequestTimeout(3600000).post(postBody)
-
-              wsRespFuture map { wsResp =>
+              
+              // Sequential blocking calls - slow throughput but may avoid database overflow when no back pressure is available
+              val wsResp = Await.result(wsRespFuture, 1 minutes)
+              
+              // Parallel non blocking high throughput - may overflow database when no back pressure is available              
+              //wsRespFuture map { wsResp =>
                 // Check web service response status 
                 wsResp.status match {
                   // Ok proceed
@@ -166,11 +179,11 @@ object GeoXmlDAO {
                     Logger.error(s"Problem calling hb-geo-api service: ${wsResp.status} - body is: ${wsResp.body}")
                   }
                 }
-              }
+              //} // Parallel non blocking call end 
 
               wsRespFuture recover { case e => Logger.error(s"Problem calling hb-geo-api service: ${e.toString}") }
             }
-          }
+          //} // Parallel non blocking call end
         } // for loop end
       }
     }
