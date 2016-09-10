@@ -183,7 +183,8 @@ object ElfinDAO {
   private def executeStatement(statement: String)(implicit conf: DbConfig) = {
     val conn = XQConnectionHelper.getConnection()(conf)
     try {
-      logger.debug("executeStatement(statement) : " + statement)
+      // Too noisy even while debugging (this is super debug mode...)
+      //logger.debug("executeStatement(statement) : " + statement)
       var xqe = conn.createExpression()
       xqe.executeCommand(statement)
     } finally {
