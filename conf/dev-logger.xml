@@ -1,0 +1,35 @@
+<configuration>
+    <conversionRule conversionWord="coloredLevel" converterClass="play.api.Logger$ColoredLevel" />
+
+
+	<appender name="FILE"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>logs/hyperbird_dev.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- Daily rollover with compression -->
+			<fileNamePattern>hyperbird-log-%d{yyyy-MM-dd}.gz</fileNamePattern>
+			<!-- keep 30 days worth of history -->
+			<maxHistory>30</maxHistory>
+		</rollingPolicy>
+		<encoder>
+			<pattern>%date{yyyy-MM-dd HH:mm:ss ZZZZ} - [%level] - from %logger in %thread %n%message%n%xException%n</pattern>
+			<!-- this quadruples logging throughput -->
+			<immediateFlush>false</immediateFlush>
+		</encoder>
+	</appender>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder><pattern>%coloredLevel %logger{15} - %message%n%xException{5}</pattern></encoder>
+<!--         <encoder><pattern>%date [%level] from %logger in %thread - %message%n%xException</pattern></encoder> -->
+    </appender>
+
+    <logger name="play" level="DEBUG" />
+    <logger name="application" level="DEBUG" />
+    <logger name="ch.bsisa.hyperbird.util.ElapsedTime" level="DEBUG" />
+    <logger name="ch.bsisa.hyperbird.dao.ElfinDAO" level="DEBUG" />
+
+    <root level="DEBUG">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </root>
+</configuration>

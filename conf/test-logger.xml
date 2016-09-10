@@ -7,6 +7,8 @@
 
     <logger name="play" level="DEBUG" />
     <logger name="application" level="DEBUG" />
+    <logger name="ch.bsisa.hyperbird.util.ElapsedTime" level="DEBUG" />
+    <logger name="ch.bsisa.hyperbird.dao.ElfinDAO" level="DEBUG" />
 
     <root level="DEBUG">
         <appender-ref ref="STDOUT" />
