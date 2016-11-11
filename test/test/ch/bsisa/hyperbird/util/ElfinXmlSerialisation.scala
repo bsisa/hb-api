@@ -28,11 +28,10 @@ import play.api.libs.json._
  */
 class ElfinXmlSerialisation extends BaseSerialisationSpec {
 
-
   val expectedElfinTest001_Id = "G20040931234567890"
   val expectedElfinTest001_ID_G = "G20040930101030005"
   val expectedELFIN_IDENTIFIANT_VALEUR = 0.0
-  val expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF =  8600.0
+  val expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF = 8600.0
   val expectedELFIN_IDENTIFIANT_OBJECTIF = "733"
 
   // ================================================================== 
@@ -51,13 +50,13 @@ class ElfinXmlSerialisation extends BaseSerialisationSpec {
     }
     s"have IDENTIFIANT/VALEUR equal to ${expectedELFIN_IDENTIFIANT_VALEUR}" in {
       (elfinTest001Xml \ "IDENTIFIANT" \ "VALEUR").text must equalTo(expectedELFIN_IDENTIFIANT_VALEUR.toString)
-    }        
+    }
     s"have IDENTIFIANT/VALEUR_A_NEUF equal to ${expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF}" in {
       (elfinTest001Xml \ "IDENTIFIANT" \ "VALEUR_A_NEUF").text must equalTo(expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF.toString)
     }
     s"have IDENTIFIANT/OBJECTIF equal to ${expectedELFIN_IDENTIFIANT_OBJECTIF}" in {
       (elfinTest001Xml \ "IDENTIFIANT" \ "OBJECTIF").text must equalTo(expectedELFIN_IDENTIFIANT_OBJECTIF.toString)
-    }    
+    }
   }
 
   // ================================================================== 
@@ -80,7 +79,7 @@ class ElfinXmlSerialisation extends BaseSerialisationSpec {
     }
     s"have ELFIN.IDENTIFIANT.OBJECTIF equal to ${expectedELFIN_IDENTIFIANT_OBJECTIF}" in {
       elfin.IDENTIFIANT.get.OBJECTIF.get must be equalTo (expectedELFIN_IDENTIFIANT_OBJECTIF)
-    }        
+    }
   }
 
   val etat1MixedContent = elfin.CARACTERISTIQUE.get.ETAT.get.ETAT1.get.mixed
@@ -102,17 +101,19 @@ class ElfinXmlSerialisation extends BaseSerialisationSpec {
   // ==================================================================
 
   // Produce JSON from ELFIN object
-  val elfinJson = Json.toJson(elfin)
 
   val mutationsJson = Json.toJson(elfin.MUTATIONS)
   val geoselectionJson = Json.toJson(elfin.GEOSELECTION)
   val identifiantJson = Json.toJson(elfin.IDENTIFIANT)
+  val filiationJson = Json.toJson(elfin.FILIATION)
   val caracteristiqueJson = Json.toJson(elfin.CARACTERISTIQUE)
   val partenaireJson = Json.toJson(elfin.PARTENAIRE)
   val activiteJson = Json.toJson(elfin.ACTIVITE)
   val formeJson = Json.toJson(elfin.FORME)
   val annexeJson = Json.toJson(elfin.ANNEXE)
   val diversJson = Json.toJson(elfin.DIVERS)
+
+  val elfinJson = Json.toJson(elfin)
 
   // ==================================================================
   // play.api.libs.json.JsValue => JSON file
@@ -160,18 +161,18 @@ class ElfinXmlSerialisation extends BaseSerialisationSpec {
   val annexeFromFile = annexeJsonInput.as[ANNEXE]
   val diversFromFile = diversJsonInput.as[DIVERS]
 
-  //TODO: add tests checking the expected values are found in :
-  // elfinFromFile and its sub elements
-  // mutationsFromFile 
-  // geoselectionFromFile
-  // identifiantFromFile
-  // caracteristiqueFromFile
-  // partenaireFromFile
-  // activiteFromFile
-  // formeFromFile
-  // annexeFromFile
-  // diversFromFile  
-  
+  //  //TODO: add tests checking the expected values are found in :
+  //  // elfinFromFile and its sub elements
+  //  // mutationsFromFile 
+  //  // geoselectionFromFile
+  //  // identifiantFromFile
+  //  // caracteristiqueFromFile
+  //  // partenaireFromFile
+  //  // activiteFromFile
+  //  // formeFromFile
+  //  // annexeFromFile
+  //  // diversFromFile  
+  //  
   // ==================================================================
   // ch.bsisa.hyperbird.model.ELFIN => scala.xml.Elem
   // ==================================================================  
@@ -189,21 +190,19 @@ class ElfinXmlSerialisation extends BaseSerialisationSpec {
     }
     s"have IDENTIFIANT/VALEUR equal to ${expectedELFIN_IDENTIFIANT_VALEUR}" in {
       (elfinBackToXml \ "IDENTIFIANT" \ "VALEUR").text must equalTo(expectedELFIN_IDENTIFIANT_VALEUR.toString)
-    }        
+    }
     s"have IDENTIFIANT/VALEUR_A_NEUF equal to ${expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF}" in {
       (elfinBackToXml \ "IDENTIFIANT" \ "VALEUR_A_NEUF").text must equalTo(expectedELFIN_IDENTIFIANT_VALEUR_A_NEUF.toString)
     }
     s"have IDENTIFIANT/OBJECTIF equal to ${expectedELFIN_IDENTIFIANT_OBJECTIF}" in {
       (elfinBackToXml \ "IDENTIFIANT" \ "OBJECTIF").text must equalTo(expectedELFIN_IDENTIFIANT_OBJECTIF.toString)
-    }    
-    
-    
+    }
   }
 
-  // ==================================================================
-  // scala.xml.Elem => XML file
-  // ==================================================================
-  // Dump the XML to file for manual review
-  scala.xml.XML.save(TestResultsDir + "scalaxbResult.xml", elfinBackToXml.iterator.next)
+    // ==================================================================
+    // scala.xml.Elem => XML file
+    // ==================================================================
+    // Dump the XML to file for manual review
+    scala.xml.XML.save(TestResultsDir + "scalaxbResult.xml", elfinBackToXml.iterator.next)
 
 }

@@ -24,6 +24,9 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
   implicit lazy val ModelGEOSELECTIONFormat: scalaxb.XMLFormat[ch.bsisa.hyperbird.model.GEOSELECTION] = new DefaultModelGEOSELECTIONFormat {}
   implicit lazy val ModelCENTROIDEFormat: scalaxb.XMLFormat[ch.bsisa.hyperbird.model.CENTROIDE] = new DefaultModelCENTROIDEFormat {}
   implicit lazy val ModelIDENTIFIANTFormat: scalaxb.XMLFormat[ch.bsisa.hyperbird.model.IDENTIFIANT] = new DefaultModelIDENTIFIANTFormat {}
+  implicit lazy val ModelFILIATIONFormat: scalaxb.XMLFormat[ch.bsisa.hyperbird.model.FILIATION] = new DefaultModelFILIATIONFormat {}
+  implicit lazy val ModelPARENTFormat: scalaxb.XMLFormat[ch.bsisa.hyperbird.model.PARENT] = new DefaultModelPARENTFormat {}
+  implicit lazy val ModelPROPRIETEFormat: scalaxb.XMLFormat[ch.bsisa.hyperbird.model.PROPRIETE] = new DefaultModelPROPRIETEFormat {}
   implicit lazy val ModelFORMEFormat: scalaxb.XMLFormat[ch.bsisa.hyperbird.model.FORME] = new DefaultModelFORMEFormat {}
   implicit lazy val ModelPOINTFormat: scalaxb.XMLFormat[ch.bsisa.hyperbird.model.POINT] = new DefaultModelPOINTFormat {}
   implicit lazy val ModelFONCTIONFormat: scalaxb.XMLFormat[ch.bsisa.hyperbird.model.FONCTION] = new DefaultModelFONCTIONFormat {}
@@ -67,9 +70,11 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
   implicit lazy val ModelLIGNEu46attributeGroupFormat: scalaxb.AttributeGroupFormat[ch.bsisa.hyperbird.model.LIGNEu46attributeGroup] = new DefaultModelLIGNEu46attributeGroupFormat {}
   implicit lazy val ModelGUIDEu46attributeGroupFormat: scalaxb.AttributeGroupFormat[ch.bsisa.hyperbird.model.GUIDEu46attributeGroup] = new DefaultModelGUIDEu46attributeGroupFormat {}
   implicit lazy val ModelPOINTu46attributeGroupFormat: scalaxb.AttributeGroupFormat[ch.bsisa.hyperbird.model.POINTu46attributeGroup] = new DefaultModelPOINTu46attributeGroupFormat {}
+  implicit lazy val ModelPARENTu46attributeGroupFormat: scalaxb.AttributeGroupFormat[ch.bsisa.hyperbird.model.PARENTu46attributeGroup] = new DefaultModelPARENTu46attributeGroupFormat {}
   implicit lazy val ModelMUTATIONu46attributeGroupFormat: scalaxb.AttributeGroupFormat[ch.bsisa.hyperbird.model.MUTATIONu46attributeGroup] = new DefaultModelMUTATIONu46attributeGroupFormat {}
   implicit lazy val ModelELFINu46attributeGroupFormat: scalaxb.AttributeGroupFormat[ch.bsisa.hyperbird.model.ELFINu46attributeGroup] = new DefaultModelELFINu46attributeGroupFormat {}
   implicit lazy val ModelCENTROIDEu46attributeGroupFormat: scalaxb.AttributeGroupFormat[ch.bsisa.hyperbird.model.CENTROIDEu46attributeGroup] = new DefaultModelCENTROIDEu46attributeGroupFormat {}
+  implicit lazy val ModelPROPRIETEu46attributeGroupFormat: scalaxb.AttributeGroupFormat[ch.bsisa.hyperbird.model.PROPRIETEu46attributeGroup] = new DefaultModelPROPRIETEu46attributeGroupFormat {}
   implicit lazy val ModelPASSAGEu46attributeGroupFormat: scalaxb.AttributeGroupFormat[ch.bsisa.hyperbird.model.PASSAGEu46attributeGroup] = new DefaultModelPASSAGEu46attributeGroupFormat {}
   implicit lazy val ModelPIECEu46attributeGroupFormat: scalaxb.AttributeGroupFormat[ch.bsisa.hyperbird.model.PIECEu46attributeGroup] = new DefaultModelPIECEu46attributeGroupFormat {}
   implicit lazy val ModelSYMBOLEu46attributeGroupFormat: scalaxb.AttributeGroupFormat[ch.bsisa.hyperbird.model.SYMBOLEu46attributeGroup] = new DefaultModelSYMBOLEu46attributeGroupFormat {}
@@ -96,22 +101,24 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
       phrase(opt(scalaxb.ElemName(None, "MUTATIONS")) ~ 
       opt(scalaxb.ElemName(None, "GEOSELECTION")) ~ 
       opt(scalaxb.ElemName(None, "IDENTIFIANT")) ~ 
+      opt(scalaxb.ElemName(None, "FILIATION")) ~ 
       opt(scalaxb.ElemName(None, "CARACTERISTIQUE")) ~ 
       opt(scalaxb.ElemName(None, "PARTENAIRE")) ~ 
       opt(scalaxb.ElemName(None, "ACTIVITE")) ~ 
       opt(scalaxb.ElemName(None, "FORME")) ~ 
       opt(scalaxb.ElemName(None, "ANNEXE")) ~ 
       opt(scalaxb.ElemName(None, "DIVERS")) ^^
-      { case p1 ~ p2 ~ p3 ~ p4 ~ p5 ~ p6 ~ p7 ~ p8 ~ p9 =>
+      { case p1 ~ p2 ~ p3 ~ p4 ~ p5 ~ p6 ~ p7 ~ p8 ~ p9 ~ p10 =>
       ch.bsisa.hyperbird.model.ELFIN(p1.headOption map { scalaxb.fromXML[ch.bsisa.hyperbird.model.MUTATIONS](_, scalaxb.ElemName(node) :: stack) },
         p2.headOption map { scalaxb.fromXML[ch.bsisa.hyperbird.model.GEOSELECTION](_, scalaxb.ElemName(node) :: stack) },
         p3.headOption map { scalaxb.fromXML[ch.bsisa.hyperbird.model.IDENTIFIANT](_, scalaxb.ElemName(node) :: stack) },
-        p4.headOption map { scalaxb.fromXML[ch.bsisa.hyperbird.model.CARACTERISTIQUE](_, scalaxb.ElemName(node) :: stack) },
-        p5.headOption map { scalaxb.fromXML[ch.bsisa.hyperbird.model.PARTENAIRE](_, scalaxb.ElemName(node) :: stack) },
-        p6.headOption map { scalaxb.fromXML[ch.bsisa.hyperbird.model.ACTIVITE](_, scalaxb.ElemName(node) :: stack) },
-        p7.headOption map { scalaxb.fromXML[ch.bsisa.hyperbird.model.FORME](_, scalaxb.ElemName(node) :: stack) },
-        p8.headOption map { scalaxb.fromXML[ch.bsisa.hyperbird.model.ANNEXE](_, scalaxb.ElemName(node) :: stack) },
-        p9.headOption map { scalaxb.fromXML[ch.bsisa.hyperbird.model.DIVERS](_, scalaxb.ElemName(node) :: stack) },
+        p4.headOption map { scalaxb.fromXML[ch.bsisa.hyperbird.model.FILIATION](_, scalaxb.ElemName(node) :: stack) },
+        p5.headOption map { scalaxb.fromXML[ch.bsisa.hyperbird.model.CARACTERISTIQUE](_, scalaxb.ElemName(node) :: stack) },
+        p6.headOption map { scalaxb.fromXML[ch.bsisa.hyperbird.model.PARTENAIRE](_, scalaxb.ElemName(node) :: stack) },
+        p7.headOption map { scalaxb.fromXML[ch.bsisa.hyperbird.model.ACTIVITE](_, scalaxb.ElemName(node) :: stack) },
+        p8.headOption map { scalaxb.fromXML[ch.bsisa.hyperbird.model.FORME](_, scalaxb.ElemName(node) :: stack) },
+        p9.headOption map { scalaxb.fromXML[ch.bsisa.hyperbird.model.ANNEXE](_, scalaxb.ElemName(node) :: stack) },
+        p10.headOption map { scalaxb.fromXML[ch.bsisa.hyperbird.model.DIVERS](_, scalaxb.ElemName(node) :: stack) },
         scalaxb.fromXML[String]((node \ "@Id"), scalaxb.ElemName(node) :: stack),
         scalaxb.fromXML[String]((node \ "@ID_G"), scalaxb.ElemName(node) :: stack),
         scalaxb.fromXML[String]((node \ "@CLASSE"), scalaxb.ElemName(node) :: stack),
@@ -136,6 +143,7 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
       Seq.concat(__obj.MUTATIONS map { scalaxb.toXML[ch.bsisa.hyperbird.model.MUTATIONS](_, None, Some("MUTATIONS"), __scope, false) } getOrElse {Nil},
         __obj.GEOSELECTION map { scalaxb.toXML[ch.bsisa.hyperbird.model.GEOSELECTION](_, None, Some("GEOSELECTION"), __scope, false) } getOrElse {Nil},
         __obj.IDENTIFIANT map { scalaxb.toXML[ch.bsisa.hyperbird.model.IDENTIFIANT](_, None, Some("IDENTIFIANT"), __scope, false) } getOrElse {Nil},
+        __obj.FILIATION map { scalaxb.toXML[ch.bsisa.hyperbird.model.FILIATION](_, None, Some("FILIATION"), __scope, false) } getOrElse {Nil},
         __obj.CARACTERISTIQUE map { scalaxb.toXML[ch.bsisa.hyperbird.model.CARACTERISTIQUE](_, None, Some("CARACTERISTIQUE"), __scope, false) } getOrElse {Nil},
         __obj.PARTENAIRE map { scalaxb.toXML[ch.bsisa.hyperbird.model.PARTENAIRE](_, None, Some("PARTENAIRE"), __scope, false) } getOrElse {Nil},
         __obj.ACTIVITE map { scalaxb.toXML[ch.bsisa.hyperbird.model.ACTIVITE](_, None, Some("ACTIVITE"), __scope, false) } getOrElse {Nil},
@@ -295,6 +303,68 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
         __obj.VALEUR_A_NEUF map { scalaxb.toXML[Double](_, None, Some("VALEUR_A_NEUF"), __scope, false) } getOrElse {Nil},
         __obj.VALEUR map { scalaxb.toXML[Double](_, None, Some("VALEUR"), __scope, false) } getOrElse {Nil},
         __obj.MOTCLE flatMap { scalaxb.toXML[String](_, None, Some("MOTCLE"), __scope, false) })
+
+  }
+
+  trait DefaultModelFILIATIONFormat extends scalaxb.ElemNameParser[ch.bsisa.hyperbird.model.FILIATION] {
+    val targetNamespace: Option[String] = None
+    
+    def parser(node: scala.xml.Node, stack: List[scalaxb.ElemName]): Parser[ch.bsisa.hyperbird.model.FILIATION] =
+      phrase(safeRep(scalaxb.ElemName(None, "PARENT")) ^^
+      { case p1 =>
+      ch.bsisa.hyperbird.model.FILIATION(p1 map { scalaxb.fromXML[ch.bsisa.hyperbird.model.PARENT](_, scalaxb.ElemName(node) :: stack) }) })
+    
+    def writesChildNodes(__obj: ch.bsisa.hyperbird.model.FILIATION, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
+      (__obj.PARENT flatMap { scalaxb.toXML[ch.bsisa.hyperbird.model.PARENT](_, None, Some("PARENT"), __scope, false) })
+
+  }
+
+  trait DefaultModelPARENTFormat extends scalaxb.ElemNameParser[ch.bsisa.hyperbird.model.PARENT] {
+    val targetNamespace: Option[String] = None
+    
+    def parser(node: scala.xml.Node, stack: List[scalaxb.ElemName]): Parser[ch.bsisa.hyperbird.model.PARENT] =
+      phrase(safeRep(scalaxb.ElemName(None, "PROPRIETE")) ^^
+      { case p1 =>
+      ch.bsisa.hyperbird.model.PARENT(p1 map { scalaxb.fromXML[ch.bsisa.hyperbird.model.PROPRIETE](_, scalaxb.ElemName(node) :: stack) },
+        scalaxb.fromXML[String]((node \ "@Id"), scalaxb.ElemName(node) :: stack),
+        (node \ "@ID_G").headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) },
+        (node \ "@CLASSE").headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) },
+        (node \ "@REMARQUE").headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }) })
+    
+    override def writesAttribute(__obj: ch.bsisa.hyperbird.model.PARENT, __scope: scala.xml.NamespaceBinding): scala.xml.MetaData = {
+      var attr: scala.xml.MetaData  = scala.xml.Null
+      attr = scala.xml.Attribute(null, "Id", __obj.Id.toString, attr)
+      __obj.ID_G foreach { x => attr = scala.xml.Attribute(null, "ID_G", x.toString, attr) }
+      __obj.CLASSE foreach { x => attr = scala.xml.Attribute(null, "CLASSE", x.toString, attr) }
+      __obj.REMARQUE foreach { x => attr = scala.xml.Attribute(null, "REMARQUE", x.toString, attr) }
+      attr
+    }
+
+    def writesChildNodes(__obj: ch.bsisa.hyperbird.model.PARENT, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
+      (__obj.PROPRIETE flatMap { scalaxb.toXML[ch.bsisa.hyperbird.model.PROPRIETE](_, None, Some("PROPRIETE"), __scope, false) })
+
+  }
+
+  trait DefaultModelPROPRIETEFormat extends scalaxb.XMLFormat[ch.bsisa.hyperbird.model.PROPRIETE] with scalaxb.CanWriteChildNodes[ch.bsisa.hyperbird.model.PROPRIETE] {
+    val targetNamespace: Option[String] = None
+    import scalaxb.ElemName._
+    
+    def reads(seq: scala.xml.NodeSeq, stack: List[scalaxb.ElemName]): Either[String, ch.bsisa.hyperbird.model.PROPRIETE] = seq match {
+      case node: scala.xml.Node => Right(ch.bsisa.hyperbird.model.PROPRIETE(scalaxb.fromXML[String]((node \ "@CLEF"), scalaxb.ElemName(node) :: stack),
+        scalaxb.fromXML[String]((node \ "@VALEUR"), scalaxb.ElemName(node) :: stack)))
+      case _ => Left("reads failed: seq must be scala.xml.Node")
+    }
+    
+    override def writesAttribute(__obj: ch.bsisa.hyperbird.model.PROPRIETE, __scope: scala.xml.NamespaceBinding): scala.xml.MetaData = {
+      var attr: scala.xml.MetaData  = scala.xml.Null
+      attr = scala.xml.Attribute(null, "CLEF", __obj.CLEF.toString, attr)
+      attr = scala.xml.Attribute(null, "VALEUR", __obj.VALEUR.toString, attr)
+      attr
+    }
+
+    def writesChildNodes(__obj: ch.bsisa.hyperbird.model.PROPRIETE, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
+      Nil
+
 
   }
 
@@ -1444,6 +1514,27 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
     }
   }
 
+  trait DefaultModelPARENTu46attributeGroupFormat extends scalaxb.AttributeGroupFormat[ch.bsisa.hyperbird.model.PARENTu46attributeGroup] {
+    val targetNamespace: Option[String] = None
+    
+    def reads(seq: scala.xml.NodeSeq, stack: List[scalaxb.ElemName]): Either[String, ch.bsisa.hyperbird.model.PARENTu46attributeGroup] = seq match {
+      case node: scala.xml.Node => Right(ch.bsisa.hyperbird.model.PARENTu46attributeGroup(scalaxb.fromXML[String]((node \ "@Id"), scalaxb.ElemName(node) :: stack),
+      (node \ "@ID_G").headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) },
+      (node \ "@CLASSE").headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) },
+      (node \ "@REMARQUE").headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }))
+      case _ => Left("reads failed: seq must be scala.xml.Node")
+    }
+    
+    def toAttribute(__obj: ch.bsisa.hyperbird.model.PARENTu46attributeGroup, __attr: scala.xml.MetaData, __scope: scala.xml.NamespaceBinding): scala.xml.MetaData = {
+      var attr: scala.xml.MetaData  = __attr
+      attr = scala.xml.Attribute(null, "Id", __obj.Id.toString, attr)
+    __obj.ID_G foreach { x => attr = scala.xml.Attribute(null, "ID_G", x.toString, attr) }
+    __obj.CLASSE foreach { x => attr = scala.xml.Attribute(null, "CLASSE", x.toString, attr) }
+    __obj.REMARQUE foreach { x => attr = scala.xml.Attribute(null, "REMARQUE", x.toString, attr) }
+      attr
+    }
+  }
+
   trait DefaultModelMUTATIONu46attributeGroupFormat extends scalaxb.AttributeGroupFormat[ch.bsisa.hyperbird.model.MUTATIONu46attributeGroup] {
     val targetNamespace: Option[String] = None
     
@@ -1511,6 +1602,23 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
     attr = scala.xml.Attribute(null, "YM", __obj.YM.toString, attr)
     __obj.ZM foreach { x => attr = scala.xml.Attribute(null, "ZM", x.toString, attr) }
     attr = scala.xml.Attribute(null, "RM", __obj.RM.toString, attr)
+      attr
+    }
+  }
+
+  trait DefaultModelPROPRIETEu46attributeGroupFormat extends scalaxb.AttributeGroupFormat[ch.bsisa.hyperbird.model.PROPRIETEu46attributeGroup] {
+    val targetNamespace: Option[String] = None
+    
+    def reads(seq: scala.xml.NodeSeq, stack: List[scalaxb.ElemName]): Either[String, ch.bsisa.hyperbird.model.PROPRIETEu46attributeGroup] = seq match {
+      case node: scala.xml.Node => Right(ch.bsisa.hyperbird.model.PROPRIETEu46attributeGroup(scalaxb.fromXML[String]((node \ "@CLEF"), scalaxb.ElemName(node) :: stack),
+      scalaxb.fromXML[String]((node \ "@VALEUR"), scalaxb.ElemName(node) :: stack)))
+      case _ => Left("reads failed: seq must be scala.xml.Node")
+    }
+    
+    def toAttribute(__obj: ch.bsisa.hyperbird.model.PROPRIETEu46attributeGroup, __attr: scala.xml.MetaData, __scope: scala.xml.NamespaceBinding): scala.xml.MetaData = {
+      var attr: scala.xml.MetaData  = __attr
+      attr = scala.xml.Attribute(null, "CLEF", __obj.CLEF.toString, attr)
+    attr = scala.xml.Attribute(null, "VALEUR", __obj.VALEUR.toString, attr)
       attr
     }
   }

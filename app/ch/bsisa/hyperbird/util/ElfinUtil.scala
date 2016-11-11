@@ -34,7 +34,7 @@ object ElfinUtil {
   def assignElfinId(elfin: ELFIN): Future[ELFIN] = {
     val newElfinIdFuture: Future[String] = ElfinIdGenerator.getNewElfinId
     val futureElfin: Future[ELFIN] = newElfinIdFuture.map { newElfinId =>
-      ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, elfin.CARACTERISTIQUE,
+      ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, elfin.FILIATION, elfin.CARACTERISTIQUE,
         elfin.PARTENAIRE, elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, newElfinId,
         elfin.ID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
     }
@@ -47,7 +47,7 @@ object ElfinUtil {
    */
   def replaceElfinID_G(elfin: ELFIN, newElfinID_G: String): ELFIN = {
 
-    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, elfin.CARACTERISTIQUE,
+    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, elfin.FILIATION, elfin.CARACTERISTIQUE,
       elfin.PARTENAIRE, elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, elfin.Id,
       newElfinID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
   }
@@ -78,7 +78,7 @@ object ElfinUtil {
       case None => MUTATIONS(MUTATION = Seq(newElfinMutation))
     }
 
-    ELFIN(Some(newMutations), elfin.GEOSELECTION, elfin.IDENTIFIANT, elfin.CARACTERISTIQUE,
+    ELFIN(Some(newMutations), elfin.GEOSELECTION, elfin.IDENTIFIANT, elfin.FILIATION, elfin.CARACTERISTIQUE,
       elfin.PARTENAIRE, elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, elfin.Id,
       elfin.ID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
   }
@@ -91,7 +91,7 @@ object ElfinUtil {
    */
   def replaceElfinNatureGroupeSource(elfin: ELFIN, newNature: String, newGroupe: Option[String], newSource: Option[String]): ELFIN = {
 
-    ELFIN(MUTATIONS = elfin.MUTATIONS, GEOSELECTION = elfin.GEOSELECTION, IDENTIFIANT = elfin.IDENTIFIANT, CARACTERISTIQUE = elfin.CARACTERISTIQUE,
+    ELFIN(MUTATIONS = elfin.MUTATIONS, GEOSELECTION = elfin.GEOSELECTION, IDENTIFIANT = elfin.IDENTIFIANT, FILIATION = elfin.FILIATION, CARACTERISTIQUE = elfin.CARACTERISTIQUE,
       PARTENAIRE = elfin.PARTENAIRE, ACTIVITE = elfin.ACTIVITE, FORME = elfin.FORME, ANNEXE = elfin.ANNEXE, DIVERS = elfin.DIVERS, Id = elfin.Id,
       ID_G = elfin.ID_G, CLASSE = elfin.CLASSE, GROUPE = newGroupe, TYPE = elfin.TYPE, NATURE = newNature, SOURCE = newSource)
   }
@@ -102,7 +102,7 @@ object ElfinUtil {
    * The returned elfin is a new elfin instance.
    */
   def replaceElfinCaracteristique(elfin: ELFIN, newCaracteristique: ch.bsisa.hyperbird.model.CARACTERISTIQUE): ELFIN = {
-    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, Some(newCaracteristique),
+    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, elfin.FILIATION, Some(newCaracteristique),
       elfin.PARTENAIRE, elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, elfin.Id,
       elfin.ID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
   }
@@ -113,7 +113,7 @@ object ElfinUtil {
    * stays unchanged. The returned elfin is a new elfin instance.
    */
   def replaceElfinCaracteristiqueFractionL(elfin: ELFIN, newLSeq: Seq[ch.bsisa.hyperbird.model.L]): ELFIN = {
-    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, Some(CARACTERISTIQUE(FRACTION = Some(MATRICEType(newLSeq)))),
+    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, elfin.IDENTIFIANT, elfin.FILIATION, Some(CARACTERISTIQUE(FRACTION = Some(MATRICEType(newLSeq)))),
       elfin.PARTENAIRE, elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, elfin.Id,
       elfin.ID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
   }
@@ -122,7 +122,7 @@ object ElfinUtil {
    * Replaces the value elfin.IDENTIFIANT by newIdentifiant and returns a new ELFIN
    */
   def replaceElfinIdentifiant(elfin: ELFIN, newIdentifiant: IDENTIFIANT): ELFIN = {
-    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, Option(newIdentifiant), elfin.CARACTERISTIQUE,
+    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, Option(newIdentifiant), elfin.FILIATION, elfin.CARACTERISTIQUE,
       elfin.PARTENAIRE, elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, elfin.Id,
       elfin.ID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
 
@@ -153,7 +153,7 @@ object ElfinUtil {
       PROPRIETAIRE = None)
 
     val userIdentifiant = IDENTIFIANT(NOM = Option(userName), ALIAS = Option(userPwdInfo), DE = Option(dateDE), A = Option(dateA))
-    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, Option(userIdentifiant), elfin.CARACTERISTIQUE,
+    ELFIN(elfin.MUTATIONS, elfin.GEOSELECTION, Option(userIdentifiant), elfin.FILIATION, elfin.CARACTERISTIQUE,
       Option(userDetailsContainer), elfin.ACTIVITE, elfin.FORME, elfin.ANNEXE, elfin.DIVERS, elfin.Id,
       elfin.ID_G, elfin.CLASSE, elfin.GROUPE, elfin.TYPE, elfin.NATURE, elfin.SOURCE)
   }
@@ -183,7 +183,7 @@ object ElfinUtil {
 
     ELFIN(
       MUTATIONS = elfinUser.MUTATIONS, GEOSELECTION = elfinUser.GEOSELECTION,
-      IDENTIFIANT = Option(userIdentifiant), CARACTERISTIQUE = elfinUser.CARACTERISTIQUE,
+      IDENTIFIANT = Option(userIdentifiant), FILIATION = elfinUser.FILIATION, CARACTERISTIQUE = elfinUser.CARACTERISTIQUE,
       elfinUser.PARTENAIRE,
       elfinUser.ACTIVITE,
       elfinUser.FORME,

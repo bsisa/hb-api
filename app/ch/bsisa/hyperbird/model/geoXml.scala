@@ -18,6 +18,7 @@ case class MELFIN(ELFIN: Seq[ch.bsisa.hyperbird.model.ELFIN] = Nil)
 case class ELFIN(MUTATIONS: Option[ch.bsisa.hyperbird.model.MUTATIONS] = None,
   GEOSELECTION: Option[ch.bsisa.hyperbird.model.GEOSELECTION] = None,
   IDENTIFIANT: Option[ch.bsisa.hyperbird.model.IDENTIFIANT] = None,
+  FILIATION: Option[ch.bsisa.hyperbird.model.FILIATION] = None,
   CARACTERISTIQUE: Option[ch.bsisa.hyperbird.model.CARACTERISTIQUE] = None,
   PARTENAIRE: Option[ch.bsisa.hyperbird.model.PARTENAIRE] = None,
   ACTIVITE: Option[ch.bsisa.hyperbird.model.ACTIVITE] = None,
@@ -89,6 +90,23 @@ case class IDENTIFIANT(AUT: Option[String] = None,
   VALEUR_A_NEUF: Option[Double] = None,
   VALEUR: Option[Double] = None,
   MOTCLE: Seq[String] = Nil)
+      
+
+
+case class FILIATION(PARENT: Seq[ch.bsisa.hyperbird.model.PARENT] = Nil)
+      
+
+
+case class PARENT(PROPRIETE: Seq[ch.bsisa.hyperbird.model.PROPRIETE] = Nil,
+  Id: String,
+  ID_G: Option[String] = None,
+  CLASSE: Option[String] = None,
+  REMARQUE: Option[String] = None)
+      
+
+
+case class PROPRIETE(CLEF: String,
+  VALEUR: String)
       
 
 
@@ -557,6 +575,12 @@ case class POINTu46attributeGroup(POS: BigInt,
   GROUPE: Option[String] = None)
 
 
+case class PARENTu46attributeGroup(Id: String,
+  ID_G: Option[String] = None,
+  CLASSE: Option[String] = None,
+  REMARQUE: Option[String] = None)
+
+
 case class MUTATIONu46attributeGroup(DATE: String,
   ROLE: String,
   MOT_DE_PASSE: Option[String] = None,
@@ -577,6 +601,10 @@ case class CENTROIDEu46attributeGroup(TYPE: ch.bsisa.hyperbird.model.TYPEType,
   YM: Double,
   ZM: Option[Double] = None,
   RM: Double)
+
+
+case class PROPRIETEu46attributeGroup(CLEF: String,
+  VALEUR: String)
 
 
 case class PASSAGEu46attributeGroup(POS: Option[BigInt] = None,

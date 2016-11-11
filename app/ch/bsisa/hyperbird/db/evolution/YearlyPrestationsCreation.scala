@@ -100,7 +100,7 @@ object YearlyPrestationsCreation {
               VALEUR = prestation.IDENTIFIANT.get.VALEUR)
             
             
-            val newPrestationWithoutMutations = ELFIN(None, prestation.GEOSELECTION, Option(identifiantWithUpdatedYearAndObjectif), prestation.CARACTERISTIQUE,
+            val newPrestationWithoutMutations = ELFIN(None, prestation.GEOSELECTION, Option(identifiantWithUpdatedYearAndObjectif), prestation.FILIATION, prestation.CARACTERISTIQUE,
             prestation.PARTENAIRE, prestation.ACTIVITE, prestation.FORME, prestation.ANNEXE, prestation.DIVERS, elfin.Id,
             elfin.ID_G, elfin.CLASSE, prestation.GROUPE, prestation.TYPE, prestation.NATURE, prestation.SOURCE) 
           

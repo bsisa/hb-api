@@ -120,7 +120,7 @@ object Implicits {
       val jsResult = (json \ "MUTATION").validate[List[MUTATION]]
       jsResult match {
         case JsSuccess(mutationList, path) => JsSuccess(MUTATIONS(mutationList))
-        case JsError(e) => JsError("Error reading MUTATIONS") ++ JsError(e)
+        case JsError(e)                    => JsError("Error reading MUTATIONS") ++ JsError(e)
       }
     }
 
@@ -139,15 +139,15 @@ object Implicits {
       json match {
         case JsString(value) => value match {
           case "SCHEMATIQUE" => JsSuccess(SCHEMATIQUE)
-          case "GEOGRAPHIE" => JsSuccess(GEOGRAPHIE)
-          case invalid => JsError(s"Invalid string value ${invalid} found for TYPE. Valid values are {SCHEMATIQUE,GEOGRAPHIE}")
+          case "GEOGRAPHIE"  => JsSuccess(GEOGRAPHIE)
+          case invalid       => JsError(s"Invalid string value ${invalid} found for TYPE. Valid values are {SCHEMATIQUE,GEOGRAPHIE}")
         }
         case _ => JsError(s"Invalid JsValue type received for TYPE. Expecting JsString only.")
       }
 
     def writes(t: TYPEType): JsValue = t.toString match {
       case "SCHEMATIQUE" => JsString("SCHEMATIQUE")
-      case "GEOGRAPHIE" => JsString("GEOGRAPHIE")
+      case "GEOGRAPHIE"  => JsString("GEOGRAPHIE")
     }
   }
 
@@ -159,7 +159,7 @@ object Implicits {
       val centroideJsSeq = (json \ "CENTROIDE").validate[List[CENTROIDE]]
       centroideJsSeq match {
         case JsSuccess(centroideList, path) => JsSuccess(GEOSELECTION(centroideList))
-        case JsError(e) => JsError("Error reading GEOSELECTION") ++ JsError(e)
+        case JsError(e)                     => JsError("Error reading GEOSELECTION") ++ JsError(e)
       }
     }
 
@@ -195,20 +195,20 @@ object Implicits {
   //    (JsPath \ "MOTCLE").read[Seq[String]])(IDENTIFIANT.apply _)
 
   /**
-   * This object is not part of the XML data model but here to have 
+   * This object is not part of the XML data model but here to have
    * JSON object array instead of JSON primitive array:
-   * 
-   * Objects array: 
+   *
+   * Objects array:
    * "MOTCLE": [{ "VALUE": "FIRST" }, {"VALUE": "SECOND"}, {"VALUE": "THIRD"}]
-   * 
+   *
    * Primitives array:
    * "MOTCLE": ["FIRST", "SECOND", "THIRD"]
-   * 
-   * This is helpful to keep dealing with AngularJS 2-way data binding 
+   *
+   * This is helpful to keep dealing with AngularJS 2-way data binding
    * in scopes straight forward.
-   * 
+   *
    * https://github.com/angular/angular.js/wiki/Understanding-Scopes
-   * 
+   *
    */
   case class MOTCLEValue(VALUE: String)
 
@@ -231,7 +231,6 @@ object Implicits {
       "VALUE" -> motcleValue.VALUE)
   }
 
-  
   implicit object IDENTIFIANTFormat extends Format[IDENTIFIANT] {
 
     def reads(json: JsValue): JsResult[IDENTIFIANT] = {
@@ -250,37 +249,37 @@ object Implicits {
         case JsError(errors) => JsError("Error reading MOTCLE") ++ JsError(errors)
       }
 
-//      val autReader = (JsPath \ "AUT").readNullable[String]
-//      val gerReader = (JsPath \ "GER").readNullable[String]
-//      val resReader = (JsPath \ "RES").readNullable[String]
-//      val nomReader = (JsPath \ "NOM").readNullable[String]
-//      val aliasReader = (JsPath \ "ALIAS").readNullable[String]
-//      val origineReader = (JsPath \ "ORIGINE").readNullable[String]
-//      val objectifReader = (JsPath \ "OBJECTIF").readNullable[String]
-//      val qualiteReader = (JsPath \ "QUALITE").readNullable[String]
-//      val compteReader = (JsPath \ "COMPTE").readNullable[String]
-//      val deReader = (JsPath \ "DE").readNullable[String]
-//      val aReader = (JsPath \ "A").readNullable[String]
-//      val parReader = (JsPath \ "PAR").readNullable[String]
-//      val valeur_a_neufReader = (JsPath \ "VALEUR_A_NEUF").readNullable[Double]
-//      val valeurReader = (JsPath \ "VALEUR").readNullable[Double]
-      
+      //      val autReader = (JsPath \ "AUT").readNullable[String]
+      //      val gerReader = (JsPath \ "GER").readNullable[String]
+      //      val resReader = (JsPath \ "RES").readNullable[String]
+      //      val nomReader = (JsPath \ "NOM").readNullable[String]
+      //      val aliasReader = (JsPath \ "ALIAS").readNullable[String]
+      //      val origineReader = (JsPath \ "ORIGINE").readNullable[String]
+      //      val objectifReader = (JsPath \ "OBJECTIF").readNullable[String]
+      //      val qualiteReader = (JsPath \ "QUALITE").readNullable[String]
+      //      val compteReader = (JsPath \ "COMPTE").readNullable[String]
+      //      val deReader = (JsPath \ "DE").readNullable[String]
+      //      val aReader = (JsPath \ "A").readNullable[String]
+      //      val parReader = (JsPath \ "PAR").readNullable[String]
+      //      val valeur_a_neufReader = (JsPath \ "VALEUR_A_NEUF").readNullable[Double]
+      //      val valeurReader = (JsPath \ "VALEUR").readNullable[Double]
+
       val identifiantContent: JsResult[(Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[Double], Option[Double], Seq[String])] = for {
-//        aut <- (json \ "AUT").validate[Option[String]](autReader)
-//        ger <- (json \ "GER").validate[Option[String]](gerReader)
-//        res <- (json \ "RES").validate[Option[String]](resReader)
-//        nom <- (json \ "NOM").validate[Option[String]](nomReader)
-//        alias <- (json \ "ALIAS").validate[Option[String]](aliasReader)
-//        origine <- (json \ "ORIGINE").validate[Option[String]](origineReader)
-//        objectif <- (json \ "OBJECTIF").validate[Option[String]](objectifReader)
-//        qualite <- (json \ "QUALITE").validate[Option[String]](qualiteReader)
-//        compte <- (json \ "COMPTE").validate[Option[String]](compteReader)
-//        de <- (json \ "DE").validate[Option[String]](deReader)
-//        a <- (json \ "A").validate[Option[String]](aReader)
-//        par <- (json \ "PAR").validate[Option[String]](parReader)
-//        valeur_a_neuf <- (json \ "VALEUR_A_NEUF").validate[Option[Double]](valeur_a_neufReader)
-//        valeur <- (json \ "VALEUR").validate[Option[Double]](valeurReader)
-        
+        //        aut <- (json \ "AUT").validate[Option[String]](autReader)
+        //        ger <- (json \ "GER").validate[Option[String]](gerReader)
+        //        res <- (json \ "RES").validate[Option[String]](resReader)
+        //        nom <- (json \ "NOM").validate[Option[String]](nomReader)
+        //        alias <- (json \ "ALIAS").validate[Option[String]](aliasReader)
+        //        origine <- (json \ "ORIGINE").validate[Option[String]](origineReader)
+        //        objectif <- (json \ "OBJECTIF").validate[Option[String]](objectifReader)
+        //        qualite <- (json \ "QUALITE").validate[Option[String]](qualiteReader)
+        //        compte <- (json \ "COMPTE").validate[Option[String]](compteReader)
+        //        de <- (json \ "DE").validate[Option[String]](deReader)
+        //        a <- (json \ "A").validate[Option[String]](aReader)
+        //        par <- (json \ "PAR").validate[Option[String]](parReader)
+        //        valeur_a_neuf <- (json \ "VALEUR_A_NEUF").validate[Option[Double]](valeur_a_neufReader)
+        //        valeur <- (json \ "VALEUR").validate[Option[Double]](valeurReader)
+
         aut <- (json \ "AUT").validate[Option[String]]
         ger <- (json \ "GER").validate[Option[String]]
         res <- (json \ "RES").validate[Option[String]]
@@ -294,8 +293,8 @@ object Implicits {
         a <- (json \ "A").validate[Option[String]]
         par <- (json \ "PAR").validate[Option[String]]
         valeur_a_neuf <- (json \ "VALEUR_A_NEUF").validate[Option[Double]]
-        valeur <- (json \ "VALEUR").validate[Option[Double]]        
-        
+        valeur <- (json \ "VALEUR").validate[Option[Double]]
+
         motscle <- motsCleJsResult
       } yield (aut, ger, res, nom, alias, origine, objectif, qualite, compte, de, a, par, valeur_a_neuf, valeur, motscle)
 
@@ -314,12 +313,12 @@ object Implicits {
 
       val valeur_a_neuf = identifiant.VALEUR_A_NEUF match {
         case Some(value) => JsNumber(value)
-        case None => JsNull
+        case None        => JsNull
       }
 
       val valeur = identifiant.VALEUR match {
         case Some(value) => JsNumber(value)
-        case None => JsNull
+        case None        => JsNull
       }
 
       val jsvalue = Json.obj(
@@ -344,21 +343,87 @@ object Implicits {
   }
 
   // ==================================================================
+  // ch.bsisa.hyperbird.model.FILIATION and sub tree
+  // ==================================================================  
+
+  implicit val PROPRIETEFormat: Format[PROPRIETE] = Json.format[PROPRIETE]
+
+  /**
+   * PARENT has 0 to n PROPRIETE sub element but a List can be Nil
+   */
+  implicit object PARENTFormat extends Format[PARENT] {
+
+    def reads(json: JsValue): JsResult[PARENT] = {
+
+      val parentJsRes = for {
+        propJsList <- (json \ "PROPRIETE").validate[List[PROPRIETE]]
+        id <- (json \ "Id").validate[String]
+        idg <- (json \ "ID_G").validate[Option[String]]
+        classe <- (json \ "CLASSE").validate[Option[String]]
+      } yield (propJsList, id, idg, classe)
+
+      parentJsRes match {
+        case JsSuccess((propList, id, idg, classe), path) => JsSuccess(PARENT(propList, id, idg, classe))
+        case JsError(e)                                   => JsError("Error reading CARSET") ++ JsError(e)
+      }
+    }
+
+    def writes(parent: PARENT): JsValue = {
+      // Note: Force PROPRIETEFormat 
+      val propJsSeq = for {
+        p <- parent.PROPRIETE
+      } yield Json.toJson(p)(PROPRIETEFormat)
+
+      val parentTuple = Seq[(String, play.api.libs.json.Json.JsValueWrapper)](
+        "Id" -> parent.Id,
+        "ID_G" -> parent.ID_G,
+        "CLASSE" -> parent.CLASSE,
+        "PROPRIETE" -> JsArray(propJsSeq))
+
+      // TODO: Use generic tuple for possible future filtering of optional or empty seq
+      Json.obj(parentTuple: _*)
+
+    }
+  }
+
+  /**
+   * FILIATION has 1 to n PARENT sub elements.
+   */
+  implicit object FILIATIONFormat extends Format[FILIATION] {
+
+    def reads(json: JsValue): JsResult[FILIATION] = {
+      val parentsRes: JsResult[Seq[PARENT]] = for {
+        parent <- (json \ "PARENT").validate[List[PARENT]]
+      } yield (parent)
+
+      parentsRes match {
+        case JsSuccess((parents), path) => JsSuccess(FILIATION(parents))
+        case JsError(errors)            => JsError("Error reading FILIATION") ++ JsError(errors)
+      }
+    }
+
+    def writes(filiation: FILIATION): JsValue = {
+      val parentJsSeq = for (p <- filiation.PARENT) yield Json.toJson(p)(PARENTFormat)
+      Json.obj("PARENT" -> JsArray(parentJsSeq))
+    }
+
+  }
+
+  // ==================================================================
   // ch.bsisa.hyperbird.model.CARACTERISTIQUE and sub tree
   // ==================================================================  
 
   implicit object CARTypableFormat extends Format[CARTypable] {
 
-//     val nomReader = (JsPath \ "NOM").readNullable[String]
-//     val uniteReader = (JsPath \ "UNITE").readNullable[String]
-//     val valeurReader = (JsPath \ "VALEUR").readNullable[String]
+    //     val nomReader = (JsPath \ "NOM").readNullable[String]
+    //     val uniteReader = (JsPath \ "UNITE").readNullable[String]
+    //     val valeurReader = (JsPath \ "VALEUR").readNullable[String]
 
-     
     def reads(json: JsValue): JsResult[CARType] = {
       val nomUniteValeur: JsResult[(Option[String], Option[String], Option[String])] = for {
-//        nom <- (json \ "NOM").validate[Option[String]](nomReader)
-//        unite <- (json \ "UNITE").validate[Option[String]](uniteReader)
-//        valeur <- (json \ "VALEUR").validate[Option[String]](valeurReader)
+        //        nom <- (json \ "NOM").validate[Option[String]](nomReader)
+        //        unite <- (json \ "UNITE").validate[Option[String]](uniteReader)
+        //        valeur <- (json \ "VALEUR").validate[Option[String]](valeurReader)
         nom <- (json \ "NOM").validate[Option[String]]
         unite <- (json \ "UNITE").validate[Option[String]]
         valeur <- (json \ "VALEUR").validate[Option[String]]
@@ -366,7 +431,7 @@ object Implicits {
 
       nomUniteValeur match {
         case JsSuccess((nom, unite, valeur), path) => JsSuccess(CARType(nom, unite, valeur))
-        case JsError(errors) => JsError("Error reading CARTypable") ++ JsError(errors)
+        case JsError(errors)                       => JsError("Error reading CARTypable") ++ JsError(errors)
       }
     }
 
@@ -385,7 +450,7 @@ object Implicits {
       val carJsSeq = (json \ "CAR").validate[List[CARSET_CARType]]
       carJsSeq match {
         case JsSuccess(carList, path) => JsSuccess(CARSET(carList))
-        case JsError(e) => JsError("Error reading CARSET") ++ JsError(e)
+        case JsError(e)               => JsError("Error reading CARSET") ++ JsError(e)
       }
     }
 
@@ -398,13 +463,13 @@ object Implicits {
 
   implicit object STATETypeFormat extends Format[STATEType] {
 
-//    val bReader = (JsPath \ "B").readNullable[String]
-//    val cReader = (JsPath \ "C").readNullable[String]
-    
+    //    val bReader = (JsPath \ "B").readNullable[String]
+    //    val cReader = (JsPath \ "C").readNullable[String]
+
     def reads(json: JsValue): JsResult[STATEType] = {
       val bAndCAndContent: JsResult[(Option[String], Option[String], String)] = for {
-//        b <- (json \ "B").validate[Option[String]](bReader)
-//        c <- (json \ "C").validate[Option[String]](cReader)
+        //        b <- (json \ "B").validate[Option[String]](bReader)
+        //        c <- (json \ "C").validate[Option[String]](cReader)
         b <- (json \ "B").validate[Option[String]]
         c <- (json \ "C").validate[Option[String]]
         content <- (json \ MixedContentJsonPropName).validate[String]
@@ -456,17 +521,17 @@ object Implicits {
     def reads(json: JsValue): JsResult[NOM] = json match {
       case JsString(value) => value match {
         case "LONGUEUR" => JsSuccess(LONGUEUR)
-        case "SURFACE" => JsSuccess(SURFACE)
-        case "RAYON" => JsSuccess(RAYON)
-        case invalid => JsError(s"Invalid string value ${invalid} found for NOM. Valid values are {LONGUEUR,SURFACE,RAYON}")
+        case "SURFACE"  => JsSuccess(SURFACE)
+        case "RAYON"    => JsSuccess(RAYON)
+        case invalid    => JsError(s"Invalid string value ${invalid} found for NOM. Valid values are {LONGUEUR,SURFACE,RAYON}")
       }
       case _ => JsError(s"Invalid JsValue type received for NOM. Expecting JsString only.")
     }
 
     def writes(n: NOM): JsValue = n.toString match {
       case "LONGUEUR" => JsString("LONGUEUR")
-      case "SURFACE" => JsString("SURFACE")
-      case "RAYON" => JsString("RAYON")
+      case "SURFACE"  => JsString("SURFACE")
+      case "RAYON"    => JsString("RAYON")
     }
   }
 
@@ -504,7 +569,7 @@ object Implicits {
       val lineJsSeq = (json \ "L").validate[List[L]]
       lineJsSeq match {
         case JsSuccess(lineList, path) => JsSuccess(MATRICEType(lineList))
-        case JsError(e) => JsError("Error reading MATRICETypable") ++ JsError(e)
+        case JsError(e)                => JsError("Error reading MATRICETypable") ++ JsError(e)
       }
     }
 
@@ -554,15 +619,15 @@ object Implicits {
 
     def reads(json: JsValue): JsResult[E_STATUT] = json match {
       case JsString(value) => value match {
-        case "OK" => JsSuccess(OK)
+        case "OK"          => JsSuccess(OK)
         case "A EFFECTUER" => JsSuccess(AEFFECTUER)
-        case invalid => JsError(s"Invalid string value ${invalid} found for E_STATUT. Valid values are {OK,A EFFECTUER}")
+        case invalid       => JsError(s"Invalid string value ${invalid} found for E_STATUT. Valid values are {OK,A EFFECTUER}")
       }
       case _ => JsError(s"Invalid JsValue type received for E_STATUT. Expecting JsString only.")
     }
 
     def writes(e: E_STATUT): JsValue = e.toString match {
-      case "OK" => JsString("OK")
+      case "OK"          => JsString("OK")
       case "A EFFECTUER" => JsString("A EFFECTUER")
     }
   }
@@ -578,7 +643,7 @@ object Implicits {
       val echeanceJsSeq = (json \ "ECHEANCE").validate[List[ECHEANCE]]
       echeanceJsSeq match {
         case JsSuccess(echeanceList, path) => JsSuccess(EVENEMENT(echeanceList))
-        case JsError(e) => JsError("Error reading EVENEMENT") ++ JsError(e)
+        case JsError(e)                    => JsError("Error reading EVENEMENT") ++ JsError(e)
       }
     }
 
@@ -601,8 +666,8 @@ object Implicits {
     def reads(json: JsValue): JsResult[FONCTION] = json match {
       case JsString(value) => value match {
         case "LIBRE" => JsSuccess(LIBRE)
-        case "LIE" => JsSuccess(LIE)
-        case "BASE" => JsSuccess(BASE)
+        case "LIE"   => JsSuccess(LIE)
+        case "BASE"  => JsSuccess(BASE)
         case invalid => JsError(s"Invalid string value ${invalid} found for FONCTION. Valid values are {LIBRE,LIE,BASE}")
       }
       case _ => JsError(s"Invalid JsValue type received for FONCTION. Expecting JsString with valid values {LIBRE,LIE,BASE} only.")
@@ -610,8 +675,8 @@ object Implicits {
 
     def writes(f: FONCTION): JsValue = f.toString match {
       case "LIBRE" => JsString("LIBRE")
-      case "LIE" => JsString("LIE")
-      case "BASE" => JsString("BASE")
+      case "LIE"   => JsString("LIE")
+      case "BASE"  => JsString("BASE")
     }
   }
 
@@ -623,24 +688,24 @@ object Implicits {
 
     def reads(json: JsValue): JsResult[FONCTIONType] = json match {
       case JsString(value) => value match {
-        case "DEBUT" => JsSuccess(DEBUT)
-        case "MILIEU" => JsSuccess(MILIEU)
-        case "FIN" => JsSuccess(FIN)
-        case "PASSAGE" => JsSuccess(PASSAGEValue)
+        case "DEBUT"     => JsSuccess(DEBUT)
+        case "MILIEU"    => JsSuccess(MILIEU)
+        case "FIN"       => JsSuccess(FIN)
+        case "PASSAGE"   => JsSuccess(PASSAGEValue)
         case "ACTUATEUR" => JsSuccess(ACTUATEUR)
-        case "DEPART" => JsSuccess(DEPART)
-        case invalid => JsError(s"Invalid string value ${invalid} found for FONCTION. Valid values are {DEBUT,MILIEU,FIN,PASSAGE,ACTUATEUR,DEPART}")
+        case "DEPART"    => JsSuccess(DEPART)
+        case invalid     => JsError(s"Invalid string value ${invalid} found for FONCTION. Valid values are {DEBUT,MILIEU,FIN,PASSAGE,ACTUATEUR,DEPART}")
       }
       case _ => JsError(s"Invalid JsValue type received for FONCTION. Expecting JsString with valid values {DEBUT,MILIEU,FIN,PASSAGE,ACTUATEUR,DEPART} only.")
     }
 
     def writes(f: FONCTIONType): JsValue = f.toString match {
-      case "DEBUT" => JsString("DEBUT")
-      case "MILIEU" => JsString("MILIEU")
-      case "FIN" => JsString("FIN")
-      case "PASSAGE" => JsString("PASSAGE")
+      case "DEBUT"     => JsString("DEBUT")
+      case "MILIEU"    => JsString("MILIEU")
+      case "FIN"       => JsString("FIN")
+      case "PASSAGE"   => JsString("PASSAGE")
       case "ACTUATEUR" => JsString("ACTUATEUR")
-      case "DEPART" => JsString("DEPART")
+      case "DEPART"    => JsString("DEPART")
     }
   }
 
@@ -652,7 +717,7 @@ object Implicits {
 
     def reads(json: JsValue): JsResult[DIRECTION] = json match {
       case JsString(value) => value match {
-        case "AVAL" => JsSuccess(AVAL)
+        case "AVAL"  => JsSuccess(AVAL)
         case "AMONT" => JsSuccess(AMONT)
         case invalid => JsError(s"Invalid string value ${invalid} found for DIRECTION. Valid values are {AVAL,AMONT}")
       }
@@ -660,7 +725,7 @@ object Implicits {
     }
 
     def writes(f: DIRECTION): JsValue = f.toString match {
-      case "AVAL" => JsString("AVAL")
+      case "AVAL"  => JsString("AVAL")
       case "AMONT" => JsString("AMONT")
     }
   }
@@ -670,15 +735,15 @@ object Implicits {
     def reads(json: JsValue): JsResult[FONCTIONType2] = json match {
       case JsString(value) => value match {
         case "FRONTIERE" => JsSuccess(FRONTIERE)
-        case "AXE" => JsSuccess(AXE)
-        case invalid => JsError(s"Invalid string value ${invalid} found for FONCTION. Valid values are {FRONTIERE,AXE}")
+        case "AXE"       => JsSuccess(AXE)
+        case invalid     => JsError(s"Invalid string value ${invalid} found for FONCTION. Valid values are {FRONTIERE,AXE}")
       }
       case _ => JsError(s"Invalid JsValue type received for FONCTION. Expecting JsString with valid values {FRONTIERE,AXE} only.")
     }
 
     def writes(f: FONCTIONType2): JsValue = f.toString match {
       case "FRONTIERE" => JsString("FRONTIERE")
-      case "AXE" => JsString("AXE")
+      case "AXE"       => JsString("AXE")
     }
   }
 
@@ -694,7 +759,7 @@ object Implicits {
 
     def reads(json: JsValue): JsResult[java.net.URI] = (json).validate[String] match {
       case JsSuccess(lien, path) => JsSuccess(new java.net.URI(lien))
-      case JsError(e) => JsError("Error reading java.net.URI") ++ JsError(e)
+      case JsError(e)            => JsError("Error reading java.net.URI") ++ JsError(e)
     }
 
     //use l.toASCIIString if encoding to ASCII is required, l.toString otherwise
@@ -730,7 +795,7 @@ object Implicits {
       val jsResult = (json \ "RENVOI").validate[List[RENVOI]]
       jsResult match {
         case JsSuccess(renvoiList, path) => JsSuccess(ANNEXE(renvoiList))
-        case JsError(e) => JsError("Error reading ANNEXE") ++ JsError(e)
+        case JsError(e)                  => JsError("Error reading ANNEXE") ++ JsError(e)
       }
     }
 
@@ -747,11 +812,11 @@ object Implicits {
 
     def reads(json: JsValue): JsResult[TYPE] = json match {
       case JsString(value) => value match {
-        case "BIEN" => JsSuccess(BIEN)
+        case "BIEN"     => JsSuccess(BIEN)
         case "ACTIVITE" => JsSuccess(ACTIVITEValue)
         case "PERSONNE" => JsSuccess(PERSONNE)
         case "DOCUMENT" => JsSuccess(DOCUMENT)
-        case invalid => JsError(s"Invalid string value ${invalid} found for TYPE. Valid values are {BIEN,ACTIVITE,PERSONNE,DOCUMENT}")
+        case invalid    => JsError(s"Invalid string value ${invalid} found for TYPE. Valid values are {BIEN,ACTIVITE,PERSONNE,DOCUMENT}")
       }
       case _ => JsError(s"Invalid JsValue type received for TYPE. Expecting JsString with valid values {BIEN,ACTIVITE,PERSONNE,DOCUMENT} only.")
     }
