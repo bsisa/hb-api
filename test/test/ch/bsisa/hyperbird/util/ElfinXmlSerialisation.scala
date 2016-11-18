@@ -105,7 +105,7 @@ class ElfinXmlSerialisation extends BaseSerialisationSpec {
   val mutationsJson = Json.toJson(elfin.MUTATIONS)
   val geoselectionJson = Json.toJson(elfin.GEOSELECTION)
   val identifiantJson = Json.toJson(elfin.IDENTIFIANT)
-//  val filiationJson = Json.toJson(elfin.FILIATION)
+  val filiationJson = Json.toJson(elfin.FILIATION)
   val caracteristiqueJson = Json.toJson(elfin.CARACTERISTIQUE)
   val partenaireJson = Json.toJson(elfin.PARTENAIRE)
   val activiteJson = Json.toJson(elfin.ACTIVITE)
@@ -124,7 +124,7 @@ class ElfinXmlSerialisation extends BaseSerialisationSpec {
   JsonXmlConverter.printJsonToFile(mutationsJson, TestResultsDir + "MUTATIONSResult.json")
   JsonXmlConverter.printJsonToFile(geoselectionJson, TestResultsDir + "GEOSELECTIONResult.json")
   JsonXmlConverter.printJsonToFile(identifiantJson, TestResultsDir + "IDENTIFIANTResult.json")
-//  JsonXmlConverter.printJsonToFile(filiationJson, TestResultsDir + "FILIATIONResult.json")
+  JsonXmlConverter.printJsonToFile(filiationJson, TestResultsDir + "FILIATIONResult.json")
   JsonXmlConverter.printJsonToFile(caracteristiqueJson, TestResultsDir + "CARACTERISTIQUEResult.json")
   JsonXmlConverter.printJsonToFile(partenaireJson, TestResultsDir + "PARTENAIREResult.json")
   JsonXmlConverter.printJsonToFile(activiteJson, TestResultsDir + "ACTIVITEResult.json")
@@ -140,7 +140,7 @@ class ElfinXmlSerialisation extends BaseSerialisationSpec {
   val mutationsJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "MUTATIONSResult.json")
   val geoselectionJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "GEOSELECTIONResult.json")
   val identifiantJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "IDENTIFIANTResult.json")
-//  val filiationJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "FILIATIONResult.json")
+  val filiationJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "FILIATIONResult.json")
   val caracteristiqueJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "CARACTERISTIQUEResult.json")
   val partenaireJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "PARTENAIREResult.json")
   val activiteJsonInput = JsonXmlConverter.loadJsonFromFile(TestResultsDir + "ACTIVITEResult.json")
@@ -156,7 +156,7 @@ class ElfinXmlSerialisation extends BaseSerialisationSpec {
   val mutationsFromFile = mutationsJsonInput.as[MUTATIONS]
   val geoselectionFromFile = geoselectionJsonInput.as[GEOSELECTION]
   val identifiantFromFile = identifiantJsonInput.as[IDENTIFIANT]
-  //val filiationFromFile = filiationJsonInput.as[FILIATION]
+  val filiationFromFile = filiationJsonInput.as[FILIATION]
   val caracteristiqueFromFile = caracteristiqueJsonInput.as[CARACTERISTIQUE]
   val partenaireFromFile = partenaireJsonInput.as[PARTENAIRE]
   val activiteFromFile = activiteJsonInput.as[ACTIVITE]
