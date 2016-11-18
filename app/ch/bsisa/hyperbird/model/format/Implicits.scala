@@ -370,47 +370,47 @@ object Implicits {
 
     def writes(parent: PARENT): JsValue = {
       // Note: Force PROPRIETEFormat 
+
+      val propJsSeqOption = parent.PROPRIETE match {
+        case Nil => None
+        case _ =>
+          val propJsSeq = for {
+            p <- parent.PROPRIETE
+          } yield Json.toJson(p)(PROPRIETEFormat)
+          Some(propJsSeq)
+      }
+
       val propJsSeq = for {
         p <- parent.PROPRIETE
       } yield Json.toJson(p)(PROPRIETEFormat)
+      Some(propJsSeq)
 
-      val parentTupleCleaned = Seq[(String, play.api.libs.json.Json.JsValueWrapper)](
-        "Id" -> parent.Id,
-        "ID_G" -> parent.ID_G,
-        "CLASSE" -> parent.CLASSE,
-        "PROPRIETE" -> JsArray(propJsSeq))
+      val id: Option[(String, play.api.libs.json.Json.JsValueWrapper)] = Some(("Id" -> parent.Id))
 
-        // WIP
-//      val parentTuple = Seq(
-//        "Id" -> parent.Id,
-//        "ID_G" -> parent.ID_G,
-//        "CLASSE" -> parent.CLASSE,
-//        "PROPRIETE" -> propJsSeq)
-//        //"PROPRIETE" -> JsArray(propJsSeq))
+      val idg: Option[(String, play.api.libs.json.Json.JsValueWrapper)] = parent.ID_G match {
+        case Some(idg) => Some("ID_G" -> parent.ID_G)
+        case None      => None
+      }
 
-//      val parentTupleCleaned = parentTuple.foldLeft[Seq[(String, play.api.libs.json.Json.JsValueWrapper)]](Nil) { (acc, tuple) =>
-//        val (key, obj) = tuple
-//        obj match {
-//          case None => acc
-//          case Nil => acc
-//          case Some(v: String) => 
-//            val jvw : play.api.libs.json.Json.JsValueWrapper = v
-//            (key,jvw) +: acc
-//          case sq: Seq[JsValue] => 
-//            val jvw : play.api.libs.json.Json.JsValueWrapper = JsArray(sq)
-//            (key,jvw) +: acc
-//          case s:String => 
-//            val jvw : play.api.libs.json.Json.JsValueWrapper = s
-//            (key,jvw) +: acc
-//          case e =>
-//            println(s"WHAT AM I ? = ${e}")
-//            acc
-//        }
-//
-//      }
-//
-//      println(s"parentTupleCleaned : ${parentTupleCleaned}")
+      val classe: Option[(String, play.api.libs.json.Json.JsValueWrapper)] = parent.CLASSE match {
+        case Some(classe) => Some("CLASSE" -> parent.CLASSE)
+        case None         => None
+      }
 
+      // Filtering on empty PROPRIETE breaks tests, currently always keep a PROPRIETE property even if empty.
+      val proprietes: Option[(String, play.api.libs.json.Json.JsValueWrapper)] = Some(("PROPRIETE", propJsSeq))
+      //      val proprietes: Option[(String, play.api.libs.json.Json.JsValueWrapper)] = propJsSeqOption match {
+      //        case Some(ps) => Some("PROPRIETE", ps)
+      //        case None => None
+      //      }
+
+      val parentTupleOptions = Seq[Option[(String, play.api.libs.json.Json.JsValueWrapper)]](
+        id,
+        idg,
+        classe,
+        proprietes)
+
+      val parentTupleCleaned = parentTupleOptions.filter(p => p.isDefined).map(f => f.get)
 
       // TODO: Use generic tuple for possible future filtering of optional or empty seq
       Json.obj(parentTupleCleaned: _*)
