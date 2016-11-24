@@ -10,7 +10,7 @@ import ScalaxbKeys._
 object ApplicationBuild extends Build {
 
   val appName = "hb-api"
-  val appVersion = "5.4.0"
+  val appVersion = "5.4.1"
 
   val appDependencies = Seq(
     "io.github.cloudify" %% "spdf" % "1.3.1",
