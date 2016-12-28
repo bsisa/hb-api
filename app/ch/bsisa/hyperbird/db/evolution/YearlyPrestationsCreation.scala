@@ -106,7 +106,7 @@ object YearlyPrestationsCreation {
           
             val newPrestation = ElfinUtil.replaceElfinMutationsHead(newPrestationWithoutMutations,ElfinUtil.createMutationForUserId("PRE"))
             Logger.debug(s"newPrestation.Id = ${newPrestation.Id}")
-            Logger.debug(s"newPrestation.Id = ${newPrestation.IDENTIFIANT}")
+            Logger.debug(s"newPrestation.IDENTIFIANT = ${newPrestation.IDENTIFIANT}")
 
             // TODO: Evaluate possible improvement making database entry creation conditional to 
             // no existing entry with identical {IDENTIFIANT/0BJECTIF building part, year, groupe, remark}
