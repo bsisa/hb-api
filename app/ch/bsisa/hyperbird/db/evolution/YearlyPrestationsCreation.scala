@@ -117,7 +117,7 @@ object YearlyPrestationsCreation {
   private def createPrestation(newIdentifiant: IDENTIFIANT, prestation: ELFIN): Unit = {
 
     val futureElfinWithId: Future[ELFIN] = ElfinDAO.getNewFromCatalogue(prestation.CLASSE)
-    // Send cloned catalog elfin in JSON format 
+
     futureElfinWithId.map { elfin =>
 
       val newPrestationWithoutMutations = ELFIN(None, prestation.GEOSELECTION, Option(newIdentifiant), prestation.FILIATION, prestation.CARACTERISTIQUE,
