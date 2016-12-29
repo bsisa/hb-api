@@ -37,7 +37,6 @@ import org.jsoup.Jsoup
 import ch.bsisa.hyperbird.spreadsheet.SpreadSheetBuilder
 import ch.bsisa.hyperbird.security.social.WithRole
 
-
 /**
  * Database migration controller.
  *
@@ -53,14 +52,16 @@ object DbMigration extends Controller with securesocial.core.SecureSocial {
     Ok(views.html.index("HyperBird 5.0", "Check Version4To5.scala for details"))
   }
 
-  
-  def newPrestations(referenceYear:String, createYear: String, owner: String) = SecuredAction(WithRole("admin")) {
-   
+  def newPrestations(referenceYear: String, createYear: String, owner: String) = SecuredAction(WithRole("admin")) {
+
     Logger.debug("Running db migration...")
-    ch.bsisa.hyperbird.db.evolution.YearlyPrestationsCreation.createPrestations(referenceYear, createYear, owner)
-    Ok(views.html.index("HyperBird 5.0", s"Creates PRESTATION restricted to owner ${owner} for year ${createYear} using year ${referenceYear} as example. Check YearlyPrestationsCreation.scala for details"))
-    
+    if (referenceYear.toInt < createYear.toInt) {
+      ch.bsisa.hyperbird.db.evolution.YearlyPrestationsCreation.createPrestations(referenceYear, createYear, owner)
+      Ok(views.html.index("HyperBird 5.0", s"Creates PRESTATION restricted to owner ${owner} for year ${createYear} using year ${referenceYear} as example. Check YearlyPrestationsCreation.scala for details"))
+    } else {
+      Ok(views.html.index("HyperBird 5.0", s"Reference year must be before year to be created: Cannot create PRESTATION restricted to owner ${owner} for year ${createYear} using year ${referenceYear} as example. Check YearlyPrestationsCreation.scala for details"))
+    }
+
   }
-  
-  
+
 }
