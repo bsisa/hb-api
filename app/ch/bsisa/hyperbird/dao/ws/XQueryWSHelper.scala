@@ -152,6 +152,11 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
         // TODO: more investigation to catch basic authentication failures instead of silently failing.
         val responseFuture: Future[Response] = WS.url(elfinResourceUrl).
           withAuth(conf.userName, conf.password, AuthScheme.BASIC).delete
+        responseFuture.map { resp =>
+          // TODO: Exploit response status: 404 when trying to delete a file not found (misnamed...)
+          // Receive a 200 when ok.
+          Logger.debug(s">>>> DELETE Response status ${resp.status}")
+        }
       case None =>
         Logger.error(s"Cannot delete ELFIN with Id, ID_G, CLASSE : ${elfin.Id} ${elfin.ID_G} ${elfin.CLASSE}")
     }
@@ -171,17 +176,27 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
    *  Creates the provided ELFIN in the database providing no feedback on the operation.
    */
   override def create(elfin: ELFIN)(implicit conf: DbConfig): Unit = {
-    val fileName = ElfinIdGenerator.getElfinFileName(elfin)
-    val elfinResourceUrl = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}/${elfin.ID_G}/${fileName}"""
-    // Keep consistent with current database state where each 
-    // ELFIN element is contained alone in a MELFIN element. 
-    val melfinXML = ElfinFormat.toXml(MELFIN(Seq(elfin)))
+    val fileNameOpt = ElfinIdGenerator.getElfinFileName(elfin)
+    fileNameOpt match {
+      case Some(fileName) => {
+        val elfinResourceUrl = s"""${conf.protocol}${conf.hostName}:${conf.port}${conf.restPrefix}${conf.databaseName}/${elfin.ID_G}/${fileName}"""
+        // Keep consistent with current database state where each 
+        // ELFIN element is contained alone in a MELFIN element. 
+        val melfinXML = ElfinFormat.toXml(MELFIN(Seq(elfin)))
 
-    //Logger.debug("elfinResourceUrl for PUT : " + elfinResourceUrl)
+        //Logger.debug("elfinResourceUrl for PUT : " + elfinResourceUrl)
 
-    // TODO: more investigation to catch basic authentication failures instead of silently failing.
-    val responseFuture: Future[Response] = WS.url(elfinResourceUrl).
-      withAuth(conf.userName, conf.password, AuthScheme.BASIC).put(melfinXML)
+        // TODO: more investigation to catch basic authentication failures instead of silently failing.
+        val responseFuture: Future[Response] = WS.url(elfinResourceUrl).
+          withAuth(conf.userName, conf.password, AuthScheme.BASIC).put(melfinXML)
+
+        responseFuture.map { resp =>
+          Logger.debug(s">>>> CREATE Response: ${resp.status}") // 201 ok,
+        }
+      }
+      case None => // Handle error 
+        Logger.error(s"CREATE aborted, no fileName available for elfin.Id ${elfin.Id}")
+    }
 
   }
 
