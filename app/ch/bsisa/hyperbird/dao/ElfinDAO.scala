@@ -41,11 +41,13 @@ object ElfinDAO {
    * <i>The database API do not provide any feedback on that operation.</i>
    * Note: elfin.ID_G and elfin.Id are mandatory
    */
-  def update(elfin: ELFIN)(implicit dbConfig: DbConfig) = {
+  def update(elfin: ELFIN)(implicit dbConfig: DbConfig) : Unit = {
 
     if (elfin.ID_G != "" && elfin.Id != "") {
       logger.debug(s"ElfinDAO.update elfin.ID_G/Id: ${elfin.ID_G}/${elfin.Id}")
       val elfinXml = ElfinFormat.toXml(elfin)
+      // TODO: Refactor as follow (requires tests)
+      // update(elfinXml)
       val updateStatetement =
         s"update replace collection('${dbConfig.databaseName}/${elfin.ID_G}')//ELFIN[@Id='${elfin.Id}'] with ${elfinXml.mkString}"
       executeStatement(updateStatetement)
@@ -59,7 +61,7 @@ object ElfinDAO {
    * <i>The database API do not provide any feedback on that operation.</i>
    * Note: elfin.ID_G and elfin.Id are mandatory
    */
-  def update(elfin: scala.xml.Node)(implicit dbConfig: DbConfig) = {
+  def update(elfin: scala.xml.Node)(implicit dbConfig: DbConfig) : Unit = {
 
     val idg: String = (elfin \ "@ID_G").mkString
     val id: String = (elfin \ "@Id").mkString
