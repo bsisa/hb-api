@@ -23,6 +23,12 @@ Go to hb-api/ and type:
 The distribution will be available at: 
     hb-api/target/universal/hb-api-X.Y.Z.zip
 
+## Running in dev
+
+If you're running on Linux, make sure you have jnotify installed and add it to the java.library.path env. Example:
+
+    sbt -Djava.library.path=/home/guy/bin/jnotify/64bit_linux/ play run    
+
 
 # Running the distribution #
 
