@@ -1,14 +1,15 @@
 package ch.bsisa.hyperbird.spreadsheet
 
-import scala.collection.JavaConversions._
 import java.io.InputStream
-import play.api.Logger
-import securesocial.core.Identity
+import java.util.Date
+
 import org.apache.poi.ss.usermodel._
 import org.apache.poi.ss.util.CellReference
-import org.apache.poi.ss.formula.FormulaShifter
 import org.jsoup.Jsoup
-import java.util.Date
+import play.api.Logger
+import securesocial.core.Identity
+
+import scala.collection.JavaConversions._
 
 /**
  * Encapsulate logic and external libraries dependencies required to produce XLS spreadsheet reports.
@@ -53,10 +54,10 @@ object SpreadSheetBuilder {
    * Get the xquery file name defined in the Workbook `wb`
    */
   def getXQueryFileName(wb: Workbook): String = {
-    wb.getSheet(XQueryFileNameCellRef.getSheetName())
-      .getRow(XQueryFileNameCellRef.getRow())
-      .getCell(XQueryFileNameCellRef.getCol())
-      .getRichStringCellValue().getString()
+    wb.getSheet(XQueryFileNameCellRef.getSheetName)
+      .getRow(XQueryFileNameCellRef.getRow)
+      .getCell(XQueryFileNameCellRef.getCol)
+      .getRichStringCellValue.getString
   }
 
   /**
@@ -69,10 +70,10 @@ object SpreadSheetBuilder {
     val dateTimeFormat = "dd.MM.yyyy HH:mm"
     val dtSdf = new java.text.SimpleDateFormat(dateTimeFormat)
 
-    for (i <- 0 until wb.getNumberOfSheets()) {
+    for (i <- 0 until wb.getNumberOfSheets) {
       val sheet = wb.getSheetAt(i)
       val footer = sheet.getFooter
-      val preservedFooterCenterContent = if (footer.getCenter.trim.size > 0) " - " + footer.getCenter else ""
+      val preservedFooterCenterContent = if (footer.getCenter.trim.nonEmpty) " - " + footer.getCenter else ""
       footer.setCenter(userDetails.identityId.userId + " - " + dtSdf.format(new Date()) + preservedFooterCenterContent)
     }
   }
@@ -89,12 +90,12 @@ object SpreadSheetBuilder {
    */
   def insertWorkBookPageNumbers(wb: Workbook): Unit = {
 
-    for (i <- 0 until wb.getNumberOfSheets()) {
+    for (i <- 0 until wb.getNumberOfSheets) {
       val sheet = wb.getSheetAt(i)
       val footer = sheet.getFooter
 
-      import org.apache.poi.xssf.usermodel.XSSFWorkbook
       import org.apache.poi.hssf.usermodel.HeaderFooter
+      import org.apache.poi.xssf.usermodel.XSSFWorkbook
 
       if (wb.isInstanceOf[XSSFWorkbook]) {
         footer.setRight(footer.getRight + " page &P / &N")
@@ -111,18 +112,18 @@ object SpreadSheetBuilder {
 
     Logger.debug("SpreadSheetBuilder.updateParameterWorkBook called.")
 
-    val parameterSheet: Sheet = wb.getSheet(XQueryFileNameCellRef.getSheetName())
+    val parameterSheet: Sheet = wb.getSheet(XQueryFileNameCellRef.getSheetName)
 
     // Fill parameters values associated to xquery if any
     for (row: Row <- parameterSheet) {
       for (cell: Cell <- row) {
 
-        val cellRef: CellReference = new CellReference(row.getRowNum(), cell.getColumnIndex())
+        val cellRef: CellReference = new CellReference(row.getRowNum, cell.getColumnIndex)
         // Rows 0 and 1 contain XQuery request name and insert result cell position.  
-        if (cellRef.getRow() > 1 && cellRef.getCol() == 0) {
+        if (cellRef.getRow > 1 && cellRef.getCol == 0) {
           // Get the parameter name specified in the spread sheet
-          val parameterName = cell.getCellType() match {
-            case Cell.CELL_TYPE_STRING => cell.getRichStringCellValue().getString()
+          val parameterName = cell.getCellType match {
+            case Cell.CELL_TYPE_STRING => cell.getRichStringCellValue.getString
             case _ =>
               Logger.error(s"Parameter name should be of string type! found: ${cell.getCellType}") // TODO: throw exception
               s"ERROR - Parameter name should be of string type! found: ${cell.getCellType}"
@@ -130,27 +131,27 @@ object SpreadSheetBuilder {
 
           // From the query string try to find the parameter value corresponding to the parameter name specified in the spread sheet
           val parameterValue = queryString.get(parameterName) match {
-            case Some(value) => value(0)
+            case Some(value) => value.head
             case None =>
-              Logger.error(s"No value found in query string for parameter ${parameterName}") // TODO: throw exception
-              s"ERROR - No value found for parameter ${parameterName}"
+              Logger.error(s"No value found in query string for parameter $parameterName") // TODO: throw exception
+              s"ERROR - No value found for parameter $parameterName"
           }
 
-          Logger.debug(s"Found parameter named: ${parameterName} with value >${parameterValue}<")
+          Logger.debug(s"Found parameter named: $parameterName with value >$parameterValue<")
 
           // Check the parameter value cell type and convert the matching 
           // query parameter value to the given type to preserve parameter 
           // value cell type while updating its content.
           val paramValueCell = row.getCell(1)
-          paramValueCell.getCellType() match {
+          paramValueCell.getCellType match {
             case Cell.CELL_TYPE_BLANK =>
-              Logger.debug(s"Updated BLANK parameter value cell with string = ${parameterValue}")
+              Logger.debug(s"Updated BLANK parameter value cell with string = $parameterValue")
               paramValueCell.setCellValue(parameterValue)
             case Cell.CELL_TYPE_STRING =>
-              Logger.debug(s"Updated STRING parameter value cell with string = ${parameterValue}")
+              Logger.debug(s"Updated STRING parameter value cell with string = $parameterValue")
               paramValueCell.setCellValue(parameterValue)
             case Cell.CELL_TYPE_NUMERIC =>
-              Logger.debug(s"Updated parameter value cell with double = ${parameterValue}")
+              Logger.debug(s"Updated parameter value cell with double = $parameterValue")
               Logger.warn("Request parameter used to set numeric cell. Untested operation, date and numeric conversion need extended support.")
               paramValueCell.setCellValue(parameterValue.toDouble)
             // TODO: date and numeric values need a defined format while passed as request parameter and a corresponding formatter
@@ -158,7 +159,7 @@ object SpreadSheetBuilder {
             //                if (DateUtil.isCellDateFormatted(paramValueCell)) paramValueCell.   paramValueCell.setCellValue(Date.parse(parameterValue)) else paramValueCell.getNumericCellValue()
             // TODO: date and numeric values need a defined format while passed as request parameter and a corresponding formatter
             case Cell.CELL_TYPE_BOOLEAN =>
-              Logger.debug(s"Updated parameter value cell with string = ${parameterValue}")
+              Logger.debug(s"Updated parameter value cell with string = $parameterValue")
               Logger.warn("Request parameter used to set boolean cell. Untested operation.")
               paramValueCell.setCellValue(parameterValue)
             case Cell.CELL_TYPE_FORMULA =>
@@ -188,10 +189,10 @@ object SpreadSheetBuilder {
     Logger.debug("SpreadSheetBuilder.mergeHtmlTable called.")
 
     val resultDataStartCellRefString =
-      wb.getSheet(ResultInsertStartCellRef.getSheetName())
-        .getRow(ResultInsertStartCellRef.getRow())
+      wb.getSheet(ResultInsertStartCellRef.getSheetName)
+        .getRow(ResultInsertStartCellRef.getRow)
         .getCell(ResultInsertStartCellRef.getCol())
-        .getRichStringCellValue().getString()
+        .getRichStringCellValue.getString
 
     val resultDataStartCellRef = new CellReference(resultDataStartCellRefString)
 
@@ -206,13 +207,13 @@ object SpreadSheetBuilder {
     val temporarySheet = wb.cloneSheet(0)
     
     // Get the first row as example
-    val templateRow = dataSheet.getRow(resultDataStartCellRef.getRow())
+    val templateRow = dataSheet.getRow(resultDataStartCellRef.getRow)
     //Logger.debug(s"templateRow last cell num = ${templateRow.getLastCellNum()}");
     
     import scala.collection.JavaConversions._
 
     // Parse report HTML table result as org.jsoup.nodes.Document
-    val htmlReportDoc = Jsoup.parse(htmlTable);
+    val htmlReportDoc = Jsoup.parse(htmlTable)
     // We expect a single table per document
     val tables = htmlReportDoc.select("table")
     // Check htmlTable structure
@@ -239,11 +240,11 @@ object SpreadSheetBuilder {
     // Loop on HTML table result rows
     for (row <- dataTableTrCollection) {
 
-      var cellIdxFormulaPass: Integer = resultDataStartCellRef.getCol()
+      var cellIdxFormulaPass: Integer = resultDataStartCellRef.getCol.toInt
       var nbColWithoutFormula = 0
       
       // Always create row at start position, it will be shifted down a position afterward
-      val dataRow = temporarySheet.createRow(resultDataStartCellRef.getRow())
+      val dataRow = temporarySheet.createRow(resultDataStartCellRef.getRow)
 
       // Loop on HTML table result row columns
       for (cell <- row.select("td")) {
@@ -253,19 +254,19 @@ object SpreadSheetBuilder {
       }
       
       // keep looping while MAX_COL_WITHOUT_FORMULA not reached or last template columns reached
-      while (nbColWithoutFormula < MAX_COL_WITHOUT_FORMULA && cellIdxFormulaPass < templateRow.getLastCellNum()) {
+      while (nbColWithoutFormula < MAX_COL_WITHOUT_FORMULA && cellIdxFormulaPass < templateRow.getLastCellNum) {
 
         val exampleCell = templateRow.getCell(cellIdxFormulaPass)
 
         // Check if next template column contains a formula
-        exampleCell.getCellType() match {
+        exampleCell.getCellType match {
           case Cell.CELL_TYPE_FORMULA =>
-            val formula = exampleCell.getCellFormula()
+            val formula = exampleCell.getCellFormula
             if (formula.trim().length() > 0) {
               val currSheetCell = dataRow.createCell(cellIdxFormulaPass)
-              currSheetCell.setCellType(exampleCell.getCellType())
-              currSheetCell.setCellFormula(exampleCell.getCellFormula())
-              currSheetCell.setCellStyle(exampleCell.getCellStyle())
+              currSheetCell.setCellType(exampleCell.getCellType)
+              currSheetCell.setCellFormula(exampleCell.getCellFormula)
+              currSheetCell.setCellStyle(exampleCell.getCellStyle)
               // Leave nbColWithoutFormula untouched
             } else {
               nbColWithoutFormula = nbColWithoutFormula + 1
@@ -282,7 +283,7 @@ object SpreadSheetBuilder {
       // Do not shift row on last loop
       if (currFormulaPassIdx < dataTableTrCollection.length) {
     	  // Perform shifting on temporarySheet to preserve dataSheet from side effect on "static" formulas
-    	  temporarySheet.shiftRows(resultDataStartCellRef.getRow(), rowIdxFormulaPass, 1)
+    	  temporarySheet.shiftRows(resultDataStartCellRef.getRow, rowIdxFormulaPass, 1)
       }
       
       if (cellIdxFormulaPass > maxCellIdxFormulaPass) maxCellIdxFormulaPass = cellIdxFormulaPass
@@ -304,7 +305,7 @@ object SpreadSheetBuilder {
     // Loop on HTML table result rows
     for (row <- dataTableTrCollection) {
 
-      var cellIdx: Integer = resultDataStartCellRef.getCol()
+      var cellIdx: Integer = resultDataStartCellRef.getCol.toInt
       var nbColWithoutFormula = 0
 
       // Create row on dataSheet for each HTML table result row
@@ -315,7 +316,7 @@ object SpreadSheetBuilder {
        
         val currSheetCell = dataRow.createCell(cellIdx)
         
-        if (!cell.text.isEmpty()) {
+        if (!cell.text.isEmpty) {
           // Cell type is defined after td class names.
           // Currently supported names for type specific {"date","num"} 
           cell.className() match {
@@ -331,7 +332,7 @@ object SpreadSheetBuilder {
         }
         
         // Copy example row cells style
-        val cellStyle = templateRow.getCell(cellIdx).getCellStyle()
+        val cellStyle = templateRow.getCell(cellIdx).getCellStyle
        
         currSheetCell.setCellStyle(cellStyle)
         cellIdx = cellIdx + 1
@@ -344,16 +345,16 @@ object SpreadSheetBuilder {
       // ==============================================================
       
       // keep doing while MAX_NO_FORMULA_FOUND reached
-      while (nbColWithoutFormula < MAX_COL_WITHOUT_FORMULA && cellIdx < templateRow.getLastCellNum()) {
+      while (nbColWithoutFormula < MAX_COL_WITHOUT_FORMULA && cellIdx < templateRow.getLastCellNum) {
 
         val exampleCell = templateRow.getCell(cellIdx)
 
         // Check if next template column contains a formula
-        exampleCell.getCellType() match {
+        exampleCell.getCellType match {
           case Cell.CELL_TYPE_FORMULA =>
             //val fRange = exampleCell.getArrayFormulaRange()            
             //val cachedResult = exampleCell.getCachedFormulaResultType()
-            val formula = exampleCell.getCellFormula()
+            val formula = exampleCell.getCellFormula
             //val style = exampleCell.getCellStyle()
             //Logger.debug(s"Formula found: >${formula}<, cachedResult: >${cachedResult}<")
             //Logger.debug(s"Formula range: \nfirst col: ${fRange.getFirstColumn()}\nlast col : ${fRange.getLastColumn()}\nfirst row: ${fRange.getFirstRow()} \nlast row : ${fRange.getLastRow()} \nnb of cells: ${fRange.getNumberOfCells()}")
@@ -361,12 +362,12 @@ object SpreadSheetBuilder {
             if (formula.trim().length() > 0) {
               //Logger.debug(s"formula.trim().length() = ${formula.trim().length()}")
               val currSheetCell = dataRow.createCell(cellIdx)
-              currSheetCell.setCellType(exampleCell.getCellType())
+              currSheetCell.setCellType(exampleCell.getCellType)
               // Get the formula with correct references from temporarySheet
-              val shiftedFormulaFromTemporarySheet = temporarySheet.getRow(currSheetCell.getRowIndex()).getCell(currSheetCell.getColumnIndex()).getCellFormula()
+              val shiftedFormulaFromTemporarySheet = temporarySheet.getRow(currSheetCell.getRowIndex).getCell(currSheetCell.getColumnIndex).getCellFormula
               //Logger.debug(s"shiftedFormulaFromTemporarySheet = ${shiftedFormulaFromTemporarySheet}")
               currSheetCell.setCellFormula(shiftedFormulaFromTemporarySheet)
-              currSheetCell.setCellStyle(exampleCell.getCellStyle())
+              currSheetCell.setCellStyle(exampleCell.getCellStyle)
               // Leave nbColWithoutFormula untouched
             } else {
               nbColWithoutFormula = nbColWithoutFormula + 1
@@ -428,10 +429,10 @@ object SpreadSheetBuilder {
     val printRangeStartCellRef = new CellReference(printRangeStart)
 
     // Compute resultDataEndCellAbsRef column position
-    val endCol = if (printRangeStartCellRef.getCol() > resultDataStartCellRef.getCol()) {
-      maxColIdx - (printRangeStartCellRef.getCol() - resultDataStartCellRef.getCol())
+    val endCol = if (printRangeStartCellRef.getCol > resultDataStartCellRef.getCol) {
+      maxColIdx - (printRangeStartCellRef.getCol - resultDataStartCellRef.getCol)
     } else {
-      maxColIdx + (resultDataStartCellRef.getCol() - printRangeStartCellRef.getCol())
+      maxColIdx + (resultDataStartCellRef.getCol - printRangeStartCellRef.getCol)
     }
     // Define new print range end position
     val resultDataEndCellAbsRef = new CellReference(maxRowIdx - 1, endCol, AbsRow, AbsCol)
@@ -443,18 +444,17 @@ object SpreadSheetBuilder {
    * HSSF and XSSF compatible formulas evaluation.
    */
   def evaluateAllFormulaCells(wb: Workbook): Unit = {
-    val evaluator = wb.getCreationHelper().createFormulaEvaluator()
-    for (i <- 0 until wb.getNumberOfSheets()) {
-      val sheet = wb.getSheetAt(i);
+    val evaluator = wb.getCreationHelper.createFormulaEvaluator()
+    for (i <- 0 until wb.getNumberOfSheets) {
+      val sheet = wb.getSheetAt(i)
       for (row <- sheet) {
         for (cell <- row) {
-          if (cell.getCellType() == Cell.CELL_TYPE_FORMULA) {
+          if (cell.getCellType == Cell.CELL_TYPE_FORMULA) {
             try {
-            	evaluator.evaluateFormulaCell(cell);
+            	evaluator.evaluateFormulaCell(cell)
             } catch {
-            	case e: Throwable => {
-            		Logger.warn(s"Problem evaluating formulae for cell row ${cell.getRowIndex()}, column ${cell.getColumnIndex()} : ${e.getMessage()}")
-            	}
+            	case e: Throwable =>
+                Logger.warn(s"Problem evaluating formulae for cell row ${cell.getRowIndex}, column ${cell.getColumnIndex} : ${e.getMessage}")
             }
           }
         }
