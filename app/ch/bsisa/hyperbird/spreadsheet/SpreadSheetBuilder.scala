@@ -12,24 +12,27 @@ import securesocial.core.Identity
 import scala.collection.JavaConversions._
 
 /**
- * Encapsulate logic and external libraries dependencies required to produce XLS spreadsheet reports.
- * General supported workflow:
- *
- * - Take a Workbook containing a dataSheet and a parameterSheet
- * - Extract parameterSheet XQuery name and parameters
- * - Obtain XQuery result in HTML format expected to contain a single HTML table
- * - Convert the HTML table to Spreadsheet rows and cells and merge them to the dataSheet
- *
- * @author Patrick Refondini
- */
+  * Encapsulate logic and external libraries dependencies required to produce XLS spreadsheet reports.
+  * General supported workflow:
+  *
+  * - Take a Workbook containing a dataSheet and a parameterSheet
+  * - Extract parameterSheet XQuery name and parameters
+  * - Obtain XQuery result in HTML format expected to contain a single HTML table
+  * - Convert the HTML table to Spreadsheet rows and cells and merge them to the dataSheet
+  *
+  * @author Patrick Refondini
+  */
 object SpreadSheetBuilder {
 
   // ==================================================================
   //                            Constants
   // ==================================================================
 
-  val Col0 = 0; val Col1 = 1; val Col2 = 2
-  val Row0 = 0; val Row1 = 1
+  val Col0 = 0
+  val Col1 = 1
+  val Col2 = 2
+  val Row0 = 0
+  val Row1 = 1
 
   val DateCssClassName = "date"
   val NumericCssClassName = "num"
@@ -46,13 +49,13 @@ object SpreadSheetBuilder {
   val sdf = new java.text.SimpleDateFormat("yyyy-MM-dd")
 
   /**
-   * Creates Workbook from provided input stream.
-   */
+    * Creates Workbook from provided input stream.
+    */
   def getWorkbook(workBookStream: InputStream): Workbook = WorkbookFactory.create(workBookStream)
 
   /**
-   * Get the xquery file name defined in the Workbook `wb`
-   */
+    * Get the xquery file name defined in the Workbook `wb`
+    */
   def getXQueryFileName(wb: Workbook): String = {
     wb.getSheet(XQueryFileNameCellRef.getSheetName)
       .getRow(XQueryFileNameCellRef.getRow)
@@ -61,8 +64,8 @@ object SpreadSheetBuilder {
   }
 
   /**
-   * Adds user info to Workbook sheets footers.
-   */
+    * Adds user info to Workbook sheets footers.
+    */
   def insertWorkBookUserDetails(wb: Workbook, userDetails: Identity): Unit = {
 
     // dateTimeFormat information could be obtained within userDetails or 
@@ -79,15 +82,15 @@ object SpreadSheetBuilder {
   }
 
   /**
-   * Inserts page x / n at footer right position of all Workbook
-   * sheet appending to existing content if any (useful for
-   * templates update). x: current page, n: total number of pages.
-   *
-   * Note: Could not find common org.apache.poi.ss.usermodel way
-   * to set page numbers! Indeed common interface:
-   * <code>org.apache.poi.ss.usermodel.HeaderFooter</code>
-   * does not provide page() and numPages() in POI 3.10-FINAL
-   */
+    * Inserts page x / n at footer right position of all Workbook
+    * sheet appending to existing content if any (useful for
+    * templates update). x: current page, n: total number of pages.
+    *
+    * Note: Could not find common org.apache.poi.ss.usermodel way
+    * to set page numbers! Indeed common interface:
+    * <code>org.apache.poi.ss.usermodel.HeaderFooter</code>
+    * does not provide page() and numPages() in POI 3.10-FINAL
+    */
   def insertWorkBookPageNumbers(wb: Workbook): Unit = {
 
     for (i <- 0 until wb.getNumberOfSheets) {
@@ -106,8 +109,8 @@ object SpreadSheetBuilder {
   }
 
   /**
-   * Updates workbook `wb` parameter sheet with `queryString` values.
-   */
+    * Updates workbook `wb` parameter sheet with `queryString` values.
+    */
   def updateParameterWorkBook(wb: Workbook, queryString: Map[String, Seq[String]]): Unit = {
 
     Logger.debug("SpreadSheetBuilder.updateParameterWorkBook called.")
@@ -180,10 +183,10 @@ object SpreadSheetBuilder {
   }
 
   /**
-   * Merge `htmlTable` string expected to contain a simple HTML
-   * document containing a single HTML table within the provided
-   * `wb` Workbook first sheet.
-   */
+    * Merge `htmlTable` string expected to contain a simple HTML
+    * document containing a single HTML table within the provided
+    * `wb` Workbook first sheet.
+    */
   def mergeHtmlTable(wb: Workbook, htmlTable: String): Unit = {
 
     Logger.debug("SpreadSheetBuilder.mergeHtmlTable called.")
@@ -200,16 +203,16 @@ object SpreadSheetBuilder {
 
     // By convention the resultDataStartCellRef is considered to be on the first sheet
     val dataSheet = wb.getSheetAt(0)
-    
+
     // Make use of a temporarySheet to perform formulas references adjustments 
     // using row shifting without affecting dataSheet formulas we want to keep
     // references untouched (Header totals for instance).
     val temporarySheet = wb.cloneSheet(0)
-    
+
     // Get the first row as example
     val templateRow = dataSheet.getRow(resultDataStartCellRef.getRow)
     //Logger.debug(s"templateRow last cell num = ${templateRow.getLastCellNum()}");
-    
+
     import scala.collection.JavaConversions._
 
     // Parse report HTML table result as org.jsoup.nodes.Document
@@ -230,10 +233,10 @@ object SpreadSheetBuilder {
     // ================================================================
     // ==== Deal with formula - START
     // ================================================================
-    
+
     var rowIdxFormulaPass: Integer = resultDataStartCellRef.getRow()
     var maxCellIdxFormulaPass: Integer = 0
-    
+
     // Index used to check for last loop
     var currFormulaPassIdx = 0
 
@@ -242,17 +245,17 @@ object SpreadSheetBuilder {
 
       var cellIdxFormulaPass: Integer = resultDataStartCellRef.getCol.toInt
       var nbColWithoutFormula = 0
-      
+
       // Always create row at start position, it will be shifted down a position afterward
       val dataRow = temporarySheet.createRow(resultDataStartCellRef.getRow)
 
       // Loop on HTML table result row columns
       for (cell <- row.select("td")) {
-    	  val currSheetCell = dataRow.createCell(cellIdxFormulaPass)
-    	  currSheetCell.setCellValue("SHOULD NEVER BE VISIBLE :: TO BE DELETED WITH temporarySheet :: " + cell.text)
-    	  cellIdxFormulaPass = cellIdxFormulaPass + 1
+        val currSheetCell = dataRow.createCell(cellIdxFormulaPass)
+        currSheetCell.setCellValue("SHOULD NEVER BE VISIBLE :: TO BE DELETED WITH temporarySheet :: " + cell.text)
+        cellIdxFormulaPass = cellIdxFormulaPass + 1
       }
-      
+
       // keep looping while MAX_COL_WITHOUT_FORMULA not reached or last template columns reached
       while (nbColWithoutFormula < MAX_COL_WITHOUT_FORMULA && cellIdxFormulaPass < templateRow.getLastCellNum) {
 
@@ -276,21 +279,21 @@ object SpreadSheetBuilder {
         }
         // Go a column forward
         cellIdxFormulaPass = cellIdxFormulaPass + 1
-      }      
+      }
 
       currFormulaPassIdx = currFormulaPassIdx + 1
-      
+
       // Do not shift row on last loop
       if (currFormulaPassIdx < dataTableTrCollection.length) {
-    	  // Perform shifting on temporarySheet to preserve dataSheet from side effect on "static" formulas
-    	  temporarySheet.shiftRows(resultDataStartCellRef.getRow, rowIdxFormulaPass, 1)
+        // Perform shifting on temporarySheet to preserve dataSheet from side effect on "static" formulas
+        temporarySheet.shiftRows(resultDataStartCellRef.getRow, rowIdxFormulaPass, 1)
       }
-      
+
       if (cellIdxFormulaPass > maxCellIdxFormulaPass) maxCellIdxFormulaPass = cellIdxFormulaPass
-      rowIdxFormulaPass = rowIdxFormulaPass + 1 
-      
+      rowIdxFormulaPass = rowIdxFormulaPass + 1
+
     }
-    
+
     // ================================================================
     // ==== Deal with formula - END
     // ================================================================    
@@ -298,10 +301,10 @@ object SpreadSheetBuilder {
     // ================================================================
     // ==== Deal with data - START
     // ================================================================
-    
+
     var rowIdx: Integer = resultDataStartCellRef.getRow()
-    var maxCellIdx: Integer = 0    
-    
+    var maxCellIdx: Integer = 0
+
     // Loop on HTML table result rows
     for (row <- dataTableTrCollection) {
 
@@ -310,40 +313,40 @@ object SpreadSheetBuilder {
 
       // Create row on dataSheet for each HTML table result row
       val dataRow = dataSheet.createRow(rowIdx)
-      
+
       // Loop on HTML table result row columns
       for (cell <- row.select("td")) {
-       
+
         val currSheetCell = dataRow.createCell(cellIdx)
-        
+
         if (!cell.text.isEmpty) {
           // Cell type is defined after td class names.
           // Currently supported names for type specific {"date","num"} 
           cell.className() match {
-            case DateCssClassName => 
+            case DateCssClassName =>
               currSheetCell.setCellValue(sdf.parse(cell.text))
-            case NumericCssClassName => 
+            case NumericCssClassName =>
               currSheetCell.setCellValue(java.lang.Double.parseDouble(cell.text))
-            case _ => 
+            case _ =>
               currSheetCell.setCellValue(cell.text)
           }
         } else {
           currSheetCell.setCellValue(cell.text)
         }
-        
+
         // Copy example row cells style
         val cellStyle = templateRow.getCell(cellIdx).getCellStyle
-       
+
         currSheetCell.setCellStyle(cellStyle)
         cellIdx = cellIdx + 1
-        
+
       }
 
-      
+
       // ==============================================================
       // Proceed with formulas columns if any
       // ==============================================================
-      
+
       // keep doing while MAX_NO_FORMULA_FOUND reached
       while (nbColWithoutFormula < MAX_COL_WITHOUT_FORMULA && cellIdx < templateRow.getLastCellNum) {
 
@@ -380,21 +383,22 @@ object SpreadSheetBuilder {
       if (cellIdx > maxCellIdx) maxCellIdx = cellIdx
       rowIdx = rowIdx + 1
     }
-    
+
     // Get rid of the temporary fake sheet.
     wb.removeSheetAt(wb.getSheetIndex(temporarySheet))
-    
+
     // ================================================================
     // ==== Deal with data - END
     // ================================================================
 
-    
+
     // ================================================================
     // ==== Deal with Print - START
     // ================================================================
-    
+
     val maxColIdx = maxCellIdx
     val maxRowIdx = rowIdx
+
 
     definePrintRange(wb, resultDataStartCellRef, maxColIdx, maxRowIdx)
     //Logger.debug(s"maxColIdx = ${maxColIdx}, maxRowIdx = ${maxRowIdx}")
@@ -402,7 +406,7 @@ object SpreadSheetBuilder {
     // ================================================================
     // ==== Deal with Print - END
     // ================================================================    
-    
+
     // Disabled autoSizeColumn upon user request. Full fixed layout control on 
     // template is prefered to unpredictable dynamic resize.
     // Note: Text wrap can be defined on template example data row and will be preserved for dynamic data.
@@ -417,32 +421,33 @@ object SpreadSheetBuilder {
   }
 
   /**
-   * Deal with print range for dataSheet adapting from already existing print range.
-   */
+    * Deal with print range for dataSheet adapting from already existing print range.
+    */
   def definePrintRange(wb: Workbook, resultDataStartCellRef: CellReference, maxColIdx: Int, maxRowIdx: Int): Unit = {
+    for (i <- 0 until wb.getNumberOfSheets) {
+      // Only deal with sheets that do not have an already defined print area
+      if (wb.getPrintArea(i) == null) {
 
-    val printArea = wb.getPrintArea(0)
-    val printRange = printArea.split("!")(1)
-    //Logger.debug(s"printArea: ${printArea}, printRange: ${printRange}")
+        val printRangeStart = "$A$1"
+        val printRangeStartCellRef = new CellReference(printRangeStart)
 
-    val printRangeStart = printRange.split(":")(0)
-    val printRangeStartCellRef = new CellReference(printRangeStart)
-
-    // Compute resultDataEndCellAbsRef column position
-    val endCol = if (printRangeStartCellRef.getCol > resultDataStartCellRef.getCol) {
-      maxColIdx - (printRangeStartCellRef.getCol - resultDataStartCellRef.getCol)
-    } else {
-      maxColIdx + (resultDataStartCellRef.getCol - printRangeStartCellRef.getCol)
+        // Compute resultDataEndCellAbsRef column position
+        val endCol = if (printRangeStartCellRef.getCol > resultDataStartCellRef.getCol) {
+          maxColIdx - (printRangeStartCellRef.getCol - resultDataStartCellRef.getCol)
+        } else {
+          maxColIdx + (resultDataStartCellRef.getCol - printRangeStartCellRef.getCol)
+        }
+        // Define new print range end position
+        val resultDataEndCellAbsRef = new CellReference(maxRowIdx - 1, endCol, AbsRow, AbsCol)
+        val newPrintRange = printRangeStart + ":" + resultDataEndCellAbsRef.formatAsString()
+        wb.setPrintArea(i, newPrintRange)
+      }
     }
-    // Define new print range end position
-    val resultDataEndCellAbsRef = new CellReference(maxRowIdx - 1, endCol, AbsRow, AbsCol)
-    val newPrintRange = printRangeStart + ":" + resultDataEndCellAbsRef.formatAsString()
-    wb.setPrintArea(0, newPrintRange)
   }
 
   /**
-   * HSSF and XSSF compatible formulas evaluation.
-   */
+    * HSSF and XSSF compatible formulas evaluation.
+    */
   def evaluateAllFormulaCells(wb: Workbook): Unit = {
     val evaluator = wb.getCreationHelper.createFormulaEvaluator()
     for (i <- 0 until wb.getNumberOfSheets) {
@@ -451,9 +456,9 @@ object SpreadSheetBuilder {
         for (cell <- row) {
           if (cell.getCellType == Cell.CELL_TYPE_FORMULA) {
             try {
-            	evaluator.evaluateFormulaCell(cell)
+              evaluator.evaluateFormulaCell(cell)
             } catch {
-            	case e: Throwable =>
+              case e: Throwable =>
                 Logger.warn(s"Problem evaluating formulae for cell row ${cell.getRowIndex}, column ${cell.getColumnIndex} : ${e.getMessage}")
             }
           }
@@ -465,11 +470,12 @@ object SpreadSheetBuilder {
 }
 
 /**
- *  Exception thrown when the expected HTML table is not found within the HTML query result.
- */
+  * Exception thrown when the expected HTML table is not found within the HTML query result.
+  */
 case class HtmlTableNotFoundException(message: String = null, cause: Throwable = null) extends Exception(message, cause)
+
 /**
- *  Exception thrown when the HTML result contains more than a single expected HTML table.
- */
+  * Exception thrown when the HTML result contains more than a single expected HTML table.
+  */
 case class MoreThanOneHtmlTableFoundException(message: String = null, cause: Throwable = null) extends Exception(message, cause)
 
