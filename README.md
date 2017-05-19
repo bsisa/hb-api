@@ -13,6 +13,9 @@ HyperBird API services
   If not already install check for it at: http://openjdk.java.net/ and  http://java.oracle.com
 * SBT - Simple Build Tool
   http://www.scala-sbt.org/release/docs/Getting-Started/Setup.html
+* JNotify 
+  http://jnotify.sourceforge.net/
+
 
 ## Build procedure ##
 
@@ -40,11 +43,11 @@ Go to hb-api-X.Y.Z/bin directory:
 
     cd hb-api-X.Y.Z/bin
 
-Run the appliation (Linux, MacOSX):
+Run the application (Linux, MacOSX):
 
     ./hb-api 
 
-Run the appliation (Windows):
+Run the application (Windows):
 
     hb-api.bat
 
