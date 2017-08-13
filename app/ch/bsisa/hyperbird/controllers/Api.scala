@@ -934,5 +934,26 @@ object Api extends Controller with securesocial.core.SecureSocial {
     }
   }
 
+  /**
+    * Gets ELFIN corresponding to this collectionId and elfinId
+    */
+  def getAnnexesOnlyReport(reportCollectionId: String, reportElfinId: String) = SecuredAction(ajaxCall = true).async { request =>
+
+    // Flatten Map[String, Seq[String]] to a Map[String, String]
+    val queryStringMap: Map[String, String] = request.queryString.map { case (key, value) => key -> value.mkString }
+    val queryString: Option[String] = if (request.rawQueryString != null && request.rawQueryString.nonEmpty) Option(request.rawQueryString) else None
+    Logger.debug(s"getReport(reportCollectionId=${reportCollectionId}, reportElfinId=${reportElfinId}) called, queryString = ${queryString.getOrElse("")}")
+
+    XQueryWSHelper.find(WSQueries.elfinQuery(reportCollectionId, reportElfinId)).map { reportElfin =>
+
+      val reportFile = ReportBuilder.writeAnnexeReport(reportElfin, queryString, Some(queryStringMap))
+      if (reportFile == null) {
+        val e= new IllegalStateException()
+        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.getReport() - Failed to perform find operation for Elfin with ID_G: ${reportCollectionId}, Id: ${reportElfinId}: ${e}"))
+      } else {
+        Ok.sendFile(reportFile.file)
+      }
+    }
+  }
 }
 

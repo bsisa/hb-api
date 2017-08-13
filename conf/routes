@@ -86,6 +86,9 @@ GET      /api/melfin/spreadsheet/:fileName                                 ch.bs
 # Generates and return reports based on the definition
 GET      /api/melfin/report/:reportCollectionId/:reportElfinId             ch.bsisa.hyperbird.controllers.Api.getReport(reportCollectionId, reportElfinId)
 
+# Generates and return reports based on the definition
+GET      /api/melfin/report_annexes/:reportCollectionId/:reportElfinId     ch.bsisa.hyperbird.controllers.Api.getAnnexesOnlyReport(reportCollectionId, reportElfinId)
+
 # Allow searching an ELFIN per Id accross all collections
 GET      /api/melfin/collections/:elfinId                                  ch.bsisa.hyperbird.controllers.Api.getElfinById(elfinId)
 
