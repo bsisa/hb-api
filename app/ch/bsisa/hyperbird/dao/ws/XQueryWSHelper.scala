@@ -218,7 +218,7 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
   //def runXQueryFile(xqueryFileName: String, queryString: Option[String])(implicit dbConf: DbConfig, collectionsConf: CollectionsConfig): Future[Response] = {
   //val query = WSQueries.runXQueryFile(xqueryFileName, queryString)(dbConf, collectionsConf)
   def runXQueryFile(xqueryFileName: String, queryString: Option[String]): Future[Response] = {
-    val query = WSQueries.runXQueryFile(xqueryFileName, queryString)
+    val query = WSQueries.getXQueryFileURI(xqueryFileName, queryString)
     executeQuery(query)
     //     val responseFuture: Future[Response] = WS.url(query).withAuth(dbConf.userName, dbConf.password, AuthScheme.BASIC).withHeaders(("Content-Type", "application/xquery")).get
     //     responseFuture     
@@ -248,7 +248,7 @@ object XQueryWSHelper extends Controller with QueriesProcessor with Updates {
    * `fileName` must be an XQuery file located in `CollectionsConfig.xqueriesCollectionId` collection
    */
   def getFile(fileName: String): Future[Response] = {
-    val query = WSQueries.runXQueryFile(xqueryFileName = fileName, queryString = None)
+    val query = WSQueries.getXQueryFileURI(xqueryFileName = fileName, queryString = None)
     val responseFuture: Future[Response] = WS.url(query).withHeaders(("Content-Type", "application/xquery")).get
     // Keep working with default. Kept as syntax reminder.
     //val responseFuture: Future[Response] = WS.url(query).withHeaders(("Content-Type", "application/xquery"),("charset","UTF-8")).get

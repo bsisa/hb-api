@@ -96,7 +96,7 @@ object WSQueries extends Queries {
    * Returns a query to execute a given xquery file by name
    * TODO: Add additional optional `wrapResult` parameter set to `false` by default and deprecate or delete runWrappedXQueryFile noise
    */
-  def runXQueryFile(xqueryFileName: String, queryString: Option[String])(implicit dbConf: DbConfig, collectionsConf: CollectionsConfig): String = {
+  def getXQueryFileURI(xqueryFileName: String, queryString: Option[String])(implicit dbConf: DbConfig, collectionsConf: CollectionsConfig): String = {
     val baseQuery = s"""${dbConf.protocol}${dbConf.hostName}:${dbConf.port}${dbConf.restPrefix}${dbConf.databaseName}/${collectionsConf.xqueriesCollectionId}/${xqueryFileName}?_howmany=${highPagingLimit}&_wrap=${wrap}"""
     val query = queryString match {
       case Some(queryString) => baseQuery + s"&${queryString}"

@@ -128,7 +128,7 @@ object GeoXmlDAO {
           val queryString = s"""&startIndex=${from}&maxNbResults=${maxResults}&path=${path}&xpath=${xpath}&orderBy=${orderBy}"""
 
           // Sequential blocking calls - slow throughput but may avoid database overflow when no back pressure is available
-          val futureElfins = XQueryWSHelper.queryElfins(WSQueries.runXQueryFile(xqueryFileName, Some(queryString)))
+          val futureElfins = XQueryWSHelper.queryElfins(WSQueries.getXQueryFileURI(xqueryFileName, Some(queryString)))
           val elfins = Await.result(futureElfins, 1 minutes)
 
           // Parallel non blocking high throughput - may overflow database when no back pressure is available
