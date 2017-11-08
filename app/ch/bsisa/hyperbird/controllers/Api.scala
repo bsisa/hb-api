@@ -356,8 +356,8 @@ object Api extends Controller with securesocial.core.SecureSocial {
         // Merge HTML table query result with workbook datasheet =========================================
         SpreadSheetBuilder.mergeHtmlTable(wb, reportDynamicContent)
 
-        SpreadSheetBuilder.insertWorkBookUserDetails(wb, request.user)
-        SpreadSheetBuilder.insertWorkBookPageNumbers(wb)
+        // SpreadSheetBuilder.insertWorkBookUserDetails(wb, request.user)
+        // SpreadSheetBuilder.insertWorkBookPageNumbers(wb)
         SpreadSheetBuilder.evaluateAllFormulaCells(wb)
 
         // Write workbook object back to an outputstream =================================================
