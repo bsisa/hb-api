@@ -1,6 +1,7 @@
 package ch.bsisa.hyperbird.report
 
-import ch.bsisa.hyperbird.Implicits._
+import play.api.Play
+
 import scala.sys.process._
 
 /**
@@ -37,4 +38,20 @@ object PdfFileMergingHelper {
     exitCode
   }
 
+}
+
+object PdfFileWatermarkHelper {
+  private val CmdInstruction = "background"
+  private val OutputInstruction = "output"
+
+  def stampPdfFile(inputFilePath: String, outputFilePath: String, watermarkName:String)(implicit reportConfig: ReportConfig) : Int = {
+
+    val watermarkResource = s"/conf/resources/reports/additions/$watermarkName.pdf"
+    val stamp = Play.current.getFile(watermarkResource).getAbsolutePath
+    val cmdSeq = reportConfig.pdfMergingPath +: Seq(inputFilePath) :+ CmdInstruction :+ stamp :+ OutputInstruction :+ outputFilePath
+
+    println(s">>>> cmdSeq = " + cmdSeq.toString().substring(5).replaceAll(",", " "))
+
+    Process(cmdSeq).!
+  }
 }

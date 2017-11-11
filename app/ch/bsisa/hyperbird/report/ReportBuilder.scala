@@ -17,20 +17,21 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
 
 /**
- * PDF report builder based on wkhtmltopdf
- */
+  * PDF report builder based on wkhtmltopdf
+  */
 object ReportBuilder {
 
   val REPORT_TITLE_QUERY_PARAM_NAME = "reportTitle"
   val REPORT_FILENAME_PREFIX_QUERY_PARAM_NAME = "reportFileNamePrefix"
   val REPORT_HEADER_DYNAMIC_PARAMETER_1_QUERY_PARAM_NAME = "reportHeaderParam1"
   val REPORT_HEADER_DYNAMIC_PARAMETER_2_QUERY_PARAM_NAME = "reportHeaderParam2"
+  val REPORT_HEADER_WATERMARK_PARAM_NAME = "watermark"
   val REPORT_CALLER_ELFIN_ID = "id"
   val REPORT_CALLER_ELFIN_ID_G = "col"
 
   /**
-   * Renders template with three parameters by name to String for wkhtmltopdf to process
-   */
+    * Renders template with three parameters by name to String for wkhtmltopdf to process
+    */
   def renderTemplate[A](templateName: String, data: A, reportTitle: String, headerMessage: String): String = {
     val ru = scala.reflect.runtime.universe
     val m = ru.runtimeMirror(getClass.getClassLoader)
@@ -39,8 +40,8 @@ object ReportBuilder {
   }
 
   /**
-   * Renders template with two parameters by name to String for wkhtmltopdf to process
-   */
+    * Renders template with two parameters by name to String for wkhtmltopdf to process
+    */
   def renderTemplate[A](templateName: String, data: A, reportTitle: String): String = {
     val ru = scala.reflect.runtime.universe
     val m = ru.runtimeMirror(getClass.getClassLoader)
@@ -49,8 +50,8 @@ object ReportBuilder {
   }
 
   /**
-   * Renders template with a single parameter by name to String for wkhtmltopdf to process
-   */
+    * Renders template with a single parameter by name to String for wkhtmltopdf to process
+    */
   def renderTemplate(templateName: String, reportTitle: String): String = {
     val ru = scala.reflect.runtime.universe
     val m = ru.runtimeMirror(getClass.getClassLoader)
@@ -60,14 +61,15 @@ object ReportBuilder {
 
   /**
     * Resolves the report parameters
-    * @param reportElfin
-    * @param queryStringMapOption
+    *
+    * @param reportElfin The elfin containing the report definition
+    * @param queryStringMapOption The query string
     * @return
     */
 
-  def getReportParameters(reportElfin: ELFIN, queryStringMapOption: Option[Map[String, String]] = None):(String, String) = queryStringMapOption match {
+  def getReportParameters(reportElfin: ELFIN, queryStringMapOption: Option[Map[String, String]] = None): (String, String) = queryStringMapOption match {
     case Some(queryStringMap) =>
-      Logger.debug(s"ReportBuilder.writeReport: queryStringMap = ${queryStringMap}")
+      Logger.debug(s"ReportBuilder.writeReport: queryStringMap = $queryStringMap")
       val reportFileNamePrefix = queryStringMap.get(REPORT_FILENAME_PREFIX_QUERY_PARAM_NAME) match {
         case Some(reportFileNamePrefix) => reportFileNamePrefix
         case None => reportElfin.CARACTERISTIQUE.get.CAR5.get.VALEUR.get
@@ -91,7 +93,7 @@ object ReportBuilder {
     */
   def writeAnnexeReport(reportElfin: ELFIN, queryString: Option[String], queryStringMapOption: Option[Map[String, String]] = None)
                        (implicit reportConfig: ReportConfig, apiConfig: ch.bsisa.hyperbird.ApiConfig): TemporaryFile = {
-    val reportParams = getReportParameters( reportElfin, queryStringMapOption)
+    val reportParams = getReportParameters(reportElfin, queryStringMapOption)
 
     // Optional identity of the ELFIN data source calling the report
     val callerId = queryStringMapOption.flatMap(_.get(REPORT_CALLER_ELFIN_ID))
@@ -104,24 +106,25 @@ object ReportBuilder {
     // using the Option nature of dyn res.
     // Perform dynamic merging if caller Id, ID_G are available.
     val reportWithDynTempResultOpt = if (callerId.isDefined && callerID_G.isDefined) {
-      Logger.debug(s">>>> CALLER: ID_G/Id = ${callerId}/${callerID_G}" );
+      Logger.debug(s">>>> CALLER: ID_G/Id = $callerId/$callerID_G")
       val futureFilepathsOptToMerge = ReportDAO.getPdfAnnexPathsToMerge(elfinId = callerId.get, elfinID_G = callerID_G.get)
       val res =
-        futureFilepathsOptToMerge map { _.map { filepathsToMerge =>
-          val filepathsToMergeBefore = filepathsToMerge._1
-          val filepathsToMergeAfter = filepathsToMerge._2
+        futureFilepathsOptToMerge map {
+          _.map { filepathsToMerge =>
+            val filepathsToMergeBefore = filepathsToMerge._1
+            val filepathsToMergeAfter = filepathsToMerge._2
 
-          // Merge files
-          val inputFilesAbsPathNameList = filepathsToMergeBefore ++ filepathsToMergeAfter
-          // Create empty temporary file for PDF report content including dynamic outcome.
-          val reportWithDynTempResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))
-          val mergeExitCode = PdfFileMergingHelper.mergePdfFiles(inputFilesAbsPathNameList, reportWithDynTempResult.file.getCanonicalPath)
-          if (mergeExitCode != 0) {
-            Logger.error(s"ReportBuilder.writeReport: Failure while merging PDF file: mergePdfFiles exit code = ${mergeExitCode}")
+            // Merge files
+            val inputFilesAbsPathNameList = filepathsToMergeBefore ++ filepathsToMergeAfter
+            // Create empty temporary file for PDF report content including dynamic outcome.
+            val reportWithDynTempResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))
+            val mergeExitCode = PdfFileMergingHelper.mergePdfFiles(inputFilesAbsPathNameList, reportWithDynTempResult.file.getCanonicalPath)
+            if (mergeExitCode != 0) {
+              Logger.error(s"ReportBuilder.writeReport: Failure while merging PDF file: mergePdfFiles exit code = $mergeExitCode")
+            }
+            Logger.debug(s">>>> reportWithDynTempResult at ${reportWithDynTempResult.file.getCanonicalPath}")
+            reportWithDynTempResult
           }
-          Logger.debug(s">>>> reportWithDynTempResult at ${reportWithDynTempResult.file.getCanonicalPath}")
-          reportWithDynTempResult
-        }
         }
       import scala.concurrent.duration._
       val tempRes = Await.result(res, 1 minutes)
@@ -149,13 +152,13 @@ object ReportBuilder {
           // Merge file at end
           val inputFilesAbsPathNameList =
             reportWithDynTempResultOpt match {
-              case Some(reportWithDynTempResult) =>  Seq(reportWithDynTempResult.file.getCanonicalPath, file.getCanonicalPath)
+              case Some(reportWithDynTempResult) => Seq(reportWithDynTempResult.file.getCanonicalPath, file.getCanonicalPath)
               case None => Seq(emptyFile.file.getCanonicalPath, file.getCanonicalPath)
             }
           val tempMergedResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))
           val mergeExitCode = PdfFileMergingHelper.mergePdfFiles(inputFilesAbsPathNameList, tempMergedResult.file.getCanonicalPath)
           if (mergeExitCode != 0) {
-            Logger.error(s"ReportBuilder.writeReport: Failure while merging PDF file: mergePdfFiles exit code = ${mergeExitCode}")
+            Logger.error(s"ReportBuilder.writeReport: Failure while merging PDF file: mergePdfFiles exit code = $mergeExitCode")
           }
           tempMergedResult
         }
@@ -177,17 +180,16 @@ object ReportBuilder {
           val inputFilesAbsPathNameList =
             mergedWithPdfIncludeLastFileOpt match {
               case Some(mergedWithPdfIncludeLastFile) => Seq(file.getCanonicalPath, mergedWithPdfIncludeLastFile.file.getCanonicalPath)
-              case None => {
+              case None =>
                 reportWithDynTempResultOpt match {
-                  case Some(reportWithDynTempResult) =>  Seq(file.getCanonicalPath, reportWithDynTempResult.file.getCanonicalPath)
+                  case Some(reportWithDynTempResult) => Seq(file.getCanonicalPath, reportWithDynTempResult.file.getCanonicalPath)
                   case None => Seq(file.getCanonicalPath, emptyFile.file.getCanonicalPath)
                 }
-              }
             }
           val tempMergedResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))
           val mergeExitCode = PdfFileMergingHelper.mergePdfFiles(inputFilesAbsPathNameList, tempMergedResult.file.getCanonicalPath)
           if (mergeExitCode != 0) {
-            Logger.error(s"ReportBuilder.writeReport: Failure while merging PDF file: mergePdfFiles exit code = ${mergeExitCode}")
+            Logger.error(s"ReportBuilder.writeReport: Failure while merging PDF file: mergePdfFiles exit code = $mergeExitCode")
           }
           tempMergedResult
         }
@@ -200,41 +202,39 @@ object ReportBuilder {
     // Return merged documents if applicable and available otherwise return first generated PDF unchanged
     mergedWithPdfIncludeFirstFileOpt match {
       case Some(mergedWithPdfIncludeFirstFile) => mergedWithPdfIncludeFirstFile // Built last it contains report content, dynamic includes and both static includes depending on their availability.
-      case None => {
+      case None =>
         mergedWithPdfIncludeLastFileOpt match {
           case Some(mergedWithPdfIncludeLastFile) => mergedWithPdfIncludeLastFile
-          case None => {
+          case None =>
             reportWithDynTempResultOpt match {
               case Some(reportWithDynTempResult) => reportWithDynTempResult
               case None => emptyFile
             }
-          }
         }
-      }
     }
   }
 
-    /**
-   * Produces a PDF report given a report description `reportElfin`in geoXml ELFIN format
-   * and optional raw HTTP GET query string to provide additional dynamic parameters to
-   * XQuery referred to in ELFIN report description.
-   *
-   * Example report description in ELFIN format:
-   * <ELFIN Id="xxx" ID_G="xxx" CLASSE="RAPPORT" GROUPE="" TYPE="ACTIVITE" NATURE="Flux">
-   * (...)
-   * <CARACTERISTIQUE>
-   * <CAR1 NOM="header" UNITE="reference" VALEUR="views.html.reports.defaultHeader"/>
-   * <CAR2 NOM="content" UNITE="reference" VALEUR="views.html.reports.defaultBody"/>
-   * <CAR3 NOM="footer" UNITE="reference" VALEUR="views.html.reports.defaultFooter"/>
-   * <CAR4 NOM="query" UNITE="reference" VALEUR="myReportXQuery.xq"/>
-   * <CAR5 NOM="filename" UNITE="name" VALEUR="FriendlyFileNamePrefix"/>
-   * <CAR6 NOM="reportTitle" UNITE="name" VALEUR="The Report Title"/>
-   * <CALCUL/>
-   * </CARACTERISTIQUE>
-   * (...)
-   * </ELFIN>
-   *
-   */
+  /**
+    * Produces a PDF report given a report description `reportElfin`in geoXml ELFIN format
+    * and optional raw HTTP GET query string to provide additional dynamic parameters to
+    * XQuery referred to in ELFIN report description.
+    *
+    * Example report description in ELFIN format:
+    * <ELFIN Id="xxx" ID_G="xxx" CLASSE="RAPPORT" GROUPE="" TYPE="ACTIVITE" NATURE="Flux">
+    * (...)
+    * <CARACTERISTIQUE>
+    * <CAR1 NOM="header" UNITE="reference" VALEUR="views.html.reports.defaultHeader"/>
+    * <CAR2 NOM="content" UNITE="reference" VALEUR="views.html.reports.defaultBody"/>
+    * <CAR3 NOM="footer" UNITE="reference" VALEUR="views.html.reports.defaultFooter"/>
+    * <CAR4 NOM="query" UNITE="reference" VALEUR="myReportXQuery.xq"/>
+    * <CAR5 NOM="filename" UNITE="name" VALEUR="FriendlyFileNamePrefix"/>
+    * <CAR6 NOM="reportTitle" UNITE="name" VALEUR="The Report Title"/>
+    * <CALCUL/>
+    * </CARACTERISTIQUE>
+    * (...)
+    * </ELFIN>
+    *
+    */
   def writeReport(reportElfin: ELFIN, queryString: Option[String], queryStringMapOption: Option[Map[String, String]] = None)(implicit reportConfig: ReportConfig, apiConfig: ch.bsisa.hyperbird.ApiConfig): Future[TemporaryFile] = {
 
     // ==============================================================
@@ -244,6 +244,7 @@ object ReportBuilder {
     val contentTemplateName = reportElfin.CARACTERISTIQUE.get.CAR2.get.VALEUR.get
     val footerTemplateName = reportElfin.CARACTERISTIQUE.get.CAR3.get.VALEUR.get
     val queryFileName = reportElfin.CARACTERISTIQUE.get.CAR4.get.VALEUR.get
+    val reportGroup = reportElfin.GROUPE
 
     // Manage optional header parameters list
     // Optional static
@@ -252,15 +253,16 @@ object ReportBuilder {
     // Optional dynamic
     val headerDynParam1 = queryStringMapOption.flatMap(_.get(REPORT_HEADER_DYNAMIC_PARAMETER_1_QUERY_PARAM_NAME))
     val headerDynParam2 = queryStringMapOption.flatMap(_.get(REPORT_HEADER_DYNAMIC_PARAMETER_2_QUERY_PARAM_NAME))
+    val watermarkName = queryStringMapOption.flatMap(_.get(REPORT_HEADER_WATERMARK_PARAM_NAME))
 
     // This sequence of parameters will be empty if no optional parameters were defined 
-    val headerParams = Seq(staticHeaderMessageOption,headerDynParam1,headerDynParam2).filter( _.isDefined ).map( _.get )
+    val headerParams = Seq(staticHeaderMessageOption, headerDynParam1, headerDynParam2).filter(_.isDefined).map(_.get)
 
     // Get reportTitle, reportFileNamePrefix information from query parameters if available 
     // fallback to default from ELFIN report configuration otherwise.
     // This allow a single complex XQuery to produce reports with different names and titles
     // avoiding XQuery logic duplication 
-    val reportParams = getReportParameters( reportElfin, queryStringMapOption)
+    val reportParams = getReportParameters(reportElfin, queryStringMapOption)
 
     // Optional identity of the ELFIN data source calling the report
     val callerId = queryStringMapOption.flatMap(_.get(REPORT_CALLER_ELFIN_ID))
@@ -275,51 +277,51 @@ object ReportBuilder {
     // ==============================================================
 
     // Additional parameter values
-    val annexesRootFolderPathOpt = if (apiConfig.annexesRootFolder.trim().size > 0) Some(apiConfig.annexesRootFolder) else None
-    val reportWaterMarkElfinRefOpt = ElfinUtil.getElfinCarByName( reportElfin, ReportConfig.CAR_NAME_WATERMARK_ELFIN_REF ).flatMap( _.VALEUR )
+    val annexesRootFolderPathOpt = if (apiConfig.annexesRootFolder.trim().nonEmpty) Some(apiConfig.annexesRootFolder) else None
+    val reportWaterMarkElfinRefOpt = ElfinUtil.getElfinCarByName(reportElfin, ReportConfig.CAR_NAME_WATERMARK_ELFIN_REF).flatMap(_.VALEUR)
 
     // Additional parameter key to value map
     val optionalParamsToQuery = Map(
-    "annexesRootFolderPath" -> annexesRootFolderPathOpt,
-    ReportConfig.CAR_NAME_WATERMARK_ELFIN_REF -> reportWaterMarkElfinRefOpt
+      "annexesRootFolderPath" -> annexesRootFolderPathOpt,
+      ReportConfig.CAR_NAME_WATERMARK_ELFIN_REF -> reportWaterMarkElfinRefOpt
     )
 
-//    // Remove any key -> value where no value has been provided to
-//    val paramsToQuery = optionalParamsToQuery.filter( { case(key,value) => value.isDefined } ).map( { case(key,value) => (key,value.get) } );
-//
-//    // Create augmentedQueryString merging additional parameters to
-//    // existing query string as necessary
-//    // Remark: parameters come from controlled configurations and do not require encoding.
-//    val augmentedQueryString =
-//      // Additional parameters are available
-//      if (paramsToQuery.size > 0) {
-//        val queryStringWithNewParams = queryString match {
-//            // An existing query need to be `augmented`
-//            case Some(qs) =>
-//              val nextParams = for {
-//                (k,v) <- paramsToQuery
-//              } yield {
-//                  s"&${k}=${v}"
-//              }
-//              val finalQueryString = qs + nextParams.mkString
-//              finalQueryString
-//            // No existing query, build one.
-//            case None =>
-//              val params = for {
-//                ((k,v),i) <- paramsToQuery.view.zipWithIndex
-//              } yield {
-//                val paramSep = if (i!=0) {"&"} else {"?"}
-//                paramSep+s"${k}=${v}"
-//              }
-//              params.mkString
-//          }
-//        Some(queryStringWithNewParams)
-//    } else { // No additional parameters are available, return queryString unchanged.
-//      queryString
-//    }
+    //    // Remove any key -> value where no value has been provided to
+    //    val paramsToQuery = optionalParamsToQuery.filter( { case(key,value) => value.isDefined } ).map( { case(key,value) => (key,value.get) } );
+    //
+    //    // Create augmentedQueryString merging additional parameters to
+    //    // existing query string as necessary
+    //    // Remark: parameters come from controlled configurations and do not require encoding.
+    //    val augmentedQueryString =
+    //      // Additional parameters are available
+    //      if (paramsToQuery.size > 0) {
+    //        val queryStringWithNewParams = queryString match {
+    //            // An existing query need to be `augmented`
+    //            case Some(qs) =>
+    //              val nextParams = for {
+    //                (k,v) <- paramsToQuery
+    //              } yield {
+    //                  s"&${k}=${v}"
+    //              }
+    //              val finalQueryString = qs + nextParams.mkString
+    //              finalQueryString
+    //            // No existing query, build one.
+    //            case None =>
+    //              val params = for {
+    //                ((k,v),i) <- paramsToQuery.view.zipWithIndex
+    //              } yield {
+    //                val paramSep = if (i!=0) {"&"} else {"?"}
+    //                paramSep+s"${k}=${v}"
+    //              }
+    //              params.mkString
+    //          }
+    //        Some(queryStringWithNewParams)
+    //    } else { // No additional parameters are available, return queryString unchanged.
+    //      queryString
+    //    }
 
 
-    val augmentedQueryString = buildOrAugmentQueryString( queryString , optionalParamsToQuery )
+    val augmentedQueryString = buildOrAugmentQueryString(queryString, optionalParamsToQuery)
 
 
     // ==============================================================
@@ -340,7 +342,7 @@ object ReportBuilder {
       //val resultData = XML.loadString(respBody)
 
       // Extract CARSET.CAR[@NAME='pageOrientation']/@VALEUR and return whether orientation is portrait or landscape
-      val pageOrientationValueOption = ElfinUtil.getElfinCarByName( reportElfin, ReportConfig.CAR_NAME_PAGE_ORIENTATION ).flatMap( _.VALEUR )
+      val pageOrientationValueOption = ElfinUtil.getElfinCarByName(reportElfin, ReportConfig.CAR_NAME_PAGE_ORIENTATION).flatMap(_.VALEUR)
       val pageOrientation = pageOrientationValueOption match {
         case Some(pageOrientationValue) => if (pageOrientationValue == ReportConfig.CAR_VALUE_PAGE_ORIENTATION_LANDSCAPE) Landscape else Portrait
         case None => Portrait
@@ -351,18 +353,24 @@ object ReportBuilder {
       play.api.libs.Files.writeFile(reportFooterHtmlTempFile.file, renderTemplate(footerTemplateName, reportTitle))
 
       // Render report body to HTML and save it to disk
-      val reportContentHtmlTempFile = new TemporaryFile(java.io.File.createTempFile("hb5ReportContent", ".html"))
-      play.api.libs.Files.writeFile(reportContentHtmlTempFile.file, renderTemplate(contentTemplateName, resultData, reportTitle))
 
+      val reportContentHtmlTempFile: Option[TemporaryFile] = reportGroup.get match {
+        case "AGGREGATION_ONLY" => None
+        case _ => Option(new TemporaryFile(java.io.File.createTempFile("hb5ReportContent", ".html")))
+      }
+
+      if (reportContentHtmlTempFile.isDefined) {
+        play.api.libs.Files.writeFile(reportContentHtmlTempFile.get.file, renderTemplate(contentTemplateName, resultData, reportTitle))
+      }
 
       // If defined, render report header to HTML and save it to disk
-      val pdfOpt : Option[Pdf] = headerTemplateNameCar1Option match {
+      val pdfOpt: Option[Pdf] = headerTemplateNameCar1Option match {
         case Some(htn) =>
           // Render report header to HTML and save it to disk
           val reportHeaderHtmlTempFile = new TemporaryFile(java.io.File.createTempFile("hb5ReportHeader", ".html"))
           // If any report header parameters defined pass them to template
-          if ( headerParams.size > 0 ) {
-            if ( headerParams.size == 1 ) {
+          if (headerParams.nonEmpty) {
+            if (headerParams.size == 1) {
               play.api.libs.Files.writeFile(reportHeaderHtmlTempFile.file, renderTemplate(htn.VALEUR.get, headerParams.head, reportTitle))
               // Configure wkhtmltopdf with header
               Some(Pdf(
@@ -374,7 +382,7 @@ object ReportBuilder {
                   footerHtml := reportFooterHtmlTempFile.file.getAbsolutePath
                 }
               ))
-            } else if ( headerParams.size == 2) {
+            } else if (headerParams.size == 2) {
               play.api.libs.Files.writeFile(reportHeaderHtmlTempFile.file, renderTemplate(htn.VALEUR.get, headerParams.head, headerParams.tail.head, reportTitle))
               // Configure wkhtmltopdf with header
               Some(Pdf(
@@ -407,22 +415,32 @@ object ReportBuilder {
         case None =>
           // Configure wkhtmltopdf without header (useful to gain print space for drawing or stickers specific configurations)
           Some(Pdf(
-              reportConfig.wkhtmltopdfPath,
-              new PdfConfig {
-                orientation := pageOrientation
-                pageSize := "A4"
-                footerHtml := reportFooterHtmlTempFile.file.getAbsolutePath
-              }
+            reportConfig.wkhtmltopdfPath,
+            new PdfConfig {
+              orientation := pageOrientation
+              pageSize := "A4"
+              footerHtml := reportFooterHtmlTempFile.file.getAbsolutePath
+            }
           ))
       }
 
       // Create empty temporary file for PDF report content outcome.
-      val reportContentTempResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))
+      val reportContentTempResult = if (reportContentHtmlTempFile.isDefined) {
+        Option(new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf")))
+      } else {
+        None
+      }
 
       pdfOpt match {
         case Some(pdf) =>
           // Process HTML temporary files to PDF using wkhtmltopdf
-          val exitCode = pdf.run(reportContentHtmlTempFile.file, reportContentTempResult.file)
+
+
+          val exitCode = if (reportContentHtmlTempFile.isDefined) {
+            pdf.run(reportContentHtmlTempFile.get.file, reportContentTempResult.get.file)
+          } else {
+            0
+          }
 
           // If PDF creation succeeded
           if (exitCode == 0) {
@@ -431,25 +449,32 @@ object ReportBuilder {
             // Easily achieved using the Option nature of dyn res.
             // Perform dynamic merging if caller Id, ID_G are available.
             val reportWithDynTempResultOpt = if (callerId.isDefined && callerID_G.isDefined) {
-              Logger.debug(s">>>> CALLER: ID_G/Id = ${callerId}/${callerID_G}" );
+              Logger.debug(s">>>> CALLER: ID_G/Id = $callerId/$callerID_G")
               val futureFilepathsOptToMerge = ReportDAO.getPdfAnnexPathsToMerge(elfinId = callerId.get, elfinID_G = callerID_G.get)
               val res =
-                futureFilepathsOptToMerge map { _.map { filepathsToMerge =>
-                  val filepathsToMergeBefore = filepathsToMerge._1
-                  val filepathsToMergeAfter = filepathsToMerge._2
+                futureFilepathsOptToMerge map {
+                  _.map { filepathsToMerge =>
+                    val filepathsToMergeBefore = filepathsToMerge._1
+                    val filepathsToMergeAfter = filepathsToMerge._2
 
-                  // Merge files 
-                  val inputFilesAbsPathNameList = filepathsToMergeBefore ++ Seq(reportContentTempResult.file.getCanonicalPath) ++ filepathsToMergeAfter
-                  // Create empty temporary file for PDF report content including dynamic outcome.
-                  val reportWithDynTempResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))
-                  val mergeExitCode = PdfFileMergingHelper.mergePdfFiles(inputFilesAbsPathNameList, reportWithDynTempResult.file.getCanonicalPath)
-                  if (mergeExitCode != 0) {
-                    Logger.error(s"ReportBuilder.writeReport: Failure while merging PDF file: mergePdfFiles exit code = ${mergeExitCode}")
+                    // Merge files
+
+                    val inputFilesAbsPathNameList = if (reportContentTempResult.isDefined) {
+                      filepathsToMergeBefore ++ Seq(reportContentTempResult.get.file.getCanonicalPath) ++ filepathsToMergeAfter
+                    } else {
+                      filepathsToMergeBefore ++ filepathsToMergeAfter
+                    }
+
+                    // Create empty temporary file for PDF report content including dynamic outcome.
+                    val reportWithDynTempResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))
+                    val mergeExitCode = PdfFileMergingHelper.mergePdfFiles(inputFilesAbsPathNameList, reportWithDynTempResult.file.getCanonicalPath)
+                    if (mergeExitCode != 0) {
+                      Logger.error(s"ReportBuilder.writeReport: Failure while merging PDF file: mergePdfFiles exit code = $mergeExitCode")
+                    }
+                    Logger.debug(s">>>> reportWithDynTempResult at ${reportWithDynTempResult.file.getCanonicalPath}")
+                    reportWithDynTempResult
                   }
-                  Logger.debug(s">>>> reportWithDynTempResult at ${reportWithDynTempResult.file.getCanonicalPath}")
-                  reportWithDynTempResult
                 }
-              }
               import scala.concurrent.duration._
               val tempRes = Await.result(res, 1 minutes)
               tempRes
@@ -468,15 +493,18 @@ object ReportBuilder {
               val futureTmpRes = ReportDAO.getFirstPdfAnnexe(triplet) map { fileOpt =>
                 fileOpt.map { file =>
                   // Merge file at end
-                  val inputFilesAbsPathNameList =
-                   reportWithDynTempResultOpt match {
-                    case Some(reportWithDynTempResult) =>  Seq(reportWithDynTempResult.file.getCanonicalPath, file.getCanonicalPath)
-                    case None => Seq(reportContentTempResult.file.getCanonicalPath, file.getCanonicalPath)
+                  val inputFilesAbsPathNameList = reportWithDynTempResultOpt match {
+                    case Some(reportWithDynTempResult) => Seq(reportWithDynTempResult.file.getCanonicalPath, file.getCanonicalPath)
+                    case None => if (reportContentTempResult.isDefined) {
+                      Seq(reportContentTempResult.get.file.getCanonicalPath, file.getCanonicalPath)
+                    } else {
+                      Seq(file.getCanonicalPath)
+                    }
                   }
                   val tempMergedResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))
                   val mergeExitCode = PdfFileMergingHelper.mergePdfFiles(inputFilesAbsPathNameList, tempMergedResult.file.getCanonicalPath)
                   if (mergeExitCode != 0) {
-                    Logger.error(s"ReportBuilder.writeReport: Failure while merging PDF file: mergePdfFiles exit code = ${mergeExitCode}")
+                    Logger.error(s"ReportBuilder.writeReport: Failure while merging PDF file: mergePdfFiles exit code = $mergeExitCode")
                   }
                   tempMergedResult
                 }
@@ -497,18 +525,21 @@ object ReportBuilder {
                   // Merge file at beginning
                   val inputFilesAbsPathNameList =
                     mergedWithPdfIncludeLastFileOpt match {
-                    case Some(mergedWithPdfIncludeLastFile) => Seq(file.getCanonicalPath, mergedWithPdfIncludeLastFile.file.getCanonicalPath)
-                    case None => {
-                      reportWithDynTempResultOpt match {
-                        case Some(reportWithDynTempResult) =>  Seq(file.getCanonicalPath, reportWithDynTempResult.file.getCanonicalPath)
-                        case None => Seq(file.getCanonicalPath, reportContentTempResult.file.getCanonicalPath)
-                      }
+                      case Some(mergedWithPdfIncludeLastFile) => Seq(file.getCanonicalPath, mergedWithPdfIncludeLastFile.file.getCanonicalPath)
+                      case None =>
+                        reportWithDynTempResultOpt match {
+                          case Some(reportWithDynTempResult) => Seq(file.getCanonicalPath, reportWithDynTempResult.file.getCanonicalPath)
+                          case None => if(reportContentTempResult.isDefined)
+                            Seq(file.getCanonicalPath, reportContentTempResult.get.file.getCanonicalPath)
+                          else
+                            Seq(file.getCanonicalPath)
+
+                        }
                     }
-                  }
                   val tempMergedResult = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))
                   val mergeExitCode = PdfFileMergingHelper.mergePdfFiles(inputFilesAbsPathNameList, tempMergedResult.file.getCanonicalPath)
                   if (mergeExitCode != 0) {
-                    Logger.error(s"ReportBuilder.writeReport: Failure while merging PDF file: mergePdfFiles exit code = ${mergeExitCode}")
+                    Logger.error(s"ReportBuilder.writeReport: Failure while merging PDF file: mergePdfFiles exit code = $mergeExitCode")
                   }
                   tempMergedResult
                 }
@@ -518,30 +549,39 @@ object ReportBuilder {
               tempRes
             }
 
+
+
             // Return merged documents if applicable and available otherwise return first generated PDF unchanged
-            mergedWithPdfIncludeFirstFileOpt match {
+            val result = mergedWithPdfIncludeFirstFileOpt match {
               case Some(mergedWithPdfIncludeFirstFile) => mergedWithPdfIncludeFirstFile // Built last it contains report content, dynamic includes and both static includes depending on their availability.
-              case None => {
+              case None =>
                 mergedWithPdfIncludeLastFileOpt match {
                   case Some(mergedWithPdfIncludeLastFile) => mergedWithPdfIncludeLastFile
-                  case None => {
+                  case None =>
                     reportWithDynTempResultOpt match {
-                        case Some(reportWithDynTempResult) => reportWithDynTempResult
-                        case None => reportContentTempResult
+                      case Some(reportWithDynTempResult) => reportWithDynTempResult
+                      case None => reportContentTempResult.get
                     }
-                  }
                 }
-              }
             }
+
+            if (watermarkName.isDefined) {
+              val watermarkedFile = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))
+              val temporaryFile = PdfFileWatermarkHelper.stampPdfFile(result.file.getAbsolutePath, watermarkedFile.file.getAbsolutePath, watermarkName.get)
+              watermarkedFile
+            } else {
+              result
+            }
+
           } else {
             // If exitCode for PDF generation is not equal to zero it failed. Do not perform any extra process.
-            Logger.error(s"ReportBuilder.writeReport: Failure while generating PDF file: pdf.run exit code = ${exitCode}")
-            reportContentTempResult
+            Logger.error(s"ReportBuilder.writeReport: Failure while generating PDF file: pdf.run exit code = $exitCode")
+            reportContentTempResult.get
           }
         case None =>
-            // If exitCode for PDF generation is not equal to zero it failed. Do not perform any extra process.
-            Logger.error(s"ReportBuilder.writeReport: Obtained invalid number of header parameters. Should be 0 to 2 maximum.")
-            reportContentTempResult
+          // If exitCode for PDF generation is not equal to zero it failed. Do not perform any extra process.
+          Logger.error(s"ReportBuilder.writeReport: Obtained invalid number of header parameters. Should be 0 to 2 maximum.")
+          reportContentTempResult.get
       }
 
 
@@ -549,8 +589,8 @@ object ReportBuilder {
   }
 
   /**
-   * Reads a binary file reachable at `path` in `Play.current.resourceAsStream` context as base64 String with specified `mimeType`
-   */
+    * Reads a binary file reachable at `path` in `Play.current.resourceAsStream` context as base64 String with specified `mimeType`
+    */
   def encodeImage(path: String, mimeType: String): String = {
     val isOption: Option[InputStream] = Play.current.resourceAsStream(path)
     isOption match {
@@ -567,8 +607,8 @@ object ReportBuilder {
   }
 
   /**
-   * Reads a file reachable at `path` in `Play.current.resourceAsStream` context as String.
-   */
+    * Reads a file reachable at `path` in `Play.current.resourceAsStream` context as String.
+    */
   def readFileToString(path: String): String = {
     val isOption: Option[InputStream] = Play.current.resourceAsStream(path)
     isOption match {
@@ -582,43 +622,47 @@ object ReportBuilder {
 
 
   /**
-   * Builds a new query string from `parameterValueMap` if queryString is empty.
-   * Returns `queryString` unchanged if parameterValueMap is empty.
-   * Returns `queryString` merged with `parameterValueMap` if both contain values.
-   * Returns None if neither `queryString` nor `parameterValueMap` contain value.
-   */
-  def buildOrAugmentQueryString( queryString : Option[String], parameterValueMap : Map[String,Option[String]] ) : Option[String] = {
+    * Builds a new query string from `parameterValueMap` if queryString is empty.
+    * Returns `queryString` unchanged if parameterValueMap is empty.
+    * Returns `queryString` merged with `parameterValueMap` if both contain values.
+    * Returns None if neither `queryString` nor `parameterValueMap` contain value.
+    */
+  def buildOrAugmentQueryString(queryString: Option[String], parameterValueMap: Map[String, Option[String]]): Option[String] = {
 
     // Remove any key -> value where no value has been provided to
-    val paramsToQuery = parameterValueMap.filter( { case(key,value) => value.isDefined } ).map( { case(key,value) => (key,value.get) } );
+    val paramsToQuery: Map[String, String] = parameterValueMap.filter({ case (key, value) => value.isDefined }).map({ case (key, value) => (key, value.get) })
 
     // Create augmentedQueryString merging additional parameters to 
     // existing query string as necessary
     // Remark: parameters come from controlled configurations and do not require encoding.
     val augmentedQueryString =
-      // Additional parameters are available
-      if (paramsToQuery.size > 0) {
-        val queryStringWithNewParams = queryString match {
-            // An existing query need to be `augmented`
-            case Some(qs) =>
-              val nextParams = for {
-                (k,v) <- paramsToQuery
-              } yield {
-                  s"&${k}=${v}"
-              }
-              val finalQueryString = qs + nextParams.mkString
-              finalQueryString
-            // No existing query, build one.
-            case None =>
-              val params = for {
-                ((k,v),i) <- paramsToQuery.view.zipWithIndex
-              } yield {
-                val paramSep = if (i!=0) {"&"} else {"?"}
-                paramSep+s"${k}=${v}"
-              }
-              params.mkString
+    // Additional parameters are available
+    if (paramsToQuery.nonEmpty) {
+      val queryStringWithNewParams = queryString match {
+        // An existing query need to be `augmented`
+        case Some(qs) =>
+          val nextParams = for {
+            (k, v) <- paramsToQuery
+          } yield {
+            s"&$k=$v"
           }
-        Some(queryStringWithNewParams)
+          val finalQueryString = qs + nextParams.mkString
+          finalQueryString
+        // No existing query, build one.
+        case None =>
+          val params = for {
+            ((k, v), i) <- paramsToQuery.view.zipWithIndex
+          } yield {
+            val paramSep = if (i != 0) {
+              "&"
+            } else {
+              "?"
+            }
+            paramSep + s"$k=$v"
+          }
+          params.mkString
+      }
+      Some(queryStringWithNewParams)
     } else { // No additional parameters are available, return queryString unchanged.
       queryString
     }
