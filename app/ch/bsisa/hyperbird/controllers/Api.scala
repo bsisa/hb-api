@@ -676,13 +676,13 @@ object Api extends Controller with securesocial.core.SecureSocial {
       }
     } catch {
       case e: WithManagerEditRightException =>
-        val errorMsg = s"Failed to perform update for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
+        val errorMsg = s"Failed to perform update for Elfin with ID_G: $collectionId, Id: $elfinId: $e"
         manageWithManagerEditRightException(exception = e, errorMsg = Option(errorMsg))
       case e: WithClasseEditRightException =>
-        val errorMsg = s"Failed to perform update for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
+        val errorMsg = s"Failed to perform update for Elfin with ID_G: $collectionId, Id: $elfinId: $e"
         manageWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))
       case e: Throwable =>
-        val errorMsg = s"Failed to perform update for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
+        val errorMsg = s"Failed to perform update for Elfin with ID_G: $collectionId, Id: $elfinId: $e"
         ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(errorMsg))
     }
   }
