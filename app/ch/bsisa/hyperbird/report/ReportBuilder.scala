@@ -98,6 +98,7 @@ object ReportBuilder {
     // Optional identity of the ELFIN data source calling the report
     val callerId = queryStringMapOption.flatMap(_.get(REPORT_CALLER_ELFIN_ID))
     val callerID_G = queryStringMapOption.flatMap(_.get(REPORT_CALLER_ELFIN_ID_G))
+    val watermarkName = queryStringMapOption.flatMap(_.get(REPORT_HEADER_WATERMARK_PARAM_NAME))
 
     val reportFileNamePrefix = reportParams._2
 
@@ -200,7 +201,7 @@ object ReportBuilder {
     }
 
     // Return merged documents if applicable and available otherwise return first generated PDF unchanged
-    mergedWithPdfIncludeFirstFileOpt match {
+    val result = mergedWithPdfIncludeFirstFileOpt match {
       case Some(mergedWithPdfIncludeFirstFile) => mergedWithPdfIncludeFirstFile // Built last it contains report content, dynamic includes and both static includes depending on their availability.
       case None =>
         mergedWithPdfIncludeLastFileOpt match {
@@ -211,6 +212,14 @@ object ReportBuilder {
               case None => emptyFile
             }
         }
+    }
+
+    if (watermarkName.isDefined) {
+      val watermarkedFile = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))
+      val temporaryFile = PdfFileWatermarkHelper.stampPdfFile(result.file.getAbsolutePath, watermarkedFile.file.getAbsolutePath, watermarkName.get)
+      watermarkedFile
+    } else {
+      result
     }
   }
 
