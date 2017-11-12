@@ -35,7 +35,9 @@ case object WithManagerEditRight {
     val authorised = if (apiConfig.dataManagerSecurityEnabled) {
       elfin.IDENTIFIANT match {
         case Some(identifiant) => identifiant.GER match {
-          case Some(ger) => ger.equals(dataManagerRight) // Some(AutorisationLimit.INSUFFICIENT_ACCESS_RIGHTS) or None
+          case Some(ger) =>
+            Logger.error(s"IDENTIFIANT/GER '$ger' information comparing to HTTP_HEADER_DATA_MANAGER_ACCESS_RIGHTS_CREATE_UPDATE: '$dataManagerRight'")
+            ger.equals(dataManagerRight) // Some(AutorisationLimit.INSUFFICIENT_ACCESS_RIGHTS) or None
           case None      => 
             // Some(AutorisationLimit.MISSING_GER_INFO_ACCESS_RIGHTS)
             Logger.error(s"IDENTIFIANT/GER information missing for ELFIN IG_G/CLASSE/Id = ${elfin.ID_G}/${elfin.CLASSE}/${elfin.Id}") 
@@ -55,7 +57,7 @@ case object WithManagerEditRight {
     if (authorised) {
       authorised
     } else {
-      throw WithManagerEditRightException("Insufficiant mandatory data manager rights")
+      throw WithManagerEditRightException(s"Insufficiant mandatory data manager rights - '$dataManagerRight' does not match GER '${elfin.IDENTIFIANT.get.GER.get}'")
     }
 
   }
@@ -73,7 +75,9 @@ case object WithManagerEditRight {
     val authorised = if (apiConfig.dataManagerSecurityEnabled) {
       elfin.IDENTIFIANT match {
         case Some(identifiant) => identifiant.GER match {
-          case Some(ger) => ger.equals(dataManagerRight)
+          case Some(ger) =>
+            Logger.error(s"IDENTIFIANT/GER '$ger' information comparing to HTTP_HEADER_DATA_MANAGER_ACCESS_RIGHTS_CREATE_UPDATE: '$dataManagerRight'")
+            ger.equals(dataManagerRight)
           case None      => 
             Logger.error(s"IDENTIFIANT/GER information missing for ELFIN IG_G/CLASSE/Id = ${elfin.ID_G}/${elfin.CLASSE}/${elfin.Id}") 
             false
