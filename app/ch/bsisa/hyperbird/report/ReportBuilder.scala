@@ -70,14 +70,8 @@ object ReportBuilder {
   def getReportParameters(reportElfin: ELFIN, queryStringMapOption: Option[Map[String, String]] = None): (String, String) = queryStringMapOption match {
     case Some(queryStringMap) =>
       Logger.debug(s"ReportBuilder.writeReport: queryStringMap = $queryStringMap")
-      val reportFileNamePrefix = queryStringMap.get(REPORT_FILENAME_PREFIX_QUERY_PARAM_NAME) match {
-        case Some(reportFileNamePrefix) => reportFileNamePrefix
-        case None => reportElfin.CARACTERISTIQUE.get.CAR5.get.VALEUR.get
-      }
-      val reportTitle = queryStringMap.get(REPORT_TITLE_QUERY_PARAM_NAME) match {
-        case Some(reportTitle) => reportTitle
-        case None => reportElfin.CARACTERISTIQUE.get.CAR6.get.VALEUR.get
-      }
+      val reportFileNamePrefix = queryStringMap.getOrElse(REPORT_FILENAME_PREFIX_QUERY_PARAM_NAME, reportElfin.CARACTERISTIQUE.get.CAR5.get.VALEUR.get)
+      val reportTitle = queryStringMap.getOrElse(REPORT_TITLE_QUERY_PARAM_NAME, reportElfin.CARACTERISTIQUE.get.CAR6.get.VALEUR.get)
       (reportTitle, reportFileNamePrefix)
     case None =>
       Logger.debug(s"ReportBuilder.writeReport: queryStringMap = None")
@@ -216,7 +210,7 @@ object ReportBuilder {
 
     if (watermarkName.isDefined) {
       val watermarkedFile = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))
-      val temporaryFile = PdfFileWatermarkHelper.stampPdfFile(result.file.getAbsolutePath, watermarkedFile.file.getAbsolutePath, watermarkName.get)
+      PdfFileWatermarkHelper.stampPdfFile(result.file.getAbsolutePath, watermarkedFile.file.getAbsolutePath, watermarkName.get)
       watermarkedFile
     } else {
       result
@@ -379,7 +373,7 @@ object ReportBuilder {
           val reportHeaderHtmlTempFile = new TemporaryFile(java.io.File.createTempFile("hb5ReportHeader", ".html"))
           // If any report header parameters defined pass them to template
           if (headerParams.nonEmpty) {
-            if (headerParams.size == 1) {
+            if (headerParams.lengthCompare(1) == 0) {
               play.api.libs.Files.writeFile(reportHeaderHtmlTempFile.file, renderTemplate(htn.VALEUR.get, headerParams.head, reportTitle))
               // Configure wkhtmltopdf with header
               Some(Pdf(
@@ -391,7 +385,7 @@ object ReportBuilder {
                   footerHtml := reportFooterHtmlTempFile.file.getAbsolutePath
                 }
               ))
-            } else if (headerParams.size == 2) {
+            } else if (headerParams.lengthCompare(2) == 0) {
               play.api.libs.Files.writeFile(reportHeaderHtmlTempFile.file, renderTemplate(htn.VALEUR.get, headerParams.head, headerParams.tail.head, reportTitle))
               // Configure wkhtmltopdf with header
               Some(Pdf(
@@ -576,7 +570,7 @@ object ReportBuilder {
 
             if (watermarkName.isDefined) {
               val watermarkedFile = new TemporaryFile(java.io.File.createTempFile(reportFileNamePrefix, ".pdf"))
-              val temporaryFile = PdfFileWatermarkHelper.stampPdfFile(result.file.getAbsolutePath, watermarkedFile.file.getAbsolutePath, watermarkName.get)
+              PdfFileWatermarkHelper.stampPdfFile(result.file.getAbsolutePath, watermarkedFile.file.getAbsolutePath, watermarkName.get)
               watermarkedFile
             } else {
               result
