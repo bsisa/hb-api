@@ -920,7 +920,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
     XQueryWSHelper.find(WSQueries.elfinQuery(reportCollectionId, reportElfinId)).flatMap { reportElfin =>
       ReportBuilder.writeReport(reportElfin, queryString, Some(queryStringMap))
     }.map { tempFile =>
-      Ok.sendFile(tempFile.file)
+      Ok.sendFile(tempFile.file, true)
     }.recover {
       case resNotFound: ResultNotFoundException => {
         manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"No elfin found for ID_G: ${reportCollectionId}, Id: ${reportElfinId}"))
@@ -951,7 +951,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
         val e= new IllegalStateException()
         ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.getReport() - Failed to perform find operation for Elfin with ID_G: ${reportCollectionId}, Id: ${reportElfinId}: ${e}"))
       } else {
-        Ok.sendFile(reportFile.file)
+        Ok.sendFile(reportFile.file, true)
       }
     }
   }
