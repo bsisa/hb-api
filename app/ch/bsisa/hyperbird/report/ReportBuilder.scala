@@ -85,7 +85,7 @@ object ReportBuilder {
     * This method shares a lot with thwe writeReport method.
     * TODO: Try to factorize both methods
     */
-  def writeAnnexeReport(reportElfin: ELFIN, queryString: Option[String], queryStringMapOption: Option[Map[String, String]] = None)
+  def writeAnnexeReport(reportElfin: ELFIN, queryString: Option[String], queryStringMapOption: Option[Map[String, String]] = None, annexType:String = "file")
                        (implicit reportConfig: ReportConfig, apiConfig: ch.bsisa.hyperbird.ApiConfig): TemporaryFile = {
     val reportParams = getReportParameters(reportElfin, queryStringMapOption)
 
@@ -102,7 +102,7 @@ object ReportBuilder {
     // Perform dynamic merging if caller Id, ID_G are available.
     val reportWithDynTempResultOpt = if (callerId.isDefined && callerID_G.isDefined) {
       Logger.debug(s">>>> CALLER: ID_G/Id = $callerId/$callerID_G")
-      val futureFilepathsOptToMerge = ReportDAO.getPdfAnnexPathsToMerge(elfinId = callerId.get, elfinID_G = callerID_G.get)
+      val futureFilepathsOptToMerge = ReportDAO.getPdfAnnexPathsToMerge(elfinId = callerId.get, elfinID_G = callerID_G.get, annexType = annexType)
       val res =
         futureFilepathsOptToMerge map {
           _.map { filepathsToMerge =>

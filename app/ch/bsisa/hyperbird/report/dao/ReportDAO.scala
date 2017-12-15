@@ -53,12 +53,12 @@ object ReportDAO {
   /**
    * Returns `(filesToMergeBefore,filesToMergeAfter)` as `Future[Option[(Seq[File], Seq[File])]]`
    */
-  def getPdfAnnexFilesToMerge(elfinId: String, elfinID_G: String): Future[Option[(Seq[File], Seq[File])]] = {
+  def getPdfAnnexFilesToMerge(elfinId: String, elfinID_G: String, annexType:String = "file"): Future[Option[(Seq[File], Seq[File])]] = {
     val futureElfin = XQueryWSHelper.find(WSQueries.elfinQuery(elfinID_G, elfinId))
     val futureFileOpt = futureElfin.map { elfin =>
       val res = elfin.ANNEXE.map { anx =>
-        val filesToMergeBefore = getPdfFilesRefForTag("action::merge::before", anx.RENVOI, elfinID_G, elfinId)
-        val filesToMergeAfter = getPdfFilesRefForTag("action::merge::after", anx.RENVOI, elfinID_G, elfinId)
+        val filesToMergeBefore = getPdfFilesRefForTag(s"$annexType,action::merge::before", anx.RENVOI, elfinID_G, elfinId)
+        val filesToMergeAfter = getPdfFilesRefForTag(s"$annexType,action::merge::after", anx.RENVOI, elfinID_G, elfinId)
         (filesToMergeBefore, filesToMergeAfter)
       }
       res
@@ -66,8 +66,8 @@ object ReportDAO {
     futureFileOpt
   }
 
-  def getPdfAnnexPathsToMerge(elfinId: String, elfinID_G: String): Future[Option[(Seq[String], Seq[String])]] = {
-    val futureFilesOptToMerge = getPdfAnnexFilesToMerge(elfinId, elfinID_G)
+  def getPdfAnnexPathsToMerge(elfinId: String, elfinID_G: String, annexType:String = "file"): Future[Option[(Seq[String], Seq[String])]] = {
+    val futureFilesOptToMerge = getPdfAnnexFilesToMerge(elfinId, elfinID_G, annexType)
     val futureFilepathsOptToMerge = futureFilesOptToMerge map {
       futureFilesToMerge =>
         futureFilesToMerge map {
