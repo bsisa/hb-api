@@ -13,6 +13,21 @@ Qui utilise entre autre:
 
     get_PRESTATION_list_for_year.xq
 
+
+## Exécution
+
+1. S'identifier dans l'application comme d'habitude
+1. Ouvrir un nouvel onglet dans le navigateur
+1. Coller l'adresse de commande (Voir historique pour des exemples)
+
+#Historique
+## 2018 Test
+
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2017/2018/FMPA
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2017/2018/CDP
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2017/2018/NE
+
+
 ## Request `get_PRESTATION_list_for_year`
 
 ```
@@ -24,7 +39,7 @@ import module namespace request="http://exist-db.org/xquery/request";
 (:allowing easy determination of the highest PRESTATION/IDENTIFIANT/OBJECTFIF for each IMMEUBLE group :)
 (:of PRESTATIONs:)
 
-let $yearOfReference := request:get-parameter("refYear", "2016")
+let $yearOfReference := request:get-parameter("refYear", "2017")
 let $owner := request:get-parameter("owner", "NE")
 (:let $owner := request:get-parameter("owner", "FMPA"):)
 (:let $owner := request:get-parameter("owner", "CDP"):)
@@ -47,21 +62,20 @@ let $prestations := collection("/db/hb4/G20081113902512302")//ELFIN[@CLASSE='PRE
 
 let $referencePrestations := 
     for $activeBuilding in $activeBuildings 
-        let $activeBuildingObj := $activeBuilding/IDENTIFIANT/OBJECTIF
+        let $source := concat($activeBuilding/@ID_G, "/", $activeBuilding/@CLASSE, "/", $activeBuilding/@Id) 
         let $referenceYearPrestations := 
-(:            for $refPrestation in $prestations[substring-before(IDENTIFIANT/OBJECTIF,'.')=$activeBuilding/IDENTIFIANT/OBJECTIF and PARTENAIRE/PROPRIETAIRE/@NOM=$activeBuilding/PARTENAIRE/PROPRIETAIRE/@NOM]:)
-            for $refPrestation in $prestations[substring-before(IDENTIFIANT/OBJECTIF,'.')=$activeBuilding/IDENTIFIANT/OBJECTIF]
+            for $refPrestation in $prestations[@SOURCE=concat($activeBuilding/@ID_G, "/", $activeBuilding/@CLASSE, "/", $activeBuilding/@Id) ]
             order by $refPrestation/IDENTIFIANT/OBJECTIF descending
             return $refPrestation
 (:    IMPORTANT: In the current data model design PRESTATION cannot be different for two buildings (IMMEUBLE) with the same IDENTIFIANT/OBJECTIF. Thus they are shared.:)
 (:    To avoid duplicating identical PRESTATION for identical IDENTIFIANT/OBJECTIF (No SAI) used by more than a single IMMEUBLE, we need to perform a `group by` close. :)
-    group by $activeBuildingObj
-    order by $activeBuildingObj ascending
+    group by $source
+    order by $source ascending
     return $referenceYearPrestations
 
 for $refP in $referencePrestations
 order by $refP/IDENTIFIANT/OBJECTIF descending
-(:return $refP/IDENTIFIANT/OBJECTIF:)
 return $refP
+
 
 ```
