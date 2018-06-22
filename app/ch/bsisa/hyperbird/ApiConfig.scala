@@ -36,7 +36,7 @@ class ApiConfig {
   }
 
   /**
-   * Used by Angular $logProvider service to enable or disable debug log.
+   * Used by Angular logProvider service to enable or disable debug log.
    */
   val clientDebugEnabled: Boolean = Play.current.configuration.getBoolean(ApiConfig.ClientDebugEnabledUrlKey) match {
     case Some(clientDebugEnabledValue) => clientDebugEnabledValue
