@@ -321,25 +321,30 @@ object SpreadSheetBuilder {
 
         if (!cell.text.isEmpty) {
           // Cell type is defined after td class names.
-          // Currently supported names for type specific {"date","num"} 
-          cell.className() match {
-            case DateCssClassName =>
-              currSheetCell.setCellValue(sdf.parse(cell.text))
-            case NumericCssClassName =>
-              currSheetCell.setCellValue(java.lang.Double.parseDouble(cell.text))
-            case _ =>
-              currSheetCell.setCellValue(cell.text)
+          // Currently supported names for type specific {"date","num"}
+          if (cell.text.startsWith("=")) {
+            currSheetCell.setCellFormula(cell.text.substring(1))
+          } else {
+            cell.className() match {
+              case DateCssClassName =>
+                currSheetCell.setCellValue(sdf.parse(cell.text))
+              case NumericCssClassName =>
+                currSheetCell.setCellValue(java.lang.Double.parseDouble(cell.text))
+              case _ =>
+                currSheetCell.setCellValue(cell.text)
+            }
           }
         } else {
           currSheetCell.setCellValue(cell.text)
         }
 
         // Copy example row cells style
-        val cellStyle = templateRow.getCell(cellIdx).getCellStyle
+        if (templateRow.getCell(cellIdx) != null) {
+          val cellStyle = templateRow.getCell(cellIdx).getCellStyle
+          currSheetCell.setCellStyle(cellStyle)
+        }
 
-        currSheetCell.setCellStyle(cellStyle)
         cellIdx = cellIdx + 1
-
       }
 
 
