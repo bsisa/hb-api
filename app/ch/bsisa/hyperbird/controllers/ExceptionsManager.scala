@@ -14,7 +14,7 @@ object ExceptionsManager {
    * Utility method to return exception, error message in a generic JSON error message.
    */
   def manageException(exception: Option[Throwable] = None, errorMsg: Option[String] = None): SimpleResult = {
-    Logger.warn("Api exception: " + exception.getOrElse("").toString + " - " + errorMsg.getOrElse(""))
+    Logger.warn("Api exception: " + exception.getOrElse("").toString + " - " + errorMsg.getOrElse(""), exception.get)
     val jsonExceptionMsg = Json.obj(
       "ERROR" -> exception.getOrElse("application.validation.failure").toString,
       "DESCRIPTION" -> errorMsg.getOrElse(exception.getOrElse("None").toString).toString // TODO: review
