@@ -77,7 +77,7 @@ object Implicits {
   }
 
   /**
-   * Creates a Seq[scalaxb.DataRecord[Any]] structure from provided `content parameter.
+   * Creates a Seq[ scalaxb.DataRecord[Any] ] structure from provided content parameter.
    * This type of data structure is necessary to manage mixed content with Scalaxb.
    */
   def setMixedContent(content: String): Seq[scalaxb.DataRecord[Any]] = {
@@ -88,7 +88,7 @@ object Implicits {
    * Generic BigInt formatter. Considers that no BigInt will exceed Long as used in geoXml.xsd
    *
    * WARNING: Assumes BigInt conversion only applies to POS attributes which is currently true for geoXml.xsd
-   * @todo: Review geoXml.xsd xs:positiveInteger XSD definition leads to BigInt. Complicates conversions. Check how to have
+   * //TODO Review geoXml.xsd xs:positiveInteger XSD definition leads to BigInt. Complicates conversions. Check how to have
    * Long instead for simplification.
    */
   implicit object BigIntFormat extends Format[BigInt] {
