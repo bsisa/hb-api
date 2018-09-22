@@ -8,7 +8,7 @@ libraryDependencies ++= Seq(
   "io.github.cloudify" %% "spdf" % "1.0.0",
   "commons-codec" % "commons-codec" % "1.6",
   // Transitive dependency on Play provided library com.typesafe.play, play-json must be excluded.
-  "ch.bsisa" % "hb-geo-model_2.10" % "1.0" excludeAll(ExclusionRule(organization = "com.typesafe.play"))
+  "ch.bsisa" % "hb-geo-model_2.10" % "1.0" excludeAll ExclusionRule(organization = "com.typesafe.play")
 )     
 
 // Control which files are packaged with dist task.
