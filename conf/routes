@@ -82,6 +82,8 @@ GET      /api/melfin/xquery/:xqueryFileName                                ch.bs
 # Returns the spreadsheet file corresponding to the file name in binary format. 
 GET      /api/melfin/spreadsheet/:fileName                                 ch.bsisa.hyperbird.controllers.Api.getSpreadsheetReport(fileName)
 
+# Returs the document file corresponding ti the filename in binary format
+GET      /api/melfin/document/:fileName                                    ch.bsisa.hyperbird.controllers.Api.getDocumentReport(fileName)
 
 # Generates and return reports based on the definition
 GET      /api/melfin/report/:reportCollectionId/:reportElfinId             ch.bsisa.hyperbird.controllers.Api.getReport(reportCollectionId, reportElfinId)

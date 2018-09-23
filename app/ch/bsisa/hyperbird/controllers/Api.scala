@@ -1,49 +1,33 @@
 package ch.bsisa.hyperbird.controllers
 
-import ch.bsisa.hyperbird.CollectionsConfig
-import ch.bsisa.hyperbird.InitConfig
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File}
+import java.net.ConnectException
+import java.util.Date
+
 import ch.bsisa.hyperbird.Implicits._
-import ch.bsisa.hyperbird.dao.ws.WSQueries
-import ch.bsisa.hyperbird.dao.ws.XQueryWSHelper
-import ch.bsisa.hyperbird.dao.ElfinDAO
-import ch.bsisa.hyperbird.dao.ResultNotFoundException
+import ch.bsisa.hyperbird.{CollectionsConfig, InitConfig}
+import ch.bsisa.hyperbird.cache.CacheHelper
+import ch.bsisa.hyperbird.dao.{ElfinDAO, ResultNotFoundException}
+import ch.bsisa.hyperbird.dao.ws.{WSQueries, XQueryWSHelper}
+import ch.bsisa.hyperbird.documents.{SpreadSheetBuilder, WordDocumentBuilder}
+import ch.bsisa.hyperbird.io._
 import ch.bsisa.hyperbird.model.ELFIN
 import ch.bsisa.hyperbird.model.format.ElfinFormat
 import ch.bsisa.hyperbird.model.format.ElfinFormat.ElfinFormatException
 import ch.bsisa.hyperbird.report.ReportBuilder
-import ch.bsisa.hyperbird.security.social.HbSecureService
 import ch.bsisa.hyperbird.security.social.HbSecureService.PasswordHashException
-import ch.bsisa.hyperbird.spreadsheet.SpreadSheetBuilder
-import ch.bsisa.hyperbird.util.{ FunctionsUtil, ElfinUtil }
+import ch.bsisa.hyperbird.security.social._
+import ch.bsisa.hyperbird.util.{ElfinUtil, FunctionsUtil}
 import org.apache.poi.ss.usermodel._
-import securesocial.core.java.SecureSocial.SecuredAction
-import play.api._
+import org.apache.poi.xwpf.usermodel.XWPFDocument
 import play.api.Logger
+import play.api.libs.Files
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee.Enumerator
-import play.api.libs.json.Json
-import play.api.libs.ws.Response
-import play.api.libs.ws.WS
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.xml.XML
-import java.net.ConnectException
-import java.io.InputStream
-import java.io.OutputStream
-import java.io.ByteArrayOutputStream
-import java.io.ByteArrayInputStream
-import ch.bsisa.hyperbird.security.social.WithRole
-import ch.bsisa.hyperbird.security.social.WithClasseEditRight
-import ch.bsisa.hyperbird.security.social.WithClasseEditRightException
-import ch.bsisa.hyperbird.security.social.WithManagerEditRight
-import ch.bsisa.hyperbird.security.social.WithManagerEditRightException
-import securesocial.core.SocialUser
-import ch.bsisa.hyperbird.security.social.User
-import ch.bsisa.hyperbird.cache.CacheHelper
-import ch.bsisa.hyperbird.io._
-import java.io.File
-import java.util.Date
+
+import scala.concurrent.{Await, Future}
 
 /**
  * REST API controller.
@@ -86,20 +70,20 @@ object Api extends Controller with securesocial.core.SecureSocial {
    * authentication information. This assumes restricted server "localhost"
    * access.
    */
-  def runBackup() = Action.async { request =>
+  def runBackup(): Action[AnyContent] = Action.async { request =>
     val LOCALHOST = "localhost"
     val hostTokens = request.host.split(":")
-    val isLocalHost = (hostTokens.length > 0 && hostTokens(0) == LOCALHOST)
+    val isLocalHost = hostTokens.nonEmpty && hostTokens(0) == LOCALHOST
     if (isLocalHost) {
       val xqueryFileName = "admin_backup.xq"
-      Logger.debug(s"""Run XQuery ${xqueryFileName} from host ${LOCALHOST} with XML returned format such as <backup date="2015-01-06T14:12:59.249+01:00" />""")
+      Logger.debug(s"""Run XQuery $xqueryFileName from host $LOCALHOST with XML returned format such as <backup date="2015-01-06T14:12:59.249+01:00" />""")
 
       XQueryWSHelper.runXQueryFile(xqueryFileName, None).map { response =>
-        Ok(response.body).as(response.ahcResponse.getContentType())
+        Ok(response.body).as(response.ahcResponse.getContentType)
       }
     } else {
       val backupDateString = ch.bsisa.hyperbird.util.DateUtil.elfinIdentifiantDateFormat.format(new java.util.Date())
-      val messageString = s"Security policy only allows backup maintenance operation from ${LOCALHOST}"
+      val messageString = s"Security policy only allows backup maintenance operation from $LOCALHOST"
       scala.concurrent.Future(Forbidden(<backup date={ backupDateString } status="forbidden" message={ messageString }/>))
     }
   }
@@ -107,14 +91,14 @@ object Api extends Controller with securesocial.core.SecureSocial {
   /**
    * Allow clearing all cached entries with keys starting with `http`
    */
-  def clearCache() = SecuredAction(ajaxCall = true) {
+  def clearCache(): Action[AnyContent] = SecuredAction(ajaxCall = true) {
     CacheHelper.removeAllEntries
     val currentDate = new Date()
     val jsonMsg = s"""
 		{
 			"cache": {
 		        "status": "cleared",
-		        "time": "${currentDate}"
+		        "time": "$currentDate"
 		    }
 		}
 	  """
@@ -124,7 +108,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
   /**
    * Dynamically provides initialisation configuration information useful to hb-ui
    */
-  def config() = SecuredAction(ajaxCall = true) {
+  def config(): Action[AnyContent] = SecuredAction(ajaxCall = true) {
     Ok(getConfigJson).as(JSON)
   }
 
@@ -143,22 +127,20 @@ object Api extends Controller with securesocial.core.SecureSocial {
   /**
    * Provides password hashing service.
    */
-  def getPasswordHash(plainTextPassword: String) = SecuredAction(ajaxCall = true) { request =>
+  def getPasswordHash(plainTextPassword: String): Action[AnyContent] = SecuredAction(ajaxCall = true) { request =>
     //
     try {
       val plainTextPasswordHashValue = HbSecureService.getPasswordHash(plainTextPassword)
       val jsonResponse =
         s"""{
-	      "hash" : "${plainTextPasswordHashValue}"
+	      "hash" : "$plainTextPasswordHashValue"
 }"""
       Ok(jsonResponse).as(JSON)
     } catch {
-      case phe: PasswordHashException => {
+      case phe: PasswordHashException =>
         managePasswordHashException(exception = phe, errorMsg = Option(s"User: ${request.user} failed to obtain password hash."))
-      }
-      case e: Throwable => {
+      case e: Throwable =>
         ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"User: ${request.user} failed to obtain password hash."))
-      }
     }
 
   }
@@ -173,9 +155,9 @@ object Api extends Controller with securesocial.core.SecureSocial {
    * If the XML returned is not an ELFIN format then use `original` format instead and proceed to whatever
    * conversion afterward.
    */
-  def runXQueryFile(xqueryFileName: String, format: String) = SecuredAction(ajaxCall = true).async { request =>
+  def runXQueryFile(xqueryFileName: String, format: String): Action[AnyContent] = SecuredAction(ajaxCall = true).async { request =>
     val queryString = if (request.rawQueryString != null && request.rawQueryString.nonEmpty) Option(request.rawQueryString) else None
-    Logger.debug(s"Run XQuery ${xqueryFileName} with returned format = ${format} and rawQueryString: ${queryString}")
+    Logger.debug(s"Run XQuery $xqueryFileName with returned format = $format and rawQueryString: $queryString")
 
     XQueryWSHelper.runXQueryFile(xqueryFileName, queryString).map { response =>
       format match {
@@ -183,7 +165,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
           Logger.debug(s">>>> runXQueryFile: Result of type ${response.ahcResponse.getContentType} received")
           val melfinWrappedBody = "<MELFIN>" + response.body.mkString + "</MELFIN>"
           Ok(ElfinFormat.elfinsToJsonArray(ElfinFormat.elfinsFromXml(scala.xml.XML.loadString(melfinWrappedBody))))
-        case ORIGINAL_FORMAT => Ok(response.body).as(response.ahcResponse.getContentType())
+        case ORIGINAL_FORMAT => Ok(response.body).as(response.ahcResponse.getContentType)
       }
     }
   }
@@ -192,8 +174,8 @@ object Api extends Controller with securesocial.core.SecureSocial {
    * Returns the annex file if found HTTP error codes otherwise.
    * <i>Intended to HTTP GET requests</i>
    */
-  def getElfinAnnexFile(elfinID_G: String, elfinId: String, fileName: String) = SecuredAction(ajaxCall = true) { request =>
-    Logger.debug(s"getElfinAnnexFile(elfinID_G = ${elfinID_G}, elfinId = ${elfinId}, fileName = ${fileName}) called.")
+  def getElfinAnnexFile(elfinID_G: String, elfinId: String, fileName: String): Action[AnyContent] = SecuredAction(ajaxCall = true) { _ =>
+    Logger.debug(s"getElfinAnnexFile(elfinID_G = $elfinID_G, elfinId = $elfinId, fileName = $fileName) called.")
     try {
       Ok.sendFile(AnnexesManager.getElfinAnnexFile(elfinID_G, elfinId, fileName))
     } catch {
@@ -208,17 +190,16 @@ object Api extends Controller with securesocial.core.SecureSocial {
    *   <li>custom HTTP 701 as successful `annex file resource does not exist` response.</li>
    *  <ul>
    */
-  def cĥeckForElfinAnnexFile(elfinID_G: String, elfinId: String, fileName: String) = SecuredAction(ajaxCall = true) { request =>
-    Logger.debug(s"cĥeckForElfinAnnexFile(elfinID_G = ${elfinID_G}, elfinId = ${elfinId}, fileName = ${fileName}) called.")
+  def cĥeckForElfinAnnexFile(elfinID_G: String, elfinId: String, fileName: String): Action[AnyContent] = SecuredAction(ajaxCall = true) { _ =>
+    Logger.debug(s"cĥeckForElfinAnnexFile(elfinID_G = $elfinID_G, elfinId = $elfinId, fileName = $fileName) called.")
     try {
       Ok.sendFile(AnnexesManager.getElfinAnnexFile(elfinID_G, elfinId, fileName))
     } catch {
-      case e: AnnexesManagerFileNotFoundException => {
+      case _: AnnexesManagerFileNotFoundException =>
         val jsonMsg = Json.obj(
           "ERROR" -> "annex.file.not.found",
           "DESCRIPTION" -> "HEAD call.")
         Status(701)(jsonMsg) // 701 - Custom application special Ok for HEAD not found
-      }
       case e: Exception => manageAnnexesManagerException(e)
     }
   }
@@ -231,7 +212,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
    * Creates the annex file pointed at by `ELFIN/ANNEXE/RENVOI/@LIEN` data structure
    */
   //  def createElfinAnnexFile(elfinID_G: String, elfinId: String, fileName: String) = Action(parse.multipartFormData) { request =>
-  def createElfinAnnexFile() = Action(parse.multipartFormData) { request =>
+  def createElfinAnnexFile(): Action[MultipartFormData[Files.TemporaryFile]] = Action(parse.multipartFormData) { request =>
 
     try {
 
@@ -240,20 +221,20 @@ object Api extends Controller with securesocial.core.SecureSocial {
       //for ( key <- params.keys) { Logger.debug(s"key = ${key}")}
 
       // flow.js upload information
-      val flowIdentifier = params.get("flowIdentifier").get.seq(0)
-      val flowChunkNumber = params.get("flowChunkNumber").get.seq(0).toInt
-      val flowTotalChunks = params.get("flowTotalChunks").get.seq(0).toInt
-      val flowFilename = params.get("flowFilename").get.seq(0)
-      val flowTotalSize = params.get("flowTotalSize").get.seq(0).toInt
-      val flowChunkSize = params.get("flowChunkSize").get.seq(0).toInt
+      val flowIdentifier = params("flowIdentifier").seq.head
+      val flowChunkNumber = params("flowChunkNumber").seq.head.toInt
+      val flowTotalChunks = params("flowTotalChunks").seq.head.toInt
+      val flowFilename = params("flowFilename").seq.head
+      val flowTotalSize = params("flowTotalSize").seq.head.toInt
+      val flowChunkSize = params("flowChunkSize").seq.head.toInt
 
       // HyperBird upload information
       val elfinID_G = params.get("elfinID_G") match {
-        case Some(seq) => seq(0)
+        case Some(seq) => seq.head
         case None      => throw new Exception("elfinID_G mandatory information missing.")
       }
       val elfinId = params.get("elfinId") match {
-        case Some(seq) => seq(0)
+        case Some(seq) => seq.head
         case None      => throw new Exception("elfinId mandatory information missing.")
       }
 
@@ -270,13 +251,13 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
       // TODO: make it a config	  
       val chunksDirectory = FileUploadHelper.getTemporaryFileUploadDirectory()
-      val chunkDestinationFile = new File(chunksDirectory, s"${flowIdentifier}-${flowChunkNumber}")
+      val chunkDestinationFile = new File(chunksDirectory, s"$flowIdentifier-$flowChunkNumber")
       Logger.debug(s"""
-  chunksDirectory = ${chunksDirectory.getCanonicalPath()}
-  chunkDestinationFile = ${chunkDestinationFile.getCanonicalPath()}
+  chunksDirectory = ${chunksDirectory.getCanonicalPath}
+  chunkDestinationFile = ${chunkDestinationFile.getCanonicalPath}
 	  """)
       val file = request.body.file("file").get
-      file.ref.moveTo(chunkDestinationFile, true)
+      file.ref.moveTo(chunkDestinationFile, replace = true)
 
       // Check if we reached the end of the upload
       // Note: With flow.js prioritizeFirstAndLastChunk set to true the last chunk is received 
@@ -285,11 +266,11 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
         val retryNb = 3; val delayMillis = 3000L
         val uploadCompleted = FunctionsUtil.retry(retryNb, delayMillis) {
-          Logger.debug(s"createElfinAnnexFile() - retry checkUploadComplete till ${retryNb} times with ${delayMillis} delay.")
+          Logger.debug(s"createElfinAnnexFile() - retry checkUploadComplete till $retryNb times with $delayMillis delay.")
           FileUploadHelper.checkUploadComplete(chunksSourceDirectory = chunksDirectory, fileIdentifier = flowIdentifier, totalChunks = flowTotalChunks, totalSize = flowTotalSize)
         }
 
-        Logger.debug(s"createElfinAnnexFile() - uploadCompleted = ${uploadCompleted}")
+        Logger.debug(s"createElfinAnnexFile() - uploadCompleted = $uploadCompleted")
 
         if (uploadCompleted) {
 
@@ -320,15 +301,67 @@ object Api extends Controller with securesocial.core.SecureSocial {
   }
 
   /**
+    * Produce Docx document report from provided DOCX template and associated XQuery.
+    */
+  def getDocumentReport(filename:String): Action[AnyContent] = SecuredAction(ajaxCall = true).async { request =>
+    val rawQueryString = if (request.rawQueryString.nonEmpty) Option(request.rawQueryString) else None
+
+    XQueryWSHelper.getFile(filename).map { response =>
+
+      if (response.ahcResponse.getStatusCode == 200) {
+
+        // Convert document from inputstream to XWPFDocument object =========================================
+        val doc: XWPFDocument = WordDocumentBuilder.getDocument(response.ahcResponse.getResponseBodyAsStream)
+
+        // Get the result of the query as an HTML table =================================================
+        val xqueryFileName = WordDocumentBuilder.getXQueryFileName(doc)
+        // 10 minutes timeout is not expected to be reached but
+        // is set to this very long value to avoid failing with
+        // possibly very heavy xqueries.
+        //
+        // Non blocking solution seem not possible given
+        // reportDynamicContentFuture depends on xqueryFileName
+        import scala.concurrent.duration._
+        val reportDynamicContent = Await.result(XQueryWSHelper.runXQueryFile(xqueryFileName, rawQueryString).map { response =>
+          response.body.mkString
+        }, 10 minutes)
+        //Logger.debug("reportDynamicContent: " + reportDynamicContent)
+
+        // Merge HTML table query result with workbook datasheet =========================================
+        WordDocumentBuilder.mergeData(doc, reportDynamicContent)
+
+
+        // Write document object back to an outputstream =================================================
+        val out: ByteArrayOutputStream = new ByteArrayOutputStream()
+        doc.write(out)
+        out.close()
+        val modifiedStream = new ByteArrayInputStream(out.toByteArray)
+
+        // Sent the response stream ======================================================================
+        Ok.chunked(Enumerator.fromStream(modifiedStream)).as(response.ahcResponse.getContentType)
+      } else {
+        val endUserMsg = s"Status: ${response.ahcResponse.getStatusCode} - ${response.ahcResponse.getStatusText}. Possible misconfiguration, please contact your system administrator."
+        Logger.error(s"$endUserMsg Failing URI: ${response.ahcResponse.getUri}")
+        ExceptionsManager.manageException(exception = None, errorMsg = Option(s"Failed to obtain file: $filename: $endUserMsg"))
+      }
+    }.recover {
+      case e: Throwable =>
+        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to obtain file: $filename: $e"))
+    }
+
+  }
+
+
+  /**
    * Produce XLS spreadsheet report from provided XLS template and associated XQuery.
    */
-  def getSpreadsheetReport(fileName: String) = SecuredAction(ajaxCall = true).async { request =>
+  def getSpreadsheetReport(fileName: String): Action[AnyContent] = SecuredAction(ajaxCall = true).async { request =>
 
     val rawQueryString = if (request.rawQueryString != null && request.rawQueryString.nonEmpty) Option(request.rawQueryString) else None
 
     XQueryWSHelper.getFile(fileName).map { response =>
 
-      if (response.ahcResponse.getStatusCode() == 200) {
+      if (response.ahcResponse.getStatusCode == 200) {
 
         // Convert workbook from inputstream to Workbook object =========================================
         val wb: Workbook = SpreadSheetBuilder.getWorkbook(response.ahcResponse.getResponseBodyAsStream)
@@ -369,28 +402,29 @@ object Api extends Controller with securesocial.core.SecureSocial {
         // Sent the response stream ======================================================================
         Ok.chunked(Enumerator.fromStream(modifiedStream)).as(response.ahcResponse.getContentType)
       } else {
-        val endUserMsg = s"Status: ${response.ahcResponse.getStatusCode()} - ${response.ahcResponse.getStatusText()}. Possible misconfiguration, please contact your system administrator."
-        Logger.error(s"${endUserMsg} Failing URI: ${response.ahcResponse.getUri()}")
-        ExceptionsManager.manageException(exception = None, errorMsg = Option(s"Failed to obtain file: ${fileName}: ${endUserMsg}"))
+        val endUserMsg = s"Status: ${response.ahcResponse.getStatusCode} - ${response.ahcResponse.getStatusText}. Possible misconfiguration, please contact your system administrator."
+        Logger.error(s"$endUserMsg Failing URI: ${response.ahcResponse.getUri}")
+        ExceptionsManager.manageException(exception = None, errorMsg = Option(s"Failed to obtain file: $fileName: $endUserMsg"))
       }
     }.recover {
-      case e: Throwable => {
-        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to obtain file: ${fileName}: ${e}"))
-      }
+      case e: Throwable =>
+        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to obtain file: $fileName: $e"))
     }
   }
+
+
 
   /**
    * Returns the list of elfins contained in the specified collection matching the xpath filter expression with defined format
    */
-  def getFilteredCollection(collectionId: String, xpath: String) = SecuredAction(ajaxCall = true).async {
+  def getFilteredCollection(collectionId: String, xpath: String): Action[AnyContent] = SecuredAction(ajaxCall = true).async {
     XQueryWSHelper.query(WSQueries.filteredCollectionQuery(collectionId, xpath))
   }
 
   /**
    * Gets new ELFIN instance from catalog for provided CLASSE. This instance does not exist in database yet.
    */
-  def getNewElfin(classeName: String) = SecuredAction(ajaxCall = true).async { request =>
+  def getNewElfin(classeName: String): Action[AnyContent] = SecuredAction(ajaxCall = true).async { _ =>
 
     val futureElfinWithId: Future[ELFIN] = ElfinDAO.getNewFromCatalogue(classeName)
 
@@ -403,41 +437,34 @@ object Api extends Controller with securesocial.core.SecureSocial {
       Ok(elfinJson).as(JSON)
     }.recover {
       case e: WithClasseEditRightException =>
-        val errorMsg = s"Failed to obtain Elfin with CLASSE: ${classeName} from catalog: ${e}"
+        val errorMsg = s"Failed to obtain Elfin with CLASSE: $classeName from catalog: $e"
         manageWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))
 
-      case resNotFound: ResultNotFoundException => {
-        manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"Failed to obtain new ELFIN from catalog for classeName: ${classeName}: ${resNotFound}"))
-      }
-      case connectException: ConnectException => {
+      case resNotFound: ResultNotFoundException =>
+        manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"Failed to obtain new ELFIN from catalog for classeName: $classeName: $resNotFound"))
+      case connectException: ConnectException =>
         manageConnectException(exception = connectException, errorMsg = Option(s"No database connection could be established."))
-      }
-      case e: Throwable => {
-        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to obtain new ELFIN from catalog for classeName: ${classeName}: ${e}"))
-      }
+      case e: Throwable =>
+        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to obtain new ELFIN from catalog for classeName: $classeName: $e"))
     }
   }
 
   /**
    * Gets new ELFIN instance from catalog for provided CLASSE. This instance does not exist in database yet.
    */
-  def getNewOrderNumber() = SecuredAction(ajaxCall = true).async { request =>
+  def getNewOrderNumber: Action[AnyContent] = SecuredAction(ajaxCall = true).async { _ =>
 
     val futureOrderNumber = ch.bsisa.hyperbird.orders.OrderNumberGenerator.getNewOrderNumber
 
     // Send cloned catalog elfin in JSON format 
-    futureOrderNumber.map { orderNumberOpt =>
-      orderNumberOpt match {
-        case Some(orderNumber) => Ok(s"${orderNumber}").as(JSON)
-        case None              => Ok("hello").as(JSON)
-      }
+    futureOrderNumber.map {
+      case Some(orderNumber) => Ok(s"$orderNumber").as(JSON)
+      case None => Ok("hello").as(JSON)
     }.recover {
-      case connectException: ConnectException => {
+      case connectException: ConnectException =>
         manageConnectException(exception = connectException, errorMsg = Option(s"No database connection could be established."))
-      }
-      case e: Throwable => {
-        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to obtain new order number from order ids service: ${e}"))
-      }
+      case e: Throwable =>
+        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Failed to obtain new order number from order ids service: $e"))
     }
   }
 
@@ -446,14 +473,11 @@ object Api extends Controller with securesocial.core.SecureSocial {
    *
    * See COMMANDE catalog description for format details.
    */
-  def computeOrderFigures() = SecuredAction(ajaxCall = true).async(parse.json) { request =>
+  def computeOrderFigures(): Action[JsValue] = SecuredAction(ajaxCall = true).async(parse.json) { request =>
 
     Logger.debug(s"computeOrderFigures called by user: ${request.user}")
 
     try {
-      // Match our custom User type Identity implementation  
-      val user = request.user match { case user: User => user }
-
       // Convert elfin JsValue to ELFIN.CARACTERISTIQUE.FRACTION 
       val caracteristique = ElfinFormat.caracteristiqueFromJson(request.body)
 
@@ -463,7 +487,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
     } catch {
       case e: Throwable =>
-        val errorMsg = s"Failed to compute order figures: ${e}"
+        val errorMsg = s"Failed to compute order figures: $e"
         ExceptionsManager.manageFutureException(exception = Option(e), errorMsg = Option(errorMsg))
     }
 
@@ -472,7 +496,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
   /**
    * Triggers asynchronous all database POINTs swiss federal coordinates (LV03) to GPS computation.
    */
-  def convertAllPointsToGps() = SecuredAction(ajaxCall = true).async { request =>
+  def convertAllPointsToGps(): Action[AnyContent] = SecuredAction(ajaxCall = true).async { _ =>
     import ch.bsisa.hyperbird.dao.GeoXmlDAO
     GeoXmlDAO.convertAllPointsToGps()
     scala.concurrent.Future(Ok("""{message:"All database POINTs swiss federal coordinates (LV03) to GPS computation triggered."}""").as(JSON))
@@ -494,15 +518,12 @@ object Api extends Controller with securesocial.core.SecureSocial {
           Ok(elfin).as(XML)
         }.recover {
 
-          case resNotFound: ResultNotFoundException => {
-            manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"No elfin found for ID_G: ${collectionId}, Id: ${elfinId}"))
-          }
-          case connectException: ConnectException => {
+          case resNotFound: ResultNotFoundException =>
+            manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"No elfin found for ID_G: $collectionId, Id: $elfinId"))
+          case connectException: ConnectException =>
             manageConnectException(exception = connectException, errorMsg = Option(s"No database connection could be established."))
-          }
-          case e: Throwable => {
-            ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.getElfinSimpleResult() - Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
-          }
+          case e: Throwable =>
+            ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.getElfinSimpleResult() - Failed to perform find operation for Elfin with ID_G: $collectionId, Id: $elfinId: $e"))
         }
       case JSON_PRETTY_FORMAT =>
         val futureElfin = XQueryWSHelper.find(WSQueries.elfinQuery(collectionId, elfinId))
@@ -510,15 +531,12 @@ object Api extends Controller with securesocial.core.SecureSocial {
           val elfinJson = ElfinFormat.toJson(elfin)
           Ok(Json.prettyPrint(elfinJson)).as(JSON)
         }.recover {
-          case resNotFound: ResultNotFoundException => {
-            manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"No elfin found for ID_G: ${collectionId}, Id: ${elfinId}"))
-          }
-          case connectException: ConnectException => {
+          case resNotFound: ResultNotFoundException =>
+            manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"No elfin found for ID_G: $collectionId, Id: $elfinId"))
+          case connectException: ConnectException =>
             manageConnectException(exception = connectException, errorMsg = Option(s"No database connection could be established."))
-          }
-          case e: Throwable => {
-            ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.getElfinSimpleResult() - Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
-          }
+          case e: Throwable =>
+            ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.getElfinSimpleResult() - Failed to perform find operation for Elfin with ID_G: $collectionId, Id: $elfinId: $e"))
         }
       case _ =>
         val futureElfin = XQueryWSHelper.find(WSQueries.elfinQuery(collectionId, elfinId))
@@ -526,15 +544,12 @@ object Api extends Controller with securesocial.core.SecureSocial {
           val elfinJson = ElfinFormat.toJson(elfin)
           Ok(elfinJson).as(JSON)
         }.recover {
-          case resNotFound: ResultNotFoundException => {
-            manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"No elfin found for ID_G: ${collectionId}, Id: ${elfinId}"))
-          }
-          case connectException: ConnectException => {
+          case resNotFound: ResultNotFoundException =>
+            manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"No elfin found for ID_G: $collectionId, Id: $elfinId"))
+          case connectException: ConnectException =>
             manageConnectException(exception = connectException, errorMsg = Option(s"No database connection could be established."))
-          }
-          case e: Throwable => {
-            ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.getElfinSimpleResult() - Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
-          }
+          case e: Throwable =>
+            ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.getElfinSimpleResult() - Failed to perform find operation for Elfin with ID_G: $collectionId, Id: $elfinId: $e"))
         }
     }
 
@@ -551,40 +566,37 @@ object Api extends Controller with securesocial.core.SecureSocial {
       val elfinJson = ElfinFormat.toJson(elfin)
       Ok(elfinJson).as(JSON)
     }.recover {
-      case resNotFound: ResultNotFoundException => {
-        manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"No elfin found for Id: ${elfinId}"))
-      }
-      case connectException: ConnectException => {
+      case resNotFound: ResultNotFoundException =>
+        manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"""No elfin found for Id: $elfinId"""))
+      case connectException: ConnectException =>
         manageConnectException(exception = connectException, errorMsg = Option(s"No database connection could be established."))
-      }
-      case e: Throwable => {
-        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.getElfinSimpleResult() - Failed to perform find operation for Elfin with Id: ${elfinId}: ${e}"))
-      }
+      case e: Throwable =>
+        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.getElfinSimpleResult() - Failed to perform find operation for Elfin with Id: $elfinId: $e"))
     }
   }
 
   /**
    * Gets ELFIN corresponding to this `collectionId` and `elfinId`
    */
-  def getElfin(collectionId: String, elfinId: String, format: String = "json") = SecuredAction(ajaxCall = true).async { implicit request =>
-    Logger.debug(s"getElfin(collectionId=${collectionId}, elfinId=${elfinId}, format=${format}) called by user: ${request.user}")
+  def getElfin(collectionId: String, elfinId: String, format: String = "json"): Action[AnyContent] = SecuredAction(ajaxCall = true).async { implicit request =>
+    Logger.debug(s"getElfin(collectionId=$collectionId, elfinId=$elfinId, format=$format) called by user: ${request.user}")
     getElfinSimpleResult(collectionId, elfinId, format)
   }
 
   /**
    * Gets ELFIN corresponding to this `elfinId`
    */
-  def getElfinById(elfinId: String) = SecuredAction(ajaxCall = true).async { implicit request =>
-    Logger.debug(s"getElfin(elfinId=${elfinId}) called by user: ${request.user}")
+  def getElfinById(elfinId: String): Action[AnyContent] = SecuredAction(ajaxCall = true).async { implicit request =>
+    Logger.debug(s"getElfin(elfinId=$elfinId) called by user: ${request.user}")
     getElfinSimpleResult(elfinId)
   }
 
   /**
    * Creates an ELFIN within the specified collectionId of CLASS className.
    */
-  def createElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true).async(parse.json) { request =>
+  def createElfin(collectionId: String, elfinId: String): Action[JsValue] = SecuredAction(ajaxCall = true).async(parse.json) { request =>
 
-    Logger.debug(s"createElfin(collectionId=${collectionId}, elfinId=${elfinId}) called by user: ${request.user}")
+    Logger.debug(s"createElfin(collectionId=$collectionId, elfinId=$elfinId) called by user: ${request.user}")
 
     try {
       // Match our custom User type Identity implementation  
@@ -618,18 +630,18 @@ object Api extends Controller with securesocial.core.SecureSocial {
         // 2) make easier to cache all query calls and no find calls.
         getElfinSimpleResult(collectionId, elfinId)
       } else {
-        val errorMsg = s"PUT URL ELFIN ID_G/Id: ${collectionId}/${elfinId} unique identifier does not match PUT body JSON ELFIN provided ID_G/Id: ${elfin.ID_G}/${elfin.Id}. Creation cancelled."
+        val errorMsg = s"PUT URL ELFIN ID_G/Id: $collectionId/$elfinId unique identifier does not match PUT body JSON ELFIN provided ID_G/Id: ${elfin.ID_G}/${elfin.Id}. Creation cancelled."
         ExceptionsManager.manageFutureException(errorMsg = Option(errorMsg))
       }
     } catch {
       case e: WithManagerEditRightException =>
-        val errorMsg = s"Failed to create Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
+        val errorMsg = s"Failed to create Elfin with ID_G: $collectionId, Id: $elfinId: $e"
         manageFutureWithManagerEditRightException(exception = e, errorMsg = Option(errorMsg))
       case e: WithClasseEditRightException =>
-        val errorMsg = s"Failed to create Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
+        val errorMsg = s"Failed to create Elfin with ID_G: $collectionId, Id: $elfinId: $e"
         manageFutureWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))
       case e: Throwable =>
-        val errorMsg = s"Failed to create Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
+        val errorMsg = s"Failed to create Elfin with ID_G: $collectionId, Id: $elfinId: $e"
         ExceptionsManager.manageFutureException(exception = Option(e), errorMsg = Option(errorMsg))
     }
 
@@ -641,9 +653,9 @@ object Api extends Controller with securesocial.core.SecureSocial {
    */
   // Kept as reminder but won't be used as for update, delete, create operations.
   //def updateElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true, authorize = WithRole("admin"))(parse.json) { request =>
-  def updateElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true)(parse.json) { request =>
+  def updateElfin(collectionId: String, elfinId: String): Action[JsValue] = SecuredAction(ajaxCall = true)(parse.json) { request =>
 
-    Logger.debug(s"updateElfin(collectionId=${collectionId}, elfinId=${elfinId}) called by user: ${request.user}")
+    Logger.debug(s"updateElfin(collectionId=$collectionId, elfinId=$elfinId) called by user: ${request.user}")
 
     try {
       // Match our custom User type Identity implementation  
@@ -671,7 +683,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
         // Sent success response with updated elfin
         Ok(ElfinFormat.toJson(elfin)).as(JSON)
       } else {
-        val errorMsg = s"PUT URL ELFIN ID_G/Id: ${collectionId}/${elfinId} unique identifier does not match PUT body JSON ELFIN provided ID_G/Id: ${elfin.ID_G}/${elfin.Id}. Update cancelled."
+        val errorMsg = s"PUT URL ELFIN ID_G/Id: $collectionId/$elfinId unique identifier does not match PUT body JSON ELFIN provided ID_G/Id: ${elfin.ID_G}/${elfin.Id}. Update cancelled."
         ExceptionsManager.manageException(errorMsg = Option(errorMsg))
       }
     } catch {
@@ -690,7 +702,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
   /**
    * Delete the list of elfins contained in the specified collection matching the xpath filter expression with defined format
    */
-  def deleteFilteredCollection(collectionId: String, xpath: String) = SecuredAction(ajaxCall = true).async { request =>
+  def deleteFilteredCollection(collectionId: String, xpath: String): Action[AnyContent] = SecuredAction(ajaxCall = true).async { request =>
 
     try {
       // Match our custom User type Identity implementation  
@@ -714,13 +726,13 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
           } catch {
             case e: WithManagerEditRightException =>
-              val errorMsg = s"Failed to delete Elfins for collectionId: ${collectionId}, xpath: ${xpath}: ${e}"
+              val errorMsg = s"Failed to delete Elfins for collectionId: $collectionId, xpath: $xpath: $e"
               manageWithManagerEditRightException(exception = e, errorMsg = Option(errorMsg))
             case e: WithClasseEditRightException =>
-              val errorMsg = s"Failed to delete Elfins for collectionId: ${collectionId}, xpath: ${xpath}: ${e}"
+              val errorMsg = s"Failed to delete Elfins for collectionId: $collectionId, xpath: $xpath: $e"
               manageWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))
             case e: Throwable =>
-              val errorMsg = s"Api.deleteFilteredCollection() - Failed for collectionId: ${collectionId}, xpath: ${xpath}: ${e}"
+              val errorMsg = s"Api.deleteFilteredCollection() - Failed for collectionId: $collectionId, xpath: $xpath: $e"
               ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(errorMsg))
           }
 
@@ -729,7 +741,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
         deletedElfinsStatus match {
           case Some(simpleResultWithError) => simpleResultWithError
           case None =>
-            val deletedElfinsMsg = s"""{ "message" :  "Api.deleteFilteredCollection() - success for collectionId: ${collectionId}, xpath: ${xpath}"  }"""
+            val deletedElfinsMsg = s"""{ "message" :  "Api.deleteFilteredCollection() - success for collectionId: $collectionId, xpath: $xpath"  }"""
             Ok(deletedElfinsMsg).as(JSON)
         }
 
@@ -737,7 +749,7 @@ object Api extends Controller with securesocial.core.SecureSocial {
 
     } catch {
       case e: Throwable =>
-        val errorMsg = s"Api.deleteFilteredCollection() - Failed for collectionId: ${collectionId}, xpath: ${xpath}: ${e}"
+        val errorMsg = s"Api.deleteFilteredCollection() - Failed for collectionId: $collectionId, xpath: $xpath: $e"
         ExceptionsManager.manageFutureException(exception = Option(e), errorMsg = Option(errorMsg))
     }
 
@@ -753,13 +765,13 @@ object Api extends Controller with securesocial.core.SecureSocial {
    * In addition trying to process it would fail with REST client such as
    * Restangular which does not send any body for DELETE operations.
    */
-  def deleteElfin(collectionId: String, elfinId: String) = SecuredAction(ajaxCall = true).async { request =>
+  def deleteElfin(collectionId: String, elfinId: String): Action[AnyContent] = SecuredAction(ajaxCall = true).async { request =>
     try {
       // Match our custom User type Identity implementation  
       val user = request.user match { case user: User => user }
 
       // Info level is fine for DELETE operation. They should not be frequent and should be easily traceable.
-      Logger.info(s"deleteElfin(collectionId=${collectionId}, elfinId=${elfinId}) called by user: ${user.fullName} - ${user.identityId.userId}")
+      Logger.info(s"deleteElfin(collectionId=$collectionId, elfinId=$elfinId) called by user: ${user.fullName} - ${user.identityId.userId}")
 
       // Make sure the resource we want to delete still exists.
       val futureElfin = XQueryWSHelper.find(WSQueries.elfinQuery(collectionId, elfinId))
@@ -777,17 +789,17 @@ object Api extends Controller with securesocial.core.SecureSocial {
           Ok(ElfinFormat.toJson(elfin)).as(JSON)
         } catch {
           case e: WithManagerEditRightException =>
-            val errorMsg = s"Failed to delete Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
+            val errorMsg = s"Failed to delete Elfin with ID_G: $collectionId, Id: $elfinId: $e"
             manageWithManagerEditRightException(exception = e, errorMsg = Option(errorMsg))
           case e: WithClasseEditRightException =>
-            val errorMsg = s"Failed to delete Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
+            val errorMsg = s"Failed to delete Elfin with ID_G: $collectionId, Id: $elfinId: $e"
             manageWithClasseEditRightException(exception = e, errorMsg = Option(errorMsg))
           case e: Throwable =>
-            ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.deleteElfin() - Failed to perform find operation for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"))
+            ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.deleteElfin() - Failed to perform find operation for Elfin with ID_G: $collectionId, Id: $elfinId: $e"))
         })
     } catch {
       case e: Throwable =>
-        val errorMsg = s"Failed to perform update for Elfin with ID_G: ${collectionId}, Id: ${elfinId}: ${e}"
+        val errorMsg = s"Failed to perform update for Elfin with ID_G: $collectionId, Id: $elfinId: $e"
         ExceptionsManager.manageFutureException(exception = Option(e), errorMsg = Option(errorMsg))
     }
   }
@@ -838,24 +850,21 @@ object Api extends Controller with securesocial.core.SecureSocial {
   def manageAnnexesManagerException(exception: Exception, errorMsg: Option[String] = None): SimpleResult = {
     Logger.warn("Api exception: " + exception.toString + " - " + errorMsg.getOrElse(""))
     exception match {
-      case e: AnnexesManagerFileNotFoundException => {
+      case _: AnnexesManagerFileNotFoundException =>
         val jsonExceptionMsg = Json.obj(
           "ERROR" -> "annex.file.not.found",
           "DESCRIPTION" -> errorMsg.getOrElse("").toString)
         NotFound(jsonExceptionMsg)
-      }
-      case e: AnnexesManagerCannotReadFileException => {
+      case _: AnnexesManagerCannotReadFileException =>
         val jsonExceptionMsg = Json.obj(
           "ERROR" -> "annex.file.cannot.read",
           "DESCRIPTION" -> errorMsg.getOrElse("").toString)
-        Status(403)(jsonExceptionMsg) // 403 - Forbidden   
-      }
-      case e: Exception => {
+        Status(403)(jsonExceptionMsg) // 403 - Forbidden
+      case _: Exception =>
         val jsonExceptionMsg = Json.obj(
           "ERROR" -> "annex.file.unexpected.exception",
           "DESCRIPTION" -> errorMsg.getOrElse("").toString)
         NotFound(jsonExceptionMsg)
-      }
     }
 
   }
@@ -910,34 +919,31 @@ object Api extends Controller with securesocial.core.SecureSocial {
   /**
    * Gets ELFIN corresponding to this collectionId and elfinId
    */
-  def getReport(reportCollectionId: String, reportElfinId: String) = SecuredAction(ajaxCall = true).async { request =>
+  def getReport(reportCollectionId: String, reportElfinId: String): Action[AnyContent] = SecuredAction(ajaxCall = true).async { request =>
 
     // Flatten Map[String, Seq[String]] to a Map[String, String]
     val queryStringMap: Map[String, String] = request.queryString.map { case (key, value) => key -> value.mkString }
     val queryString: Option[String] = if (request.rawQueryString != null && request.rawQueryString.nonEmpty) Option(request.rawQueryString) else None
-    Logger.debug(s"getReport(reportCollectionId=${reportCollectionId}, reportElfinId=${reportElfinId}) called, queryString = ${queryString.getOrElse("")}")
+    Logger.debug(s"getReport(reportCollectionId=$reportCollectionId, reportElfinId=$reportElfinId) called, queryString = ${queryString.getOrElse("")}")
 
     XQueryWSHelper.find(WSQueries.elfinQuery(reportCollectionId, reportElfinId)).flatMap { reportElfin =>
       ReportBuilder.writeReport(reportElfin, queryString, Some(queryStringMap))
     }.map { tempFile =>
-      Ok.sendFile(tempFile.file, true)
+      Ok.sendFile(tempFile.file, inline = true)
     }.recover {
-      case resNotFound: ResultNotFoundException => {
-        manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"No elfin found for ID_G: ${reportCollectionId}, Id: ${reportElfinId}"))
-      }
-      case connectException: ConnectException => {
+      case resNotFound: ResultNotFoundException =>
+        manageResutlNotFoundException(exception = resNotFound, errorMsg = Option(s"No elfin found for ID_G: $reportCollectionId, Id: $reportElfinId"))
+      case connectException: ConnectException =>
         manageConnectException(exception = connectException, errorMsg = Option(s"No database connection could be established."))
-      }
-      case e: Throwable => {
-        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.getReport() - Failed to perform find operation for Elfin with ID_G: ${reportCollectionId}, Id: ${reportElfinId}: ${e}"))
-      }
+      case e: Throwable =>
+        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.getReport() - Failed to perform find operation for Elfin with ID_G: $reportCollectionId, Id: $reportElfinId: $e"))
     }
   }
 
   /**
     * Gets ELFIN corresponding to this collectionId and elfinId
     */
-  def getAnnexesOnlyReport(annexType:String, reportCollectionId: String, reportElfinId: String) = SecuredAction(ajaxCall = true).async { request =>
+  def getAnnexesOnlyReport(annexType:String, reportCollectionId: String, reportElfinId: String): Action[AnyContent] = SecuredAction(ajaxCall = true).async { request =>
 
     // Flatten Map[String, Seq[String]] to a Map[String, String]
     val queryStringMap: Map[String, String] = request.queryString.map { case (key, value) => key -> value.mkString }
@@ -949,9 +955,9 @@ object Api extends Controller with securesocial.core.SecureSocial {
       val reportFile = ReportBuilder.writeAnnexeReport(reportElfin, queryString, Some(queryStringMap), annexType)
       if (reportFile == null) {
         val e= new IllegalStateException()
-        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.getReport() - Failed to perform find operation for Elfin with ID_G: ${reportCollectionId}, Id: ${reportElfinId}: ${e}"))
+        ExceptionsManager.manageException(exception = Option(e), errorMsg = Option(s"Api.getReport() - Failed to perform find operation for Elfin with ID_G: $reportCollectionId, Id: $reportElfinId: $e"))
       } else {
-        Ok.sendFile(reportFile.file, true)
+        Ok.sendFile(reportFile.file, inline = true)
       }
     }
   }

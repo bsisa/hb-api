@@ -1,4 +1,4 @@
-package ch.bsisa.hyperbird.spreadsheet
+package ch.bsisa.hyperbird.documents
 
 import java.io.InputStream
 import java.util.Date
@@ -125,11 +125,11 @@ object SpreadSheetBuilder {
         // Rows 0 and 1 contain XQuery request name and insert result cell position.  
         if (cellRef.getRow > 1 && cellRef.getCol == 0) {
           // Get the parameter name specified in the spread sheet
-          val parameterName = cell.getCellType match {
-            case Cell.CELL_TYPE_STRING => cell.getRichStringCellValue.getString
+          val parameterName = cell.getCellTypeEnum match {
+            case CellType.STRING => cell.getRichStringCellValue.getString
             case _ =>
-              Logger.error(s"Parameter name should be of string type! found: ${cell.getCellType}") // TODO: throw exception
-              s"ERROR - Parameter name should be of string type! found: ${cell.getCellType}"
+              Logger.error(s"Parameter name should be of string type! found: ${cell.getCellTypeEnum.name()}") // TODO: throw exception
+              s"ERROR - Parameter name should be of string type! found: ${cell.getCellTypeEnum.name()}"
           }
 
           // From the query string try to find the parameter value corresponding to the parameter name specified in the spread sheet
@@ -146,14 +146,14 @@ object SpreadSheetBuilder {
           // query parameter value to the given type to preserve parameter 
           // value cell type while updating its content.
           val paramValueCell = row.getCell(1)
-          paramValueCell.getCellType match {
-            case Cell.CELL_TYPE_BLANK =>
+          paramValueCell.getCellTypeEnum match {
+            case CellType.BLANK =>
               Logger.debug(s"Updated BLANK parameter value cell with string = $parameterValue")
               paramValueCell.setCellValue(parameterValue)
-            case Cell.CELL_TYPE_STRING =>
+            case CellType.STRING =>
               Logger.debug(s"Updated STRING parameter value cell with string = $parameterValue")
               paramValueCell.setCellValue(parameterValue)
-            case Cell.CELL_TYPE_NUMERIC =>
+            case CellType.NUMERIC =>
               Logger.debug(s"Updated parameter value cell with double = $parameterValue")
               Logger.warn("Request parameter used to set numeric cell. Untested operation, date and numeric conversion need extended support.")
               paramValueCell.setCellValue(parameterValue.toDouble)
@@ -161,14 +161,14 @@ object SpreadSheetBuilder {
             //                val format = new java.text.SimpleDateFormat("dd-MM-yyyy")
             //                if (DateUtil.isCellDateFormatted(paramValueCell)) paramValueCell.   paramValueCell.setCellValue(Date.parse(parameterValue)) else paramValueCell.getNumericCellValue()
             // TODO: date and numeric values need a defined format while passed as request parameter and a corresponding formatter
-            case Cell.CELL_TYPE_BOOLEAN =>
+            case CellType.BOOLEAN =>
               Logger.debug(s"Updated parameter value cell with string = $parameterValue")
               Logger.warn("Request parameter used to set boolean cell. Untested operation.")
               paramValueCell.setCellValue(parameterValue)
-            case Cell.CELL_TYPE_FORMULA =>
+            case CellType.FORMULA =>
               Logger.debug(s"Parameter value cell NOT updated")
               Logger.error("Request parameter used to set formula cell operation currently not supported.")
-            case Cell.CELL_TYPE_ERROR =>
+            case CellType.ERROR =>
               Logger.warn(s"Parameter value cell of type ERROR NOT updated...")
             case _ =>
               Logger.warn("Unknown Cell type!")
@@ -262,12 +262,12 @@ object SpreadSheetBuilder {
         val exampleCell = templateRow.getCell(cellIdxFormulaPass)
 
         // Check if next template column contains a formula
-        exampleCell.getCellType match {
-          case Cell.CELL_TYPE_FORMULA =>
+        exampleCell.getCellTypeEnum match {
+          case CellType.FORMULA =>
             val formula = exampleCell.getCellFormula
             if (formula.trim().length() > 0) {
               val currSheetCell = dataRow.createCell(cellIdxFormulaPass)
-              currSheetCell.setCellType(exampleCell.getCellType)
+              currSheetCell.setCellType(exampleCell.getCellTypeEnum)
               currSheetCell.setCellFormula(exampleCell.getCellFormula)
               currSheetCell.setCellStyle(exampleCell.getCellStyle)
               // Leave nbColWithoutFormula untouched
@@ -358,8 +358,8 @@ object SpreadSheetBuilder {
         val exampleCell = templateRow.getCell(cellIdx)
 
         // Check if next template column contains a formula
-        exampleCell.getCellType match {
-          case Cell.CELL_TYPE_FORMULA =>
+        exampleCell.getCellTypeEnum match {
+          case CellType.FORMULA =>
             //val fRange = exampleCell.getArrayFormulaRange()            
             //val cachedResult = exampleCell.getCachedFormulaResultType()
             val formula = exampleCell.getCellFormula
@@ -370,7 +370,7 @@ object SpreadSheetBuilder {
             if (formula.trim().length() > 0) {
               //Logger.debug(s"formula.trim().length() = ${formula.trim().length()}")
               val currSheetCell = dataRow.createCell(cellIdx)
-              currSheetCell.setCellType(exampleCell.getCellType)
+              currSheetCell.setCellType(exampleCell.getCellTypeEnum)
               // Get the formula with correct references from temporarySheet
               val shiftedFormulaFromTemporarySheet = temporarySheet.getRow(currSheetCell.getRowIndex).getCell(currSheetCell.getColumnIndex).getCellFormula
               //Logger.debug(s"shiftedFormulaFromTemporarySheet = ${shiftedFormulaFromTemporarySheet}")
@@ -459,9 +459,9 @@ object SpreadSheetBuilder {
       val sheet = wb.getSheetAt(i)
       for (row <- sheet) {
         for (cell <- row) {
-          if (cell.getCellType == Cell.CELL_TYPE_FORMULA) {
+          if (cell.getCellTypeEnum == CellType.FORMULA) {
             try {
-              evaluator.evaluateFormulaCell(cell)
+              evaluator.evaluateFormulaCellEnum(cell)
             } catch {
               case e: Throwable =>
                 Logger.warn(s"Problem evaluating formulae for cell row ${cell.getRowIndex}, column ${cell.getColumnIndex} : ${e.getMessage}")
@@ -483,4 +483,5 @@ case class HtmlTableNotFoundException(message: String = null, cause: Throwable =
   * Exception thrown when the HTML result contains more than a single expected HTML table.
   */
 case class MoreThanOneHtmlTableFoundException(message: String = null, cause: Throwable = null) extends Exception(message, cause)
+
 
