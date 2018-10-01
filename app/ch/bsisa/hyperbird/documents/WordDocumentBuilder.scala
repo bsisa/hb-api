@@ -27,6 +27,8 @@ object WordDocumentBuilder {
       }
     }
 
+    doc.enforceUpdateFields()
+
     doc
   }
 }
