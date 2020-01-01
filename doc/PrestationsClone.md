@@ -21,16 +21,19 @@ Qui utilise entre autre:
 1. Coller l'adresse de commande (Voir historique pour des exemples)
 
 #Historique
-## 2018 
+
+## 2020 
+Important: En 2020, seules les prestations du groupe Investissement sont clonées
 ### Test
-    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2017/2018/FMPA
-    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2017/2018/CDP
-    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2017/2018/NE
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2019/2020/FMPA
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2019/2020/CDP
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2019/2020/NE
     
 ### Prod
-    http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2017/2018/FMPA
-    http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2017/2018/CDP
-    http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2017/2018/NE
+    http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2019/2020/FMPA
+    http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2019/2020/CDP
+    http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2019/2020/NE
+
 
 ## 2019 
 ### Test
@@ -42,6 +45,19 @@ Qui utilise entre autre:
     http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2018/2019/FMPA
     http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2018/2019/CDP
     http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2018/2019/NE
+
+## 2018 
+### Test
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2017/2018/FMPA
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2017/2018/CDP
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2017/2018/NE
+    
+### Prod
+    http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2017/2018/FMPA
+    http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2017/2018/CDP
+    http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2017/2018/NE
+
+
 
 ## Request `get_PRESTATION_list_for_year`
 
