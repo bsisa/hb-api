@@ -28,10 +28,20 @@ Qui utilise entre autre:
     http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2020/2021/CDP
     http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2020/2021/NE
 
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2020/2021/CORC
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2020/2021/CORM
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2020/2021/VAL
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2020/2021/PES
+
 ### Prod
     http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2020/2021/FMPA
     http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2020/2021/CDP
     http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2020/2021/NE
+    
+    http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2020/2021/CORC
+    http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2020/2021/CORM
+    http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2020/2021/VAL
+    http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2020/2021/PES
 
 
 
