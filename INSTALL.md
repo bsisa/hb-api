@@ -5,12 +5,12 @@ This file is packaged with the current Play application
 when using `play dist`.
 
 
-== Managed dependencies ==
+## Managed dependencies
 
 Check build.sbt, project/plugins.sbt, and project/Build.scala
 
 
-== Unmanaged dependencies ==
+## Unmanaged dependencies
 
 XQJ driver: A standard Java interface to XML DataSources which support XQuery 1.0.
 
@@ -31,9 +31,11 @@ package.
 Note that XQS.scala depends on lib/xqjapi.jar at compile time.
 
 
-== How to run ==
+## How to run
 
 Prerequisites are:
+
+* Play 2.2.6 available here: https://www.playframework.com/releases
 * Java
 * SBT
 * wkhtmltopdf (see http://wkhtmltopdf.org/downloads.html) to get the latest version
