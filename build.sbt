@@ -15,7 +15,7 @@ libraryDependencies ++= Seq(
 // We exclude rsync backup files ending in ~, as well 
 // as all dev and example configuration files found in conf folder.
 mappings in (Compile, packageBin) ~= { _.filterNot { case (_, name) =>
-      //if (name.endsWith("~") || name.endsWith(".conf.example") || name.endsWith("_dev.conf") || name.endsWith("application.conf")) { println(" EXCLUDE: name = " + name ) }
+      //if (name.endsWith("~") || namdiste.endsWith(".conf.example") || name.endsWith("_dev.conf") || name.endsWith("application.conf")) { println(" EXCLUDE: name = " + name ) }
       name.endsWith("~") || name.endsWith(".conf.example") || name.endsWith("_dev.conf") || name.endsWith("application.conf")
 }}
 

@@ -3,7 +3,7 @@ logLevel := Level.Warn
 
 // The Typesafe repository 
 resolvers ++= Seq( 
-				"Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
+				"Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/",
 				"sonatype-public" at "https://oss.sonatype.org/content/groups/public/")
 
 // Use the Play sbt plugin for Play projects

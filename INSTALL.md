@@ -9,6 +9,20 @@ when using `play dist`.
 
 Check build.sbt, project/plugins.sbt, and project/Build.scala
 
+Copy `play-2.2.6/repository/local` in `~/.ivy2/`
+
+Add the following to `~/.sbt/repositories`
+
+```
+[repositories]
+local
+maven-central: https://repo1.maven.org/maven2
+typesafe: https://repo.typesafe.com/typesafe/releases
+bintray: https://dl.bintray.com/sbt/sbt-plugin-release
+sbt-plugin-releases: https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases
+
+```
+
 
 ## Unmanaged dependencies
 
