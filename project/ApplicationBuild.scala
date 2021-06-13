@@ -50,7 +50,7 @@ object ApplicationBuild extends Build {
       Resolver.sonatypeRepo("releases"),
       Resolver.url(
         "sbt-plugin-releases",
-        new URL("http://repo.scala-sbt.org/scalasbt/sbt-plugin-releases/"))(Resolver.ivyStylePatterns)
+        new URL("https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases/"))(Resolver.ivyStylePatterns)
     ),
     // ========================================================================
     // Scalaxb settings
