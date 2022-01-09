@@ -22,6 +22,27 @@ Qui utilise entre autre:
 
 #Historique
 
+## 2022
+### Test
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2021/2022/FMPA
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2021/2022/CDP
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2021/2022/NE
+
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2021/2022/CORC
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2021/2022/CORM
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2021/2022/VAL
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2021/2022/PES
+
+### Prod
+    http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2021/2022/FMPA
+    http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2021/2022/CDP
+    http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2021/2022/NE
+    
+    http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2021/2022/CORC
+    http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2021/2022/CORM
+    http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2021/2022/VAL
+    http://vdn132.vdn.ne.ch:9999/api/melfin/create/prestation/2021/2022/PES
+
 ## 2021
 ### Test
     http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2020/2021/FMPA
