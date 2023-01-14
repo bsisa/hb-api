@@ -20,7 +20,18 @@ Qui utilise entre autre:
 1. Ouvrir un nouvel onglet dans le navigateur
 1. Coller l'adresse de commande (Voir historique pour des exemples)
 
-#Historique
+# Historique
+
+## 2023
+### Test
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2022/2023/FMPA
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2022/2023/CDP
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2022/2023/NE
+
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2022/2023/CORC
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2022/2023/CORM
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2022/2023/VAL
+    http://vdn138.vdn.ne.ch:9999/api/melfin/create/prestation/2022/2023/PES
 
 ## 2022
 ### Test
